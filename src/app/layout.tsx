@@ -7,14 +7,14 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://theartofconnect.com"),
-  title: { default: "The Art of Connect — Relationships, Business & Counseling", template: "%s · The Art of Connect" },
+  title: { default: "The Art of Connect — In Business. In Life. In Love.", template: "%s · The Art of Connect" },
   description:
-    "A private membership for the relationships that shape a life: intentional dating, purposeful professional networking, and confidential access to verified counselors.",
+    "Meaningful connections begin with understanding who you are. Discover yourself, build intentional relationships, connect with compatible business professionals, and access trusted guidance — all within one extraordinary ecosystem.",
   openGraph: { siteName: "The Art of Connect", type: "website", images: [{ url: "/og.jpg", width: 1200, height: 630 }] },
   icons: { icon: "/icon-512.png", apple: "/apple-icon.png" },
 };
 
-export const viewport: Viewport = { themeColor: "#171512", width: "device-width", initialScale: 1, viewportFit: "cover" };
+export const viewport: Viewport = { themeColor: "#211C18", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
