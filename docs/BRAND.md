@@ -4,23 +4,30 @@
 **Brand name / domain:** The Art of Connect · theartofconnect.com
 **Tagline:** In business. In life. In love.
 
-## Signature colors
+## Palette
 
 | Name | Hex | Used for |
 |---|---|---|
-| Onyx | `#171512` | Page background |
-| Champagne Gold | `#C9AD83` | Primary accent, buttons, headings highlights; Business accent |
-| Ivory | `#F5EFE6` | Text; Counseling accent |
-| Bronze | `#725B3D` | Deep end of gold gradients, ambient glow |
-| Burgundy | `#743F4D` | Ribbon lines, ambient glow; Relationships accent (as tint `#C98F9D` for legible text) |
+| Warm ivory cream | `#F8F3E9` | Main light sections, member dashboards, sign-in |
+| Soft champagne cream | `#E8D9C5` | Accent light sections (privacy, pathways) |
+| Rich espresso black | `#211C18` | Hero, explorer, header, footer, Owner Portal sidebar |
+| Deep burgundy | `#781F35` | Professional recruitment section, ribbon accents |
+| Champagne gold | `#C5A572` | Buttons, dividers, gold text on dark sections |
 
-The five colors are defined once, as tokens at the top of `src/app/globals.css`
-(`--onyx`, `--champagne`, `--ivory`, `--bronze`, `--burgundy`). Change them there
-and the whole site follows.
+The public site is roughly 65% light and 35% dark, alternating section by section.
+Each section picks a tone class (`theme-ivory`, `theme-cream`, `theme-dark` or
+`theme-burgundy`), and all text and accent colors adapt automatically. The
+palette and tones are defined once, at the top of `src/app/globals.css`.
 
-Full-strength Bronze and Burgundy are too dark to read as text on Onyx, so text
-uses light tints of them. Green (`--success`) and red (`--danger`) appear only as
-status indicators in forms and the Owner Portal, not as brand colors.
+### Readability rules (WCAG AA, verified)
+
+- **Gold text on light sections** uses a deeper gold (`#6F5222`, 6.5:1 on ivory),
+  because champagne gold on cream is only about 2:1. Champagne gold stays the
+  color of buttons, dividers and decoration everywhere.
+- **Gold text on burgundy** uses a light champagne (`#E2CBA0`, 6.6:1).
+- **Gold buttons** always use espresso text on a champagne gradient (5.2:1 or higher).
+- Green and red appear only as status indicators, with a darker variant on
+  light sections.
 
 ## Logo assets (`public/brand/`)
 

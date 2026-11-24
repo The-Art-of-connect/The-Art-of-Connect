@@ -49,7 +49,7 @@ export function MobileMenu() {
         role="dialog"
         aria-modal="true"
         aria-label="Site menu"
-        className={`fixed inset-0 z-50 flex flex-col bg-ink transition-[opacity,visibility] duration-300 lg:hidden ${open ? "visible opacity-100" : "invisible opacity-0"}`}
+        className={`theme-dark fixed inset-0 z-50 flex flex-col bg-ink transition-[opacity,visibility] duration-300 lg:hidden ${open ? "visible opacity-100" : "invisible opacity-0"}`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_80%_0%,rgb(116_63_77/0.35),transparent_70%)]" />
         <div className="relative flex h-16 items-center justify-between px-4 sm:h-20 sm:px-8">

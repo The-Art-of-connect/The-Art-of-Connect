@@ -21,7 +21,8 @@ export function ExperiencePage({
   const e = EXPERIENCES[experience];
   return (
     <>
-      <section className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-12 pt-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pt-20">
+      <div className="band theme-dark">
+      <section className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-20 pt-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pb-28 lg:pt-20">
         <div>
           <p className="eyebrow rise">{e.subtitle}</p>
           <h1 className="display rise rise-2 mt-6 text-5xl sm:text-7xl">{headline}</h1>
@@ -37,7 +38,9 @@ export function ExperiencePage({
           <p className="display absolute bottom-6 left-6 text-3xl text-ivory sm:text-4xl">{e.caption}</p>
         </div>
       </section>
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-8">
+      </div>
+      <div className="band theme-ivory">
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:py-28">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f, i) => (
             <Reveal key={f.title} delay={(i % 3) * 100}>
@@ -50,7 +53,8 @@ export function ExperiencePage({
           ))}
         </div>
       </section>
-      {children}
+      </div>
+      {children && <div className="band theme-cream">{children}</div>}
     </>
   );
 }
