@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Emblem } from "@/components/Emblem";
+import { Monogram } from "@/components/Emblem";
 import { getViewer, isStaff } from "@/lib/auth";
 import { ADMIN_SECTIONS } from "@/lib/admin";
 import { getLaunchState } from "@/lib/launch";
@@ -22,7 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="border-b border-line bg-ink-2/80 backdrop-blur-xl lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/admin" className="flex items-center gap-3">
-            <Emblem size={28} />
+            <Monogram height={30} />
             <span>
               <span className="display block text-lg leading-none">Owner Portal</span>
               <span className="text-[0.65rem] tracking-[0.2em] uppercase text-faint">The Art of Connect</span>

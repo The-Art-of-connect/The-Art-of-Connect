@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Constellation } from "@/components/Constellation";
+import { Monogram, Ornament } from "@/components/Emblem";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { EXPERIENCES, type Experience } from "@/lib/experiences";
 
@@ -11,7 +12,7 @@ export default function HomePage() {
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-20 pt-14 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pt-24">
         <div>
-          <p className="eyebrow rise">A private membership · Est. 2026</p>
+          <p className="eyebrow rise">In business. In life. In love.</p>
           <h1 className="display rise rise-2 mt-6 text-[3.4rem] sm:text-7xl lg:text-[6.2rem]">
             The art of <br />
             <span className="gilded italic">being known.</span>
@@ -38,11 +39,15 @@ export default function HomePage() {
           </dl>
         </div>
         <div className="relative mx-auto w-full max-w-[560px]">
-          <Constellation className="w-full" />
+          <Constellation className="w-full opacity-45" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute h-1/2 w-1/2 rounded-full bg-gold/10 blur-3xl" />
+            <Monogram height={250} priority className="relative h-auto w-[72%] drop-shadow-[0_10px_40px_rgba(216,194,157,0.25)]" />
+          </div>
           <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-5 text-[0.65rem] tracking-[0.25em] uppercase text-faint">
+            <span className="text-sapphire">Business</span>
+            <span className="text-jade">Life</span>
             <span className="text-rose">Love</span>
-            <span className="text-sapphire">Ambition</span>
-            <span className="text-jade">Growth</span>
           </div>
         </div>
       </section>
@@ -139,6 +144,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Invitation ───────────────────────────────────────── */}
+      <Ornament className="px-4 pt-10" />
       <section id="waitlist" className="mx-auto max-w-3xl scroll-mt-28 px-4 py-20 sm:px-8">
         <div className="glass glass-edge p-7 sm:p-12">
           <p className="eyebrow">By invitation</p>

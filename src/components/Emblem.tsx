@@ -1,29 +1,32 @@
-/** The Art of Connect emblem: three interlocking orbits — one per experience — meeting at a single point of light. */
-export function Emblem({ size = 32, className = "", animated = false }: { size?: number; className?: string; animated?: boolean }) {
+import Image from "next/image";
+
+/** The AC monogram from the brand logo (transparent cut-out). */
+export function Monogram({ height = 32, className = "", priority = false }: { height?: number; className?: string; priority?: boolean }) {
+  const width = Math.round(height * (640 / 402));
+  return <Image src="/brand/monogram.webp" alt="" width={width} height={height} className={className} priority={priority} aria-hidden="true" />;
+}
+
+/** Lotus mark from the brand logo, used as a section ornament. */
+export function Lotus({ width = 56, className = "" }: { width?: number; className?: string }) {
+  return <Image src="/brand/lotus.webp" alt="" width={width} height={Math.round(width * (91 / 170))} className={className} aria-hidden="true" />;
+}
+
+/** Lotus flanked by burgundy light-lines, as in the logo. */
+export function Ornament({ className = "" }: { className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id="emblem-gold" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f0dfbd" />
-          <stop offset="0.55" stopColor="#d8c29d" />
-          <stop offset="1" stopColor="#a88b5c" />
-        </linearGradient>
-      </defs>
-      <g className={animated ? "spin-slow" : undefined} style={{ transformOrigin: "32px 32px" }}>
-        <ellipse cx="32" cy="32" rx="26" ry="11" stroke="url(#emblem-gold)" strokeWidth="1.4" />
-        <ellipse cx="32" cy="32" rx="26" ry="11" stroke="url(#emblem-gold)" strokeWidth="1.4" transform="rotate(60 32 32)" />
-        <ellipse cx="32" cy="32" rx="26" ry="11" stroke="url(#emblem-gold)" strokeWidth="1.4" transform="rotate(120 32 32)" />
-      </g>
-      <circle cx="32" cy="32" r="3.2" fill="url(#emblem-gold)" />
-    </svg>
+    <div className={`flex items-center justify-center gap-4 ${className}`} aria-hidden="true">
+      <span className="ribbon-line h-px flex-1 max-w-48" />
+      <Lotus width={48} />
+      <span className="ribbon-line h-px flex-1 max-w-48 rotate-180" />
+    </div>
   );
 }
 
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-3 ${className}`}>
-      <Emblem size={30} />
-      <span className="display text-[1.35rem] leading-none tracking-tight">
+      <Monogram height={30} priority />
+      <span className="display text-[1.3rem] leading-none tracking-tight">
         The Art <span className="italic text-gold">of</span> Connect
       </span>
     </span>

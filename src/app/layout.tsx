@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   title: { default: "The Art of Connect — Relationships, Business & Counseling", template: "%s · The Art of Connect" },
   description:
     "A private membership for the relationships that shape a life: intentional dating, purposeful professional networking, and confidential access to verified counselors.",
-  openGraph: { siteName: "The Art of Connect", type: "website" },
-  icons: { icon: "/icon.svg" },
+  openGraph: { siteName: "The Art of Connect", type: "website", images: [{ url: "/og.jpg", width: 1200, height: 630 }] },
+  icons: { icon: "/icon-512.png", apple: "/apple-icon.png" },
 };
 
 export const viewport: Viewport = { themeColor: "#07070b", width: "device-width", initialScale: 1, viewportFit: "cover" };

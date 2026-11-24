@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { Wordmark } from "@/components/Emblem";
+import { Ornament, Wordmark } from "@/components/Emblem";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-32 border-t border-line">
+    <footer className="mt-32">
+      <Ornament className="px-4" />
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="space-y-4">
           <Wordmark />
+          <p className="eyebrow !tracking-[0.25em]">In business. In life. In love.</p>
           <p className="max-w-xs text-sm leading-relaxed text-muted">
-            A private membership for the relationships that shape a life — in love, in business, and in growth.
+            A private membership for the relationships that shape a life.
           </p>
           <a href="mailto:info@theartofconnect.com" className="text-sm text-gold hover:text-gold-bright">
             info@theartofconnect.com
@@ -31,7 +33,7 @@ export function SiteFooter() {
       </div>
       <div className="hairline" />
       <p className="mx-auto max-w-7xl px-4 py-6 text-xs text-faint sm:px-8">
-        © {new Date().getFullYear()} The Art of Connect. All rights reserved.
+        © {new Date().getFullYear()} The Art of Connection, LLC. All rights reserved.
       </p>
     </footer>
   );

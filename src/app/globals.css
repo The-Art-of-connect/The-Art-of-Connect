@@ -15,7 +15,9 @@
   --gold: #d8c29d;
   --gold-bright: #f0dfbd;
   --gold-deep: #a88b5c;
-  --rose: #e8a3a8;
+  --wine: #8f2742;
+  --wine-bright: #c4506d;
+  --rose: #e693a5;
   --sapphire: #8fb0ff;
   --jade: #8ad1b8;
   --danger: #ff8a8a;
@@ -36,6 +38,8 @@
   --color-gold: var(--gold);
   --color-gold-bright: var(--gold-bright);
   --color-gold-deep: var(--gold-deep);
+  --color-wine: var(--wine);
+  --color-wine-bright: var(--wine-bright);
   --color-rose: var(--rose);
   --color-sapphire: var(--sapphire);
   --color-jade: var(--jade);
@@ -107,6 +111,9 @@ body {
   pointer-events: none;
 }
 
+/* Burgundy light-line from the logo */
+.ribbon-line { background: linear-gradient(90deg, transparent, var(--wine) 40%, var(--wine-bright) 85%, rgb(255 190 200 / 0.9)); box-shadow: 0 0 12px rgb(196 80 109 / 0.5); }
+
 .hairline { height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong), transparent); }
 
 /* Ambient aurora behind pages */
@@ -117,7 +124,7 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(40% 35% at 18% 18%, rgb(232 163 168 / 0.16), transparent 70%),
+    radial-gradient(40% 35% at 18% 18%, rgb(143 39 66 / 0.22), transparent 70%),
     radial-gradient(38% 34% at 82% 12%, rgb(143 176 255 / 0.14), transparent 70%),
     radial-gradient(45% 40% at 55% 62%, rgb(138 209 184 / 0.09), transparent 72%),
     radial-gradient(60% 50% at 50% 0%, rgb(216 194 157 / 0.08), transparent 70%);
