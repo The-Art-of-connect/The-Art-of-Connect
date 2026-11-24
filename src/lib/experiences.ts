@@ -1,32 +1,63 @@
+/**
+ * The three experiences. Internal keys (used in the database and permissions)
+ * are stable; everything customers see comes from the display fields here.
+ *   business      → In Business · Professional Connections
+ *   counseling    → In Life     · Personal Growth & Guidance
+ *   relationships → In Love     · Romantic Connections
+ */
 export type Experience = "relationships" | "business" | "counseling";
 export type StaffRole = "owner" | "admin" | "support" | "moderator" | "finance";
 
-export const EXPERIENCES: Record<
-  Experience,
-  { name: string; eyebrow: string; tagline: string; accent: string; href: string; pillars: string[] }
-> = {
-  relationships: {
-    name: "Relationships",
-    eyebrow: "I · Intentional love",
-    tagline: "Connection designed with intention — from first conversation to lasting partnership.",
-    accent: "var(--relationships)",
-    href: "/relationships",
-    pillars: ["Compatibility assessments", "Intentional dating", "Relationship development", "Couples’ growth studio"],
-  },
+export type ExperienceInfo = {
+  name: string;
+  subtitle: string;
+  caption: string;
+  summary: string;
+  accent: string;
+  href: string;
+  image: string;
+  imageAlt: string;
+  pillars: string[];
+};
+
+export const EXPERIENCES: Record<Experience, ExperienceInfo> = {
   business: {
-    name: "Business",
-    eyebrow: "II · Purposeful ambition",
-    tagline: "A private network where founders, leaders and makers find the partners they’ve been looking for.",
+    name: "In Business",
+    subtitle: "Professional Connections",
+    caption: "Connect with purpose.",
+    summary:
+      "Business compatibility, professional networking, mentorship, strategic partnerships, collaboration and meaningful professional relationships.",
     accent: "var(--business)",
     href: "/business",
-    pillars: ["Business compatibility", "Partnerships & collaboration", "Curated referrals", "Entrepreneurial circles"],
+    image: "/images/in-business.webp",
+    imageAlt: "Professionals talking and laughing together at an elegant evening reception",
+    pillars: ["Business compatibility", "Professional networking", "Mentorship", "Strategic partnerships", "Collaboration"],
   },
   counseling: {
-    name: "Counseling",
-    eyebrow: "III · Guided growth",
-    tagline: "Verified counselors, private by design. Your counseling life stays yours alone.",
+    name: "In Life",
+    subtitle: "Personal Growth & Guidance",
+    caption: "Discover yourself.",
+    summary:
+      "Self-discovery, personal development, emotional intelligence, private journaling and access to qualified counselors and coaches.",
     accent: "var(--counseling)",
-    href: "/counseling",
-    pillars: ["Credential-verified providers", "Confidential client identity", "Seamless scheduling", "Provider memberships"],
+    href: "/life",
+    image: "/images/in-life.webp",
+    imageAlt: "A woman with silver hair sitting by a sunlit window, smiling thoughtfully",
+    pillars: ["Self-discovery", "Personal development", "Emotional intelligence", "Private journaling", "Qualified counselors & coaches"],
+  },
+  relationships: {
+    name: "In Love",
+    subtitle: "Romantic Connections",
+    caption: "Connect intentionally.",
+    summary:
+      "Intentional matchmaking for singles, personality and compatibility assessments, relationship readiness, emotional intelligence, meaningful introductions and relationship development tools for existing couples.",
+    accent: "var(--relationships)",
+    href: "/love",
+    image: "/images/in-love.webp",
+    imageAlt: "A couple sharing a warm conversation over dinner at golden hour",
+    pillars: ["Intentional matchmaking for singles", "Personality & compatibility assessments", "Relationship readiness", "Meaningful introductions", "Tools for existing couples"],
   },
 };
+
+/** Display order follows the tagline: In Business. In Life. In Love. */
+export const EXPERIENCE_ORDER: Experience[] = ["business", "counseling", "relationships"];

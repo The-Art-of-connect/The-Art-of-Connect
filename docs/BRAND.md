@@ -1,6 +1,6 @@
 # Brand guide
 
-**Legal name:** The Art of Connection, LLC
+**Legal name:** The Art of Connect, LLC (the logo artwork currently reads "The Art of Connection, LLC")
 **Brand name / domain:** The Art of Connect · theartofconnect.com
 **Tagline:** In business. In life. In love.
 

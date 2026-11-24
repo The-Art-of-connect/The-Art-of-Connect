@@ -99,7 +99,7 @@ export async function reviewApplication(_prev: ActionResult, form: FormData): Pr
     .from("applications")
     .update({ status: parsed.data.decision, reviewer_notes: parsed.data.notes || null, reviewer_id: viewer.id, reviewed_at: new Date().toISOString() })
     .eq("id", parsed.data.id)
-    .select("user_id, legal_name, license_type, specialties")
+    .select("user_id, legal_name, license_type, certifications, specialties, professional_type")
     .single();
   if (error || !app) return fail("The review was not saved.");
 
@@ -109,7 +109,8 @@ export async function reviewApplication(_prev: ActionResult, form: FormData): Pr
     const { error: e2 } = await counseling.from("counselors").upsert({
       user_id: app.user_id,
       professional_name: app.legal_name,
-      credentials: app.license_type,
+      credentials: app.license_type ?? app.certifications,
+      professional_type: app.professional_type,
       specialties: app.specialties,
       is_verified: true,
     });

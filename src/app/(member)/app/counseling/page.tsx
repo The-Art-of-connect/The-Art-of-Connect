@@ -5,14 +5,16 @@ export default async function Page() {
   const { preview } = await requireExperience("counseling");
   return (
     <ExperienceShell experience="counseling" preview={preview}>
-      <div className="md:col-span-2 rounded-2xl border border-counseling/30 bg-counseling/5 p-5 text-sm text-counseling">
-        Confidential space. Your counseling identity is separate from your other profiles, and session notes are visible
-        only to your counselor.
+      <div className="md:col-span-2 rounded-2xl border border-line-strong bg-ink-2 p-5 text-sm text-muted">
+        Private space. Your journal and reflections are visible only to you, and your In Life activity never appears on
+        your In Love or In Business profiles.
       </div>
-      <ModuleCard title="Find a counselor" body="Browse credential-verified counselors by specialty, format and availability." />
-      <ModuleCard title="Appointments" body="Request, confirm and manage video, phone or in-person sessions." />
-      <ModuleCard title="Provider workspace" body="For counselors: listing, availability, appointments and private session notes." />
-      <ModuleCard title="Provider application" body="Submit your license and credentials for verification." />
+      <ModuleCard title="Personal growth dashboard" body="Your goals, pathways and progress in one place." />
+      <ModuleCard title="Guided self-discovery" body="Identity exploration, inner-child reflection and attachment style exploration." />
+      <ModuleCard title="Emotional intelligence" body="Assessments and exercises to grow self-awareness and empathy." />
+      <ModuleCard title="Private journal" body="Visible only to you — not to partners, matches or The Art of Connect team." />
+      <ModuleCard title="Counselors & coaches" body="Find reviewed professionals, clearly marked as licensed or nonclinical." />
+      <ModuleCard title="Professional referrals" body="Share information with a professional only with your explicit consent." />
     </ExperienceShell>
   );
 }

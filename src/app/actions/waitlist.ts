@@ -6,7 +6,7 @@ const schema = z.object({
   email: z.email().max(254),
   fullName: z.string().trim().max(120).optional(),
   interests: z.array(z.enum(["relationships", "business", "counseling"])).max(3),
-  isCounselor: z.boolean(),
+  loveTrack: z.enum(["single", "couple"]).nullable(),
   website: z.string().max(0).optional(), // honeypot: real people leave it empty
 });
 
@@ -17,7 +17,7 @@ export async function joinWaitlist(_prev: WaitlistState, form: FormData): Promis
     email: String(form.get("email") ?? "").trim().toLowerCase(),
     fullName: String(form.get("fullName") ?? "") || undefined,
     interests: form.getAll("interests").map(String),
-    isCounselor: form.get("isCounselor") === "on",
+    loveTrack: (form.get("loveTrack") as "single" | "couple" | null) || null,
     website: String(form.get("website") ?? ""),
   });
   if (!parsed.success) return { ok: false, message: "Please enter a valid email address." };
@@ -30,7 +30,7 @@ export async function joinWaitlist(_prev: WaitlistState, form: FormData): Promis
     email: parsed.data.email,
     full_name: parsed.data.fullName ?? null,
     interests: parsed.data.interests,
-    is_counselor: parsed.data.isCounselor,
+    love_track: parsed.data.loveTrack,
     source: "website",
   });
   // A duplicate email is treated as success so the form never reveals who has signed up.

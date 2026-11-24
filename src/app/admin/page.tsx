@@ -36,10 +36,10 @@ export default async function AdminOverview() {
   const switches: [string, boolean][] = [
     ["Public registrations", launch.registrations_open],
     ["Live payments", launch.payments_live],
-    ["Relationships", launch.relationships_live],
-    ["Business", launch.business_live],
-    ["Counseling", launch.counseling_live],
-    ["Counselor applications", launch.counselor_applications_open],
+    ["In Business", launch.business_live],
+    ["In Life", launch.counseling_live],
+    ["In Love", launch.relationships_live],
+    ["Professional applications", launch.counselor_applications_open],
   ];
 
   return (
@@ -66,7 +66,7 @@ export default async function AdminOverview() {
         <Panel title="Needs attention">
           <ul className="divide-y divide-line">
             {[
-              ["Counselor applications awaiting review", applications, "/admin/counselors"],
+              ["Professional applications awaiting review", applications, "/admin/counselors"],
               ["Open support tickets", tickets, "/admin/support"],
               ["Open moderation reports", reports, "/admin/moderation"],
             ].map(([label, n, href]) => (

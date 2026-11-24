@@ -17,9 +17,9 @@ export function SiteFooter() {
           </a>
         </div>
         {[
-          { title: "Experiences", items: [["Relationships", "/relationships"], ["Business", "/business"], ["Counseling", "/counseling"]] },
-          { title: "Membership", items: [["Packages", "/membership"], ["Request invitation", "/#waitlist"], ["Sign in", "/sign-in"]] },
-          { title: "Trust", items: [["Privacy", "/privacy"], ["Terms", "/terms"], ["Counselor applications", "/counseling#providers"]] },
+          { title: "Experiences", items: [["In Business", "/business"], ["In Life", "/life"], ["In Love", "/love"]] },
+          { title: "Membership", items: [["How membership works", "/membership"], ["Request invitation", "/#invitation"], ["Sign in", "/sign-in"]] },
+          { title: "Company", items: [["For professionals", "/professionals"], ["Privacy", "/privacy"], ["Terms", "/terms"]] },
         ].map((col) => (
           <div key={col.title}>
             <p className="eyebrow mb-4">{col.title}</p>
@@ -33,7 +33,7 @@ export function SiteFooter() {
       </div>
       <div className="hairline" />
       <p className="mx-auto max-w-7xl px-4 py-6 text-xs text-faint sm:px-8">
-        © {new Date().getFullYear()} The Art of Connection, LLC. All rights reserved.
+        © {new Date().getFullYear()} The Art of Connect, LLC. All rights reserved.
       </p>
     </footer>
   );
