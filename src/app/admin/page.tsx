@@ -71,7 +71,7 @@ export default async function AdminOverview() {
               ["Open moderation reports", reports, "/admin/moderation"],
             ].map(([label, n, href]) => (
               <li key={String(href)}>
-                <Link href={String(href)} className="flex items-center justify-between px-5 py-4 text-sm hover:bg-white/[0.02]">
+                <Link href={String(href)} className="flex items-center justify-between px-5 py-4 text-sm hover:bg-ink-3">
                   <span className="text-muted">{label}</span>
                   <span className="display text-2xl text-gold-bright">{n}</span>
                 </Link>

@@ -9,8 +9,8 @@ export default async function MemberLayout({ children }: { children: React.React
   const viewer = await getViewer();
   if (!viewer) redirect("/sign-in?next=/app");
   return (
-    <div className="min-h-dvh">
-      <header className="sticky top-0 z-30 border-b border-line bg-ink/75 backdrop-blur-xl">
+    <div className="theme-ivory min-h-dvh">
+      <header className="theme-dark sticky top-0 z-30 border-b border-line !bg-espresso/95 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
           <Link href="/app"><Wordmark /></Link>
           <div className="flex items-center gap-3">

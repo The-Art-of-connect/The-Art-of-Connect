@@ -7,14 +7,19 @@ export const metadata: Metadata = { title: "Membership", description: "One accou
 
 export default function MembershipPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-8 lg:py-24">
+    <>
+    <div className="band theme-dark">
+    <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
       <p className="eyebrow">Membership</p>
       <h1 className="display mt-5 max-w-4xl text-5xl sm:text-7xl">One account. Every connection that matters.</h1>
       <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
         Membership options are being finalized and will be shared with invited members first. Here is how membership will
         work.
       </p>
-
+    </div>
+    </div>
+    <div className="band theme-ivory">
+    <div className="mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:py-28">
       <div className="mt-16 grid gap-5 lg:grid-cols-3">
         {[
           ["One secure account", "Sign in once. Your account connects every experience you choose to join."],
@@ -40,7 +45,11 @@ export default function MembershipPage() {
         ))}
       </div>
 
-      <div className="glass glass-edge mt-16 grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-[1.5fr_1fr]">
+    </div>
+    </div>
+    <div className="band theme-cream">
+    <div className="mx-auto max-w-7xl px-4 py-24 sm:px-8">
+      <div className="glass glass-edge grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-[1.5fr_1fr]">
         <div>
           <p className="eyebrow">For professionals</p>
           <h2 className="display mt-4 text-4xl">Professional memberships</h2>
@@ -52,5 +61,7 @@ export default function MembershipPage() {
         </div>
       </div>
     </div>
+    </div>
+    </>
   );
 }

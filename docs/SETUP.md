@@ -63,6 +63,17 @@ Set these in **Netlify → Site configuration → Environment variables** (and i
 2. Add the environment variables from section 2.
 3. Under Domain management, add `theartofconnect.com`, then update DNS at your registrar. HTTPS is issued automatically.
 
+## 5b. Point theartofconnect.com at Netlify
+
+If the domain still shows another provider's page, such as a Squarespace "under construction" page, its DNS records still point there. Change them where the domain is managed (Squarespace → Domains → theartofconnect.com → DNS):
+
+1. In Netlify, go to **Domain management** and confirm `theartofconnect.com` and `www.theartofconnect.com` are added to the `theartofconnect` site.
+2. At Squarespace, **delete** the existing Squarespace `A` records for `@` and the `www` `CNAME`. Keep any email (MX/TXT) records.
+3. Add these records:
+   - `A` record: host `@`, value `75.2.60.5` (Netlify's load balancer)
+   - `CNAME` record: host `www`, value `theartofconnect.netlify.app`
+4. DNS changes usually take effect within an hour, but can take up to 48 hours. Netlify then issues the HTTPS certificate automatically.
+
 ## 6. How launch works (nothing goes live by accident)
 
 Opening any feature to the public needs **two keys**:

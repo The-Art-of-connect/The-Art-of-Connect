@@ -18,8 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const groups = [...new Set(sections.map((s) => s.group))];
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[280px_1fr]">
-      <aside className="border-b border-line bg-ink-2/80 backdrop-blur-xl lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
+    <div className="theme-ivory min-h-dvh lg:grid lg:grid-cols-[280px_1fr]">
+      <aside className="theme-dark border-b border-line lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/admin" className="flex items-center gap-3">
             <Monogram height={30} />

@@ -3,7 +3,7 @@ import { Ornament, Wordmark } from "@/components/Emblem";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-32">
+    <footer className="band theme-dark pt-20">
       <Ornament className="px-4" />
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="space-y-4">

@@ -24,7 +24,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
       </head>
       <body>
-        <div className="aurora" />
         <div className="grain" />
         {children}
       </body>

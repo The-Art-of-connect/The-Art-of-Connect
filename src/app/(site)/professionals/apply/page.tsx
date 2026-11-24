@@ -12,7 +12,7 @@ export default async function ApplyPage() {
   const open = launch.counselor_applications_open;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-8 lg:py-24">
+    <div className="mx-auto max-w-3xl px-4 py-20 sm:px-8 lg:py-28">
       <Link href="/professionals" className="text-sm text-gold hover:text-gold-bright">← Professional pathway</Link>
       <h1 className="display mt-6 text-5xl">{open ? "Professional application" : "Express your interest"}</h1>
       <p className="mt-4 text-muted">

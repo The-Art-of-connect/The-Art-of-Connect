@@ -1,10 +1,15 @@
-# Netlify detects Next.js automatically and applies its Next.js runtime.
+# Next.js on Netlify. The runtime plugin is declared explicitly (and pinned in
+# package.json) so every build — from Git or an API upload — generates the
+# server and edge functions the app needs. Without it the site returns 404.
 [build]
   command = "npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 # Security headers for every response.
 [[headers]]

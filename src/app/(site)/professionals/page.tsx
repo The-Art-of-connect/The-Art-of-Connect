@@ -6,8 +6,11 @@ export const metadata: Metadata = { title: "For Professionals", description: "Co
 
 export default function ProfessionalsPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-8 lg:py-24">
+    <>
+    <div className="band theme-burgundy">
+    <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
       <p className="eyebrow">For counselors, coaches & mentors</p>
+      <hr className="gold-rule mt-5 w-24" />
       <h1 className="display mt-5 max-w-4xl text-5xl sm:text-7xl">
         A distinguished home for <span className="gilded italic">your practice.</span>
       </h1>
@@ -18,8 +21,11 @@ export default function ProfessionalsPage() {
       <div className="mt-10 flex flex-col gap-3 sm:flex-row">
         <Link href="/professionals/apply" className="btn btn-gold">Begin your application</Link>
       </div>
-
-      <div className="mt-20 grid gap-5 lg:grid-cols-2">
+    </div>
+    </div>
+    <div className="band theme-ivory">
+    <div className="mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:py-28">
+      <div className="grid gap-5 lg:grid-cols-2">
         {[
           {
             title: "Licensed mental health professionals",
@@ -46,7 +52,11 @@ export default function ProfessionalsPage() {
         ))}
       </div>
 
-      <h2 className="display mt-24 text-4xl sm:text-5xl">The pathway</h2>
+    </div>
+    </div>
+    <div className="band theme-cream">
+    <div className="mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:py-28">
+      <h2 className="display text-4xl sm:text-5xl">The pathway</h2>
       <ol className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ["Apply", "Share your background, specialties and where you’d like to serve."],
@@ -69,5 +79,7 @@ export default function ProfessionalsPage() {
         with approved applicants.
       </p>
     </div>
+    </div>
+    </>
   );
 }
