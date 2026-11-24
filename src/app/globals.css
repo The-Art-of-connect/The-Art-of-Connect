@@ -1,0 +1,231 @@
+@import "tailwindcss";
+
+/* ── The Art of Connect · design tokens ─────────────────────────────
+   Obsidian & champagne. One accent per experience:
+   Relationships = rose, Business = sapphire, Counseling = jade.     */
+:root {
+  --ink: #07070b;
+  --ink-2: #0d0d14;
+  --ink-3: #151521;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --text: #f4f1ea;
+  --text-muted: rgb(244 241 234 / 0.64);
+  --text-faint: rgb(244 241 234 / 0.42);
+  --gold: #d8c29d;
+  --gold-bright: #f0dfbd;
+  --gold-deep: #a88b5c;
+  --rose: #e8a3a8;
+  --sapphire: #8fb0ff;
+  --jade: #8ad1b8;
+  --danger: #ff8a8a;
+  --success: #8ad1b8;
+  --radius: 22px;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
+  --color-rose: var(--rose);
+  --color-sapphire: var(--sapphire);
+  --color-jade: var(--jade);
+  --color-danger: var(--danger);
+  --font-display: "Cormorant Garamond Variable", "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  background: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+::selection { background: rgb(216 194 157 / 0.32); color: var(--text); }
+
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+
+/* ── Typography ─────────────────────────────────────────────────── */
+.display {
+  font-family: "Cormorant Garamond Variable", "Cormorant Garamond", ui-serif, Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.98;
+}
+.eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+.gilded {
+  background: linear-gradient(100deg, var(--gold-deep) 0%, var(--gold-bright) 45%, var(--gold) 70%, var(--gold-deep) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── Surfaces ───────────────────────────────────────────────────── */
+.glass {
+  position: relative;
+  background: linear-gradient(160deg, rgb(255 255 255 / 0.055), rgb(255 255 255 / 0.015));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+.glass-edge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, rgb(240 223 189 / 0.5), transparent 35%, transparent 65%, rgb(240 223 189 / 0.22));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.hairline { height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong), transparent); }
+
+/* Ambient aurora behind pages */
+.aurora {
+  position: fixed;
+  inset: -20vh -20vw auto -20vw;
+  height: 120vh;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 18% 18%, rgb(232 163 168 / 0.16), transparent 70%),
+    radial-gradient(38% 34% at 82% 12%, rgb(143 176 255 / 0.14), transparent 70%),
+    radial-gradient(45% 40% at 55% 62%, rgb(138 209 184 / 0.09), transparent 72%),
+    radial-gradient(60% 50% at 50% 0%, rgb(216 194 157 / 0.08), transparent 70%);
+  filter: blur(10px);
+  animation: drift 26s ease-in-out infinite alternate;
+}
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ── Controls ───────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.98); }
+.btn-gold {
+  color: #1a140a;
+  background: linear-gradient(120deg, var(--gold-bright), var(--gold) 55%, var(--gold-deep));
+  box-shadow: 0 10px 40px -12px rgb(216 194 157 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+.btn-gold:hover { box-shadow: 0 14px 50px -10px rgb(216 194 157 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.6); transform: translateY(-1px); }
+.btn-ghost { color: var(--text); border: 1px solid var(--line-strong); background: rgb(255 255 255 / 0.03); }
+.btn-ghost:hover { border-color: rgb(216 194 157 / 0.5); background: rgb(255 255 255 / 0.06); }
+.btn-sm { min-height: 38px; padding: 0 1rem; font-size: 0.78rem; }
+.btn[disabled] { opacity: 0.45; pointer-events: none; }
+
+.field {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 1.1rem;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+  font-size: 16px; /* prevents iOS zoom */
+  transition: border-color 0.2s, background 0.2s;
+}
+.field::placeholder { color: var(--text-faint); }
+.field:focus { outline: none; border-color: var(--gold); background: rgb(255 255 255 / 0.06); }
+textarea.field { padding: 0.9rem 1.1rem; min-height: 120px; }
+select.field { appearance: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-strong);
+  color: var(--text-muted);
+}
+.chip-live { color: var(--success); border-color: rgb(138 209 184 / 0.4); }
+.chip-locked { color: var(--gold); border-color: rgb(216 194 157 / 0.35); }
+.chip-danger { color: var(--danger); border-color: rgb(255 138 138 / 0.35); }
+
+/* ── Tables (owner portal) ──────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th {
+  text-align: left;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.data-table td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); color: var(--text-muted); vertical-align: middle; }
+.data-table tr:hover td { background: rgb(255 255 255 / 0.02); }
+
+/* ── Motion ─────────────────────────────────────────────────────── */
+@keyframes drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-3vw, 2vh, 0) scale(1.06); }
+}
+@keyframes orbit { to { transform: rotate(360deg); } }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.rise { animation: rise 1s cubic-bezier(0.2, 0.7, 0.1, 1) both; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.24s; }
+.rise-4 { animation-delay: 0.36s; }
+.spin-slow { animation: orbit 60s linear infinite; transform-origin: center; }
+.spin-slower { animation: orbit 90s linear infinite reverse; transform-origin: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
