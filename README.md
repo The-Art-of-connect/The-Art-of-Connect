@@ -2,9 +2,14 @@
 
 A premium, membership-based platform connecting people through three experiences:
 
-- **Relationships**: compatibility assessments, intentional dating, relationship development and couples' growth.
-- **Business**: professional networking, partnerships, referrals and collaboration.
-- **Counseling**: a confidential marketplace of credential-verified counselors.
+- **In Business** (Professional Connections): business compatibility, professional networking, mentorship, strategic partnerships and collaboration.
+- **In Life** (Personal Growth & Guidance): self-discovery, personal development, emotional intelligence, private journaling and access to qualified counselors and coaches.
+- **In Love** (Romantic Connections): intentional matchmaking for singles, and relationship development for existing couples. Singles and couples are separate paths.
+
+Counselors, coaches and mentors join through a separate professional pathway (`/professionals`).
+Internally, the database keeps its original schema names: `business` = In Business, `counseling` = In Life, `relationships` = In Love.
+
+See [docs/STATUS.md](docs/STATUS.md) for what works today, what is in development and what needs configuration.
 
 The owner manages everything from a separate, role-protected **Owner Portal** at `/admin`.
 

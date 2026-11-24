@@ -22,10 +22,10 @@ export default async function AccessPage() {
       <Panel title="Grant or revoke experience access">
         <ActionForm action={setExperienceAccess} className="grid gap-3 p-5 md:grid-cols-[1.4fr_1fr_auto_auto]">
           <input name="email" type="email" required placeholder="Member email" className="field" />
-          <select name="experience" className="field" defaultValue="relationships">
-            <option value="relationships">Relationships</option>
-            <option value="business">Business</option>
-            <option value="counseling">Counseling</option>
+          <select name="experience" className="field" defaultValue="business">
+            <option value="business">In Business</option>
+            <option value="counseling">In Life</option>
+            <option value="relationships">In Love</option>
           </select>
           <button name="grant" value="true" className="btn btn-gold">Grant</button>
           <button name="grant" value="false" className="btn btn-ghost">Revoke</button>

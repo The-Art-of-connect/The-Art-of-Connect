@@ -18,7 +18,11 @@ export const viewport: Viewport = { themeColor: "#171512", width: "device-width"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Lets CSS know JavaScript is running, so scroll animations never hide content without it. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body>
         <div className="aurora" />
         <div className="grain" />

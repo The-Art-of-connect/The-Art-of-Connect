@@ -35,7 +35,9 @@ Set these in **Netlify → Site configuration → Environment variables** (and i
 
 ## 3. Supabase configuration
 
-1. **Run the database migration.** Paste `supabase/migrations/20261124000001_foundation.sql` into the Supabase SQL Editor and run it, or use `supabase db push` with the Supabase CLI.
+1. **Run the database migrations, in order.** Either paste each file from `supabase/migrations/` into the Supabase SQL Editor and run it, or use `supabase db push` with the Supabase CLI.
+   - `20261124000001_foundation.sql`
+   - `20261125000001_experiences_v2.sql`
 2. **Expose the experience schemas.** Go to Project Settings → Data API → Exposed schemas and add `relationships`, `business` and `counseling`.
 3. **Turn off public sign-ups.** Go to Authentication → Sign In / Providers and switch off "Allow new users to sign up". (The database also refuses sign-ups while registrations are closed. This is a second lock.)
 4. **Set the auth URLs.** Go to Authentication → URL Configuration. Set the Site URL to `https://theartofconnect.com` and add `https://theartofconnect.com/auth/callback` as a redirect URL.
@@ -72,7 +74,9 @@ The switches are: public registrations, live payments, Relationships, Business, 
 
 ## 7. Testing the database security rules
 
-The checks in `supabase/tests/rls_checks.sql` cover these rules:
+There are 29 checks in two files.
+
+`supabase/tests/rls_checks.sql` covers these rules:
 - sign-ups are blocked while closed
 - the owner bootstrap runs only once
 - members can't change launch settings or their own account status
@@ -80,10 +84,20 @@ The checks in `supabase/tests/rls_checks.sql` cover these rules:
 - counselors can't see dating profiles
 - anonymous visitors can join the waitlist but can't read it
 
+`supabase/tests/rls_checks_v2.sql` covers these:
+- couples can only be created through the secure "start a couple" step
+- only the invited email address can accept a partner invitation
+- partners can't read each other's private reflections
+- couples never appear to singles in matchmaking
+- the owner can't read private journals
+- licensed applicants must provide license details; coaches don't need them
+
 Run them **only against a local or throwaway database**:
 
 ```bash
 psql -f supabase/tests/stub.sql \
      -f supabase/migrations/20261124000001_foundation.sql \
-     -f supabase/tests/rls_checks.sql
+     -f supabase/migrations/20261125000001_experiences_v2.sql \
+     -f supabase/tests/rls_checks.sql \
+     -f supabase/tests/rls_checks_v2.sql
 ```

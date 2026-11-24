@@ -10,10 +10,10 @@ import { Empty, PageHeader, Panel } from "@/components/admin/ui";
 const LABELS: Record<string, string> = {
   registrations_open: "Public registrations",
   payments_live: "Live payments",
-  relationships_live: "Relationships experience",
-  business_live: "Business experience",
-  counseling_live: "Counseling marketplace",
-  counselor_applications_open: "Counselor applications",
+  business_live: "In Business experience",
+  counseling_live: "In Life experience (incl. counselors & coaches)",
+  relationships_live: "In Love experience",
+  counselor_applications_open: "Professional applications",
   maintenance_mode: "Maintenance mode",
 };
 

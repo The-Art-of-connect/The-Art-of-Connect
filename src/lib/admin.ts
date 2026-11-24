@@ -6,7 +6,7 @@ export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; 
   { href: "/admin", label: "Overview", roles: ["owner", "admin", "support", "moderator", "finance"], group: "Command" },
   { href: "/admin/analytics", label: "Analytics", roles: ["owner", "admin"], group: "Command" },
   { href: "/admin/members", label: "Members", roles: ["owner", "admin", "support"], group: "People" },
-  { href: "/admin/counselors", label: "Counselor verification", roles: ["owner", "admin"], group: "People" },
+  { href: "/admin/counselors", label: "Professional applications", roles: ["owner", "admin"], group: "People" },
   { href: "/admin/access", label: "Access & referrals", roles: ["owner", "admin"], group: "People" },
   { href: "/admin/memberships", label: "Memberships", roles: ["owner", "admin", "finance"], group: "Revenue" },
   { href: "/admin/pricing", label: "Pricing & packages", roles: ["owner", "finance"], group: "Revenue" },

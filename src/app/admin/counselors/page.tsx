@@ -5,23 +5,32 @@ import { reviewApplication } from "@/app/actions/admin";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { Empty, PageHeader, Panel } from "@/components/admin/ui";
 
+const TYPE_LABEL: Record<string, string> = {
+  licensed_clinical: "Licensed clinical",
+  coach: "Coach",
+  mentor: "Business mentor",
+  other_nonclinical: "Other nonclinical",
+};
+
 export default async function CounselorsPage() {
   await requireStaff(rolesFor("/admin/counselors"));
   const supabase = await createClient();
   const c = supabase?.schema("counseling");
-  const [{ data: apps }, { data: counselors }] = c
+  const [{ data: apps }, { data: counselors }, { data: interest }] = c && supabase
     ? await Promise.all([
         c.from("applications").select("*").order("created_at", { ascending: false }).limit(100),
-        c.from("counselors").select("user_id, professional_name, credentials, is_verified, is_listed, rate_cents").order("created_at", { ascending: false }),
+        c.from("counselors").select("user_id, professional_name, credentials, professional_type, is_verified, is_listed").order("created_at", { ascending: false }),
+        supabase.from("professional_interest").select("*").order("created_at", { ascending: false }).limit(200),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] as any[] }, { data: [] as any[] }, { data: [] as any[] }];
 
   return (
     <>
-      <PageHeader eyebrow="People" title="Counselor verification" />
+      <PageHeader eyebrow="People" title="Professional applications" />
       <p className="mb-6 max-w-2xl text-sm text-muted">
-        Review provider licenses and credentials. You can see applications and listings here; client records and session
-        notes are confidential and are never shown in the Owner Portal.
+        Review and approve counselors, coaches and mentors. Licensed clinicians are verified against their state license;
+        nonclinical professionals are reviewed on training and experience. Client records, journals and private notes are
+        confidential and never shown in the Owner Portal.
       </p>
       <Panel title="Applications">
         <div className="divide-y divide-line">
@@ -30,9 +39,15 @@ export default async function CounselorsPage() {
               <div className="text-sm">
                 <div className="flex items-center gap-3">
                   <p className="text-base font-semibold text-text">{a.legal_name}</p>
+                  <span className={`chip ${a.professional_type === "licensed_clinical" ? "chip-live" : "chip-locked"}`}>{TYPE_LABEL[a.professional_type] ?? a.professional_type}</span>
                   <span className="chip">{a.status.replace("_", " ")}</span>
                 </div>
-                <p className="mt-2 text-muted">{a.license_type} · #{a.license_number} · {a.license_state} · expires {date(a.license_expires_on)}</p>
+                <p className="mt-2 text-muted">
+                  {a.professional_type === "licensed_clinical"
+                    ? `${a.license_type} · #${a.license_number} · ${a.license_state} · expires ${date(a.license_expires_on)}`
+                    : a.certifications || "No certifications listed"}
+                  {a.years_experience != null ? ` · ${a.years_experience} yrs` : ""}
+                </p>
                 <p className="mt-1 text-faint">{(a.specialties ?? []).join(", ") || "No specialties listed"} · {a.document_paths?.length ?? 0} document(s) · applied {date(a.created_at)}</p>
               </div>
               <ActionForm action={reviewApplication} className="space-y-2">
@@ -51,19 +66,38 @@ export default async function CounselorsPage() {
         {!apps?.length && <Empty>No applications yet. Applications open when you enable them in Launch controls.</Empty>}
       </Panel>
       <div className="mt-6">
-        <Panel title="Verified counselors">
+        <Panel title={`Pre-launch interest (${interest?.length ?? 0})`}>
           <table className="data-table">
-            <thead><tr><th>Name</th><th>Credentials</th><th>Verified</th><th>Listed</th></tr></thead>
+            <thead><tr><th>Name</th><th>Type</th><th>Credentials</th><th>Specialties</th><th>Received</th></tr></thead>
+            <tbody>
+              {(interest ?? []).map((p: any) => (
+                <tr key={p.id}>
+                  <td><p className="text-text">{p.full_name}</p><p className="text-xs text-faint">{p.email}</p></td>
+                  <td>{TYPE_LABEL[p.professional_type] ?? p.professional_type}</td>
+                  <td>{[p.credentials, p.license_state].filter(Boolean).join(" · ") || "—"}</td>
+                  <td className="max-w-xs truncate">{p.specialties ?? "—"}</td>
+                  <td>{date(p.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!interest?.length && <Empty>No professionals have expressed interest yet.</Empty>}
+        </Panel>
+      </div>
+      <div className="mt-6">
+        <Panel title="Approved professionals">
+          <table className="data-table">
+            <thead><tr><th>Name</th><th>Type</th><th>Credentials</th><th>Verified</th><th>Listed</th></tr></thead>
             <tbody>
               {(counselors ?? []).map((x) => (
                 <tr key={x.user_id}>
-                  <td className="text-text">{x.professional_name}</td><td>{x.credentials ?? "—"}</td>
+                  <td className="text-text">{x.professional_name}</td><td>{TYPE_LABEL[x.professional_type] ?? "—"}</td><td>{x.credentials ?? "—"}</td>
                   <td>{x.is_verified ? "Yes" : "No"}</td><td>{x.is_listed ? "Yes" : "No"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!counselors?.length && <Empty>No verified counselors yet.</Empty>}
+          {!counselors?.length && <Empty>No approved professionals yet.</Empty>}
         </Panel>
       </div>
     </>

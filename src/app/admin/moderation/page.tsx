@@ -15,7 +15,7 @@ export default async function ModerationPage() {
   return (
     <>
       <PageHeader eyebrow="Care" title="Content moderation" />
-      <p className="mb-6 max-w-2xl text-sm text-muted">Reports from Relationships and Business. Counseling is outside moderation to protect confidentiality; concerns about a counselor go through counselor verification.</p>
+      <p className="mb-6 max-w-2xl text-sm text-muted">Reports from In Love and In Business. In Life is outside moderation to protect confidentiality; concerns about a counselor go through counselor verification.</p>
       <Panel title="Reports">
         <table className="data-table">
           <thead><tr><th>Experience</th><th>Reason</th><th>Details</th><th>Status</th><th>Filed</th><th /></tr></thead>
