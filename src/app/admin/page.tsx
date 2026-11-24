@@ -48,9 +48,9 @@ export default async function AdminOverview() {
       <PageHeader eyebrow="Command" title={`Good day${viewer.displayName ? ", " + viewer.displayName : ""}.`} />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Members" value={members} />
-        <Stat label="Active memberships" value={active} accent="var(--jade)" />
+        <Stat label="Active memberships" value={active} accent="var(--success)" />
         <Stat label="Monthly recurring" value={money(mrr)} accent="var(--gold-bright)" />
-        <Stat label="Waitlist" value={waitlist} accent="var(--rose)" />
+        <Stat label="Waitlist" value={waitlist} accent="var(--relationships)" />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <Panel title="Launch status" action={viewer.roles.includes("owner") ? <Link href="/admin/settings" className="text-xs text-gold">Manage →</Link> : null}>

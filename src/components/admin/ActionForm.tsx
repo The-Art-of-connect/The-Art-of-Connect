@@ -17,7 +17,7 @@ export function ActionForm({
     <form action={formAction} className={className} aria-busy={pending}>
       <fieldset disabled={pending} className="contents">{children}</fieldset>
       {state && (
-        <p className={`mt-2 text-xs ${state.ok ? "text-jade" : "text-danger"}`} role="status">{state.message}</p>
+        <p className={`mt-2 text-xs ${state.ok ? "text-success" : "text-danger"}`} role="status">{state.message}</p>
       )}
     </form>
   );

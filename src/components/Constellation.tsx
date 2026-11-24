@@ -14,20 +14,20 @@ export function Constellation({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 600 600" className={className} fill="none" aria-hidden="true">
       <defs>
-        <linearGradient id="o-rose" x1="0" x2="1"><stop stopColor="#c4506d" stopOpacity="0.05" /><stop offset="0.5" stopColor="#c4506d" stopOpacity="0.9" /><stop offset="1" stopColor="#c4506d" stopOpacity="0.05" /></linearGradient>
-        <linearGradient id="o-sapphire" x1="0" x2="1"><stop stopColor="#8fb0ff" stopOpacity="0.05" /><stop offset="0.5" stopColor="#8fb0ff" stopOpacity="0.9" /><stop offset="1" stopColor="#8fb0ff" stopOpacity="0.05" /></linearGradient>
-        <linearGradient id="o-jade" x1="0" x2="1"><stop stopColor="#8ad1b8" stopOpacity="0.05" /><stop offset="0.5" stopColor="#8ad1b8" stopOpacity="0.9" /><stop offset="1" stopColor="#8ad1b8" stopOpacity="0.05" /></linearGradient>
-        <radialGradient id="core"><stop stopColor="#f0dfbd" /><stop offset="0.35" stopColor="#d8c29d" stopOpacity="0.5" /><stop offset="1" stopColor="#d8c29d" stopOpacity="0" /></radialGradient>
+        <linearGradient id="o-rel" x1="0" x2="1"><stop stopColor="#c98f9d" stopOpacity="0.05" /><stop offset="0.5" stopColor="#c98f9d" stopOpacity="0.9" /><stop offset="1" stopColor="#c98f9d" stopOpacity="0.05" /></linearGradient>
+        <linearGradient id="o-biz" x1="0" x2="1"><stop stopColor="#c9ad83" stopOpacity="0.05" /><stop offset="0.5" stopColor="#c9ad83" stopOpacity="0.9" /><stop offset="1" stopColor="#c9ad83" stopOpacity="0.05" /></linearGradient>
+        <linearGradient id="o-couns" x1="0" x2="1"><stop stopColor="#f5efe6" stopOpacity="0.05" /><stop offset="0.5" stopColor="#f5efe6" stopOpacity="0.9" /><stop offset="1" stopColor="#f5efe6" stopOpacity="0.05" /></linearGradient>
+        <radialGradient id="core"><stop stopColor="#e4d2b4" /><stop offset="0.35" stopColor="#c9ad83" stopOpacity="0.5" /><stop offset="1" stopColor="#c9ad83" stopOpacity="0" /></radialGradient>
       </defs>
       <circle cx="300" cy="300" r="280" stroke="rgb(255 255 255 / 0.05)" />
       <circle cx="300" cy="300" r="190" stroke="rgb(255 255 255 / 0.04)" strokeDasharray="2 8" className="spin-slower" style={{ transformOrigin: "300px 300px" }} />
       <g className="spin-slow" style={{ transformOrigin: "300px 300px" }}>
-        {orbit(0, "#c4506d", "o-rose")}
-        {orbit(60, "#8fb0ff", "o-sapphire")}
-        {orbit(120, "#8ad1b8", "o-jade")}
+        {orbit(0, "#c98f9d", "o-rel")}
+        {orbit(60, "#c9ad83", "o-biz")}
+        {orbit(120, "#f5efe6", "o-couns")}
       </g>
       <circle cx="300" cy="300" r="70" fill="url(#core)" opacity="0.55" />
-      <circle cx="300" cy="300" r="6" fill="#f0dfbd" />
+      <circle cx="300" cy="300" r="6" fill="#e4d2b4" />
     </svg>
   );
 }

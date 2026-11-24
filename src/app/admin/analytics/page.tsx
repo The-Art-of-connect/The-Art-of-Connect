@@ -27,9 +27,9 @@ export default async function AnalyticsPage() {
       <PageHeader eyebrow="Command" title="Platform analytics" />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Members" value={members} hint={`${new30} new in 30 days`} />
-        <Stat label="Relationships access" value={rel} accent="var(--rose)" />
-        <Stat label="Business access" value={biz} accent="var(--sapphire)" />
-        <Stat label="Counseling access" value={couns} accent="var(--jade)" hint="Count only — no client details" />
+        <Stat label="Relationships access" value={rel} accent="var(--relationships)" />
+        <Stat label="Business access" value={biz} accent="var(--business)" />
+        <Stat label="Counseling access" value={couns} accent="var(--counseling)" hint="Count only — no client details" />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Panel title="Waitlist demand">

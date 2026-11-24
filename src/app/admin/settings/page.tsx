@@ -26,7 +26,7 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader eyebrow="Platform" title="Launch controls" />
-      <div className={`mb-6 rounded-2xl border px-5 py-4 text-sm ${env.launchLocked ? "border-gold/30 bg-gold/5 text-gold" : "border-jade/30 bg-jade/5 text-jade"}`}>
+      <div className={`mb-6 rounded-2xl border px-5 py-4 text-sm ${env.launchLocked ? "border-gold/30 bg-gold/5 text-gold" : "border-success/30 bg-success/5 text-success"}`}>
         {env.launchLocked ? (
           <>
             <strong>Master launch lock is ON.</strong> Nothing below can open to the public until LAUNCH_LOCK is set to

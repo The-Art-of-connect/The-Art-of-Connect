@@ -3,9 +3,9 @@ import { useActionState } from "react";
 import { joinWaitlist, type WaitlistState } from "@/app/actions/waitlist";
 
 const options = [
-  { value: "relationships", label: "Relationships", color: "var(--rose)" },
-  { value: "business", label: "Business", color: "var(--sapphire)" },
-  { value: "counseling", label: "Counseling", color: "var(--jade)" },
+  { value: "relationships", label: "Relationships", color: "var(--relationships)" },
+  { value: "business", label: "Business", color: "var(--business)" },
+  { value: "counseling", label: "Counseling", color: "var(--counseling)" },
 ];
 
 export function WaitlistForm() {

@@ -33,7 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           {launch.locked ? (
             <span className="text-gold">● Pre-launch — platform locked</span>
           ) : (
-            <span className="text-jade">● Launch lock released</span>
+            <span className="text-success">● Launch lock released</span>
           )}
         </div>
         {/* Mobile: horizontal rail. Desktop: grouped sidebar. */}

@@ -7,7 +7,7 @@ export default function BusinessPage() {
   return (
     <ExperiencePage
       experience="business"
-      headline={<>Where ambition <span className="italic text-sapphire">finds its match.</span></>}
+      headline={<>Where ambition <span className="italic text-business">finds its match.</span></>}
       intro="A private network for founders, executives, professionals and creators. Find partners, clients, collaborators and mentors through compatibility — not cold outreach."
       features={[
         { title: "Business compatibility", body: "Match on goals, stage, working style and what you’re seeking or offering — partnerships begin with fit." },

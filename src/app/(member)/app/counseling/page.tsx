@@ -5,7 +5,7 @@ export default async function Page() {
   const { preview } = await requireExperience("counseling");
   return (
     <ExperienceShell experience="counseling" preview={preview}>
-      <div className="md:col-span-2 rounded-2xl border border-jade/30 bg-jade/5 p-5 text-sm text-jade">
+      <div className="md:col-span-2 rounded-2xl border border-counseling/30 bg-counseling/5 p-5 text-sm text-counseling">
         Confidential space. Your counseling identity is separate from your other profiles, and session notes are visible
         only to your counselor.
       </div>

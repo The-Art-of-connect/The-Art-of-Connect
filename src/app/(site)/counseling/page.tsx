@@ -7,7 +7,7 @@ export default function CounselingPage() {
   return (
     <ExperiencePage
       experience="counseling"
-      headline={<>Guidance, <span className="italic text-jade">in confidence.</span></>}
+      headline={<>Guidance, <span className="italic text-counseling">in confidence.</span></>}
       intro="Find a credential-verified counselor for yourself, your relationship or your leadership. Counseling is sealed off from every other part of the platform — your privacy is the foundation, not a feature."
       features={[
         { title: "Verified counselors", body: "Every provider’s license, credentials and standing are reviewed by our team before they can be listed." },
@@ -31,7 +31,7 @@ export default function CounselingPage() {
           <ul className="space-y-4 self-center text-sm text-muted">
             {["Submit your license and credentials securely", "Our team verifies your standing", "Select a provider membership", "Publish your profile and set availability"].map((s, i) => (
               <li key={s} className="flex gap-4">
-                <span className="display text-2xl text-jade">{i + 1}</span>
+                <span className="display text-2xl text-counseling">{i + 1}</span>
                 <span className="pt-1.5">{s}</span>
               </li>
             ))}

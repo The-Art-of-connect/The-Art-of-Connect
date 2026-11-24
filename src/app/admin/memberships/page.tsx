@@ -20,7 +20,7 @@ export default async function MembershipsPage() {
     <>
       <PageHeader eyebrow="Revenue" title="Memberships" />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Active" value={active} accent="var(--jade)" />
+        <Stat label="Active" value={active} accent="var(--success)" />
         <Stat label="Trialing" value={trialing} />
         <Stat label="Past due" value={pastDue} accent="var(--danger)" />
         <Stat label="Canceled" value={canceled} />

@@ -42,12 +42,12 @@ export default function HomePage() {
           <Constellation className="w-full opacity-45" />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="absolute h-1/2 w-1/2 rounded-full bg-gold/10 blur-3xl" />
-            <Monogram height={250} priority className="relative h-auto w-[72%] drop-shadow-[0_10px_40px_rgba(216,194,157,0.25)]" />
+            <Monogram height={250} priority className="relative h-auto w-[72%] drop-shadow-[0_10px_40px_rgba(201,173,131,0.25)]" />
           </div>
           <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-5 text-[0.65rem] tracking-[0.25em] uppercase text-faint">
-            <span className="text-sapphire">Business</span>
-            <span className="text-jade">Life</span>
-            <span className="text-rose">Love</span>
+            <span className="text-business">Business</span>
+            <span className="text-counseling">Life</span>
+            <span className="text-relationships">Love</span>
           </div>
         </div>
       </section>
@@ -100,7 +100,7 @@ export default function HomePage() {
           <div>
             <p className="eyebrow">Private by design</p>
             <h2 className="display mt-5 text-4xl sm:text-5xl">
-              Your counseling life <span className="italic text-jade">stays yours.</span>
+              Your counseling life <span className="italic gilded">stays yours.</span>
             </h2>
             <p className="mt-6 leading-relaxed text-muted">
               Counseling lives in its own sealed space. It never touches your dating or business profiles, your matches

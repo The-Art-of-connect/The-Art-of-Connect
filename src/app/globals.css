@@ -1,27 +1,46 @@
 @import "tailwindcss";
 
-/* ── The Art of Connect · design tokens ─────────────────────────────
-   Obsidian & champagne. One accent per experience:
-   Relationships = rose, Business = sapphire, Counseling = jade.     */
+/* ── The Art of Connect · signature business colors ──────────────
+   Onyx #171512 · Champagne Gold #C9AD83 · Ivory #F5EFE6
+   Bronze #725B3D · Burgundy #743F4D
+   Experience accents are light tints of the brand colors so they stay
+   readable on Onyx: Relationships = Burgundy, Business = Champagne Gold,
+   Counseling = Ivory.                                                  */
 :root {
-  --ink: #07070b;
-  --ink-2: #0d0d14;
-  --ink-3: #151521;
-  --line: rgb(255 255 255 / 0.08);
-  --line-strong: rgb(255 255 255 / 0.16);
-  --text: #f4f1ea;
-  --text-muted: rgb(244 241 234 / 0.64);
-  --text-faint: rgb(244 241 234 / 0.42);
-  --gold: #d8c29d;
-  --gold-bright: #f0dfbd;
-  --gold-deep: #a88b5c;
-  --wine: #8f2742;
-  --wine-bright: #c4506d;
-  --rose: #e693a5;
-  --sapphire: #8fb0ff;
-  --jade: #8ad1b8;
-  --danger: #ff8a8a;
-  --success: #8ad1b8;
+  /* Brand colors (exact) */
+  --onyx: #171512;
+  --champagne: #c9ad83;
+  --ivory: #f5efe6;
+  --bronze: #725b3d;
+  --burgundy: #743f4d;
+
+  /* Surfaces & text */
+  --ink: var(--onyx);
+  --ink-2: #1e1b17;
+  --ink-3: #27231e;
+  --line: rgb(245 239 230 / 0.09);
+  --line-strong: rgb(245 239 230 / 0.17);
+  --text: var(--ivory);
+  --text-muted: rgb(245 239 230 / 0.68);
+  --text-faint: rgb(245 239 230 / 0.46);
+
+  /* Gold family */
+  --gold: var(--champagne);
+  --gold-bright: #e4d2b4;
+  --gold-deep: var(--bronze);
+
+  /* Burgundy family */
+  --wine: var(--burgundy);
+  --wine-bright: #a5606f;
+
+  /* Experience accents */
+  --relationships: #c98f9d;
+  --business: var(--champagne);
+  --counseling: var(--ivory);
+
+  /* Functional status colors (not brand colors) */
+  --success: #a9c3a0;
+  --danger: #e39494;
   --radius: 22px;
   color-scheme: dark;
 }
@@ -40,9 +59,15 @@
   --color-gold-deep: var(--gold-deep);
   --color-wine: var(--wine);
   --color-wine-bright: var(--wine-bright);
-  --color-rose: var(--rose);
-  --color-sapphire: var(--sapphire);
-  --color-jade: var(--jade);
+  --color-onyx: var(--onyx);
+  --color-champagne: var(--champagne);
+  --color-ivory: var(--ivory);
+  --color-bronze: var(--bronze);
+  --color-burgundy: var(--burgundy);
+  --color-relationships: var(--relationships);
+  --color-business: var(--business);
+  --color-counseling: var(--counseling);
+  --color-success: var(--success);
   --color-danger: var(--danger);
   --font-display: "Cormorant Garamond Variable", "Cormorant Garamond", ui-serif, Georgia, serif;
   --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, sans-serif;
@@ -64,7 +89,7 @@ body {
   overflow-x: hidden;
 }
 
-::selection { background: rgb(216 194 157 / 0.32); color: var(--text); }
+::selection { background: rgb(201 173 131 / 0.32); color: var(--text); }
 
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
 
@@ -104,7 +129,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(140deg, rgb(240 223 189 / 0.5), transparent 35%, transparent 65%, rgb(240 223 189 / 0.22));
+  background: linear-gradient(140deg, rgb(228 210 180 / 0.5), transparent 35%, transparent 65%, rgb(228 210 180 / 0.22));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -112,7 +137,7 @@ body {
 }
 
 /* Burgundy light-line from the logo */
-.ribbon-line { background: linear-gradient(90deg, transparent, var(--wine) 40%, var(--wine-bright) 85%, rgb(255 190 200 / 0.9)); box-shadow: 0 0 12px rgb(196 80 109 / 0.5); }
+.ribbon-line { background: linear-gradient(90deg, transparent, var(--wine) 40%, var(--wine-bright) 85%, rgb(228 190 198 / 0.9)); box-shadow: 0 0 12px rgb(165 96 111 / 0.5); }
 
 .hairline { height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong), transparent); }
 
@@ -124,10 +149,10 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(40% 35% at 18% 18%, rgb(143 39 66 / 0.22), transparent 70%),
-    radial-gradient(38% 34% at 82% 12%, rgb(143 176 255 / 0.14), transparent 70%),
-    radial-gradient(45% 40% at 55% 62%, rgb(138 209 184 / 0.09), transparent 72%),
-    radial-gradient(60% 50% at 50% 0%, rgb(216 194 157 / 0.08), transparent 70%);
+    radial-gradient(40% 35% at 18% 18%, rgb(116 63 77 / 0.34), transparent 70%),
+    radial-gradient(38% 34% at 82% 12%, rgb(114 91 61 / 0.30), transparent 70%),
+    radial-gradient(45% 40% at 55% 62%, rgb(116 63 77 / 0.14), transparent 72%),
+    radial-gradient(60% 50% at 50% 0%, rgb(201 173 131 / 0.08), transparent 70%);
   filter: blur(10px);
   animation: drift 26s ease-in-out infinite alternate;
 }
@@ -157,13 +182,13 @@ body {
 }
 .btn:active { transform: scale(0.98); }
 .btn-gold {
-  color: #1a140a;
+  color: var(--onyx);
   background: linear-gradient(120deg, var(--gold-bright), var(--gold) 55%, var(--gold-deep));
-  box-shadow: 0 10px 40px -12px rgb(216 194 157 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.5);
+  box-shadow: 0 10px 40px -12px rgb(201 173 131 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.5);
 }
-.btn-gold:hover { box-shadow: 0 14px 50px -10px rgb(216 194 157 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.6); transform: translateY(-1px); }
+.btn-gold:hover { box-shadow: 0 14px 50px -10px rgb(201 173 131 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.6); transform: translateY(-1px); }
 .btn-ghost { color: var(--text); border: 1px solid var(--line-strong); background: rgb(255 255 255 / 0.03); }
-.btn-ghost:hover { border-color: rgb(216 194 157 / 0.5); background: rgb(255 255 255 / 0.06); }
+.btn-ghost:hover { border-color: rgb(201 173 131 / 0.5); background: rgb(255 255 255 / 0.06); }
 .btn-sm { min-height: 38px; padding: 0 1rem; font-size: 0.78rem; }
 .btn[disabled] { opacity: 0.45; pointer-events: none; }
 
@@ -196,9 +221,9 @@ select.field { appearance: none; }
   border: 1px solid var(--line-strong);
   color: var(--text-muted);
 }
-.chip-live { color: var(--success); border-color: rgb(138 209 184 / 0.4); }
-.chip-locked { color: var(--gold); border-color: rgb(216 194 157 / 0.35); }
-.chip-danger { color: var(--danger); border-color: rgb(255 138 138 / 0.35); }
+.chip-live { color: var(--success); border-color: rgb(169 195 160 / 0.4); }
+.chip-locked { color: var(--gold); border-color: rgb(201 173 131 / 0.35); }
+.chip-danger { color: var(--danger); border-color: rgb(227 148 148 / 0.35); }
 
 /* ── Tables (owner portal) ──────────────────────────────────────── */
 .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }

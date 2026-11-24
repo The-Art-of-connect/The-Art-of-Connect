@@ -7,7 +7,7 @@ export default function RelationshipsPage() {
   return (
     <ExperiencePage
       experience="relationships"
-      headline={<>Love, <span className="italic text-rose">with intention.</span></>}
+      headline={<>Love, <span className="italic text-relationships">with intention.</span></>}
       intro="For people who are done with endless swiping. Deep compatibility, curated introductions, and tools that help a promising beginning become a lasting partnership."
       features={[
         { title: "Compatibility assessments", body: "Science-informed assessments of values, attachment, communication and life vision — so introductions begin with real alignment." },
