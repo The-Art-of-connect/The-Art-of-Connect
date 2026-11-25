@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getViewer, hasRole, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -24,7 +25,8 @@ export default async function WellnessCenter() {
   return (
     <>
       <section className="theme-dark relative overflow-hidden rounded-[28px] bg-ink px-6 py-12 text-center sm:px-12">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_60%_at_85%_0%,rgb(116_63_77/0.55),transparent_70%)]" />
+        <Image src="/images/wellness/center.webp" alt="" fill priority sizes="100vw" className="object-cover opacity-40" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
         <p className="eyebrow relative">The Art of Connect</p>
         <h1 className="display relative mt-3 text-4xl text-gold-bright sm:text-6xl">Counseling &amp; Wellness Center</h1>
         <p className="display relative mx-auto mt-3 max-w-xl text-2xl italic text-ivory/85">Professional support for every chapter of your life.</p>
