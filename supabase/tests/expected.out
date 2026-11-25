@@ -280,10 +280,10 @@ t
 ERROR:  The legal audit trail cannot be changed or deleted
 v9-21) A member cannot record acceptance on behalf of another account (expect permission denied):
 ERROR:  permission denied for function record_legal_acceptance_for
-v10-1) Seeded reference data only, no fabricated activity (expect 20|13|18|12|0|0):
-20|13|18|12|0|0
-v10-2) Guests explore industries and features; no public profiles yet (expect 20|18|0):
-20|18|0
+v10-1) Seeded reference data only, no fabricated activity (expect 20|13|23|12|0|0):
+20|13|23|12|0|0
+v10-2) Guests explore industries and features; no public profiles yet (expect 20|23|0):
+20|23|0
 v10-3) Guests cannot read the Connection Board (expect permission denied):
 ERROR:  permission denied for table posts
 v10-4) Free member tier and feature access (expect free|t|f):
@@ -325,3 +325,40 @@ ERROR:  Not permitted
 v10-20) Blocking closes the conversation; further messages are refused (expect blocked, then error):
 blocked
 ERROR:  This conversation is closed
+v11-1) Seeded topics; no webinars are invented (expect 11|0):
+11|0
+v11-2) A free member cannot host (expect error):
+ERROR:  Hosting is available to Professional Society members
+v11-3) A member creates and submits several webinars at the same time (expect 3):
+3
+v11-4) The host cannot approve their own webinar (expect error):
+ERROR:  Only the review team can approve webinars
+v11-5) The owner approves them; they appear publicly without private links (expect 4|f):
+4|f
+v11-6) Guests cannot read join links or registrations (expect permission denied):
+ERROR:  permission denied for table webinar_private
+v11-7) A free member cannot read the join link directly (expect 0):
+0
+v11-8) Joining without registering is refused (expect error):
+ERROR:  Please register first
+v11-9) Registering does not use the allowance (expect 0 of 3):
+0|3
+v11-10) A member cannot mark themselves as attended (expect permission denied):
+ERROR:  permission denied for table webinar_registrations
+v11-11) Joining three webinars uses the allowance; re-joining one does not count twice (expect zoom, 3):
+t
+t
+t
+t
+3
+v11-12) A fourth webinar requires membership; re-joining an attended one still works (expect error, t):
+ERROR:  You have used your complimentary webinars. Professional Society membership includes unlimited eligible webinars.
+t
+v11-13) Feedback is allowed; hosts see counts, not attendee identities (expect 4|0):
+4|0
+v11-14) Editing an approved webinar sends it back for review (expect submitted):
+submitted
+v11-15) The host cannot feature or price a webinar (expect error):
+ERROR:  Only the owner can feature or price webinars
+v11-16) Executives see program metrics (expect 6|1):
+6|1
