@@ -42,10 +42,10 @@ export function AllowanceMeter({ a }: { a: AllowanceView }) {
   );
 }
 
-export function JourneyChat({ initialMode = "life", allowance, available, reason, ownerTest = false }: { initialMode?: Mode; allowance: AllowanceView | null; available: boolean; reason: string; ownerTest?: boolean }) {
+export function JourneyChat({ initialMode = "life", allowance, available, reason, ownerTest = false, initialText = "" }: { initialMode?: Mode; allowance: AllowanceView | null; available: boolean; reason: string; ownerTest?: boolean; initialText?: string }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [meter, setMeter] = useState(allowance);

@@ -21,6 +21,7 @@ export const SITE_PAGES: SearchEntry[] = [
   site("/love", "The Personal Society", "In Love", "Intentional matchmaking for singles and enrichment for couples.", "love dating singles couples relationship match matchmaking partner"),
   site("/professionals", "For professionals", "Professionals", "Counselors, coaches and mentors who serve our members.", "counselor coach mentor therapist provider professional"),
   site("/professionals/apply", "Apply as a professional", "Professionals", "Apply to join our professional network.", "apply application provider credentials"),
+  site("/emotional-intelligence", "The Art of Emotional Intelligence", "The Art of Self", "Understand yourself. Respond with intention.", "emotional intelligence eq self awareness self regulation motivation empathy relationship skills triggers conflict boundaries resilience"),
   site("/legal", "Legal & policies", "Help", "Terms, privacy, cancellation, refunds and community standards.", "terms privacy policy cancel cancellation refund rules community standards safety cookies accessibility legal"),
   site("/sign-in", "Sign in", "Account", "Members and team sign in.", "login log in account member access"),
   site("/forgot-password", "Forgot password", "Account", "Reset your password by email.", "reset password forgot can't log in locked out"),
@@ -31,6 +32,7 @@ export const SITE_PAGES: SearchEntry[] = [
 export const MEMBER_PAGES: SearchEntry[] = [
   member("/app", "Member home", "Your membership", "Your experiences and what’s next.", "home dashboard start"),
   member("/app/know-yourself", "The Art of Knowing Yourself", "Who Am I?", "Before you connect with the world, connect with yourself.", "who am i self discovery know yourself values beliefs purpose identity personal journey"),
+  member("/app/know-yourself/emotional-intelligence", "My Emotional Intelligence Profile", "Who Am I?", "Strengths, triggers, communication, conflict and growth milestones.", "emotional intelligence profile triggers conflict strengths growth"),
   member("/app/know-yourself/love-languages", "Love Language Profile", "Who Am I?", "How you give and receive love — physical touch, words, quality time, acts of service and gifts.", "love languages love language physical touch words of affirmation quality time acts of service receiving gifts affection"),
   member("/app/relationships/love-languages", "Love languages together", "In Love", "For couples and mutual matches: how you each feel loved.", "love languages partner couples matches compatibility"),
   member("/app/know-yourself/boundaries", "Boundaries & non-negotiables", "Who Am I?", "What you will do, what you won’t, and how to say it respectfully.", "boundaries standards non negotiables respect dating marriage work"),
