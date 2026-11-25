@@ -23,6 +23,8 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - name: Turnstile verification against Cloudflare (official test keys)
+        run: TURNSTILE_LIVE_TESTS=1 node --test tests/turnstile.test.ts
       - run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"

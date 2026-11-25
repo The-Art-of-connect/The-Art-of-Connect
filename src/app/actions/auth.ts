@@ -9,7 +9,7 @@ import { ATTR_COOKIE, REF_COOKIE, parseAttribution } from "@/lib/attribution";
 import { env } from "@/lib/env";
 import { allow } from "@/lib/ratelimit";
 import { isDisposableEmail, logSecurityEvent } from "@/lib/security";
-import { verifyTurnstile } from "@/lib/turnstile";
+import { BOT_CHECK_MESSAGE, verifyTurnstile } from "@/lib/turnstile";
 
 export type AuthState = { error?: string; notice?: string } | null;
 
@@ -26,14 +26,11 @@ export async function signIn(_prev: AuthState, form: FormData): Promise<AuthStat
   if (!parsed.success) return { error: "Enter your email and password." };
   const email = parsed.data.email.toLowerCase();
 
-  if (!(await verifyTurnstile(form)).ok) {
-    await logSecurityEvent("bot_check_failed", { email, details: { form: "sign-in" } });
-    return { error: "Please complete the security check and try again." };
-  }
   if (!(await allow("sign-in", 10, 900))) {
     await logSecurityEvent("rate_limited", { email, details: { form: "sign-in" } });
     return { error: "Too many attempts. Please wait a few minutes and try again." };
   }
+  if (!(await verifyTurnstile(form, "sign_in", email)).ok) return { error: BOT_CHECK_MESSAGE };
   const supabase = await createClient();
   if (!supabase) return { error: "Sign-in is not available yet." };
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -94,10 +91,12 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
   const d = parsed.data;
-  if (!(await verifyTurnstile(form)).ok) {
-    await logSecurityEvent("bot_check_failed", { email: d.email, details: { form: "join" } });
-    return { error: "Please complete the security check and try again." };
+  if (!(await allow("sign-up", 5, 3600))) {
+    await logSecurityEvent("rate_limited", { email: d.email, details: { form: "sign-up" } });
+    return { error: "Too many attempts. Please try again later." };
   }
+  if (!(await verifyTurnstile(form, "sign_up", d.email)).ok) return { error: BOT_CHECK_MESSAGE };
+  await logSecurityEvent("signup_attempt", { email: d.email });
   if (isDisposableEmail(d.email)) {
     await logSecurityEvent("signup_blocked", { email: d.email, details: { reason: "disposable_email" } });
     return { error: "Please use a permanent email address." };
@@ -110,7 +109,6 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
     return { error: `The Art of Connect is exclusively for adults ${minimum_member_age} and older.` };
   }
 
-  if (!(await allow("sign-up", 5, 3600))) return { error: "Too many attempts. Please try again later." };
   const supabase = await createClient();
   if (!supabase) return { error: "Registration is not available yet." };
   const jar = await cookies();
@@ -149,14 +147,11 @@ export async function requestPasswordReset(_prev: AuthState, form: FormData): Pr
   const email = z.email().safeParse(String(form.get("email") ?? "").trim().toLowerCase());
   const generic = { notice: "If an account exists for that email, a secure reset link is on its way. It expires shortly." };
   if (!email.success) return { error: "Please enter a valid email." };
-  if (!(await verifyTurnstile(form)).ok) {
-    await logSecurityEvent("bot_check_failed", { email: email.data, details: { form: "password-reset" } });
-    return { error: "Please complete the security check and try again." };
-  }
   if (!(await allow("password-reset", 3, 3600))) {
     await logSecurityEvent("rate_limited", { email: email.data, details: { form: "password-reset" } });
     return generic;
   }
+  if (!(await verifyTurnstile(form, "password_reset", email.data)).ok) return { error: BOT_CHECK_MESSAGE };
   await logSecurityEvent("password_reset_requested", { email: email.data });
   const supabase = await createClient();
   if (supabase) await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${env.siteUrl}/auth/callback?next=/reset-password` });

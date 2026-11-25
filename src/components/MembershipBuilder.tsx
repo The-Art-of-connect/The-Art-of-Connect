@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
 import { joinWaitlist, validatePromo, type WaitlistState } from "@/app/actions/waitlist";
 import { EXPERIENCES, type Experience } from "@/lib/experiences";
 import {
@@ -340,6 +341,7 @@ export function MembershipBuilder({
 
 function NotifyForm({ sel, loveStatus, tierSlug }: { sel: Selection; loveStatus: "single" | "couple" | null; tierSlug: string | null }) {
   const [state, action, pending] = useActionState<WaitlistState, FormData>(joinWaitlist, null);
+  const [verified, setVerified] = useTurnstileReady();
   if (state?.ok) return <p className="glass mt-5 p-5 text-center text-sm" role="status">{state.message}</p>;
   return (
     <form action={action} className="glass mt-5 space-y-3 p-6">
@@ -354,8 +356,9 @@ function NotifyForm({ sel, loveStatus, tierSlug }: { sel: Selection; loveStatus:
       <input name="fullName" autoComplete="name" placeholder="Your name" className="field" aria-label="Your name" />
       <input name="email" type="email" required autoComplete="email" placeholder="you@domain.com" className="field" aria-label="Email" />
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+      <Turnstile action="waitlist" resetSignal={state} onReady={setVerified} />
       {state && !state.ok && <p className="text-sm text-danger" role="alert">{state.message}</p>}
-      <button className="btn btn-gold w-full" disabled={pending}>{pending ? "Saving…" : "Notify me"}</button>
+      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Saving…" : verified ? "Notify me" : "Verifying…"}</button>
     </form>
   );
 }

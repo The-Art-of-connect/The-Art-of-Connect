@@ -3,11 +3,13 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { joinWaitlist, type WaitlistState } from "@/app/actions/waitlist";
 import { EXPERIENCES, EXPERIENCE_ORDER, type Experience } from "@/lib/experiences";
+import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
 
 /** Optional pre-launch "notify me when enrollment opens" form. */
 export function WaitlistForm() {
   const [state, action, pending] = useActionState<WaitlistState, FormData>(joinWaitlist, null);
   const [chosen, setChosen] = useState<Experience[]>([]);
+  const [verified, setVerified] = useTurnstileReady();
   const love = chosen.includes("relationships");
 
   if (state?.ok) {
@@ -62,8 +64,9 @@ export function WaitlistForm() {
         </fieldset>
       )}
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+      <Turnstile action="waitlist" resetSignal={state} onReady={setVerified} />
       {state && !state.ok && <p className="text-sm text-danger" role="alert">{state.message}</p>}
-      <button className="btn btn-gold w-full sm:w-auto" disabled={pending}>{pending ? "Saving…" : "Notify me"}</button>
+      <button className="btn btn-gold w-full sm:w-auto" disabled={pending || !verified}>{pending ? "Saving…" : verified ? "Notify me" : "Verifying…"}</button>
       <p className="text-sm text-muted">
         Are you a counselor, coach or mentor? <Link href="/professionals" className="text-gold underline underline-offset-4">Visit the professional pathway</Link>.
       </p>

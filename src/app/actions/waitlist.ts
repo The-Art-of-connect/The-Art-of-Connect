@@ -6,6 +6,8 @@ import { ATTR_COOKIE, REF_COOKIE, parseAttribution } from "@/lib/attribution";
 import { checkPromotion } from "@/lib/catalogue";
 import type { Promotion } from "@/lib/pricing";
 import { allow } from "@/lib/ratelimit";
+import { logSecurityEvent } from "@/lib/security";
+import { BOT_CHECK_MESSAGE, verifyTurnstile } from "@/lib/turnstile";
 
 const schema = z.object({
   email: z.email().max(254),
@@ -41,7 +43,11 @@ export async function joinWaitlist(_prev: WaitlistState, form: FormData): Promis
   const d = parsed.data;
   if (d.website) return { ok: true, message: "Thank you." };
 
-  if (!(await allow("waitlist", 5, 3600))) return { ok: false, message: "Too many attempts. Please try again later." };
+  if (!(await allow("waitlist", 5, 3600))) {
+    await logSecurityEvent("rate_limited", { email: d.email, details: { form: "waitlist" } });
+    return { ok: false, message: "Too many attempts. Please try again later." };
+  }
+  if (!(await verifyTurnstile(form, "waitlist", d.email)).ok) return { ok: false, message: BOT_CHECK_MESSAGE };
   const supabase = await createClient();
   if (!supabase) return { ok: false, message: "Enrollment opens soon. Please write to info@theartofconnect.com." };
 
