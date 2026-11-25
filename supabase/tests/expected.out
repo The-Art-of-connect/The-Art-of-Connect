@@ -625,3 +625,9 @@ v24-3) A member cannot add a voice preview (expect error):
 ERROR:  permission denied for table journey_voice_previews
 v24-4) Another member cannot see those preferences (expect 0):
 0
+v25-1) A member sees their own primary society (expect singles):
+singles
+v25-2) A member cannot switch themselves to another society (expect error):
+ERROR:  Not permitted to change these account fields
+v25-3) Even the server cannot store an unknown society (expect error):
+ERROR:  new row for relation "profiles" violates check constraint "profiles_primary_society_check"

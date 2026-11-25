@@ -42,7 +42,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   if (!auth.user) return previewViewer();
 
   const [{ data: profile }, { data: roles }, { data: access }] = await Promise.all([
-    supabase.from("profiles").select("display_name, status, account_type, age_eligible, referral_code").eq("id", auth.user.id).maybeSingle(),
+    supabase.from("profiles").select("display_name, status, account_type, age_eligible, referral_code, primary_society").eq("id", auth.user.id).maybeSingle(),
     supabase.from("staff_roles").select("role").eq("user_id", auth.user.id),
     supabase.from("experience_access").select("experience, status, expires_at").eq("user_id", auth.user.id),
   ]);
@@ -70,6 +70,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     ageEligible: Boolean(profile?.age_eligible),
     referralCode: profile?.referral_code ?? null,
     roles: roleList,
+    society: (profile?.primary_society as Society | null) ?? null,
     experiences: (access ?? [])
       .filter((a) => a.status === "active" && (!a.expires_at || new Date(a.expires_at).getTime() > now))
       .map((a) => a.experience as Experience),
