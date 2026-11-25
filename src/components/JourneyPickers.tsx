@@ -29,7 +29,9 @@ const VOICES: { id: "warm" | "calm" | "confident" | "soft" | "friendly"; name: s
 
 type Status = "idle" | "connecting" | "live" | "paused" | "ended";
 
-export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, lesson = null, discovery = null, mode = "life" }: {
+export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, lesson = null, discovery = null, mode = "life", voiceSummary = null }: {
+  /** When set, the member's saved Customize Your Journey choice is shown instead of the legacy style picker. */
+  voiceSummary?: string | null;
   minutes: { remaining: number; total: number } | null;
   /** A curriculum lesson ("section/lesson") or discovery category this live session is about. */
   lesson?: string | null;
@@ -144,8 +146,9 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
       <p className="display mt-8 text-3xl text-gold-bright">{live ? (status === "paused" ? "Paused" : "Journey is listening") : "A space to be heard. A place to grow."}</p>
       {left !== null && <p className="mt-2 text-sm text-gold">{mmss(left)} remaining in this conversation</p>}
 
-      {!live && (
-        <fieldset className="mx-auto mt-8 max-w-md rounded-2xl border border-gold/30 p-5 text-left">
+      {!live && (voiceSummary ? (
+          <p className="mt-8 text-sm text-ivory/80">Speaking as <span className="font-semibold text-gold-bright">{voiceSummary}</span> · <a href="/app/journey/customize" className="text-gold underline-offset-2 hover:underline">Customize your Journey</a></p>
+        ) : (<fieldset className="mx-auto mt-8 max-w-md rounded-2xl border border-gold/30 p-5 text-left">
           <legend className="px-2 text-sm text-gold">Choose your preferred voice</legend>
           {VOICES.map((v) => (
             <label key={v.id} className="flex cursor-pointer items-center justify-between gap-3 py-2">
@@ -157,8 +160,7 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
             </label>
           ))}
           {preview && <p className="mt-3 rounded-xl bg-white/5 px-3 py-2 text-sm italic text-muted">&ldquo;{preview}&rdquo;<span className="mt-1 block text-[0.65rem] not-italic text-faint">This preview uses your device&rsquo;s voice. In conversation, Journey speaks in the AI-generated voice you choose.</span></p>}
-        </fieldset>
-      )}
+        </fieldset>))}
 
       {!live ? (
         <>

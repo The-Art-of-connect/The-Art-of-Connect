@@ -1,12 +1,13 @@
 import "server-only";
 import { teachingGuidance } from "@/lib/curricula";
+import { cleanPrefs, DEFAULT_PREFS, paceSpeed, styleInstructions } from "@/lib/journey-customize";
 import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
 import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { serverSecret } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildJourneyInstructions, journeyAccessFor, modeAllowed, ownerTestAccess, type JourneyMode } from "@/lib/journey";
+import { buildJourneyInstructions, effectiveMode, journeyAccessFor, modeAllowed, ownerTestAccess, type JourneyMode } from "@/lib/journey";
 import { loadSettings, membershipFor } from "@/lib/journey-server";
 
 /**
@@ -47,7 +48,10 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     const m = await membershipFor(db, viewer.id);
     const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
     if (!m || level === "none") return { ok: false, message: "Journey is a benefit of paid memberships." };
-    if (!modeAllowed(input.mode, level, m.membership)) return { ok: false, message: "This Journey experience isn't part of your membership." };
+    // Live voice is included in every paid plan: fall back to an experience the plan includes.
+    const em = input.mode === "concierge" ? (modeAllowed("concierge", level, m.membership) ? "concierge" : null) : effectiveMode(input.mode, level, m.membership);
+    if (!em) return { ok: false, message: "This Journey experience isn't part of your membership." };
+    input = { ...input, mode: em };
     const launch = await getLaunchState();
     if (!launch.payments_live) return { ok: false, message: "Talk to Journey opens soon." };
     access = level; holder = m.holderId; pkg = m.membership.packageSlug;
@@ -76,6 +80,9 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     const { data: tc } = await db.from("journey_training_categories").select("learning_objectives").eq("key", dc.key).maybeSingle();
     topic += `\n\n${discoveryInstructions(dc, tc?.learning_objectives ?? [], FOUNDER_PRINCIPLES[dc.key] ?? [], false)}\nThis discovery is spoken aloud: ask one short question at a time and wait.`;
   }
+  const { data: prefRow } = await db.from("journey_voice_preferences").select("presentation, voice, age_style, language, accent, personality, pace, avatar").eq("user_id", viewer.id).maybeSingle();
+  const prefs = prefRow ? cleanPrefs({ ...prefRow, age: prefRow.age_style }) : { ...DEFAULT_PREFS, voice: VOICE_STYLES[input.style].voice };
+  topic += `\n\n${styleInstructions(prefs, true)}`;
   const instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: null, disabledCapabilities: cfg.disabled }) + topic
     + "\n\n# Voice conversation\nYou are speaking aloud. Begin by briefly saying you are Journey, an AI assistant with an AI-generated voice. Keep replies warm, natural and concise (a few sentences), and pause to let the member speak.";
   const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
@@ -83,7 +90,7 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "OpenAI-Safety-Identifier": await hashId(viewer.id) },
     body: JSON.stringify({
       expires_after: { anchor: "created_at", seconds: 60 },
-      session: { type: "realtime", model: cfg.voice.model, instructions, audio: { output: { voice: VOICE_STYLES[input.style].voice } }, max_output_tokens: 1200 },
+      session: { type: "realtime", model: cfg.voice.model, instructions, audio: { output: { voice: prefs.voice, speed: paceSpeed(prefs.pace) } }, max_output_tokens: 1200 },
     }),
     signal: AbortSignal.timeout(15_000),
   }).catch(() => null);

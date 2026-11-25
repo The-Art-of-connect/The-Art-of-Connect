@@ -7,6 +7,7 @@ import { VoiceStudio } from "@/components/JourneyPickers";
 import { LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
 import { saveVoicePrefs } from "@/app/actions/journey-member";
 import { CURRICULA } from "@/lib/curricula";
+import { voiceById } from "@/lib/journey-customize";
 import { discoveryCategory, discoveryMode } from "@/lib/journey-discovery";
 
 export const metadata = { title: "Talk to Journey" };
@@ -25,7 +26,7 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
   const supabase = await createClient();
   const db = createAdminClient();
   const { data: prefs } = supabase && !isInsidePreview(viewer)
-    ? await supabase.from("journey_voice_preferences").select("voice_style, save_transcripts").eq("user_id", viewer.id).maybeSingle()
+    ? await supabase.from("journey_voice_preferences").select("voice_style, save_transcripts, voice, presentation").eq("user_id", viewer.id).maybeSingle()
     : { data: null };
   const { data: s } = db ? await db.from("journey_settings").select("voice_enabled, voice_model, voice_cents_per_minute").maybeSingle() : { data: null };
   let minutes: { remaining: number; total: number } | null = null;
@@ -53,19 +54,20 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
       <div className="mt-10">
         <VoiceStudio minutes={minutes} available={available} reason={reason} ownerTest={owner && status.access === "staff"}
           initialStyle={(prefs?.voice_style as "warm") ?? "warm"} initialTranscripts={prefs?.save_transcripts ?? false} onSavePrefs={saveVoicePrefs}
+          voiceSummary={prefs?.voice ? `${voiceById(prefs.voice)?.name ?? "Journey"} (${prefs.presentation} voice)` : null}
           lesson={lesson} discovery={disc?.key ?? null} mode={disc ? discoveryMode(disc.key) : "life"} />
       </div>
       <LuxSection title="Designed around you">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <LuxCard title="Speak naturally" body="Interrupt, pause or change direction anytime — Journey follows the conversation as a thoughtful listener would." />
-          <LuxCard title="Your voice, your choice" body="Choose from approved voices and preview them. Journey remembers your choice and uses it in every live session across The Art of Connect: lessons, discovery sessions and conversations." />
+          <LuxCard title="Your voice, your choice" body="Customize Your Journey: voice, language, accent, pace and personality. Journey uses your choices in every live session across The Art of Connect." />
           <LuxCard title="Always in control" body="Mute, pause or end at any moment. Conversations close automatically after a quiet period or when your minutes are used." />
           <LuxCard title="Optional transcripts" body="Keep a private written record of what Journey said, or don't — your choice each time." />
           <LuxCard title="Clear minutes" body="Your remaining voice minutes are always visible. Nothing is ever charged automatically unless you turn on Auto-Reload." />
           <LuxCard title="AI voice, clearly disclosed" body="Journey's voice is AI-generated. Journey is an AI assistant, not a person or a therapist." />
         </div>
       </LuxSection>
-      <p className="mt-10 text-center"><Link href="/app/journey#chat" className="btn btn-ghost">Prefer to write? Chat with Journey</Link></p>
+      <p className="mt-10 flex flex-wrap justify-center gap-3"><Link href="/app/journey/customize" className="btn btn-gold">Customize Your Journey</Link><Link href="/app/journey#chat" className="btn btn-ghost">Prefer to write? Chat with Journey</Link></p>
       <SafetyFooter />
     </>
   );

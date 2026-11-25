@@ -28,3 +28,4 @@
 20261219000001_curriculum_versions.sql	to_regclass('public.curriculum_versions') is not null
 20261220000001_journey_training.sql	to_regclass('public.journey_training_entries') is not null
 20261221000001_discovery_sessions.sql	to_regclass('public.discovery_analyses') is not null
+20261222000001_customize_journey.sql	to_regclass('public.journey_voice_previews') is not null

@@ -61,6 +61,7 @@ export const NAV: NavGroup[] = [
     links: [
       { href: "/app/journey", label: "Talk with Journey", access: "paid" },
       { href: "/app/journey/voice", label: "Journey Live", note: "Voice conversations", access: "paid" },
+      { href: "/app/journey/customize", label: "Customize Your Journey", note: "Voice, language and style", access: "paid" },
       { href: "/app/journey/discover", label: "Discovery Sessions", note: "Adaptive questions, just for you", access: "paid" },
       { href: "/app/journey/daily", label: "My Daily Journey", access: "member" },
       { href: "/app/journey/library", label: "The Journey Library", access: "member" },
@@ -86,7 +87,7 @@ export const PROFILE_LINKS: NavLink[] = [
   { href: "/app/know-yourself/portfolio", label: "My Personal Discovery Portfolio" },
   { href: "/app/membership", label: "Membership & billing" },
   { href: "/app/journey/plus", label: "My Journey allowance" },
-  { href: "/app/journey/voice", label: "My Journey voice" },
+  { href: "/app/journey/customize", label: "Customize Your Journey" },
   { href: "/app/journey/check-ins", label: "Notifications & check-ins" },
   { href: "/app/verify", label: "Identity verification" },
   { href: "/app/safety", label: "Privacy & safety" },
