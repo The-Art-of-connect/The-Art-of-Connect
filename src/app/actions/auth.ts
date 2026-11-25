@@ -153,6 +153,16 @@ export async function requestPasswordReset(_prev: AuthState, form: FormData): Pr
   }
   if (!(await verifyTurnstile(form, "password_reset", email.data)).ok) return { error: BOT_CHECK_MESSAGE };
   await logSecurityEvent("password_reset_requested", { email: email.data });
+  // Branded link sent through our own email service (Resend). Nothing is sent
+  // — and the response is identical — when no account exists.
+  const { isEmailConfigured, sendEmail } = await import("@/lib/email");
+  if (isEmailConfigured()) {
+    const { createAccountLink } = await import("@/lib/account-links");
+    const { templates } = await import("@/lib/email-templates");
+    const made = await createAccountLink(email.data, "recovery");
+    if (made) await sendEmail(email.data, templates.passwordReset({ link: made.link }), { category: "account" });
+    return generic;
+  }
   const supabase = await createClient();
   if (supabase) await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${env.siteUrl}/auth/callback?next=/reset-password` });
   return generic;
@@ -169,5 +179,25 @@ export async function setNewPassword(_prev: AuthState, form: FormData): Promise<
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: "Your password could not be changed. Please request a new link." };
   await logSecurityEvent("password_changed", { userId: data.user.id, email: data.user.email ?? undefined });
+  // Team members continue to the Owner Portal, which requires two-step verification first.
+  const { data: staff } = await supabase.from("staff_roles").select("role").eq("user_id", data.user.id).limit(1);
+  if (staff?.length) redirect("/admin");
   return { notice: "Your password has been changed. You can now sign in." };
+}
+
+/** Completes a one-time account link (password reset or team invitation) after the person presses Continue. */
+export async function confirmAccountLink(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const parsed = z
+    .object({ type: z.enum(["recovery", "invite"]), tokenHash: z.string().min(10).max(500) })
+    .safeParse({ type: form.get("type"), tokenHash: form.get("token_hash") });
+  if (!parsed.success) return { error: "This link is incomplete. Please request a new one." };
+  if (!(await allow("account-link", 10, 900))) return { error: "Too many attempts. Please wait a few minutes." };
+  const supabase = await createClient();
+  if (!supabase) return { error: "Not available." };
+  const { data, error } = await supabase.auth.verifyOtp({ type: parsed.data.type, token_hash: parsed.data.tokenHash });
+  if (error || !data.user) {
+    await logSecurityEvent("login_failed", { details: { reason: "expired_or_used_link", form: parsed.data.type } });
+    return { error: "This link has expired or was already used. Please request a new one." };
+  }
+  redirect(parsed.data.type === "invite" ? "/reset-password?welcome=1" : "/reset-password");
 }

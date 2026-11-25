@@ -139,6 +139,22 @@ export const templates = {
             : [`Hello ${first(name)}, thank you for your interest. After careful review, we’re unable to approve your application at this time.`],
       action: decision === "approved" ? { label: "Continue", url: `${SITE}/app` } : undefined,
     })),
+  passwordReset: (f: { name?: string | null; link: string }) =>
+    t(f, ({ name, link }) => ({
+      subject: "Reset your password — The Art of Connect",
+      preheader: "Your secure link to choose a new password.",
+      heading: "Reset your password.",
+      paragraphs: [`Hello ${first(name)}, we received a request to reset your password. Use the secure link below — it works once and expires within the hour.`, "If you didn’t ask for this, you can ignore this email; your password stays the same."],
+      action: { label: "Choose a new password", url: link },
+    })),
+  staffInvitation: (f: { roles: string; link: string }) =>
+    t(f, ({ roles, link }) => ({
+      subject: "You’re invited to The Art of Connect team",
+      preheader: "Set your password and secure your Owner Portal access.",
+      heading: "Welcome to the team.",
+      paragraphs: [`You’ve been invited to The Art of Connect Owner Portal with these permissions: ${roles}.`, "Use the secure link below to choose your password. You’ll then set up two-step verification with an authenticator app — it’s required for every team member. The link works once and expires within the hour."],
+      action: { label: "Accept invitation", url: link },
+    })),
   ownerAlert: (f: { title: string; summary: string; portalPath: string }) =>
     t(f, ({ title, summary, portalPath }) => ({
       subject: `[Owner alert] ${title}`,
