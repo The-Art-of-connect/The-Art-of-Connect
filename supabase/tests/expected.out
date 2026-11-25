@@ -233,10 +233,10 @@ ERROR:  The financial audit trail cannot be changed or deleted
 ERROR:  The financial audit trail cannot be changed or deleted
 v8-12) Team permission changes are logged (expect INSERT):
 INSERT
-v9-1) Seeded: 19 documents, all drafts, 15 requirements, 30 decisions (expect 19|19|0|15|30):
-19|19|0|15|30
-v9-2) Public sees titles but no draft text, nothing in effect (expect 19|0|t):
-19|0|t
+v9-1) Seeded: 20 documents, all drafts, 15 requirements, 30 decisions (expect 20|20|0|15|30):
+20|20|0|15|30
+v9-2) Public sees titles but no draft text, nothing in effect (expect 20|0|t):
+20|0|t
 v9-3) Anonymous reads draft versions directly (expect permission denied):
 ERROR:  permission denied for table legal_document_versions
 v9-4) A member cannot read drafts or the compliance checklist (expect 0|0):
@@ -467,3 +467,40 @@ v13-16) Partner and owner cannot read another member's answers (expect 0, then 0
 0
 v13-17) No one can write answers for someone else (expect error):
 ERROR:  new row violates row-level security policy for table "onboarding_answers"
+v14-1) A 25-year-old cannot be shown in singles matchmaking (expect error):
+ERROR:  The Personal Society singles experience is for members 30 and older.
+v14-2) Auto-Reload: a member cannot switch it on themselves (expect error then 0):
+ERROR:  permission denied for table journey_auto_reload
+0
+v14-3) A member cannot grant themselves purchased access or mark a purchase paid (expect error, error):
+ERROR:  permission denied for function journey_grant_purchase
+ERROR:  permission denied for table journey_purchases
+v14-4) Memory is private: A saves two memories and a goal (expect 2|1):
+2|1
+v14-5) A invites B, a mutually accepted connection, to an Exclusive Connection (expect t):
+t
+v14-6) B sees no memories of A; B accepts; both profiles paused; A's other connection closed; C notified without names (expect 0|accepted):
+0|accepted
+00000000-0000-0000-0000-000000000061=false,00000000-0000-0000-0000-000000000062=false
+closed
+1|t
+v14-7) Either partner can end it alone; profiles stay paused until reactivated (expect ended|f):
+ended
+f
+v14-8) C files an appeal and sees only their own (expect 1):
+1
+v14-9) C cannot mark their own appeal reversed (expect 0 updated):
+0
+v14-10) Members cannot see the development tracker, session prices before publishing, or evaluation scenarios (expect 0|0|0):
+0|0|0
+v14-11) The owner sees the tracker, sessions and 13 scenarios, but no member memories, goals or voice transcripts (expect t|4|13|0|0|0):
+t|4|13|0|0|0
+v14-12) Draft library content stays hidden from members; approved content appears (expect 0 then 1):
+0
+1
+v14-13) The server grants purchased messages only once, after payment (expect t, f, then 25):
+t
+f
+25
+v14-14) Auto-Reload is refused while live payments are off, whatever the member chose (expect payments_off):
+payments_off

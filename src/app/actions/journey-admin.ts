@@ -27,7 +27,8 @@ export async function setJourneySwitch(_p: ActionResult, f: FormData): Promise<A
   const viewer = await requireStaff(["owner"]);
   const key = String(f.get("key"));
   const on = f.get("on") === "true";
-  if (!["enabled", "paid_usage_authorized", "owner_testing_enabled", "message_packages_published", "attachments_enabled"].includes(key)) return fail("Unknown switch.");
+  if (!["enabled", "paid_usage_authorized", "owner_testing_enabled", "message_packages_published", "attachments_enabled", "voice_enabled", "memory_enabled", "sessions_published"].includes(key)) return fail("Unknown switch.");
+  if (on && key === "sessions_published" && f.get("confirm") !== "PUBLISH") return fail("Type PUBLISH to show Private Session prices to members.");
   if (on && key === "paid_usage_authorized" && f.get("confirm") !== "AUTHORIZE") return fail("Type AUTHORIZE to allow billable AI usage.");
   if (on && key === "message_packages_published" && f.get("confirm") !== "PUBLISH") return fail("Type PUBLISH to show package prices to members.");
   const supabase = (await createClient())!;
@@ -79,6 +80,7 @@ export async function saveTierLimit(_p: ActionResult, f: FormData): Promise<Acti
     monthly_messages: int(f.get("monthly")), daily_messages: int(f.get("daily")),
     member_monthly_limit_cents: cents(f.get("memberCap")), tier_monthly_limit_cents: cents(f.get("tierCap")),
     max_output_tokens: int(f.get("maxOutput")) ?? 700, model: String(f.get("model") ?? "") || null,
+    monthly_voice_minutes: int(f.get("voiceMinutes")),
   };
   if (Object.values(row).some((x) => typeof x === "number" && Number.isNaN(x))) return fail("Check the numbers.");
   const supabase = (await createClient())!;
@@ -148,4 +150,73 @@ export async function saveExample(_p: ActionResult, f: FormData): Promise<Action
   if (error) return fail("Not saved.");
   await done("journey.example", parsed.data.mode);
   return ok("Example conversation saved.");
+}
+
+export async function saveVoiceSettings(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const row = {
+    voice_model: String(f.get("voiceModel") ?? "").trim() || null,
+    voice_cents_per_minute: cents(f.get("voiceRate")),
+    voice_inactivity_seconds: int(f.get("inactivity")) ?? 120,
+    voice_max_session_minutes: int(f.get("maxMinutes")) ?? 30,
+    auto_reload_max_per_day: int(f.get("reloadDay")) ?? 3,
+    auto_reload_max_per_month: int(f.get("reloadMonth")) ?? 10,
+  };
+  if (Object.values(row).some((x) => typeof x === "number" && Number.isNaN(x))) return fail("Check the numbers.");
+  if (row.voice_model && !/^[A-Za-z0-9._:-]{2,80}$/.test(row.voice_model)) return fail("Enter the realtime model name exactly as OpenAI lists it.");
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("journey_settings").update({ ...row, updated_by: viewer.id }).eq("id", true);
+  if (error) return fail("One of the values is outside the allowed range.");
+  await done("journey.voice_settings", "settings", row);
+  return ok("Voice and Auto-Reload safeguards saved.");
+}
+
+export async function saveSessionProduct(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  await requireStaff(["owner", "finance"]);
+  const slug = String(f.get("slug"));
+  const price = cents(f.get("price"));
+  const max = int(f.get("maxMessages"));
+  if (Number.isNaN(price) || Number.isNaN(max)) return fail("Check the price and message limit.");
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("journey_session_products").update({ price_cents: price === null ? null : Math.round(price), max_messages: max ?? 40, is_active: f.get("active") === "on" }).eq("slug", slug);
+  if (error) return fail("Not saved.");
+  await done("journey.session_product", slug, { price, max });
+  return ok("Saved.");
+}
+
+export async function saveEvalRun(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner", "executive"]);
+  const parsed = z.object({ scenario: z.uuid(), reply: z.string().max(20000), rating: z.coerce.number().int().min(1).max(5), notes: z.string().max(2000).optional() })
+    .safeParse({ scenario: f.get("scenario"), reply: f.get("reply"), rating: f.get("rating"), notes: String(f.get("notes") ?? "") || undefined });
+  if (!parsed.success) return fail("Run the scenario and choose a rating.");
+  const supabase = (await createClient())!;
+  const { data: v } = await supabase.from("journey_instruction_versions").select("version").eq("status", "published").maybeSingle();
+  const { error } = await supabase.from("journey_eval_runs").insert({ scenario_id: parsed.data.scenario, reply: parsed.data.reply, rating: parsed.data.rating, notes: parsed.data.notes ?? null, instruction_version: v?.version ?? null, created_by: viewer.id });
+  if (error) return fail("Not saved.");
+  revalidatePath("/admin/journey/evaluations");
+  return ok("Rating saved.");
+}
+
+export async function saveTrackerItem(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner", "executive"]);
+  const key = String(f.get("key"));
+  const status = String(f.get("status"));
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("dev_tracker").update({ status, next_step: String(f.get("next_step") ?? "").slice(0, 500) || null, updated_by: viewer.id, updated_at: new Date().toISOString() }).eq("key", key);
+  if (error) return fail("Not saved.");
+  revalidatePath("/admin/development");
+  return ok("Updated.");
+}
+
+export async function decideAppeal(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner", "admin", "moderator"]);
+  const id = z.uuid().safeParse(f.get("id"));
+  const status = z.enum(["reviewing", "upheld", "reversed"]).safeParse(f.get("status"));
+  if (!id.success || !status.success) return fail("Choose a decision.");
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("account_appeals").update({ status: status.data, reviewer_id: viewer.id, reviewer_note: String(f.get("note") ?? "").slice(0, 2000) || null, decided_at: status.data === "reviewing" ? null : new Date().toISOString() }).eq("id", id.data);
+  if (error) return fail("Not saved.");
+  await audit(`appeal.${status.data}`, "account_appeals", id.data);
+  revalidatePath("/admin/safety");
+  return ok("Saved.");
 }

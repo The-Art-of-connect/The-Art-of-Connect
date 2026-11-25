@@ -3,13 +3,13 @@
 reset role;
 reset request.jwt.claim.sub;
 
-\echo 'v9-1) Seeded: 19 documents, all drafts, 15 requirements, 30 decisions (expect 19|19|0|15|30):'
+\echo 'v9-1) Seeded: 20 documents, all drafts, 15 requirements, 30 decisions (expect 20|20|0|15|30):'
 select (select count(*) from public.legal_documents), (select count(*) from public.legal_document_versions where status = 'draft'),
        (select count(*) from public.legal_document_versions where status <> 'draft'),
        (select count(*) from public.legal_compliance_items where kind = 'requirement'), (select count(*) from public.legal_compliance_items where kind = 'decision');
 
 set role anon;
-\echo 'v9-2) Public sees titles but no draft text, nothing in effect (expect 19|0|t):'
+\echo 'v9-2) Public sees titles but no draft text, nothing in effect (expect 20|0|t):'
 select jsonb_array_length(public.get_public_legal()),
        (select count(*) from jsonb_array_elements(public.get_public_legal()) e where (e->>'in_effect')::boolean),
        (public.get_public_legal('terms-of-service')->0->>'body') is null;

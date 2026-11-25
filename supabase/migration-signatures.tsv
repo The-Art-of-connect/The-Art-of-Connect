@@ -1,0 +1,22 @@
+# migration file	SQL that is true once the migration has been applied (read-only)
+20261124000001_foundation.sql	to_regtype('public.staff_role') is not null
+20261125000001_experiences_v2.sql	to_regclass('public.consents') is not null
+20261126000001_membership_enrollment.sql	to_regclass('public.member_private') is not null
+20261127000001_trust_safety_launch.sql	to_regclass('public.identity_verifications') is not null
+20261128000001_explicit_api_grants.sql	has_table_privilege('anon', 'public.platform_settings', 'SELECT')
+20261129000001_staff_mfa.sql	to_regprocedure('public.staff_session_ok()') is not null
+20261130000001_revoke_unneeded_privileges.sql	not has_table_privilege('authenticated', 'public.profiles', 'TRUNCATE')
+20261201000001_security_center.sql	to_regclass('public.security_events') is not null
+20261202000001_membership_packages.sql	to_regclass('public.membership_packages') is not null
+20261203000001_executive_roles.sql	exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid where t.typname = 'staff_role' and e.enumlabel = 'executive')
+20261203000002_financial_permissions.sql	to_regprocedure('public.can_preview_pricing()') is not null
+20261204000001_legal_center.sql	to_regtype('public.legal_status') is not null
+20261204000002_legal_seed.sql	(to_regclass('public.legal_documents') is not null and exists (select 1 from public.legal_documents where slug = 'terms-of-service'))
+20261205000001_professional_society.sql	to_regclass('business.industries') is not null
+20261205000002_professional_society_seed.sql	(to_regclass('business.industries') is not null and exists (select 1 from business.industries))
+20261206000001_knowledge_exchange.sql	to_regclass('business.webinar_topics') is not null
+20261207000001_journey.sql	to_regclass('public.journey_settings') is not null
+20261208000001_couples_calendar.sql	to_regclass('relationships.couple_events') is not null
+20261209000001_owner_review_onboarding.sql	to_regclass('public.page_reviews') is not null
+20261210000001_age_requirements.sql	to_regprocedure('relationships.guard_singles_age()') is not null
+20261211000001_journey_complete.sql	to_regclass('public.dev_tracker') is not null

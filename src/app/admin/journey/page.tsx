@@ -8,7 +8,7 @@ import { ActionForm } from "@/components/admin/ActionForm";
 import { OwnerTest } from "@/components/admin/OwnerTest";
 import { Empty, NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
 import {
-  publishInstructions, saveExample, saveInstructions, saveJourneyLimits, saveKnowledge, saveModel, savePackage, saveTierLimit, setJourneySwitch,
+  publishInstructions, saveExample, saveInstructions, saveJourneyLimits, saveKnowledge, saveModel, savePackage, saveSessionProduct, saveTierLimit, saveVoiceSettings, setJourneySwitch,
 } from "@/app/actions/journey-admin";
 
 export const metadata = { title: "Journey Intelligence Center" };
@@ -32,6 +32,11 @@ export default async function JourneyAdmin() {
     supabase.from("journey_usage").select("user_id, package_slug, mode, status, is_owner_test, reserved_cents, cost_cents, input_tokens, output_tokens").gte("created_at", monthStart).limit(50000),
     supabase.from("membership_packages").select("slug, name").order("sort_order"),
   ]);
+  const [{ data: sessions }, { data: voice }] = await Promise.all([
+    supabase.from("journey_session_products").select("*").order("sort_order"),
+    supabase.rpc("journey_voice_summary", { p_from: monthStart }),
+  ]);
+  const voiceRow = (voice as { sessions: number; seconds: number; cost_cents: number }[] | null)?.[0];
   const rows = usage ?? [];
   const spent = rows.reduce((n, r) => n + Number(r.status === "completed" ? r.cost_cents ?? r.reserved_cents : r.status === "failed" ? r.cost_cents ?? 0 : r.reserved_cents), 0);
   const testSpent = rows.filter((r) => r.is_owner_test).reduce((n, r) => n + Number(r.cost_cents ?? 0), 0);
@@ -64,6 +69,11 @@ export default async function JourneyAdmin() {
         <Stat label="Active Journey members" value={members} hint={`${messages} messages`} />
         <Stat label="Average cost per member" value={members ? usd(spent / members) : usd(0)} hint={`Owner testing: ${usd(testSpent)}`} />
       </div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <Stat label="Written conversation expense" value={usd(spent)} />
+        <Stat label="Voice expense" value={usd(Number(voiceRow?.cost_cents ?? 0))} hint={`${Math.round(Number(voiceRow?.seconds ?? 0) / 60)} minutes · ${voiceRow?.sessions ?? 0} conversations`} />
+        <div className="glass flex flex-col justify-center gap-2 p-5"><a href="/admin/journey/evaluations" className="btn btn-gold btn-sm">Evaluation scenarios</a><a href="/admin/development" className="btn btn-ghost btn-sm">Development tracker</a></div>
+      </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <Panel title="Emergency controls and authorization">
@@ -73,6 +83,9 @@ export default async function JourneyAdmin() {
             <Switch k="owner_testing_enabled" label="Owner testing" on={Boolean(s?.owner_testing_enabled)} />
             <Switch k="message_packages_published" label="Message package prices visible to members" on={Boolean(s?.message_packages_published)} confirm="PUBLISH" />
             <Switch k="attachments_enabled" label="Attachment processing" on={Boolean(s?.attachments_enabled)} />
+            <Switch k="voice_enabled" label="Talk to Journey (voice)" on={Boolean(s?.voice_enabled)} />
+            <Switch k="memory_enabled" label="Personal memory (members still choose for themselves)" on={s?.memory_enabled !== false} />
+            <Switch k="sessions_published" label="Private Session prices visible to members" on={Boolean(s?.sessions_published)} confirm="PUBLISH" />
             <p className="px-5 py-4 text-xs text-faint">OpenAI key on the server: <strong className={isOpenAIConfigured() ? "text-success" : "text-gold"}>{isOpenAIConfigured() ? "added" : "not added yet (OPENAI_API_KEY in Netlify)"}</strong></p>
           </div>
         </Panel>
@@ -127,7 +140,7 @@ export default async function JourneyAdmin() {
             {(pkgs ?? []).filter((p) => p.slug in INITIAL_MONTHLY_MESSAGES).map((p) => {
               const t = tierMap.get(p.slug);
               return (
-                <ActionForm key={p.slug} action={saveTierLimit} className="grid grid-cols-2 items-end gap-2 px-5 py-4 sm:grid-cols-[1.6fr_repeat(5,1fr)_auto]">
+                <ActionForm key={p.slug} action={saveTierLimit} className="grid grid-cols-2 items-end gap-2 px-5 py-4 sm:grid-cols-[1.6fr_repeat(6,1fr)_auto]">
                   <input type="hidden" name="slug" value={p.slug} />
                   <span className="col-span-2 font-semibold sm:col-span-1">{p.name}<span className="block text-xs font-normal text-faint">Spent this month: {usd(byTier.get(p.slug) ?? 0)}</span></span>
                   <label className="text-[0.65rem] text-faint">Monthly messages<input name="monthly" defaultValue={t?.monthly_messages ?? ""} className="field mt-1 w-full" /></label>
@@ -135,6 +148,7 @@ export default async function JourneyAdmin() {
                   <label className="text-[0.65rem] text-faint">Member cap ($/mo)<input name="memberCap" defaultValue={dollars(t?.member_monthly_limit_cents ?? null)} className="field mt-1 w-full" /></label>
                   <label className="text-[0.65rem] text-faint">Membership cap ($/mo)<input name="tierCap" defaultValue={dollars(t?.tier_monthly_limit_cents ?? null)} className="field mt-1 w-full" /></label>
                   <label className="text-[0.65rem] text-faint">Longest reply (tokens)<input name="maxOutput" defaultValue={t?.max_output_tokens ?? 700} className="field mt-1 w-full" /></label>
+                  <label className="text-[0.65rem] text-faint">Voice minutes / mo<input name="voiceMinutes" defaultValue={t?.monthly_voice_minutes ?? ""} className="field mt-1 w-full" /></label>
                   <button className="btn btn-ghost btn-sm">Save</button>
                 </ActionForm>
               );
@@ -161,6 +175,37 @@ export default async function JourneyAdmin() {
 
         <Panel title="Test Journey privately">
           <OwnerTest />
+        </Panel>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Panel title="Voice and Auto-Reload safeguards">
+          <ActionForm action={saveVoiceSettings} className="grid gap-3 p-5 sm:grid-cols-2">
+            <label className="text-xs text-muted sm:col-span-2">OpenAI realtime voice model<input name="voiceModel" defaultValue={s?.voice_model ?? ""} className="field mt-1 w-full" placeholder="e.g. gpt-realtime" /></label>
+            <label className="text-xs text-muted">Voice cost ($ per minute, for budgeting)<input name="voiceRate" defaultValue={dollars(s?.voice_cents_per_minute ?? null)} className="field mt-1 w-full" placeholder="0.10" /></label>
+            <label className="text-xs text-muted">End after silence (seconds)<input name="inactivity" defaultValue={s?.voice_inactivity_seconds ?? 120} className="field mt-1 w-full" /></label>
+            <label className="text-xs text-muted">Longest voice conversation (minutes)<input name="maxMinutes" defaultValue={s?.voice_max_session_minutes ?? 30} className="field mt-1 w-full" /></label>
+            <span />
+            <label className="text-xs text-muted">Auto-Reloads per member per day (max)<input name="reloadDay" defaultValue={s?.auto_reload_max_per_day ?? 3} className="field mt-1 w-full" /></label>
+            <label className="text-xs text-muted">Auto-Reloads per member per month (max)<input name="reloadMonth" defaultValue={s?.auto_reload_max_per_month ?? 10} className="field mt-1 w-full" /></label>
+            <p className="text-xs text-faint sm:col-span-2">These company safeguards apply even when a member chooses no personal Auto-Reload limit. Members under safety review can&rsquo;t be reloaded.</p>
+            <button className="btn btn-gold btn-sm sm:col-span-2" disabled={!owner}>Save</button>
+          </ActionForm>
+        </Panel>
+        <Panel title="Private Sessions">
+          <div className="divide-y divide-line">
+            {(sessions ?? []).map((p) => (
+              <ActionForm key={p.slug} action={saveSessionProduct} className="grid grid-cols-[1.4fr_1fr_1fr_auto_auto] items-end gap-2 px-5 py-3">
+                <input type="hidden" name="slug" value={p.slug} />
+                <span className="text-sm font-semibold">{p.name}<span className="block text-xs font-normal text-faint">{p.minutes} minutes</span></span>
+                <label className="text-[0.65rem] text-faint">Price ($)<input name="price" defaultValue={dollars(p.price_cents)} className="field mt-1 w-full" /></label>
+                <label className="text-[0.65rem] text-faint">Message limit<input name="maxMessages" defaultValue={p.max_messages} className="field mt-1 w-full" /></label>
+                <label className="flex items-center gap-1 pb-2 text-xs"><input type="checkbox" name="active" defaultChecked={p.is_active} /> Offer</label>
+                <button className="btn btn-ghost btn-sm">Save</button>
+              </ActionForm>
+            ))}
+          </div>
+          <p className="px-5 pb-4 text-xs text-faint">{s?.sessions_published ? "Session prices are visible to members." : "Hidden from members until you publish above."} Sessions are AI-guided personal development, never therapy.</p>
         </Panel>
       </div>
 
