@@ -540,3 +540,37 @@ v16-9) The member can erase their own history (expect 0):
 0
 v16-10) Anonymous visitors are refused (expect permission denied):
 ERROR:  permission denied for table discovery_answers
+v17-1) Partner A invites B to dinner, keeping the details a secret (expect 1):
+1
+v17-2) A cannot invite someone outside the couple (expect error):
+ERROR:  new row violates row-level security policy for table "date_invitations"
+v17-3) A cannot accept their own invitation (expect error):
+ERROR:  Invitation not found
+v17-4) A cannot mark it accepted directly (expect permission denied):
+ERROR:  permission denied for table date_invitations
+v17-5) A writes private planning notes (expect 1):
+1
+v17-6) A plans a flower surprise for later and one revealed now (expect 2):
+2
+v17-7) B sees the invitation but not A's plans or surprises directly (expect 1|0|0):
+1|0|0
+v17-8) B sees only the revealed surprise, and only its title and message (expect A note for you|I love how you laugh.):
+A note for you|I love how you laugh.
+v17-9) B accepts; it appears on the shared calendar with details kept secret (expect accepted|Date — details are a surprise):
+accepted
+accepted|Date — details are a surprise
+v17-10) Answering twice is refused (expect error):
+ERROR:  This invitation has already been answered
+v17-11) An invitation over B's private busy time can be sent, but acceptance is refused without revealing why (expect error):
+ERROR:  That time doesn't work. Please choose another date.
+    values (inv.couple_id, inv.from_user,
+            case inv.kind when 'trip' then 'trip' when 'weekend' then 'trip' when 'celebration' then 'anniversary' when 'activity' then 'activity' else 'date_night' end,
+            case when inv.keep_secret then 'Date — details are a surprise' else inv.title end, null,
+            inv.proposed_at, inv.proposed_at + make_interval(mins => inv.duration_minutes))
+    returning id"
+v17-12) B suggests another time instead (expect new_time):
+new_time
+v17-13) Someone outside the couple sees nothing (expect 0|0|0|0):
+0|0|0|0
+v17-14) The OWNER cannot read plans or surprises (expect 0|0):
+0|0

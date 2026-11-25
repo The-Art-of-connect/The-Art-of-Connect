@@ -22,3 +22,4 @@
 20261211000001_journey_complete.sql	to_regclass('public.dev_tracker') is not null
 20261212000001_know_yourself.sql	to_regclass('public.self_discovery') is not null
 20261213000001_art_of_knowing_yourself.sql	to_regclass('public.discovery_answers') is not null
+20261214000001_couples_moments.sql	to_regclass('relationships.date_invitations') is not null

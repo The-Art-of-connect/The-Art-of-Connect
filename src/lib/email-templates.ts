@@ -148,6 +148,14 @@ export const templates = {
       paragraphs: [`Hello ${first(name)}, we received a request to reset your password. Use the secure link below — it works once and expires within the hour.`, "If you didn’t ask for this, you can ignore this email; your password stays the same."],
       action: { label: "Choose a new password", url: link },
     })),
+  partnerInvitation: (f: { name: string; link: string }) =>
+    t(f, ({ name, link }) => ({
+      subject: `${name} invited you to share The Personal Society`,
+      preheader: "A private space for the two of you — date nights, surprises and plans together.",
+      heading: "A private space, just for the two of you.",
+      paragraphs: [`${name} has invited you to join them in The Personal Society on The Art of Connect — a private space for couples to plan date nights, share a calendar and nurture what you’ve built together.`, "Your own journal, reflections and personal discoveries always remain private to you. The link below works only for this email address and expires in seven days."],
+      action: { label: "Accept the invitation", url: link },
+    })),
   staffInvitation: (f: { roles: string; link: string }) =>
     t(f, ({ roles, link }) => ({
       subject: "You’re invited to The Art of Connect team",
