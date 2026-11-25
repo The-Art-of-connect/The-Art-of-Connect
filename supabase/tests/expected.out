@@ -146,8 +146,8 @@ v4-19) Approve after identity, license lookup and disciplinary check (expect app
 approved
 v4-20) Owner updates the launch checklist (expect done):
 done
-v4-21) Finance reads the checklist but cannot change it (expect 30 rows, then 0 updated):
-30
+v4-21) Finance reads the checklist but cannot change it (expect 34 rows, then 0 updated):
+34
 0
 v4-22) Member reads the checklist (expect 0); records a versioned consent (expect 1):
 0
@@ -362,3 +362,70 @@ v11-15) The host cannot feature or price a webinar (expect error):
 ERROR:  Only the owner can feature or price webinars
 v11-16) Executives see program metrics (expect 6|1):
 6|1
+v12-1) Journey starts switched off with paid usage unauthorized and no budgets (expect f|f|||f):
+f|f|||f
+v12-2) Initial allowances are seeded, one per membership, none unlimited (expect 10|150|250|750|0):
+10|150|250|750|0
+v12-3) Message packages are seeded at the proposed prices (expect 25:499,50:899,100:1499,250:2999):
+25:499,50:899,100:1499,250:2999
+v12-4) A member cannot see Journey settings or unpublished package prices (expect 0|0):
+0|0
+v12-5) A member cannot switch Journey on or authorize spending (expect f|f):
+f|f
+v12-6) A member cannot call the spending reservation directly (expect error):
+ERROR:  permission denied for function journey_reserve
+v12-7) A member cannot give themselves purchased messages (expect error):
+ERROR:  permission denied for table journey_message_credits
+v12-8) Finance sets rates and limits but cannot authorize paid usage or publish prices (expect 0 updated):
+0
+v12-9) The owner authorizes, and every change is audited (expect t|t|t):
+t|t|t
+v12-10) First request is reserved (expect a number):
+t
+v12-11) A simultaneous second request is refused while the first is in flight (expect refused:in_flight):
+refused:in_flight
+v12-12) The same message sent twice is refused, not charged twice (expect refused:duplicate):
+
+refused:duplicate
+v12-13) A failed request does not use a message (expect t, then 1):
+t
+
+1
+v12-14) Second message uses the allowance; the third is refused (expect t, then refused:allowance):
+t
+
+refused:allowance
+v12-15) A new billing period resets the included allowance; nothing rolls over (expect t):
+t
+
+v12-16) A purchased message is used only after the allowance, and a failed request gives it back (expect t, 1, then 0):
+t
+1
+
+0
+v12-17) Expired purchased messages cannot be used (expect refused:allowance):
+refused:allowance
+v12-18) Couples share one allowance: the partner draws from the same pool (expect t, then refused:allowance):
+t
+
+refused:allowance
+v12-19) A member spending cap stops requests even with messages left (expect refused:member_budget):
+refused:member_budget
+v12-20) The company budget stops everyone (expect refused:company_budget):
+refused:company_budget
+v12-21) Owner testing has its own budget and never uses a member allowance (expect t, then refused:test_budget):
+t
+
+refused:test_budget
+v12-22) Emergency shutdown stops new requests immediately (expect refused:off):
+refused:off
+v12-23) Abandoned requests are released so an allowance is never stuck (expect 1):
+1
+v12-24) A member reads their own conversation (expect 1|1):
+1|1
+v12-25) Their partner cannot read it (expect 0|0):
+0|0
+v12-26) The owner cannot read member conversations, only aggregate usage (expect 0|0|t):
+0|0|t
+v12-27) Members cannot write conversations or usage directly (expect error):
+ERROR:  permission denied for table journey_usage
