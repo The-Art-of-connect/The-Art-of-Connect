@@ -13,7 +13,7 @@ const OFFLINE: PricingCatalogue = {
   preview: false,
   currency: "usd",
   annual_months_charged: null,
-  minimum_member_age: 40,
+  minimum_member_age: 21,
   couples_upgrade: { name: "Couples upgrade", description: "Adds a second, secure login for your partner and your shared relationship space.", monthly_price_cents: null },
   referral_reward: null,
   experiences: EXPERIENCE_ORDER.map((k) => ({

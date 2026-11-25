@@ -7,7 +7,7 @@ summary: How every member and professional is expected to treat one another acro
 ---
 *Draft pending owner approval and attorney review — not yet in effect.*
 
-The Art of Connect, LLC ("The Art of Connect," "we," "us") is a private community for adults aged 40 and older. Our three experiences — **The Professional Society** (In Business), **The Art of Becoming** (In Life) and **The Personal Society** (In Love) — depend on one thing above all: that people can trust the person on the other side of the conversation. These Community Standards describe what we expect from every member, couple and professional provider. They form part of our [Terms of Service](/legal/terms-of-service), and breaking them can lead to the removal of content, restricted features, suspension or permanent closure of an account.
+The Art of Connect, LLC ("The Art of Connect," "we," "us") is a private community for adults aged 21 and older. Our three experiences — **The Professional Society** (In Business), **The Art of Becoming** (In Life) and **The Personal Society** (In Love) — depend on one thing above all: that people can trust the person on the other side of the conversation. These Community Standards describe what we expect from every member, couple and professional provider. They form part of our [Terms of Service](/legal/terms-of-service), and breaking them can lead to the removal of content, restricted features, suspension or permanent closure of an account.
 
 ## 1. Who these standards apply to
 These standards apply to everyone who uses The Art of Connect: individual members, couples, professional providers (counselors, coaches, mentors and others) and our own team. They apply to profiles, messages, introductions, events, appointments, reviews, shared content and any contact that begins on the platform, including contact that continues by phone, email, social media or in person.
@@ -39,7 +39,7 @@ These standards apply to everyone who uses The Art of Connect: individual member
 - **Professional confidentiality.** Professional providers must follow the confidentiality obligations in the [Professional Provider Agreement](/legal/professional-agreement) and their own professional rules.
 
 ## 6. Money, scams and solicitation
-Romance scams and financial fraud cause real harm, and adults over 40 are frequent targets. Therefore:
+Romance scams and financial fraud cause real harm, and they target adults of every age. Therefore:
 - **Never ask another member for money,** gifts, gift cards, cryptocurrency, wire transfers, loans, travel costs, medical costs or help with a "temporary" financial emergency.
 - **No investment pitches or unsolicited business solicitation.** Do not pitch investments, trading schemes, cryptocurrency, multi-level marketing or "opportunities" to members, including in The Professional Society, unless the other member has clearly asked to discuss a business proposal. Even then, see our [Business Networking Disclaimer](/legal/business-networking-disclaimer).
 - **No spam or advertising.** Do not use messaging to advertise products or services. Professional providers may promote their services only through the tools we provide for that purpose.

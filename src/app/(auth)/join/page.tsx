@@ -30,7 +30,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
   if (!launch.registrations_open) {
     return (
       <div className="text-center">
-        <p className="eyebrow">Exclusively for adults {catalogue.minimum_member_age}+</p>
+        <p className="eyebrow">Adults {catalogue.minimum_member_age}+ · Personal Society singles 30+</p>
         <h1 className="display mt-4 text-4xl">Membership enrollment opens soon.</h1>
         <p className="mt-5 text-muted">Build your membership now and we’ll let you know the moment you can join.</p>
         <Link href={q.pkg ? editHref : "/membership#build"} className="btn btn-gold mt-8 w-full">Build Your Membership</Link>

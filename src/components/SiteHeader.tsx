@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Wordmark } from "@/components/Emblem";
 import { MobileMenu } from "@/components/MobileMenu";
 import { SITE_NAV } from "@/lib/nav";
-import { INSIDE_PREVIEW_ENABLED } from "@/lib/inside-preview";
+import { PreviewButton } from "@/components/PreviewButton";
 
 export function SiteHeader() {
   return (
@@ -19,9 +19,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          {INSIDE_PREVIEW_ENABLED && (
-            <Link href="/inside-preview" className="nav-pill inline-flex border border-gold/40 text-[0.82rem] text-champagne">Preview</Link>
-          )}
+          <PreviewButton />
           <Link href="/sign-in" className="nav-pill hidden text-[0.82rem] text-ivory/85 lg:inline-flex">Sign in</Link>
           <Link href="/membership#build" className="btn btn-gold btn-sm hidden sm:inline-flex">Build Your Membership</Link>
           <MobileMenu />

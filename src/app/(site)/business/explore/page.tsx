@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "Explore The Professional Society — In Business",
-  description: "Business owners helping business owners, across cities and states. Explore The Professional Society before you join. Exclusively for adults 40+.",
+  description: "Business owners helping business owners, across cities and states. Explore The Professional Society before you join. For adults 21+.",
   alternates: { canonical: "/business/explore" },
 };
 export const dynamic = "force-dynamic";
@@ -54,7 +54,7 @@ export default async function ExploreProfessionalSociety() {
               <a href="#access" className="btn btn-gold">See what’s included</a>
               <a href="#founding" className="btn btn-ghost">Become a Founding Member</a>
             </div>
-            <p className="mt-6 text-xs font-semibold tracking-wide text-gold">Exclusively for adults {catalogue.minimum_member_age}+</p>
+            <p className="mt-6 text-xs font-semibold tracking-wide text-gold">For adults {catalogue.minimum_member_age}+</p>
           </div>
           <Network />
         </section>

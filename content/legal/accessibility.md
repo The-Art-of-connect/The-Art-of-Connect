@@ -7,7 +7,7 @@ summary: Our commitment to making The Art of Connect usable by everyone, and how
 ---
 *Draft pending owner approval and attorney review — not yet in effect.*
 
-**The Art of Connect, LLC** ("The Art of Connect," "we," "us") wants every adult aged 40 and older to be able to use our website and services comfortably, including people who use assistive technology or have vision, hearing, motor or cognitive disabilities.
+**The Art of Connect, LLC** ("The Art of Connect," "we," "us") wants every adult to be able to use our website and services comfortably, including people who use assistive technology or have vision, hearing, motor or cognitive disabilities.
 
 ## 1. Our goal
 

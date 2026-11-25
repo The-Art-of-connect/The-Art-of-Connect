@@ -24,7 +24,7 @@ export default async function SettingsPage() {
   await requireStaff(rolesFor("/admin/settings"));
   const settings = await getLaunchSettings();
   const sb = await createClient();
-  const { data: ages } = sb ? await sb.from("platform_settings").select("key, value").in("key", ["minimum_member_age", "minimum_professional_age"]) : { data: [] };
+  const { data: ages } = sb ? await sb.from("platform_settings").select("key, value").in("key", ["minimum_member_age", "minimum_singles_age", "minimum_professional_age"]) : { data: [] };
   const age = (k: string, d: number) => Number((ages ?? []).find((a) => a.key === k)?.value ?? d);
   const supabase = await createClient();
   const { data: allowlist } = supabase ? await supabase.from("signup_allowlist").select("email, note, created_at").order("created_at", { ascending: false }) : { data: [] };
@@ -71,10 +71,14 @@ export default async function SettingsPage() {
 
       <div className="mt-6">
         <Panel title="Eligibility — minimum ages">
-          <ActionForm action={saveEligibility} className="grid gap-4 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <ActionForm action={saveEligibility} className="grid gap-4 p-5 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
             <label className="space-y-1.5">
-              <span className="text-xs font-semibold text-muted">Consumer members (In Business, In Life, In Love)</span>
-              <input name="memberAge" type="number" min={18} max={99} defaultValue={age("minimum_member_age", 40)} className="field" />
+              <span className="text-xs font-semibold text-muted">Members (In Business, In Life, couples — both partners)</span>
+              <input name="memberAge" type="number" min={18} max={99} defaultValue={age("minimum_member_age", 21)} className="field" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-xs font-semibold text-muted">The Personal Society singles</span>
+              <input name="singlesAge" type="number" min={18} max={99} defaultValue={age("minimum_singles_age", 30)} className="field" />
             </label>
             <label className="space-y-1.5">
               <span className="text-xs font-semibold text-muted">Professional applicants</span>

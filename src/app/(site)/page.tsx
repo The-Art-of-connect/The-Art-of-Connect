@@ -21,7 +21,7 @@ export default async function HomePage() {
     logo: "https://theartofconnect.com/icon-512.png",
     email: "info@theartofconnect.com",
     slogan: "In Business. In Life. In Love.",
-    description: "A premium membership platform for adults 40 and older seeking meaningful personal, professional and romantic connections.",
+    description: "A premium membership platform for adults seeking meaningful personal, professional and romantic connections.",
   };
   return (
     <>
@@ -41,13 +41,13 @@ export default async function HomePage() {
           <div className="max-w-[62%] sm:max-w-[60%] lg:max-w-none">
             <p className="eyebrow rise max-sm:!text-[0.58rem] max-sm:!tracking-[0.22em]">In Business. In Life. In Love.</p>
             <p className="rise mt-4 inline-flex rounded-full border border-champagne/50 px-3 py-1 text-[0.58rem] font-semibold tracking-[0.16em] text-gold uppercase sm:px-4 sm:py-1.5 sm:text-xs sm:tracking-[0.18em]">
-              Exclusively for adults {catalogue.minimum_member_age}+
+              Adults {catalogue.minimum_member_age}+ · Personal Society singles 30+
             </p>
             <h1 className="display rise rise-2 mt-5 text-[2.35rem] leading-[1.02] sm:mt-6 sm:text-6xl lg:text-[6.2rem]">
               The art of <br />
               <span className="gilded italic">being known.</span>
             </h1>
-            <p className="display rise rise-2 mt-4 text-[1.05rem] italic text-ivory sm:mt-6 sm:text-2xl lg:text-3xl">Life after 40. Connection with intention.</p>
+            <p className="display rise rise-2 mt-4 text-[1.05rem] italic text-ivory sm:mt-6 sm:text-2xl lg:text-3xl">Connection with intention.</p>
             <p className="rise rise-3 mt-5 max-w-xl text-[0.82rem] leading-relaxed text-muted sm:mt-8 sm:text-base lg:text-lg">
               Meaningful connections begin with understanding who you are. Discover yourself, build intentional
               relationships, connect with compatible business professionals, and access trusted guidance — all within one
@@ -107,7 +107,7 @@ export default async function HomePage() {
               Every meaningful connection begins <span className="gilded italic">with you.</span>
             </p>
             <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted">
-              The Art of Connect is a premium membership platform designed for adults 40 and older seeking meaningful
+              The Art of Connect is a premium membership platform designed for adults seeking meaningful
               personal, professional and romantic connections. Not a dating site, a business directory or a counseling
               listing — one place to understand yourself, and to find the people who genuinely align with you.
             </p>

@@ -3,7 +3,7 @@ import { ExperiencePage } from "@/components/ExperiencePage";
 
 export const metadata: Metadata = {
   title: "In Love — Romantic Connections",
-  description: "Intentional matchmaking for singles and relationship development for couples. Exclusively for adults 40+.",
+  description: "Intentional matchmaking for singles and relationship development for couples. Singles 30+ · Couples 21+ for both partners.",
   alternates: { canonical: "/love" },
   openGraph: { title: "In Love — Romantic Connections · The Art of Connect", description: "Intentional matchmaking for singles and relationship development for couples.", url: "/love", images: [{ url: "/og/love.jpg", width: 1200, height: 630 }] },
   twitter: { card: "summary_large_image", images: ["/og/love.jpg"] },

@@ -3,17 +3,17 @@ title: Identity and Age Verification Policy
 version: 2026-12-draft-1
 consent: identity_verification
 category: privacy
-summary: How The Art of Connect confirms that members are 40 or older and who they say they are, what information is used, and the limits of verification.
+summary: How The Art of Connect confirms that members meet our age requirements and who they say they are, what information is used, and the limits of verification.
 ---
 *Draft pending owner approval and attorney review — not yet in effect.*
 
-The Art of Connect is a community exclusively for adults aged **40 and older**. This policy explains how **The Art of Connect, LLC** ("we," "us") confirms age eligibility and identity, what information is involved, and what verification can and cannot tell you.
+The Art of Connect is a community for adults aged **21 and older**; The Personal Society singles experience is for adults aged **30 and older**. This policy explains how **The Art of Connect, LLC** ("we," "us") confirms age eligibility and identity, what information is involved, and what verification can and cannot tell you.
 
 ## 1. Why we verify
 Verification helps keep our community authentic and safe. It reduces fake profiles, impersonation and romance scams, and it supports our age requirement.
 
 ## 2. Age eligibility at registration
-When you register, you provide your date of birth. Our system will not create a consumer membership account for anyone younger than the minimum age, which is currently 40. The minimum age is set by the owner and can be raised.
+When you register, you provide your date of birth. Our system will not create a consumer membership account for anyone younger than the minimum age, which is currently 21 (30 for The Personal Society singles experience). The minimum ages are set by the owner and can be raised.
 
 Your date of birth is stored in a private record that only you can read. Our staff, including the owner, see only whether your account meets the age requirement. Your date of birth is never shown on your profile and is never included in emails.
 

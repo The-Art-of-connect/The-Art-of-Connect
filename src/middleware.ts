@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { INSIDE_PREVIEW_COOKIE, INSIDE_PREVIEW_ENABLED } from "@/lib/inside-preview";
+import { ANONYMOUS_PREVIEW_ENABLED, INSIDE_PREVIEW_COOKIE, INSIDE_PREVIEW_ENABLED } from "@/lib/inside-preview";
 import { ATTR_COOKIE, ATTR_MAX_AGE, REF_COOKIE, attributionFromUrl, referralFromUrl } from "@/lib/attribution";
 
 /**
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
   const isPrivate = pathname.startsWith("/admin") || pathname.startsWith("/app");
 
   // Temporary owner review: read-only member-area preview without an account.
-  const insidePreview = INSIDE_PREVIEW_ENABLED && !user && request.cookies.get(INSIDE_PREVIEW_COOKIE)?.value === "1";
+  const insidePreview = INSIDE_PREVIEW_ENABLED && ANONYMOUS_PREVIEW_ENABLED && !user && request.cookies.get(INSIDE_PREVIEW_COOKIE)?.value === "1";
   if (insidePreview && request.method !== "GET" && request.method !== "HEAD" && (pathname.startsWith("/app") || pathname.startsWith("/api"))) {
     return new NextResponse("Preview only — nothing can be saved.", { status: 403 });
   }

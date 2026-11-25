@@ -4,7 +4,7 @@ import { ExperiencePage } from "@/components/ExperiencePage";
 
 export const metadata: Metadata = {
   title: "In Life — Personal Growth & Guidance",
-  description: "Self-discovery, personal development, emotional intelligence, private journaling and access to qualified counselors and coaches. Exclusively for adults 40+.",
+  description: "Self-discovery, personal development, emotional intelligence, private journaling and access to qualified counselors and coaches. For adults 21+.",
   alternates: { canonical: "/life" },
   openGraph: { title: "In Life — Personal Growth & Guidance · The Art of Connect", description: "Self-discovery, personal development, emotional intelligence, private journaling and access to qualified counselors and coaches.", url: "/life", images: [{ url: "/og/life.jpg", width: 1200, height: 630 }] },
   twitter: { card: "summary_large_image", images: ["/og/life.jpg"] },

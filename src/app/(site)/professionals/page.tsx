@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "For Professionals",
-  description: "Counselors, coaches and mentors: apply to serve adults 40+ on The Art of Connect.",
+  description: "Counselors, coaches and mentors: apply to serve members on The Art of Connect. Providers must be 21+ and hold the credentials their work requires.",
   alternates: { canonical: "/professionals" },
   openGraph: { images: [{ url: "/og/professionals.jpg", width: 1200, height: 630 }] },
 };

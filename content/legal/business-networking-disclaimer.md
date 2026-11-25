@@ -10,7 +10,7 @@ summary: The Professional Society connects members for professional networking a
 This disclaimer applies to **The Professional Society** (In Business) and to any business introductions, mentorship, networking, collaboration tools, events or professional content offered by The Art of Connect, LLC ("The Art of Connect," "we," "us"). It forms part of our [Terms of Service](/legal/terms-of-service) and [Membership Agreement](/legal/membership-agreement).
 
 ## 1. What The Professional Society is
-The Professional Society is a private networking community for accomplished adults aged 40 and older. It helps members discover people with complementary experience, exchange ideas, find mentors and explore possible collaborations. It is a place to meet people — not a source of professional advice, a marketplace for securities or an employment agency.
+The Professional Society is a private networking community for accomplished adults aged 21 and older. It helps members discover people with complementary experience, exchange ideas, find mentors and explore possible collaborations. It is a place to meet people — not a source of professional advice, a marketplace for securities or an employment agency.
 
 ## 2. No investment, legal, financial, tax or employment advice
 - Nothing provided through The Professional Society — including introductions, compatibility insights, content, events, member conversations or mentor discussions — is **investment, securities, legal, accounting, tax, financial, insurance or employment advice.**

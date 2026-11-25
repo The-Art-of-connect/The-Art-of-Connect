@@ -5,11 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import type { Experience, StaffRole } from "@/lib/experiences";
 import { getLaunchState } from "@/lib/launch";
 import { cookies, headers } from "next/headers";
-import { INSIDE_PREVIEW_COOKIE, INSIDE_PREVIEW_ENABLED, INSIDE_PREVIEW_ID } from "@/lib/inside-preview";
+import { INSIDE_PREVIEW_COOKIE, INSIDE_PREVIEW_ENABLED, ANONYMOUS_PREVIEW_ENABLED, INSIDE_PREVIEW_ID } from "@/lib/inside-preview";
 
 /** Temporary read-only preview viewer: no account, no session, no data. */
 async function previewViewer(): Promise<Viewer | null> {
-  if (!INSIDE_PREVIEW_ENABLED) return null;
+  if (!INSIDE_PREVIEW_ENABLED || !ANONYMOUS_PREVIEW_ENABLED) return null;
   if ((await cookies()).get(INSIDE_PREVIEW_COOKIE)?.value !== "1") return null;
   if ((await headers()).get("next-action")) return null; // never for server actions
   return {

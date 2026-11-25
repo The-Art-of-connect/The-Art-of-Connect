@@ -12,7 +12,7 @@ These Terms of Service ("Terms") are an agreement between you and **The Art of C
 By creating an account, checking the box to accept these Terms, or using the Services, you agree to these Terms and to the policies they reference, including our [Privacy Policy](/legal/privacy-policy), [Membership Agreement](/legal/membership-agreement), [Subscription and Automatic Renewal Policy](/legal/subscription-auto-renewal), [Cancellation and Refund Policy](/legal/refund-policy) and [Community Standards](/legal/community-standards). If you do not agree, do not use the Services.
 
 ## 1. Who we are and what we offer
-The Art of Connect is a private membership community for adults aged 40 and older. We offer three experiences under one account:
+The Art of Connect is a private membership community for adults aged 21 and older. We offer three experiences under one account:
 
 - **The Professional Society — In Business:** professional networking, business compatibility, mentorship and collaboration.
 - **The Art of Becoming — In Life:** self-discovery, personal development, private journaling and access to independent counselors, coaches and mentors.
@@ -21,7 +21,7 @@ The Art of Connect is a private membership community for adults aged 40 and olde
 Features may be added, changed or retired over time. Some features are available only with certain memberships.
 
 ## 2. Eligibility
-- Consumer memberships are available only to adults aged **40 or older**, or any higher minimum age we publish. You confirm your date of birth when you register.
+- Consumer memberships are available only to adults aged **21 or older**, and The Personal Society singles experience only to adults aged **30 or older**, or any higher minimum age we publish. You confirm your date of birth when you register.
 - We may ask you to verify your identity and age through an approved third-party provider. We do not store copies of government identification documents ourselves.
 - Professional provider accounts (counselors, coaches, mentors and similar professionals) have separate requirements described in the [Professional Provider Agreement](/legal/professional-agreement).
 - You may hold only one personal account. You may not use the Services if we have previously removed you, or if you are legally prohibited from doing so.

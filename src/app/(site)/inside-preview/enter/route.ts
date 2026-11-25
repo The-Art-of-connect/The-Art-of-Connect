@@ -7,6 +7,7 @@ export function GET(request: NextRequest) {
   const to = url.searchParams.get("to") ?? "/app";
   const exit = url.searchParams.get("exit") === "1";
   const safe = /^\/app(\/[a-z0-9/-]*)?$/.test(to) ? to : "/app";
+  // Anonymous previews are off; owners are signed in, so just open the page.
   url.search = "";
   url.pathname = exit || !INSIDE_PREVIEW_ENABLED ? "/inside-preview" : safe;
   const res = NextResponse.redirect(url);

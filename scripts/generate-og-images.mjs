@@ -12,12 +12,12 @@ const file = (p) => pathToFileURL(path.join(root, p)).href;
 const font = (f) => file(`node_modules/@fontsource-variable/${f}`);
 
 const cards = [
-  { out: "home", image: null, eyebrow: "In Business. In Life. In Love.", title: "The art of <em>being known.</em>", line: "Life after 40. Connection with intention." },
+  { out: "home", image: null, eyebrow: "In Business. In Life. In Love.", title: "The art of <em>being known.</em>", line: "Connection with intention." },
   { out: "membership", image: "public/images/in-business.webp", eyebrow: "Memberships", title: "Build your <em>membership.</em>", line: "Choose one experience, or all three — one account, one subscription." },
   { out: "business", image: "public/images/in-business.webp", eyebrow: "In Business · Professional Connections", title: "Connect <em>with purpose.</em>", line: "Business compatibility, mentorship and strategic partnerships." },
   { out: "life", image: "public/images/in-life.webp", eyebrow: "In Life · Personal Growth & Guidance", title: "Discover <em>yourself.</em>", line: "Self-discovery, emotional intelligence and trusted guidance." },
   { out: "love", image: "public/images/in-love.webp", eyebrow: "In Love · Romantic Connections", title: "Connect <em>intentionally.</em>", line: "Intentional matchmaking for singles, and tools for couples." },
-  { out: "professionals", image: null, eyebrow: "For counselors, coaches & mentors", title: "A distinguished home for <em>your practice.</em>", line: "Serve adults 40+ seeking meaningful growth and connection.", burgundy: true },
+  { out: "professionals", image: null, eyebrow: "For counselors, coaches & mentors", title: "A distinguished home for <em>your practice.</em>", line: "Serve members seeking meaningful growth and connection.", burgundy: true },
 ];
 
 const html = (c) => `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -41,10 +41,10 @@ p.line{margin-top:26px;font-size:24px;line-height:1.4;color:rgba(248,243,233,.85
 </style></head><body>
 ${c.image ? `<div class="photo"><img src="${file(c.image)}"></div>` : ""}
 <div class="txt"><img class="mono" src="${file("public/brand/monogram.webp")}"><div class="eyebrow">${c.eyebrow}</div><h1>${c.title}</h1><p class="line">${c.line}</p></div>
-<div class="rule"></div><div class="foot"><span>The Art of Connect</span><span>Exclusively for adults 40+</span></div>
+<div class="rule"></div><div class="foot"><span>The Art of Connect</span><span>Adults 21+ · Singles 30+</span></div>
 </body></html>`;
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined });
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
 for (const c of cards) {
   // Opened as a local file so it may load local fonts and images.

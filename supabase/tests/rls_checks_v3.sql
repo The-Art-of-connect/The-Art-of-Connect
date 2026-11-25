@@ -52,9 +52,9 @@ reset role;
 update public.platform_settings set value = 'true' where key = 'registrations_open';
 \echo 'v3-11) Consumer sign-up without date of birth (expect error):'
 insert into auth.users(email, raw_user_meta_data) values ('nodob@example.com', '{}');
-\echo 'v3-12) Consumer aged 39 (expect error):'
-insert into auth.users(email, raw_user_meta_data) values ('young@example.com', jsonb_build_object('date_of_birth', (current_date - interval '39 years')::date));
-\echo 'v3-13) Consumer turning 40 today, with a referral code (expect ok):'
+\echo 'v3-12) Consumer aged 20 (expect error):'
+insert into auth.users(email, raw_user_meta_data) values ('young@example.com', jsonb_build_object('date_of_birth', (current_date - interval '20 years')::date));
+\echo 'v3-13) Consumer aged 40, with a referral code (expect ok):'
 insert into auth.users(id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-000000000008','forty@example.com',
   jsonb_build_object('date_of_birth', (current_date - interval '40 years')::date, 'referral_code', (select referral_code from public.profiles where id = '00000000-0000-0000-0000-000000000002')));
 select account_type, age_eligible from public.profiles where id = '00000000-0000-0000-0000-000000000008';

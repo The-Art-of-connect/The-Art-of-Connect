@@ -7,7 +7,7 @@ summary: How The Art of Connect collects, uses, protects and shares personal inf
 ---
 *Draft pending owner approval and attorney review — not yet in effect.*
 
-This Privacy Policy explains how **The Art of Connect, LLC** ("The Art of Connect," "we," "us") handles personal information when you visit theartofconnect.com, create an account, or use our membership experiences: **The Professional Society — In Business**, **The Art of Becoming — In Life**, and **The Personal Society — In Love**. Our services are offered only to adults aged 40 and older.
+This Privacy Policy explains how **The Art of Connect, LLC** ("The Art of Connect," "we," "us") handles personal information when you visit theartofconnect.com, create an account, or use our membership experiences: **The Professional Society — In Business**, **The Art of Becoming — In Life**, and **The Personal Society — In Love**. Our services are offered only to adults aged 21 and older.
 
 We wrote this policy to describe what our platform actually does. If a practice is not yet decided, we say so rather than guess.
 
@@ -20,7 +20,7 @@ The Art of Connect, LLC is the company responsible for your personal information
 
 ### 2.1 Information you give us
 - **Account details:** your first name or display name, email address and password. Passwords are handled by our authentication provider and stored only in hashed form; we never see your password.
-- **Date of birth:** collected at registration to confirm you are 40 or older. It is stored in a private record that only you can read. Our staff, including the owner, see only whether your account meets the age requirement, never the date itself.
+- **Date of birth:** collected at registration to confirm you meet our age requirements (21 or older; 30 or older for singles). It is stored in a private record that only you can read. Our staff, including the owner, see only whether your account meets the age requirement, never the date itself.
 - **Membership choices:** the experiences, membership package, billing interval and any add-ons you select.
 - **Profile and experience content:** information you choose to add within each experience, such as professional interests in In Business or relationship preferences in In Love.
 - **Private journals and assessments:** reflections, journal entries and assessment answers you create, particularly in In Life and In Love.
@@ -51,7 +51,7 @@ Some information you share is especially personal: private journals, personal an
 
 ## 4. How we use information
 We use personal information to:
-1. Create and secure your account, including verifying that you are 40 or older.
+1. Create and secure your account, including verifying that you meet our age requirements.
 2. Provide the experiences you choose and the features within them.
 3. Process membership payments, renewals, upgrades, cancellations and refunds through Stripe.
 4. Send transactional emails, such as account, membership, payment and safety notices.
@@ -114,7 +114,7 @@ Depending on where you live, you may have additional rights, including rights to
 **[ATTORNEY REVIEW: state-by-state privacy rights (California, Colorado, Connecticut, Virginia, Texas, Oregon and others), response timelines and appeal process]**
 
 ## 11. Age requirement
-Our services are only for adults aged 40 and older. We do not knowingly collect personal information from anyone younger than the minimum age, and we do not direct our services to children. If we learn that an account belongs to someone under the minimum age, we will close it.
+Our services are only for adults aged 21 and older. We do not knowingly collect personal information from anyone younger than the minimum age, and we do not direct our services to children. If we learn that an account belongs to someone under the minimum age, we will close it.
 
 ## 12. International users
 Our services are operated in the United States and intended for users in the United States. **[OWNER DECISION REQUIRED: whether to accept members outside the United States]** **[ATTORNEY REVIEW: cross-border transfer requirements if non-US members are accepted]**

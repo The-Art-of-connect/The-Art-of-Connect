@@ -64,7 +64,7 @@ export default async function MemberHome() {
         <section className="glass mt-10 p-7">
           <p className="eyebrow">Refer a friend</p>
           <h2 className="display mt-3 text-3xl">Share The Art of Connect</h2>
-          <p className="mt-2 text-sm text-muted">{catalogue.referral_reward ?? "Invite friends 40+ who would value meaningful connection."}</p>
+          <p className="mt-2 text-sm text-muted">{catalogue.referral_reward ?? "Invite friends who would value meaningful connection."}</p>
           <p className="mt-4 break-all rounded-xl border border-line bg-ink-3 px-4 py-3 font-mono text-sm">{referralLink}</p>
         </section>
       )}

@@ -349,7 +349,7 @@ export function MembershipBuilder({
             )}
           </div>
           <p className="mt-5 text-center text-xs text-faint">One private account on every device — no extra device fees · change or cancel any time</p>
-          <p className="mt-2 text-center text-xs font-semibold tracking-wide text-gold">Exclusively for adults {catalogue.minimum_member_age}+</p>
+          <p className="mt-2 text-center text-xs font-semibold tracking-wide text-gold">Adults {catalogue.minimum_member_age}+ · Personal Society singles 30+</p>
         </div>
         {mode === "enroll" && !enrollmentOpen && <NotifyForm sel={sel} loveStatus={loveStatus} packageSlug={q.pkg?.slug ?? null} />}
       </aside>
