@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; group: string }[] = [
   { href: "/admin", label: "Overview", roles: ["owner", "executive", "finance", "admin", "support", "moderator"], group: "Command" },
+  { href: "/admin/preview", label: "Member view preview", roles: ["owner", "executive", "admin"], group: "Command" },
   { href: "/admin/launch", label: "Launch readiness", roles: ["owner", "executive", "finance"], group: "Command" },
   { href: "/admin/analytics", label: "Analytics", roles: ["owner", "executive", "admin"], group: "Command" },
   { href: "/admin/members", label: "Members", roles: ["owner", "executive", "admin", "support"], group: "People" },
