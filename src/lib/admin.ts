@@ -18,6 +18,7 @@ export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; 
   { href: "/admin/support", label: "Customer support", roles: ["owner", "executive", "admin", "support"], group: "Care" },
   { href: "/admin/moderation", label: "Content moderation", roles: ["owner", "executive", "admin", "moderator"], group: "Care" },
   { href: "/admin/safety", label: "Trust & safety", roles: ["owner", "executive", "admin", "moderator"], group: "Care" },
+  { href: "/admin/legal", label: "Legal & Policy Center", roles: ["owner", "executive"], group: "Platform" },
   { href: "/admin/security", label: "Security Center", roles: ["owner", "admin"], group: "Platform" },
   { href: "/admin/team", label: "Team & permissions", roles: ["owner"], group: "Platform" },
   { href: "/admin/settings", label: "Launch controls & settings", roles: ["owner"], group: "Platform" },

@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
+import { LEGAL_TITLES, PROFESSIONAL_DOCS } from "@/lib/legal-requirements";
 import { submitProfessionalApplication, submitProfessionalInterest, type ProState } from "@/app/actions/professionals";
 
 const TYPES = [
@@ -113,7 +114,16 @@ export function ProfessionalApplicationForm() {
       <ExperiencePicker />
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="agree" required className="mt-1 h-4 w-4 accent-[var(--champagne)]" />
-        <span>I agree to the <a href="/legal/professional-agreement" target="_blank" className="text-gold underline">Professional Agreement</a> and <a href="/legal/community-standards" target="_blank" className="text-gold underline">Community Standards</a>, and consent to verification of my credentials and identity.</span>
+        <span>
+          I have read and agree to the{" "}
+          {PROFESSIONAL_DOCS.map((slug, i) => (
+            <span key={slug}>
+              <a href={`/legal/${slug}`} target="_blank" rel="noreferrer" className="text-gold underline">{LEGAL_TITLES[slug]}</a>
+              {i < PROFESSIONAL_DOCS.length - 2 ? ", " : i === PROFESSIONAL_DOCS.length - 2 ? " and " : "."}
+            </span>
+          ))}{" "}
+          I consent to verification of my credentials and identity.
+        </span>
       </label>
       <Turnstile action="pro_application" resetSignal={state} onReady={setVerified} />
       {state && !state.ok && <p className="text-sm text-danger" role="alert">{state.message}</p>}

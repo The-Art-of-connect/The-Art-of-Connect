@@ -85,3 +85,9 @@ select count(*) from public.legal_acceptances;
 \echo 'v9-20) Legal audit trail records the publication and cannot be changed (expect t, error):'
 select exists (select 1 from public.legal_audit_log where table_name = 'legal_document_versions' and new_values ->> 'status' = 'published' and actor_email is not null);
 delete from public.legal_audit_log;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000008';
+\echo 'v9-21) A member cannot record acceptance on behalf of another account (expect permission denied):'
+select public.record_legal_acceptance_for('00000000-0000-0000-0000-000000000001', array['terms-of-service'], 'registration', 'x');
+reset role;
+reset request.jwt.claim.sub;

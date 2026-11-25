@@ -254,6 +254,31 @@ end;
 $$;
 grant execute on function public.record_legal_acceptance(text[], text, text, text, text) to authenticated;
 
+-- Registration: the account is created by the server, so acceptance is
+-- recorded by the server for the new account in the same request.
+create or replace function public.record_legal_acceptance_for(target uuid, docs text[], ctx text, statement text, ip_hash text default null, user_agent text default null)
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  d text;
+  v public.legal_document_versions;
+  n integer := 0;
+begin
+  if target is null then raise exception 'No account'; end if;
+  foreach d in array docs loop
+    v := public.legal_version_in_effect(d);
+    if v.id is null then
+      raise exception 'The % is not yet in effect and cannot be accepted', d;
+    end if;
+    insert into public.legal_acceptances (user_id, accepted_email, document_slug, version_id, version_label, body_sha256, context, statement, ip_hash, user_agent)
+    values (target, (select email::text from public.profiles where id = target), d, v.id, v.version_label, v.body_sha256, ctx, statement, ip_hash, left(user_agent, 300));
+    n := n + 1;
+  end loop;
+  return n;
+end;
+$$;
+revoke execute on function public.record_legal_acceptance_for(uuid, text[], text, text, text, text) from public, anon, authenticated;
+grant execute on function public.record_legal_acceptance_for(uuid, text[], text, text, text, text) to service_role;
+
 -- Which in-effect documents the signed-in person still needs to accept.
 create or replace function public.pending_legal_acceptances()
 returns table (slug text, title text, version_label text, reason text)

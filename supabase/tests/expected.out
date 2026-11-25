@@ -278,3 +278,5 @@ ERROR:  Acceptance records cannot be changed or deleted
 v9-20) Legal audit trail records the publication and cannot be changed (expect t, error):
 t
 ERROR:  The legal audit trail cannot be changed or deleted
+v9-21) A member cannot record acceptance on behalf of another account (expect permission denied):
+ERROR:  permission denied for function record_legal_acceptance_for

@@ -5,7 +5,7 @@ export function SiteFooter() {
   return (
     <footer className="band theme-dark pt-20">
       <Ornament className="px-4" />
-      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
         <div className="space-y-4">
           <Wordmark />
           <p className="eyebrow !tracking-[0.25em]">In Business. In Life. In Love.</p>
@@ -20,7 +20,8 @@ export function SiteFooter() {
         {[
           { title: "Experiences", items: [["In Business", "/business"], ["In Life", "/life"], ["In Love", "/love"]] },
           { title: "Membership", items: [["Build Your Membership", "/membership#build"], ["Compare memberships", "/membership#compare"], ["Sign in", "/sign-in"]] },
-          { title: "Company", items: [["For professionals", "/professionals"], ["Safety", "/legal/safety-policy"], ["Privacy", "/legal/privacy-policy"], ["Terms", "/legal/terms-of-service"], ["All policies", "/legal"]] },
+          { title: "Company", items: [["For professionals", "/professionals"], ["Professional Provider Agreement", "/legal/professional-agreement"], ["Accessibility", "/legal/accessibility"]] },
+          { title: "Legal", items: [["Legal & Policy Center", "/legal"], ["Terms of Service", "/legal/terms-of-service"], ["Privacy Policy", "/legal/privacy-policy"], ["Cancellation & Refunds", "/legal/refund-policy"], ["Member Safety", "/legal/safety-policy"], ["Cookies", "/legal/cookie-policy"]] },
         ].map((col) => (
           <div key={col.title}>
             <p className="eyebrow mb-4">{col.title}</p>

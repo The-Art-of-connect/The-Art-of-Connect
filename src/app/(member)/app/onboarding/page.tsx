@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { AgreementForm } from "@/components/AgreementForm";
 import { MemberBilling } from "@/components/MemberBilling";
 import { getViewer } from "@/lib/auth";
 import { getCatalogue } from "@/lib/catalogue";
@@ -13,9 +12,9 @@ export default async function OnboardingPage() {
   const viewer = (await getViewer())!;
   if (viewer.accountType !== "member") redirect("/app");
   const supabase = (await createClient())!;
-  const [{ data: auth }, { data: consents }, { data: sub }, catalogue, launch] = await Promise.all([
+  const [{ data: auth }, { data: accepted }, { data: sub }, catalogue, launch] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.from("consents").select("consent_type").eq("user_id", viewer.id).is("revoked_at", null),
+    supabase.from("legal_acceptances").select("document_slug").eq("user_id", viewer.id).eq("document_slug", "terms-of-service").limit(1),
     supabase.from("subscriptions").select("id").eq("user_id", viewer.id).in("status", ["active", "trialing", "past_due"]).maybeSingle(),
     getCatalogue(),
     getLaunchState(),
@@ -28,8 +27,10 @@ export default async function OnboardingPage() {
     interval: saved.interval === "year" ? "year" : "month",
     couples: Boolean(saved.couples),
     addons: Array.isArray(saved.addons) ? saved.addons : [],
+    package: typeof (saved as { package?: unknown }).package === "string" ? (saved as { package: string }).package : null,
   };
-  const agreed = (consents ?? []).some((c) => c.consent_type === "terms");
+  // Registration records acceptance of the Terms in effect; updated agreements are handled by the member area's acceptance step.
+  const agreed = Boolean(accepted?.length);
 
   return (
     <>
@@ -38,7 +39,13 @@ export default async function OnboardingPage() {
       <ol className="mt-10 space-y-12">
         <li className="glass p-7 sm:p-9">
           <p className="flex items-baseline gap-3"><span className="display text-3xl text-gold">01</span><span className="text-lg font-semibold">Your agreements</span></p>
-          <div className="mt-5">{agreed ? <p className="text-sm text-success">✓ Terms and Privacy Policy accepted.</p> : <AgreementForm />}</div>
+          <div className="mt-5">
+            {agreed ? (
+              <p className="text-sm text-success">✓ Terms of Service, Privacy Policy and Community Standards accepted.</p>
+            ) : (
+              <p className="text-sm text-muted">Our membership agreements are being finalized. You’ll be asked to accept them before your membership begins.</p>
+            )}
+          </div>
         </li>
         <li className={agreed ? "" : "pointer-events-none opacity-50"} aria-disabled={!agreed}>
           <p className="mb-6 flex items-baseline gap-3"><span className="display text-3xl text-gold">02</span><span className="text-lg font-semibold">Review your membership and pay securely</span></p>

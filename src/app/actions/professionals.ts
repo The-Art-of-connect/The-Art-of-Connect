@@ -6,7 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { allow } from "@/lib/ratelimit";
 import { logSecurityEvent } from "@/lib/security";
 import { BOT_CHECK_MESSAGE, verifyTurnstile } from "@/lib/turnstile";
-import { consentVersions } from "@/lib/legal";
+import { allInEffect } from "@/lib/legal";
+import { PROFESSIONAL_DOCS, acceptanceStatement } from "@/lib/legal-requirements";
+import { clientMeta } from "@/lib/security";
 
 export type ProState = { ok: boolean; message: string } | null;
 
@@ -104,7 +106,8 @@ export async function submitProfessionalApplication(_prev: ProState, form: FormD
       website: String(form.get("website") ?? ""),
     });
   if (!parsed.success) return { ok: false, message: "Please complete all required fields." };
-  if (form.get("agree") !== "on") return { ok: false, message: "Please agree to the Professional Agreement." };
+  if (form.get("agree") !== "on") return { ok: false, message: "Please agree to the Professional Provider Agreement and related policies." };
+  if (!(await allInEffect(PROFESSIONAL_DOCS))) return { ok: false, message: "The Professional Provider Agreement is being finalized. Applications open soon." };
   const d = parsed.data;
   if (d.professionalType === "licensed_clinical" && !(d.licenseType && d.licenseNumber && d.licenseState)) {
     return { ok: false, message: "Licensed professionals must provide license type, number and state." };
@@ -130,7 +133,10 @@ export async function submitProfessionalApplication(_prev: ProState, form: FormD
     website: d.website,
   });
   if (error) return { ok: false, message: "Your application could not be submitted. Please try again." };
-  await supabase.from("consents").insert(consentVersions(["professional_agreement", "community_standards", "terms", "privacy"]).map((c) => ({ user_id: viewer.id, ...c })));
+  const { ipHash, userAgent } = await clientMeta();
+  await supabase.rpc("record_legal_acceptance", {
+    docs: PROFESSIONAL_DOCS, ctx: "professional_application", statement: acceptanceStatement(PROFESSIONAL_DOCS), ip_hash: ipHash, user_agent: userAgent,
+  });
   // Confirmation to the applicant and an alert to the owner — no credentials or license details in either.
   const { sendEmail, ownerAlertAddress } = await import("@/lib/email");
   const { templates } = await import("@/lib/email-templates");
