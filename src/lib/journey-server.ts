@@ -159,8 +159,24 @@ export async function sendJourneyMessage(input: {
     : null;
 
   // Instructions: founder's philosophy and guardrails first, then the owner's published version.
-  const { data: published } = await db.from("journey_instruction_versions").select("version, body").eq("status", "published").maybeSingle();
-  const instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: published?.body ?? null, disabledCapabilities: cfg.disabled });
+  const [{ data: published }, { data: knowledge }, { data: examples }] = await Promise.all([
+    db.from("journey_instruction_versions").select("version, body").eq("status", "published").maybeSingle(),
+    db.from("journey_knowledge").select("title, body").eq("status", "approved").in("mode", ["all", input.mode]).order("updated_at", { ascending: false }).limit(20),
+    db.from("journey_examples").select("member_message, ideal_reply").eq("status", "approved").eq("mode", input.mode).order("updated_at", { ascending: false }).limit(5),
+  ]);
+  let knowledgeText = "";
+  for (const k of knowledge ?? []) {
+    const block = `## ${k.title}\n${k.body}\n\n`;
+    if (knowledgeText.length + block.length > 8000) break;
+    knowledgeText += block;
+  }
+  const exampleText = (examples ?? []).map((e) => `Member: ${e.member_message.slice(0, 600)}\nJourney: ${e.ideal_reply.slice(0, 1200)}`).join("\n\n");
+  const ownerText = [
+    published?.body ?? "",
+    knowledgeText && `# Approved knowledge from The Art of Connect\n${knowledgeText}`,
+    exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
+  ].filter(Boolean).join("\n\n");
+  const instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
 
   // Context: only this member's own conversation, trimmed to the owner's limits.
   let history: ChatTurn[] = [];
@@ -218,4 +234,33 @@ export async function sendJourneyMessage(input: {
     ? allowanceView(view.allowance, view.used + 1, view.purchasedRemaining, periodEnd)
     : view && { ...view, purchasedRemaining: Math.max(0, view.purchasedRemaining - 1) };
   return { ok: true, reply: result.text, conversationId, allowance: after };
+}
+
+/** What a Journey page needs to show: access level, the allowance meter and whether Journey is switched on. */
+export async function getJourneyStatus(): Promise<{
+  access: "none" | "standard" | "enhanced" | "staff";
+  enabled: boolean;
+  allowance: AllowanceView | null;
+  packageSlug: string | null;
+}> {
+  const viewer = await getViewer();
+  const none = { access: "none" as const, enabled: false, allowance: null, packageSlug: null };
+  if (!viewer) return none;
+  const db = createAdminClient();
+  const cfg = db ? await loadSettings(db) : null;
+  const enabled = Boolean(cfg?.settings.enabled && cfg.settings.paidUsageAuthorized);
+  if (viewer.roles.length) return { access: "staff", enabled, allowance: null, packageSlug: null };
+  if (!db || !cfg) return none;
+  const m = await membershipFor(db, viewer.id);
+  const access = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
+  if (!m || access === "none") return { ...none, enabled };
+  const [{ data: t }, { data: u }] = await Promise.all([
+    db.from("journey_tier_limits").select("monthly_messages").eq("package_slug", m.membership.packageSlug ?? "").maybeSingle(),
+    db.rpc("journey_holder_usage", { p_holder: m.holderId, p_period_start: m.periodStart.toISOString() }),
+  ]);
+  const usage = u as Record<string, number | string> | null;
+  const allowance = t?.monthly_messages != null && usage
+    ? allowanceView(t.monthly_messages, Number(usage.period_messages), Number(usage.purchased_remaining), m.periodEnd)
+    : null;
+  return { access, enabled, allowance, packageSlug: m.membership.packageSlug };
 }

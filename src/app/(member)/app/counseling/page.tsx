@@ -9,11 +9,12 @@ export default async function Page() {
         Private space. Your journal and reflections are visible only to you, and your In Life activity never appears on
         your In Love or In Business profiles.
       </div>
-      <ModuleCard title="Personal growth dashboard" body="Your goals, pathways and progress in one place." />
-      <ModuleCard title="Guided self-discovery" body="Identity exploration, inner-child reflection and attachment style exploration." />
-      <ModuleCard title="Emotional intelligence" body="Assessments and exercises to grow self-awareness and empathy." />
-      <ModuleCard title="Private journal" body="Visible only to you — not to partners, matches or The Art of Connect team." />
-      <ModuleCard title="Counselors & coaches" body="Find reviewed professionals, clearly marked as licensed or nonclinical." />
+      <ModuleCard title="Personal growth dashboard" body="Your goals, daily practices and progress in one place." href="/app/journey/daily" />
+      <ModuleCard title="Guided self-discovery" body="The ten Arts — from The Art of Self to The Art of Becoming." href="/app/journey/library" />
+      <ModuleCard title="Emotional intelligence" body="Reflections and exercises to grow self-awareness and empathy." href="/app/readiness" />
+      <ModuleCard title="Private journal" body="Visible only to you — not to partners, matches or The Art of Connect team." href="/app/counseling/journal" />
+      <ModuleCard title="Journey" body="Your AI connection concierge for self-discovery and personal growth." href="/app/journey" />
+      <ModuleCard title="Counselors & coaches" body="The Professional Therapy & Counseling Center — verified, licensed professionals." href="/app/counseling/professionals" />
       <ModuleCard title="Professional referrals" body="Share information with a professional only with your explicit consent." />
     </ExperienceShell>
   );

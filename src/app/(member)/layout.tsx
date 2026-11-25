@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Wordmark } from "@/components/Emblem";
-import { getViewer, isInsidePreview, isStaff } from "@/lib/auth";
+import { getViewer, hasRole, isInsidePreview, isStaff } from "@/lib/auth";
+import { OwnerReview, SectionGate } from "@/components/OwnerReview";
 import { AgreementForm } from "@/components/AgreementForm";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,12 +19,19 @@ export default async function MemberLayout({ children }: { children: React.React
     const { data } = (await supabase?.rpc("pending_legal_acceptances")) ?? { data: null };
     pending = (data as typeof pending | null) ?? [];
   }
+  // Pages the owner has switched to "Coming soon" (read by everyone; changed only by the owner).
+  const sb = await createClient();
+  const { data: statusRows } = (await sb?.from("section_status").select("path, status, member_note")) ?? { data: null };
+  const status = Object.fromEntries((statusRows ?? []).map((r) => [r.path, r.status]));
+  const notes = Object.fromEntries((statusRows ?? []).map((r) => [r.path, r.member_note]));
+  const reviewer = hasRole(viewer, ["owner", "executive"]);
   return (
     <div className="theme-ivory min-h-dvh">
       <header className="theme-dark sticky top-0 z-30 border-b border-line !bg-espresso/95 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
           <Link href="/app"><Wordmark /></Link>
           <div className="flex items-center gap-3">
+            <Link href="/app/journey" className="hidden text-sm text-muted hover:text-text sm:inline">Journey</Link>
             <Link href="/app/membership" className="hidden text-sm text-muted hover:text-text sm:inline">My membership</Link>
             <Link href="/app/safety" className="hidden text-sm text-muted hover:text-text sm:inline">Safety</Link>
             <Link href="/legal" className="hidden text-sm text-muted hover:text-text sm:inline">Legal</Link>
@@ -53,9 +61,10 @@ export default async function MemberLayout({ children }: { children: React.React
             <AgreementForm docs={pending.map((p) => ({ slug: p.slug, title: p.title, version: p.version_label, reason: p.reason }))} />
           </section>
         ) : (
-          children
+          <SectionGate status={status} notes={notes} staff={isStaff(viewer) || preview}>{children}</SectionGate>
         )}
       </main>
+      {reviewer && <OwnerReview status={status} />}
     </div>
   );
 }

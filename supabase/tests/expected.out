@@ -429,3 +429,41 @@ v12-26) The owner cannot read member conversations, only aggregate usage (expect
 0|0|t
 v12-27) Members cannot write conversations or usage directly (expect error):
 ERROR:  permission denied for table journey_usage
+v13-1) Partner B blocks a private work day with a label (expect 1):
+1
+v13-2) B cannot pretend a block came from a linked calendar (expect error):
+ERROR:  new row violates row-level security policy for table "busy_blocks"
+v13-3) Partner A cannot read B's busy blocks or labels (expect 0):
+0
+v13-4) A sees only that B is unavailable — times, no label (expect 1|f):
+1|f
+v13-5) The availability result has no label or source column (expect TABLE(starts_at timestamp with time zone, ends_at timestamp with time zone, mine boolean)):
+TABLE(starts_at timestamp with time zone, ends_at timestamp with time zone, mine boolean)
+v13-6) A checks the busy day: unavailable; another day: available (expect unavailable|available):
+unavailable|available
+v13-7) A books date night over B's busy time: refused with the neutral message (expect error):
+ERROR:  That time doesn't work. Please choose another date.
+v13-8) A books a free evening; both partners see it (expect 1 then 1):
+1
+1
+v13-9) An outsider sees nothing: no events, no availability (expect 0|0):
+0|0
+v13-10) An outsider cannot add to the couple's calendar (expect error):
+ERROR:  new row violates row-level security policy for table "couple_events"
+v13-11) Members cannot add a linked calendar directly (server only) or read link addresses (expect error, error):
+ERROR:  permission denied for table calendar_links
+ERROR:  permission denied for table calendar_links
+v13-12) The owner cannot read members' busy times or couple events (expect 0|0):
+0|0
+v13-13) The owner reviews a page and switches it to Coming soon (expect 1|coming_soon):
+1|coming_soon
+v13-14) A member sees which pages are Coming soon, but not the owner's notes, and cannot change status (expect t|0, then 0 updated):
+t|0
+0
+v13-15) A member saves onboarding answers and sees only their own (expect 2):
+2
+v13-16) Partner and owner cannot read another member's answers (expect 0, then 0):
+0
+0
+v13-17) No one can write answers for someone else (expect error):
+ERROR:  new row violates row-level security policy for table "onboarding_answers"
