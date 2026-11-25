@@ -3,6 +3,7 @@ import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResponse, isOpenAIConfigured, type ChatTurn } from "@/lib/openai";
+import { maybeAutoReload } from "@/lib/journey-commerce";
 import {
   buildJourneyInstructions, journeyAccessFor, modeAllowed, ownerTestAccess,
   type JourneyCapability, type JourneyMode, type PaidMembership,
@@ -38,9 +39,9 @@ export type JourneyReply =
 
 const refuse = (status: number, message: string, allowance?: AllowanceView | null): JourneyReply => ({ ok: false, status, message, allowance, safety: SAFETY_NOTE });
 
-type Db = NonNullable<ReturnType<typeof createAdminClient>>;
+export type Db = NonNullable<ReturnType<typeof createAdminClient>>;
 
-async function loadSettings(db: Db) {
+export async function loadSettings(db: Db) {
   const [{ data: s }, { data: models }] = await Promise.all([
     db.from("journey_settings").select("*").maybeSingle(),
     db.from("journey_models").select("id, input_cents_per_million, output_cents_per_million, enabled"),
@@ -70,11 +71,17 @@ async function loadSettings(db: Db) {
     enhancedPackages: (s.enhanced_packages ?? []) as string[],
     entitledStatuses: (s.entitled_statuses ?? []) as string[],
     disabled: (s.disabled_capabilities ?? []) as JourneyCapability[],
+    memoryEnabled: s.memory_enabled !== false,
+    voice: {
+      enabled: Boolean(s.voice_enabled), model: (s.voice_model as string | null) ?? null,
+      centsPerMinute: s.voice_cents_per_minute === null || s.voice_cents_per_minute === undefined ? null : Number(s.voice_cents_per_minute),
+      inactivitySeconds: Number(s.voice_inactivity_seconds ?? 120), maxSessionMinutes: Number(s.voice_max_session_minutes ?? 30),
+    },
   };
 }
 
 /** The paying membership behind this member, and whose allowance they draw from (a couple shares the subscriber's). */
-async function membershipFor(db: Db, userId: string) {
+export async function membershipFor(db: Db, userId: string) {
   const pick = "user_id, kind, status, tier_slug, experiences, amount_cents, couples_upgrade, current_period_end, billing_interval";
   const { data: own } = await db.from("subscriptions").select(pick).eq("user_id", userId).eq("kind", "member").order("created_at", { ascending: false }).limit(1).maybeSingle();
   let sub = own;
@@ -109,6 +116,8 @@ export async function sendJourneyMessage(input: {
   conversationId?: string | null;
   ownerTest?: boolean;
   hasAttachment?: boolean;
+  /** A purchased Journey Private Session (time- and message-limited; doesn't use the monthly allowance). */
+  sessionId?: string | null;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
   if (!viewer) return refuse(401, "Please sign in to talk with Journey.");
@@ -124,7 +133,14 @@ export async function sendJourneyMessage(input: {
   let periodEnd = new Date();
   let tier: TierLimit | null = null;
 
-  if (input.ownerTest) {
+  if (input.sessionId && !input.ownerTest) {
+    const m = await membershipFor(db, viewer.id);
+    const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
+    if (!m || level === "none") return refuse(403, "Journey is a benefit of paid memberships.");
+    const { data: js } = await db.from("journey_sessions").select("id, status, ends_at, objective, product_slug").eq("id", input.sessionId).eq("user_id", viewer.id).maybeSingle();
+    if (!js || ["completed", "expired", "refunded"].includes(js.status)) return refuse(403, "This session has ended. Your private summary is on the Sessions page.");
+    access = level;
+  } else if (input.ownerTest) {
     const mfa = await getMfaStatus();
     if (!ownerTestAccess({ roles: viewer.roles, mfaVerified: mfa.verified, ownerTestingEnabled: cfg.ownerTestingEnabled }))
       return refuse(403, "Owner testing isn't authorized for this session.");
@@ -171,8 +187,18 @@ export async function sendJourneyMessage(input: {
     knowledgeText += block;
   }
   const exampleText = (examples ?? []).map((e) => `Member: ${e.member_message.slice(0, 600)}\nJourney: ${e.ideal_reply.slice(0, 1200)}`).join("\n\n");
+  let memoryText = "";
+  if (!input.ownerTest && cfg.memoryEnabled) {
+    const [{ data: ms }, { data: mem }] = await Promise.all([
+      db.from("journey_memory_settings").select("enabled, approach").eq("user_id", viewer.id).maybeSingle(),
+      db.from("journey_memories").select("kind, content").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
+    ]);
+    if (ms?.approach) memoryText += `The member prefers a ${ms.approach === "blend" ? "blended spiritual, secular and practical" : ms.approach} approach.\n`;
+    if (ms?.enabled && mem?.length) memoryText += mem.map((x) => `- (${x.kind}) ${x.content}`).join("\n");
+  }
   const ownerText = [
     published?.body ?? "",
+    memoryText && `# What this member has asked Journey to remember (use naturally; never reveal it to anyone else)\n${memoryText}`,
     knowledgeText && `# Approved knowledge from The Art of Connect\n${knowledgeText}`,
     exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
   ].filter(Boolean).join("\n\n");
@@ -188,6 +214,9 @@ export async function sendJourneyMessage(input: {
   }
   const promptChars = instructions.length + history.reduce((n, h) => n + h.content.length, 0);
 
+  if (input.sessionId && !input.ownerTest) {
+    return runSession(db, cfg.settings, viewer.id, input, instructions, history);
+  }
   const d = decide({
     settings: cfg.settings, tier, ownerTest: input.ownerTest, promptChars, messageChars: input.message.length, hasAttachment: input.hasAttachment,
     usage: {
@@ -196,7 +225,14 @@ export async function sendJourneyMessage(input: {
       purchasedRemaining: Number(usage?.purchased_remaining ?? 0), tierMonthCents: 0, companyMonthCents: 0,
     },
   });
-  if (!d.allowed) return refuse(429, d.memberMessage, view);
+  if (!d.allowed) {
+    // Allowance used: if the member turned on Auto-Reload, try it (company safeguards apply; access arrives after payment).
+    if (d.reason === "Allowance used" && !input.ownerTest) {
+      const r = await maybeAutoReload(viewer.id, holderId);
+      if (r === "started") return refuse(402, "Your Auto-Reload is being processed. Your new messages will be ready in a moment — nothing else is charged.", view);
+    }
+    return refuse(429, d.memberMessage, view);
+  }
 
   const { data: reserved } = await db.rpc("journey_reserve", {
     p_user: viewer.id, p_holder: holderId, p_request_key: input.requestKey, p_package: packageSlug, p_mode: input.mode,
@@ -263,4 +299,30 @@ export async function getJourneyStatus(): Promise<{
     ? allowanceView(t.monthly_messages, Number(usage.period_messages), Number(usage.purchased_remaining), m.periodEnd)
     : null;
   return { access, enabled, allowance, packageSlug: m.membership.packageSlug };
+}
+
+/** A message inside a purchased Private Session. */
+async function runSession(db: Db, settings: JourneySettings, userId: string, input: { sessionId?: string | null; message: string; requestKey: string; mode: JourneyMode }, instructions: string, history: ChatTurn[]): Promise<JourneyReply> {
+  if (!settings.enabled || !settings.paidUsageAuthorized) return refuse(503, "Journey is resting right now. Your session time hasn't started.");
+  if (input.message.length > settings.maxInputChars) return refuse(400, `Please keep your message under ${settings.maxInputChars} characters.`);
+  const rate = settings.models.find((m) => m.id === settings.defaultModel && m.enabled);
+  if (!rate) return refuse(503, "Journey is resting right now. Your session time hasn't started.");
+  const { data: js } = await db.from("journey_sessions").select("objective, product_slug").eq("id", input.sessionId!).maybeSingle();
+  const { data: prod } = await db.from("journey_session_products").select("name, minutes, objective").eq("slug", js?.product_slug ?? "").maybeSingle();
+  const sessionInstructions = `${instructions}\n\n# This is a Journey Private Session: ${prod?.name ?? "Private Session"} (${prod?.minutes ?? ""} minutes)\nPurpose: ${prod?.objective ?? ""}\nThe member's objective: ${js?.objective ?? "to be explored together"}.\nStructure: clarify the objective, guide the conversation, invite reflection, agree practical next steps. This is AI-guided personal development, not therapy.`;
+  const reserve = costCents(rate, Math.ceil((sessionInstructions.length + input.message.length) / 4) + 16, 900) ?? 0;
+  const { data: reserved } = await db.rpc("journey_reserve_session", { p_user: userId, p_session: input.sessionId, p_request_key: input.requestKey, p_model: rate.id, p_reserve: reserve });
+  if (typeof reserved !== "string" || reserved.startsWith("refused:")) {
+    const why = String(reserved);
+    return refuse(429, why === "refused:session_ended" ? "This session has reached its time limit. You can create your private summary now." : why === "refused:session_limit" ? "This session has reached its message limit. You can create your private summary now." : "Journey is resting right now.");
+  }
+  const result = await createResponse({ model: rate.id, instructions: sessionInstructions, history, message: input.message, maxOutputTokens: 900 });
+  await db.rpc("journey_complete", { p_id: Number(reserved), p_ok: result.ok, p_in: result.inputTokens, p_out: result.outputTokens, p_cost: costCents(rate, result.inputTokens, result.outputTokens) ?? reserve });
+  if (!result.ok) {
+    // A failed reply gives the session message back.
+    const { data: cur } = await db.from("journey_sessions").select("messages_used").eq("id", input.sessionId!).maybeSingle();
+    if (cur && cur.messages_used > 0) await db.from("journey_sessions").update({ messages_used: cur.messages_used - 1 }).eq("id", input.sessionId!);
+    return refuse(502, "Journey couldn't reply just now. Please try again.");
+  }
+  return { ok: true, reply: result.text, conversationId: null, allowance: null };
 }

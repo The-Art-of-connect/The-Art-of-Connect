@@ -152,3 +152,20 @@ The preview cards in `public/og/` are generated from the site's photography and 
 ```bash
 node scripts/generate-og-images.mjs
 ```
+
+## Applying database updates securely (GitHub Action)
+
+Database migrations can be applied without pasting SQL and without sharing your database password with anyone:
+
+1. In Supabase, open **Connect** and copy the **Session pooler** connection string (URI). Put your database password in it.
+2. In GitHub, open the repository → **Settings → Environments → New environment** named `production-database` (optionally add yourself as a required reviewer), then add an environment secret named `SUPABASE_DB_URL` with that connection string.
+3. Open **Actions → Database migrations → Run workflow**:
+   - **check** — read-only. Lists every migration as applied or PENDING and runs the security verification.
+   - **apply** with `APPLY` typed in the confirm box — applies only the pending migrations, in order, each in its own transaction, stops at the first error, records each in `public.applied_migrations`, then re-runs the security verification.
+
+The secret is stored encrypted by GitHub; it is never printed in logs or committed to the repository.
+
+## Journey (OpenAI) and Journey Plus (Stripe)
+
+- **OpenAI:** add `OPENAI_API_KEY` in Netlify. Then, in Owner Portal → Journey Intelligence Center: add approved models with their current per-million-token prices, set the company and owner-testing budgets, set each membership's caps, add the realtime voice model and per-minute rate for Talk to Journey, test privately and run the evaluation scenarios. Billable usage stays off until you type AUTHORIZE.
+- **Stripe webhook events** (in addition to the membership events): `checkout.session.completed`, `payment_intent.succeeded` and `payment_intent.payment_failed`. Journey Plus messages, Private Sessions and Auto-Reload access are granted only when these confirm payment.

@@ -1,0 +1,46 @@
+# Applies database migrations to the live Supabase project — only when run
+# by hand from GitHub → Actions → "Database migrations" → Run workflow.
+#   mode: check  → read-only report of applied / pending migrations
+#   mode: apply  → applies only pending migrations (type APPLY to confirm)
+# Needs the repository secret SUPABASE_DB_URL (Supabase → Connect →
+# connection string, Session pooler, with your database password).
+name: Database migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "check (read-only) or apply"
+        required: true
+        default: check
+        type: choice
+        options: [check, apply]
+      confirm:
+        description: "Type APPLY to change the live database"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-migrations
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: production-database
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the Postgres client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client >/dev/null
+      - name: Refuse to apply without confirmation
+        if: inputs.mode == 'apply' && inputs.confirm != 'APPLY'
+        run: |
+          echo "Type APPLY in the confirm box to change the live database."
+          exit 1
+      - name: Run
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: scripts/db-migrations.sh "${{ inputs.mode }}"

@@ -1,3 +1,4 @@
+import { handleJourneyStripeEvent } from "@/lib/journey-commerce";
 import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { serverSecret } from "@/lib/env";
@@ -119,6 +120,9 @@ export async function POST(request: NextRequest) {
       }
     }
   };
+
+  // Journey Plus, Private Sessions and Auto-Reload: access is granted here, only after Stripe confirms payment.
+  if (await handleJourneyStripeEvent(stripe, event)) return NextResponse.json({ received: true });
 
   switch (event.type) {
     case "customer.subscription.created":

@@ -3,6 +3,7 @@ import { requireStaff, hasRole } from "@/lib/auth";
 import { countRows, date, rolesFor } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
 import { flagAccount, saveSafetySettings, updateSafetyFlag } from "@/app/actions/admin";
+import { decideAppeal } from "@/app/actions/journey-admin";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { Empty, PageHeader, Panel, Stat } from "@/components/admin/ui";
 
@@ -21,6 +22,7 @@ export default async function SafetyAdminPage() {
     countRows("identity_verifications", (q) => q.in("status", ["pending", "processing", "requires_input"])),
   ]);
   const v = (k: string) => (settings ?? []).find((s) => s.key === k)?.value;
+  const { data: appeals } = await supabase.from("account_appeals").select("id, regarding, explanation, status, created_at").in("status", ["open", "reviewing"]).order("created_at").limit(50);
 
   return (
     <>
@@ -88,6 +90,27 @@ export default async function SafetyAdminPage() {
             <input name="details" placeholder="Details for the review team" className="field" />
             <button className="btn btn-gold">Flag</button>
           </ActionForm>
+        </Panel>
+      </div>
+      <div className="mt-6">
+        <Panel title={`Member appeals (${appeals?.length ?? 0} open)`}>
+          {appeals?.length ? (
+            <ul className="divide-y divide-line">
+              {appeals.map((a) => (
+                <li key={a.id} className="px-5 py-4 text-sm">
+                  <p className="font-semibold">{a.regarding} <span className="chip ml-2">{a.status}</span></p>
+                  <p className="mt-1 whitespace-pre-wrap text-muted">{a.explanation}</p>
+                  <p className="mt-1 text-xs text-faint">{date(a.created_at)} · Reviewed by someone not involved in the original decision.</p>
+                  <ActionForm action={decideAppeal} className="mt-3 flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="id" value={a.id} />
+                    <select name="status" className="field w-44" defaultValue="reviewing"><option value="reviewing">Reviewing</option><option value="reversed">Reverse decision</option><option value="upheld">Uphold decision</option></select>
+                    <input name="note" className="field flex-1" placeholder="Note to file (not sent to the member)" />
+                    <button className="btn btn-ghost btn-sm">Save</button>
+                  </ActionForm>
+                </li>
+              ))}
+            </ul>
+          ) : <Empty>No open appeals.</Empty>}
         </Panel>
       </div>
       <p className="mt-4 text-xs text-muted">

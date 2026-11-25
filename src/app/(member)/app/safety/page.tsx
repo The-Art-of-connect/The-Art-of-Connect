@@ -3,16 +3,18 @@ import { ReportForm, UnblockButton } from "@/components/SafetyForms";
 import { getViewer } from "@/lib/auth";
 import { date } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
+import { AppealForm } from "@/components/AppealForm";
 
 export const metadata = { title: "Safety & privacy" };
 
 export default async function SafetyPage() {
   const viewer = (await getViewer())!;
   const supabase = (await createClient())!;
-  const [{ data: blocks }, { data: reports }, { data: profile }] = await Promise.all([
+  const [{ data: blocks }, { data: reports }, { data: profile }, { data: appeals }] = await Promise.all([
     supabase.from("blocks").select("blocked_id, created_at").eq("blocker_id", viewer.id).order("created_at", { ascending: false }),
     supabase.from("moderation_reports").select("reason, status, created_at").eq("reporter_id", viewer.id).order("created_at", { ascending: false }).limit(20),
     supabase.from("profiles").select("identity_verified_at").eq("id", viewer.id).maybeSingle(),
+    supabase.from("account_appeals").select("regarding, status, created_at").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(10),
   ]);
 
   return (
@@ -69,6 +71,17 @@ export default async function SafetyPage() {
           <li>Keep conversations on The Art of Connect until you’re comfortable.</li>
         </ul>
         <Link href="/legal/safety-policy" className="mt-4 inline-block text-gold underline">Read our Safety Policy</Link>
+      </section>
+
+      <section className="glass mt-8 p-6 sm:p-7">
+        <h2 className="text-lg font-semibold text-text">Ask us to review a decision</h2>
+        <p className="mt-2 text-sm text-muted">If your account was restricted or a report was decided in a way you believe is wrong, tell us. Someone not involved in the original decision will review it.</p>
+        <AppealForm />
+        {appeals && appeals.length > 0 && (
+          <ul className="mt-5 divide-y divide-line text-sm">
+            {appeals.map((a, i) => <li key={i} className="flex justify-between py-2"><span>{a.regarding}</span><span className="text-faint">{a.status} · {date(a.created_at)}</span></li>)}
+          </ul>
+        )}
       </section>
     </div>
   );

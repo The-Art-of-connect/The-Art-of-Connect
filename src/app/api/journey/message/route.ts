@@ -11,6 +11,7 @@ const Body = z.object({
   requestKey: z.string().regex(/^[A-Za-z0-9_-]{8,80}$/),
   conversationId: z.uuid().nullish(),
   ownerTest: z.boolean().optional(),
+  sessionId: z.uuid().nullish(),
 });
 
 /** Journey written conversations. Every permission and spending check runs on the server before OpenAI is called. */
