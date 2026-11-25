@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getViewer, isInsidePreview } from "@/lib/auth";
-import { getDiscovery, moduleProgress, nextModuleHref } from "@/lib/know-yourself-server";
+import { getDiscovery, moduleHref, moduleProgress, nextModuleHref } from "@/lib/know-yourself-server";
 import { BRAND_MESSAGE, JOURNEY_DEEPER, MODULES, PILLARS } from "@/lib/who-am-i";
 import { setDiscoveryChoice } from "@/app/actions/who-am-i";
 import { LivingHero } from "@/components/business/SocietyHero";
@@ -27,7 +27,7 @@ export default async function ArtOfKnowingYourself() {
         ]}
         eyebrow="The Art of Knowing Yourself" title="Your first connection is" gilded="with yourself."
         subtitle="Beyond the career, the relationship, the marriage and the responsibilities, there is you. Discover who you are, understand what you value, honor your boundaries and create a life that reflects your true self."
-        cta={{ href: nextModuleHref(d.answers, d.boundaries), label: started ? "Continue My Journey of Self-Discovery" : "Begin My Journey of Self-Discovery" }}
+        cta={{ href: nextModuleHref(d.answers, d.special), label: started ? "Continue My Journey of Self-Discovery" : "Begin My Journey of Self-Discovery" }}
         secondary={{ href: "/app", label: "Explore My Society" }}
       />
 
@@ -59,7 +59,7 @@ export default async function ArtOfKnowingYourself() {
           <div>
             <p className="eyebrow">Your personal discovery program</p>
             <h2 className="display mt-2 text-5xl">Who Am I?</h2>
-            <p className="mt-3 max-w-2xl text-muted">Nine private reflections to explore in any order, at your own pace. One personal profile travels with you across Business, Life, Singles and Couples — so each question is asked only once.</p>
+            <p className="mt-3 max-w-2xl text-muted">Ten private reflections to explore in any order, at your own pace. One personal profile travels with you across Business, Life, Singles and Couples — so each question is asked only once.</p>
           </div>
           {started && (
             <div className="w-full max-w-xs">
@@ -70,10 +70,10 @@ export default async function ArtOfKnowingYourself() {
         </div>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {MODULES.map((m, i) => {
-            const pr = moduleProgress(m.slug, d.answers, d.boundaries);
+            const pr = moduleProgress(m.slug, d.answers, d.special);
             const done = pr.done >= pr.total;
             const pillar = PILLARS.find((p) => p.key === m.pillar)!;
-            const href = m.slug === "boundaries" ? "/app/know-yourself/boundaries" : `/app/know-yourself/who-am-i/${m.slug}`;
+            const href = moduleHref(m.slug);
             return (
               <Link key={m.slug} href={href} className="glass lift tile-in group block overflow-hidden !p-0" style={{ animationDelay: `${i * 70}ms` }}>
                 <div className="relative aspect-[16/9] overflow-hidden">

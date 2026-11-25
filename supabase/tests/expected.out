@@ -562,3 +562,23 @@ v17-10) A member gets no totals (expect t = nothing returned):
 t
 v17-11) Anonymous visitors are refused (expect permission denied):
 ERROR:  permission denied for table journey_checkins
+v19-1) Partner A saves a profile, not yet shared (expect 1):
+1
+v19-2) An unknown love language is refused (expect error):
+ERROR:  new row for relation "love_language_profiles" violates check constraint "love_language_profiles_receive_rank_check"
+v19-3) Partner B sees nothing until A chooses to share (expect 0|0):
+0|0
+v19-4) After A shares, B sees A's profile through the couple view (expect time|Long talks):
+time|Long talks
+v19-5) Someone outside the couple sees nothing (expect 0|0):
+0|0
+v19-6) A connected match sees nothing until the member shares with matches (expect 0):
+0
+v19-7) Once shared, the connected match sees rankings only (expect words):
+words
+v19-8) A member who is not connected sees nothing, even when shared (expect 0):
+0
+v19-9) The OWNER cannot read members' love language profiles (expect 0):
+0
+v19-10) Members can read the love languages lesson in the Library (expect 1):
+1
