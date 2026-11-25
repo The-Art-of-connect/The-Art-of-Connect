@@ -3,6 +3,8 @@ import { teachingGuidance } from "@/lib/curricula";
 import { formatTraining, selectTraining, type TrainingEntry } from "@/lib/journey-training";
 import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
 import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
+import { assemblePortfolio, categoryStatuses, portfolioContext, portfolioInstructions, PORTFOLIO_REQUEST } from "@/lib/portfolio";
+import { loadPortfolioInput } from "@/lib/portfolio-server";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -132,6 +134,8 @@ export async function sendJourneyMessage(input: {
   lesson?: string | null;
   /** An adaptive Discovery Session (paid). The session decides the conversation; the client cannot choose another. */
   discovery?: { sessionId: string; summarize?: boolean; skip?: boolean } | null;
+  /** The member asked Journey to write their Personal Discovery Portfolio (their own data only, loaded here on the server). */
+  portfolio?: boolean;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
   if (!viewer) return refuse(401, "Please sign in to talk with Journey.");
@@ -234,6 +238,13 @@ export async function sendJourneyMessage(input: {
   const training = formatTraining(picked, (tcats ?? []).filter((c) => pickedCats.has(c.key)).map((c) => ({ title: c.title, decisions: c.founder_decisions ?? [] })));
   if (training) instructions += `\n\n${training}`;
 
+  if (input.portfolio) {
+    const pin = await loadPortfolioInput(db, viewer.id);
+    const statuses = categoryStatuses(pin);
+    instructions += `\n\n${portfolioInstructions(portfolioContext(assemblePortfolio(pin), statuses, pin.summaries))}`;
+    input = { ...input, conversationId: null, comparisonId: null, message: PORTFOLIO_REQUEST };
+  }
+
   // Adaptive Discovery Session: only the member's own ACTIVE session, continuing its own conversation.
   let discovery: { id: string; category: string; conversation_id: string | null; exchanges: number; skipped: number } | null = null;
   if (input.discovery) {
@@ -316,6 +327,7 @@ export async function sendJourneyMessage(input: {
       { conversation_id: conversationId, user_id: viewer.id, role: "journey", content: result.text },
     ]);
   }
+  if (input.portfolio) await db.from("discovery_analyses").insert({ user_id: viewer.id, scope: "portfolio", source: "journey", content: result.text.slice(0, 20000) });
   if (discovery) {
     const summarize = Boolean(input.discovery?.summarize);
     await db.from("journey_discovery_sessions").update({

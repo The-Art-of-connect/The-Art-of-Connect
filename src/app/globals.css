@@ -442,3 +442,12 @@ select.field { appearance: none; }
 .orb-halo { animation: orb-halo 7s ease-in-out infinite; }
 .waves-drift { animation: waves-drift 18s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .orb-breathe, .orb-halo, .waves-drift { animation: none !important; } }
+
+/* Personal Discovery Portfolio: clean printing (the member's own report). */
+@media print {
+  header, nav, footer, .no-print { display: none !important; }
+  body { background: #fff !important; }
+  main { padding: 0 !important; }
+  .print-light { background: #fff !important; color: #2b1d16 !important; box-shadow: none !important; }
+  .print-light * { color: #2b1d16 !important; }
+}

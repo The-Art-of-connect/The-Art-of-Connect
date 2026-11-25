@@ -20,6 +20,7 @@ export const NAV: NavGroup[] = [
     key: "self", label: "The Art of Self", href: "/app/know-yourself", intro: "Before you connect with the world, connect with yourself.",
     links: [
       { href: "/app/know-yourself", label: "The Art of Knowing Yourself", note: "Who Am I? — identity & self-love", access: "member" },
+      { href: "/app/know-yourself/portfolio", label: "My Personal Discovery Portfolio", note: "Everything you've discovered, together", access: "member" },
       { href: "/app/know-yourself/identity-self-love", label: "Identity & Self-Love", note: "Six lessons · founding curriculum", access: "member" },
       { href: "/emotional-intelligence", label: "Emotional Intelligence" },
       { href: "/app/know-yourself/emotional-intelligence/lessons", label: "Emotional Intelligence lessons", note: "Six lessons · founding curriculum", access: "member" },
@@ -82,7 +83,7 @@ export const NAV: NavGroup[] = [
 /** The signed-in member's profile menu: account, membership, credits and preferences. */
 export const PROFILE_LINKS: NavLink[] = [
   { href: "/app", label: "My dashboard" },
-  { href: "/app/know-yourself/emotional-intelligence", label: "My personal profile" },
+  { href: "/app/know-yourself/portfolio", label: "My Personal Discovery Portfolio" },
   { href: "/app/membership", label: "Membership & billing" },
   { href: "/app/journey/plus", label: "Journey credits" },
   { href: "/app/journey/check-ins", label: "Notifications & check-ins" },
