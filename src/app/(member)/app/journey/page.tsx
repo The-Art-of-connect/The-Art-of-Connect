@@ -1,4 +1,5 @@
 import { getJourneyStatus } from "@/lib/journey-server";
+import { getViewer, hasRole } from "@/lib/auth";
 import { JourneyChat } from "@/components/JourneyChat";
 import { GoldRule, LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
 import { JourneyOrbHero } from "@/components/JourneyOrbHero";
@@ -23,7 +24,9 @@ const MORE = [
 
 export default async function JourneyHome() {
   const status = await getJourneyStatus();
-  const available = status.enabled && (status.access === "standard" || status.access === "enhanced" || status.access === "staff");
+  const viewer = await getViewer();
+  const ownerTest = status.access === "staff" && hasRole(viewer, ["owner"]);
+  const available = status.enabled && (status.access === "standard" || status.access === "enhanced" || ownerTest);
   const reason = status.access === "none"
     ? "Journey is a benefit of paid memberships."
     : "Journey opens soon. We'll let you know the moment your conversations can begin.";
@@ -32,7 +35,7 @@ export default async function JourneyHome() {
       <JourneyOrbHero />
 
       <div id="chat" className="mt-10 scroll-mt-24">
-        <JourneyChat allowance={status.allowance} available={available} reason={reason} />
+        <JourneyChat allowance={status.allowance} available={available} reason={reason} ownerTest={ownerTest} />
       </div>
 
       <LuxSection eyebrow="Four ways Journey walks with you" title="One philosophy. Every part of your life.">

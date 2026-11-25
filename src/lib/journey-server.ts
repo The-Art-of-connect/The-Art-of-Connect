@@ -188,7 +188,7 @@ export async function sendJourneyMessage(input: {
   }
   const exampleText = (examples ?? []).map((e) => `Member: ${e.member_message.slice(0, 600)}\nJourney: ${e.ideal_reply.slice(0, 1200)}`).join("\n\n");
   let memoryText = "";
-  if (!input.ownerTest && cfg.memoryEnabled) {
+  if (cfg.memoryEnabled) {
     const [{ data: ms }, { data: mem }] = await Promise.all([
       db.from("journey_memory_settings").select("enabled, approach").eq("user_id", viewer.id).maybeSingle(),
       db.from("journey_memories").select("kind, content").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
@@ -206,7 +206,7 @@ export async function sendJourneyMessage(input: {
 
   // Context: only this member's own conversation, trimmed to the owner's limits.
   let history: ChatTurn[] = [];
-  if (input.conversationId && !input.ownerTest) {
+  if (input.conversationId) {
     const { data: conv } = await db.from("journey_conversations").select("id").eq("id", input.conversationId).eq("user_id", viewer.id).maybeSingle();
     if (!conv) return refuse(404, "That conversation wasn't found.");
     const { data: msgs } = await db.from("journey_messages").select("role, content").eq("conversation_id", conv.id).order("created_at", { ascending: true }).limit(200);
@@ -252,12 +252,11 @@ export async function sendJourneyMessage(input: {
 
   if (input.ownerTest) {
     await db.from("journey_test_runs").insert({ mode: input.mode, instruction_version: published?.version ?? null, prompt: input.message, reply: result.text, created_by: viewer.id });
-    return { ok: true, reply: result.text, conversationId: null, allowance: null };
   }
 
   let conversationId = input.conversationId ?? null;
   if (!conversationId) {
-    const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, title: input.message.slice(0, 80) }).select("id").single();
+    const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, title: `${input.ownerTest ? "[Owner test] " : ""}${input.message}`.slice(0, 80) }).select("id").single();
     conversationId = c?.id ?? null;
   }
   if (conversationId) {
@@ -266,6 +265,7 @@ export async function sendJourneyMessage(input: {
       { conversation_id: conversationId, user_id: viewer.id, role: "journey", content: result.text },
     ]);
   }
+  if (input.ownerTest) return { ok: true, reply: result.text, conversationId, allowance: null };
   const after = view && !d.usesPurchased
     ? allowanceView(view.allowance, view.used + 1, view.purchasedRemaining, periodEnd)
     : view && { ...view, purchasedRemaining: Math.max(0, view.purchasedRemaining - 1) };

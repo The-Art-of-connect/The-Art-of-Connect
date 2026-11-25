@@ -42,7 +42,7 @@ export function AllowanceMeter({ a }: { a: AllowanceView }) {
   );
 }
 
-export function JourneyChat({ initialMode = "life", allowance, available, reason }: { initialMode?: Mode; allowance: AllowanceView | null; available: boolean; reason: string }) {
+export function JourneyChat({ initialMode = "life", allowance, available, reason, ownerTest = false }: { initialMode?: Mode; allowance: AllowanceView | null; available: boolean; reason: string; ownerTest?: boolean }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [text, setText] = useState("");
@@ -62,7 +62,7 @@ export function JourneyChat({ initialMode = "life", allowance, available, reason
       const res = await fetch("/api/journey/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, message: m, requestKey: crypto.randomUUID().replace(/-/g, ""), conversationId: conversation.current }),
+        body: JSON.stringify({ mode, message: m, requestKey: crypto.randomUUID().replace(/-/g, ""), conversationId: conversation.current, ownerTest }),
       });
       const data = await res.json().catch(() => null);
       if (data?.ok) {

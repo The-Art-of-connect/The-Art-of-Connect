@@ -54,3 +54,21 @@ export async function createResponse(input: {
     return { ok: false, error: e instanceof Error ? e.message : "Network error", inputTokens: 0, outputTokens: 0 };
   }
 }
+
+export type OpenAICheck = { configured: boolean; reachable: boolean; status: number | null; models: string[]; error?: string; checkedAt: string };
+
+/** Verifies the key and lists the chat models it can use. Listing models is free — no tokens are used. */
+export async function checkOpenAIConnection(): Promise<OpenAICheck> {
+  const checkedAt = new Date().toISOString();
+  const key = serverSecret("OPENAI_API_KEY");
+  if (!key) return { configured: false, reachable: false, status: null, models: [], checkedAt };
+  try {
+    const res = await fetch("https://api.openai.com/v1/models", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(15_000), cache: "no-store" });
+    const json = (await res.json().catch(() => null)) as { data?: { id: string }[]; error?: { message?: string } } | null;
+    if (!res.ok) return { configured: true, reachable: false, status: res.status, models: [], error: res.status === 401 ? "OpenAI did not accept the key." : json?.error?.message?.slice(0, 200), checkedAt };
+    const models = (json?.data ?? []).map((m) => m.id).filter((id) => /^(gpt-|o\d|chatgpt-)/.test(id) && !/(audio|realtime|transcribe|tts|search|image|instruct)/.test(id)).sort();
+    return { configured: true, reachable: true, status: res.status, models, checkedAt };
+  } catch (e) {
+    return { configured: true, reachable: false, status: null, models: [], error: e instanceof Error ? e.message.slice(0, 200) : "Network error", checkedAt };
+  }
+}
