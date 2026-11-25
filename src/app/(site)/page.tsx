@@ -87,6 +87,14 @@ export default async function HomePage() {
               );
             })}
           </div>
+          <div className="theme-dark band mt-8 flex flex-col items-start justify-between gap-5 rounded-[28px] border border-champagne/40 p-7 sm:flex-row sm:items-center sm:p-9">
+            <div>
+              <p className="eyebrow">The Professional Society · In Business</p>
+              <p className="display mt-2 text-3xl text-ivory sm:text-4xl">Business owners helping business owners — across cities and states.</p>
+              <p className="mt-2 text-sm text-muted">Explore before you join. No registration or credit card required.</p>
+            </div>
+            <Link href="/business/explore" className="btn btn-gold shrink-0">Explore The Professional Society</Link>
+          </div>
         </section>
       </div>
 

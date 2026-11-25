@@ -15,6 +15,7 @@ const LABELS: Record<string, string> = {
   counseling_live: "In Life experience (incl. counselors & coaches)",
   relationships_live: "In Love experience",
   counselor_applications_open: "Professional applications",
+  free_business_accounts_open: "Free Professional Society business accounts (founding members, no payment)",
   identity_verification_live: "Identity verification (Stripe Identity — per-verification charges)",
   maintenance_mode: "Maintenance mode",
 };

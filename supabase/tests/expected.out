@@ -146,8 +146,8 @@ v4-19) Approve after identity, license lookup and disciplinary check (expect app
 approved
 v4-20) Owner updates the launch checklist (expect done):
 done
-v4-21) Finance reads the checklist but cannot change it (expect 28 rows, then 0 updated):
-28
+v4-21) Finance reads the checklist but cannot change it (expect 30 rows, then 0 updated):
+30
 0
 v4-22) Member reads the checklist (expect 0); records a versioned consent (expect 1):
 0
@@ -280,3 +280,48 @@ t
 ERROR:  The legal audit trail cannot be changed or deleted
 v9-21) A member cannot record acceptance on behalf of another account (expect permission denied):
 ERROR:  permission denied for function record_legal_acceptance_for
+v10-1) Seeded reference data only, no fabricated activity (expect 20|13|18|12|0|0):
+20|13|18|12|0|0
+v10-2) Guests explore industries and features; no public profiles yet (expect 20|18|0):
+20|18|0
+v10-3) Guests cannot read the Connection Board (expect permission denied):
+ERROR:  permission denied for table posts
+v10-4) Free member tier and feature access (expect free|t|f):
+free|t|f
+v10-5) Profile without consent is not public; with consent it is, and consent time is recorded (expect 0|1|t):
+0
+1|t
+v10-6) Private financial details saved by the member:
+v10-7) Member creates a Connection Board post (expect 1):
+1
+v10-8) Another member reads the post but not the first member's financial details (expect 1|0):
+1|0
+v10-9) "I Can Help — Connect Privately": request plus one introduction; a second message waits for acceptance (expect 1, then error):
+1
+ERROR:  Waiting for the other member to accept your request
+v10-10) The requester cannot accept their own request (expect error):
+ERROR:  Only the recipient can accept or decline a request
+v10-11) The recipient accepts; both can now write; unread count works (expect 1|2):
+1
+2
+v10-12) The owner cannot read members' conversations, messages or financial details (expect 0|0|0):
+0|0|0
+v10-13) Safety access without a report is refused (expect error):
+ERROR:  Access requires an open report about this conversation
+v10-14) The member files a report about the conversation:
+v10-15) Contact controls: when a member accepts no requests, a new request is refused (expect error):
+ERROR:  new row violates row-level security policy for table "conversations"
+v10-16) Premium member tier (expect premium|t):
+premium|t
+v10-17) Owner safety access with an open report returns the messages and is recorded (expect 2|1):
+2
+1
+v10-18) Owner turns the Connection Board off; members can no longer use it (expect 0 then error):
+0
+ERROR:  new row violates row-level security policy for table "posts"
+v10-19) Executives see aggregate community metrics only; members cannot (expect 3|1, then error):
+3|t
+ERROR:  Not permitted
+v10-20) Blocking closes the conversation; further messages are refused (expect blocked, then error):
+blocked
+ERROR:  This conversation is closed

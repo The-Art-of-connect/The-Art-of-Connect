@@ -10,12 +10,12 @@ trap 'psql -q -c "drop database if exists $DB" >/dev/null' EXIT
 
 psql -d "$DB" -q -v ON_ERROR_STOP=1 -f supabase/tests/stub.sql $(ls supabase/migrations/*.sql | sort | sed 's/^/-f /') >/dev/null
 psql -d "$DB" -qAt -f supabase/tests/rls_checks.sql -f supabase/tests/rls_checks_v2.sql \
-  -f supabase/tests/rls_checks_v3.sql -f supabase/tests/rls_checks_v4.sql -f supabase/tests/rls_checks_v5.sql -f supabase/tests/rls_checks_v6.sql -f supabase/tests/rls_checks_v7.sql -f supabase/tests/rls_checks_v8.sql -f supabase/tests/rls_checks_v9.sql 2>&1 \
+  -f supabase/tests/rls_checks_v3.sql -f supabase/tests/rls_checks_v4.sql -f supabase/tests/rls_checks_v5.sql -f supabase/tests/rls_checks_v6.sql -f supabase/tests/rls_checks_v7.sql -f supabase/tests/rls_checks_v8.sql -f supabase/tests/rls_checks_v9.sql -f supabase/tests/rls_checks_v10.sql 2>&1 \
   | grep -vE '^(CONTEXT|PL/pgSQL|DETAIL|SQL statement|HINT)' \
   | sed -E 's/^psql:[^:]+:[0-9]+: //' > /tmp/aoc_security_actual.out
 
 if diff -u supabase/tests/expected.out /tmp/aoc_security_actual.out; then
-  echo "All $(grep -cE '^(v[0-9]-)?[0-9]+\)' supabase/tests/expected.out) database security checks passed."
+  echo "All $(grep -cE '^(v[0-9]+-)?[0-9]+\)' supabase/tests/expected.out) database security checks passed."
 else
   echo "Database security checks FAILED (see differences above)." >&2
   exit 1

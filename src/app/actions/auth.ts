@@ -224,3 +224,51 @@ export async function confirmAccountLink(_prev: AuthState, form: FormData): Prom
   }
   redirect(parsed.data.type === "invite" ? "/reset-password?welcome=1" : "/reset-password");
 }
+
+/**
+ * Free Professional Society business account: no payment, no subscription.
+ * Opens only when the owner has opened registration AND free business
+ * accounts, and the required agreements are in effect. 40+ applies.
+ */
+export async function signUpBusiness(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const launch = await getLaunchState();
+  // Both switches respect the master launch lock.
+  if (!launch.registrations_open || !launch.free_business_accounts_open) return { error: "Founding business accounts open soon." };
+  if (!(await allInEffect(REGISTRATION_DOCS))) return { error: "Our agreements are being finalized. Founding enrollment opens soon." };
+  const parsed = joinSchema
+    .pick({ displayName: true, email: true, password: true, dobYear: true, dobMonth: true, dobDay: true, agree: true })
+    .safeParse({
+      displayName: form.get("displayName"), email: String(form.get("email") ?? "").trim().toLowerCase(), password: form.get("password"),
+      dobYear: form.get("dobYear"), dobMonth: form.get("dobMonth"), dobDay: form.get("dobDay"), agree: form.get("agree"),
+    });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
+  const d = parsed.data;
+  if (!(await allow("sign-up", 5, 3600))) return { error: "Too many attempts. Please try again later." };
+  if (!(await verifyTurnstile(form, "sign_up", d.email)).ok) return { error: BOT_CHECK_MESSAGE };
+  if (isDisposableEmail(d.email)) return { error: "Please use a permanent email address." };
+  const dob = new Date(Date.UTC(d.dobYear, d.dobMonth - 1, d.dobDay));
+  if (dob.getUTCMonth() !== d.dobMonth - 1 || dob.getUTCDate() !== d.dobDay) return { error: "Please enter a valid date of birth." };
+  const { minimum_member_age } = await getCatalogue();
+  if ((await ageOn(dob)) < minimum_member_age) return { error: `The Art of Connect is exclusively for adults ${minimum_member_age} and older.` };
+
+  const supabase = await createClient();
+  if (!supabase) return { error: "Registration is not available yet." };
+  const { data: created, error } = await supabase.auth.signUp({
+    email: d.email,
+    password: d.password,
+    options: {
+      emailRedirectTo: `${env.siteUrl}/auth/callback?next=/app/business/onboarding`,
+      data: { display_name: d.displayName, account_type: "member", date_of_birth: dob.toISOString().slice(0, 10), plan: "free_business", accepted_terms_at: new Date().toISOString() },
+    },
+  });
+  if (error || !created.user) return { error: /adults|date of birth/i.test(error?.message ?? "") ? error!.message : "We couldn’t create your account. Please try again." };
+  const admin = createAdminClient();
+  if (admin) {
+    const { ipHash, userAgent } = await clientMeta();
+    await admin.rpc("record_legal_acceptance_for", { target: created.user.id, docs: REGISTRATION_DOCS, ctx: "registration", statement: acceptanceStatement(REGISTRATION_DOCS), ip_hash: ipHash, user_agent: userAgent });
+    // In Business access with no subscription and no payment details.
+    await admin.from("experience_access").upsert({ user_id: created.user.id, experience: "business", status: "active", source: "free_tier" }, { onConflict: "user_id,experience" });
+    if (form.get("marketing") === "on") await admin.from("consents").insert({ user_id: created.user.id, consent_type: "marketing", version: "2026-12", details: { source: "business_registration" } });
+  }
+  return { notice: "Welcome to The Professional Society. Please check your inbox to confirm your email, then sign in to tell us about your business." };
+}
