@@ -10,7 +10,7 @@ summary: How couples memberships work, including separate accounts, independent 
 This Couples Membership Agreement ("Agreement") applies when two people use a couples membership offered by The Art of Connect, LLC ("The Art of Connect," "we," "us"), including the Couples Membership in **The Personal Society** (In Love) and any couples option added to a bundled membership. It supplements our [Terms of Service](/legal/terms-of-service), [Membership Agreement](/legal/membership-agreement), [Privacy Policy](/legal/privacy-policy) and [Community Standards](/legal/community-standards). Each partner must accept this Agreement individually.
 
 ## 1. Who may join
-- Both partners must be adults aged 40 or older (or any higher minimum age we set) and must meet all other eligibility requirements.
+- Both partners must be adults aged 21 or older (or any higher minimum age we set) and must meet all other eligibility requirements.
 - Both partners must be in a committed relationship with each other and must each **freely and independently choose** to participate. No one may be enrolled in a couples membership without their own consent.
 - We may ask either partner to complete identity and age verification.
 

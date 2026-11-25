@@ -12,6 +12,8 @@ insert into auth.users(id,email) values
 insert into public.experience_access(user_id, experience, source) values
   ('00000000-0000-0000-0000-000000000005','relationships','owner_grant'),
   ('00000000-0000-0000-0000-000000000006','relationships','owner_grant');
+insert into public.member_private(user_id, date_of_birth) values
+  ('00000000-0000-0000-0000-000000000005','1978-06-01'), ('00000000-0000-0000-0000-000000000006','1982-09-09');
 insert into relationships.profiles(user_id, headline, is_visible) values
   ('00000000-0000-0000-0000-000000000005','partner',true),
   ('00000000-0000-0000-0000-000000000006','single two',true);

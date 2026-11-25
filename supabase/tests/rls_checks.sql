@@ -19,6 +19,8 @@ select public.bootstrap_owner('owner@example.com');
 select public.bootstrap_owner('member@example.com');
 
 insert into public.experience_access values ('00000000-0000-0000-0000-000000000002','relationships','active','owner_grant',null,null,now());
+-- Singles must be 30+ (member_private holds the date of birth).
+insert into public.member_private(user_id, date_of_birth) values ('00000000-0000-0000-0000-000000000002','1980-01-01');
 insert into relationships.profiles(user_id,headline,is_visible) values ('00000000-0000-0000-0000-000000000002','hello',true);
 insert into counseling.counselors(user_id,professional_name,is_verified,is_listed) values ('00000000-0000-0000-0000-000000000003','Dr C',true,true);
 insert into counseling.clients(user_id,preferred_name) values ('00000000-0000-0000-0000-000000000004','Client');

@@ -3,7 +3,7 @@ import { ExperiencePage } from "@/components/ExperiencePage";
 
 export const metadata: Metadata = {
   title: "In Business — Professional Connections",
-  description: "Business compatibility, professional networking, mentorship, strategic partnerships and collaboration. Exclusively for adults 40+.",
+  description: "Business compatibility, professional networking, mentorship, strategic partnerships and collaboration. For adults 21+.",
   alternates: { canonical: "/business" },
   openGraph: { title: "In Business — Professional Connections · The Art of Connect", description: "Business compatibility, professional networking, mentorship, strategic partnerships and collaboration.", url: "/business", images: [{ url: "/og/business.jpg", width: 1200, height: 630 }] },
   twitter: { card: "summary_large_image", images: ["/og/business.jpg"] },

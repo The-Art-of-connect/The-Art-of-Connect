@@ -10,7 +10,7 @@ summary: What your paid membership includes, how billing works, and how to chang
 This Membership Agreement ("Agreement") applies when you purchase a paid membership from **The Art of Connect, LLC** ("we," "us"). It forms part of our [Terms of Service](/legal/terms-of-service) and works together with our [Subscription and Automatic Renewal Policy](/legal/subscription-auto-renewal) and [Cancellation and Refund Policy](/legal/refund-policy).
 
 ## 1. Membership eligibility
-- You must be **40 or older** (or meet any higher minimum age we publish) and hold an account in good standing.
+- You must be **21 or older** (**30 or older** for The Personal Society singles experience, or any higher minimum age we publish) and hold an account in good standing.
 - We may require identity and age verification through an approved third-party provider before some features are available, for example matchmaking introductions.
 - Memberships are for personal use by the account holder only.
 

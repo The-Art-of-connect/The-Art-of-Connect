@@ -35,9 +35,10 @@ export default async function MemberLayout({ children }: { children: React.React
             <Link href="/app/membership" className="hidden text-sm text-muted hover:text-text sm:inline">My membership</Link>
             <Link href="/app/safety" className="hidden text-sm text-muted hover:text-text sm:inline">Safety</Link>
             <Link href="/legal" className="hidden text-sm text-muted hover:text-text sm:inline">Legal</Link>
+            {reviewer && <Link href="/inside-preview" className="btn btn-ghost btn-sm hidden sm:inline-flex">All preview pages</Link>}
             {isStaff(viewer) && <Link href="/admin" className="btn btn-ghost btn-sm">Owner Portal</Link>}
             {preview ? (
-              <a href="/inside-preview" className="btn btn-ghost btn-sm">All preview pages</a>
+              <a href="/" className="btn btn-ghost btn-sm">Home</a>
             ) : (
               <form action="/auth/sign-out" method="post">
                 <button className="text-sm text-muted hover:text-text">Sign out</button>

@@ -9,9 +9,9 @@ export function SiteFooter() {
         <div className="space-y-4">
           <Wordmark />
           <p className="eyebrow !tracking-[0.25em]">In Business. In Life. In Love.</p>
-          <p className="display text-2xl italic">Life after 40. Connection with intention.</p>
+          <p className="display text-2xl italic">Connection with intention.</p>
           <p className="max-w-xs text-sm leading-relaxed text-muted">
-            A premium membership for adults 40 and older seeking meaningful personal, professional and romantic connections.
+            A premium membership for adults seeking meaningful personal, professional and romantic connections. Members 21+ · Personal Society singles 30+.
           </p>
           <a href="mailto:info@theartofconnect.com" className="text-sm text-gold hover:text-gold-bright">
             info@theartofconnect.com

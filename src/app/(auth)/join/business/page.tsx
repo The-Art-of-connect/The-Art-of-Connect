@@ -27,7 +27,7 @@ export default async function JoinBusiness() {
           <Link href="/business/explore" className="btn btn-gold w-full">Explore The Professional Society</Link>
         )}
       </div>
-      <p className="mt-6 text-center text-xs text-faint">Exclusively for adults {catalogue.minimum_member_age}+ · Already a member? <Link href="/sign-in" className="text-gold underline">Sign in</Link></p>
+      <p className="mt-6 text-center text-xs text-faint">For adults {catalogue.minimum_member_age}+ · Already a member? <Link href="/sign-in" className="text-gold underline">Sign in</Link></p>
     </>
   );
 }

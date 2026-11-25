@@ -25,7 +25,7 @@ export function ExperiencePage({
       <div className="band theme-dark">
       <section className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-20 pt-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pb-28 lg:pt-20">
         <div>
-          <p className="eyebrow rise">{e.subtitle} · Exclusively for adults 40+</p>
+          <p className="eyebrow rise">{e.subtitle} · {experience === "relationships" ? "Singles 30+ · Couples 21+" : "Adults 21+"}</p>
           <h1 className="display rise rise-2 mt-6 text-5xl sm:text-7xl">{headline}</h1>
           <p className="rise rise-3 mt-8 max-w-xl text-lg leading-relaxed text-muted">{intro}</p>
           <div className="rise rise-4 mt-10 flex flex-col gap-3 sm:flex-row">

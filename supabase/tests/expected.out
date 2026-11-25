@@ -83,9 +83,9 @@ v3-10) Public now sees published prices (expect 2999, 10.0):
 2999|10.0
 v3-11) Consumer sign-up without date of birth (expect error):
 ERROR:  A valid date of birth is required
-v3-12) Consumer aged 39 (expect error):
-ERROR:  Membership is available to adults 40 and older
-v3-13) Consumer turning 40 today, with a referral code (expect ok):
+v3-12) Consumer aged 20 (expect error):
+ERROR:  Membership is available to adults 21 and older
+v3-13) Consumer aged 40, with a referral code (expect ok):
 member|t
 v3-14) Date of birth removed from auth metadata (expect false):
 f

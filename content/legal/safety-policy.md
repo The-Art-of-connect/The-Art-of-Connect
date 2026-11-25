@@ -10,10 +10,10 @@ summary: How we help keep members safe, how to report and block, and how we inve
 Your safety and dignity matter to us. This policy explains the protections The Art of Connect, LLC ("The Art of Connect," "we," "us") provides across The Professional Society (In Business), The Art of Becoming (In Life) and The Personal Society (In Love), what we ask of you, and what happens when you report a concern. It should be read with our [Community Standards](/legal/community-standards) and [Identity and Age Verification Policy](/legal/identity-verification).
 
 ## 1. An honest word about safety
-We work hard to create a trusted environment for adults aged 40 and older, but no online service can remove every risk. **The Art of Connect cannot guarantee the identity, intentions, honesty or conduct of any member, couple or professional provider**, whether online or in person. Please use the same judgment you would use when meeting anyone new, and use the tools described below.
+We work hard to create a trusted environment for adults aged 21 and older, but no online service can remove every risk. **The Art of Connect cannot guarantee the identity, intentions, honesty or conduct of any member, couple or professional provider**, whether online or in person. Please use the same judgment you would use when meeting anyone new, and use the tools described below.
 
 ## 2. The protections we provide
-- **Age eligibility.** Consumer membership is limited to adults aged 40 and older. You confirm your date of birth at registration, and your date of birth is stored privately and never shown on your profile.
+- **Age eligibility.** Consumer membership is limited to adults aged 21 and older, and The Personal Society singles experience to adults aged 30 and older. You confirm your date of birth at registration, and your date of birth is stored privately and never shown on your profile.
 - **Identity and age verification.** We may require or offer verification through our third-party provider, Stripe Identity. See section 5 for what verification does and does not mean.
 - **Private by design.** Your journals, reflections and assessment answers are private to you. Contact details are not displayed on profiles.
 - **Blocking and reporting** tools in every experience.

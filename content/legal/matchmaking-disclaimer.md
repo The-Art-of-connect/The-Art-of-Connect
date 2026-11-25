@@ -10,7 +10,7 @@ summary: What The Personal Society's introductions and compatibility tools can a
 This disclaimer applies to **The Personal Society** (In Love), including singles memberships, couples memberships, compatibility assessments, introductions, concierge or personalized introductions, events and any related features offered by The Art of Connect, LLC ("The Art of Connect," "we," "us"). It forms part of our [Terms of Service](/legal/terms-of-service) and [Membership Agreement](/legal/membership-agreement). Please read it carefully before using these services.
 
 ## 1. Our purpose
-The Personal Society is designed for adults aged 40 and older who want to approach relationships with intention. We offer tools that encourage self-reflection, thoughtful introductions and respectful connection. We are a membership community, not a guarantee of any relationship.
+The Personal Society is designed for singles aged 30 and older, and for couples in which both partners are 21 or older, who want to approach relationships with intention. We offer tools that encourage self-reflection, thoughtful introductions and respectful connection. We are a membership community, not a guarantee of any relationship.
 
 ## 2. No guarantee of compatibility or outcome
 **The Art of Connect cannot guarantee romantic compatibility, a successful relationship, marriage, a particular number of introductions, a response from any member, or any other outcome.** Attraction and lasting relationships depend on the choices and circumstances of the people involved, which are beyond our control. Your membership fee pays for access to the platform and its features during your membership — not for a result.

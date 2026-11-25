@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Build Your Membership",
   description:
-    "Choose In Business, In Life, In Love — or combine them at a bundled rate. One account, one subscription, every device. Exclusively for adults 40+.",
+    "Choose In Business, In Life, In Love — or combine them at a bundled rate. One account, one subscription, every device. Members 21+ · Personal Society singles 30+.",
   alternates: { canonical: "/membership" },
   openGraph: { title: "Build Your Membership · The Art of Connect", images: [{ url: "/og/membership.jpg", width: 1200, height: 630 }] },
 };
@@ -26,7 +26,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
     <>
       <div className="band theme-dark">
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-8 lg:py-28">
-          <p className="eyebrow">Memberships · Exclusively for adults {catalogue.minimum_member_age}+</p>
+          <p className="eyebrow">Memberships · Adults {catalogue.minimum_member_age}+ · Singles 30+</p>
           <h1 className="display mt-5 max-w-4xl text-5xl sm:text-7xl">
             Build your <span className="gilded italic">membership.</span>
           </h1>
@@ -164,7 +164,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           <h2 className="display mt-4 text-4xl">Good to know</h2>
           <dl className="mt-10 divide-y divide-line border-y border-line">
             {[
-              ["Who can join?", `The Art of Connect is exclusively for adults ${catalogue.minimum_member_age} and older. We confirm eligibility with your date of birth when you register; it is never shown on your profile.`],
+              ["Who can join?", `In Business, In Life and couples memberships are for adults ${catalogue.minimum_member_age} and older (both partners, for couples). The Personal Society singles experience is for adults 30 and older. We confirm eligibility with your date of birth when you register; it is never shown on your profile.`],
               ["Do I need separate subscriptions?", "No. Every experience you choose is part of one membership and one payment."],
               ["Can I change my membership later?", "Yes. Add or remove experiences, upgrade or downgrade, and switch between monthly and annual billing from your account."],
               ["Does it work on all my devices?", "Yes — phone, tablet and computer, with no additional device fees."],

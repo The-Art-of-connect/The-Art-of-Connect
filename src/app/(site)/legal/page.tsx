@@ -19,7 +19,7 @@ export default async function LegalCenter() {
         <h1 className="display mt-5 text-5xl sm:text-6xl">Legal & Policy Center</h1>
         <p className="mt-5 max-w-2xl text-muted">
           The agreements and policies for The Professional Society, The Art of Becoming and The Personal Society — written for
-          our members, adults 40 and older, in plain language.
+          our members in plain language.
         </p>
         {inEffect < docs.length && (
           <p className="mt-6 max-w-2xl rounded-2xl border border-champagne/60 bg-champagne/10 p-5 text-sm">

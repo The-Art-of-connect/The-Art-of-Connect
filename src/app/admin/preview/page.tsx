@@ -60,7 +60,7 @@ export default async function MemberPreview() {
     },
     {
       title: "Relationships · In Love",
-      note: "Singles (40+) and couples.",
+      note: "Singles (30+) and couples (21+).",
       live: launch.relationships_live,
       pages: [{ href: "/app/relationships", title: "Relationships home", what: "The singles and couples experience." }],
     },

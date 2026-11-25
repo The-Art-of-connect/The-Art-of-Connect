@@ -1,4 +1,5 @@
 "use server";
+import { MIN_AGE_SINGLES } from "@/lib/onboarding";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -115,7 +116,12 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   if (dob.getUTCMonth() !== d.dobMonth - 1 || dob.getUTCDate() !== d.dobDay) return { error: "Please enter a valid date of birth." };
   const { minimum_member_age } = await getCatalogue();
   if ((await ageOn(dob)) < minimum_member_age) {
-    return { error: `The Art of Connect is exclusively for adults ${minimum_member_age} and older.` };
+    return { error: `The Art of Connect is for adults ${minimum_member_age} and older.` };
+  }
+  // The Personal Society singles experience is 30+ (couples are 21+ for both partners).
+  const singles = d.loveStatus !== "couple" && (d.experiences.includes("relationships") || d.package === "personal-society") && !d.couples;
+  if (singles && (await ageOn(dob)) < MIN_AGE_SINGLES) {
+    return { error: `The Personal Society singles experience is for adults ${MIN_AGE_SINGLES} and older. You're welcome to join In Business or In Life now.` };
   }
 
   const supabase = await createClient();
@@ -235,7 +241,7 @@ export async function confirmAccountLink(_prev: AuthState, form: FormData): Prom
 /**
  * Free Professional Society business account: no payment, no subscription.
  * Opens only when the owner has opened registration AND free business
- * accounts, and the required agreements are in effect. 40+ applies.
+ * accounts, and the required agreements are in effect. 21+ applies.
  */
 export async function signUpBusiness(_prev: AuthState, form: FormData): Promise<AuthState> {
   const launch = await getLaunchState();
@@ -256,7 +262,7 @@ export async function signUpBusiness(_prev: AuthState, form: FormData): Promise<
   const dob = new Date(Date.UTC(d.dobYear, d.dobMonth - 1, d.dobDay));
   if (dob.getUTCMonth() !== d.dobMonth - 1 || dob.getUTCDate() !== d.dobDay) return { error: "Please enter a valid date of birth." };
   const { minimum_member_age } = await getCatalogue();
-  if ((await ageOn(dob)) < minimum_member_age) return { error: `The Art of Connect is exclusively for adults ${minimum_member_age} and older.` };
+  if ((await ageOn(dob)) < minimum_member_age) return { error: `The Art of Connect is for adults ${minimum_member_age} and older.` };
 
   const supabase = await createClient();
   if (!supabase) return { error: "Registration is not available yet." };

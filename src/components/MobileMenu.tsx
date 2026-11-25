@@ -53,7 +53,7 @@ export function MobileMenu() {
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_80%_0%,rgb(116_63_77/0.35),transparent_70%)]" />
         <div className="relative flex h-16 items-center justify-between px-4 sm:h-20 sm:px-8">
-          <span className="eyebrow">Exclusively for adults 40+</span>
+          <span className="eyebrow">Adults 21+ · Singles 30+</span>
           <button
             ref={closeRef}
             type="button"

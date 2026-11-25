@@ -17,7 +17,7 @@ The Art of Connect is **not an emergency service**. We do not monitor journals, 
 
 ## 2. The Art of Connect does not provide clinical treatment
 
-The Art of Connect is a membership platform for adults aged **40 and older**. The company itself does **not diagnose, treat or provide clinical care** for any mental-health or medical condition. Nothing on the platform replaces care from a qualified licensed professional.
+The Art of Connect is a membership platform for adults aged **21 and older**. The company itself does **not diagnose, treat or provide clinical care** for any mental-health or medical condition. Nothing on the platform replaces care from a qualified licensed professional.
 
 ## 3. Different kinds of support, clearly distinguished
 

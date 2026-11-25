@@ -9,5 +9,11 @@
  * the references to INSIDE_PREVIEW_* to retire the preview.
  */
 export const INSIDE_PREVIEW_ENABLED = true;
+/**
+ * Anonymous browsing of the member area is OFF: previews are for the owner
+ * (and executives) only, signed in with MFA. Members' private information
+ * is never shown and paid features stay locked either way.
+ */
+export const ANONYMOUS_PREVIEW_ENABLED = false;
 export const INSIDE_PREVIEW_COOKIE = "aoc_inside_preview";
 export const INSIDE_PREVIEW_ID = "00000000-0000-0000-0000-000000000000";

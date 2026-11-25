@@ -216,18 +216,19 @@ export async function setPricingPublished(_p: ActionResult, f: FormData): Promis
   return ok(publish ? "Pricing is now public." : "Pricing hidden from the public.");
 }
 
-/** Owner only: minimum ages for members and professionals. */
+/** Owner only: minimum ages for members, Personal Society singles and professionals. */
 export async function saveEligibility(_p: ActionResult, f: FormData): Promise<ActionResult> {
   await requireStaff(["owner"]);
   const parsed = z
-    .object({ member: z.coerce.number().int().min(18).max(99), professional: z.coerce.number().int().min(18).max(99) })
-    .safeParse({ member: f.get("memberAge"), professional: f.get("professionalAge") });
+    .object({ member: z.coerce.number().int().min(18).max(99), singles: z.coerce.number().int().min(18).max(99), professional: z.coerce.number().int().min(18).max(99) })
+    .safeParse({ member: f.get("memberAge"), singles: f.get("singlesAge") ?? 30, professional: f.get("professionalAge") });
   if (!parsed.success) return fail("Ages must be between 18 and 99.");
   const supabase = (await createClient())!;
   const r1 = await supabase.from("platform_settings").update({ value: parsed.data.member }).eq("key", "minimum_member_age");
   const r2 = await supabase.from("platform_settings").update({ value: parsed.data.professional }).eq("key", "minimum_professional_age");
-  if (r1.error || r2.error) return fail("Not saved.");
+  const r3 = await supabase.from("platform_settings").upsert({ key: "minimum_singles_age", value: parsed.data.singles, description: "Minimum age for The Personal Society singles experience (matchmaking)" });
+  if (r1.error || r2.error || r3.error) return fail("Not saved.");
   await audit("eligibility.update", "platform_settings", "minimum_ages", parsed.data);
   revalidatePath("/", "layout");
-  return ok(`Members ${parsed.data.member}+ · professionals ${parsed.data.professional}+.`);
+  return ok(`Members ${parsed.data.member}+ · singles ${parsed.data.singles}+ · professionals ${parsed.data.professional}+.`);
 }

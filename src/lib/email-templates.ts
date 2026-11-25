@@ -44,7 +44,7 @@ ${action ? `<table role="presentation" cellpadding="0" cellspacing="0" style="ma
 <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${C.muted}">Or paste this link into your browser:<br><a href="${esc(action.url)}" style="color:${C.goldText};word-break:break-all">${esc(action.url)}</a></p>` : ""}
 </td></tr>
 <tr><td style="padding:22px 36px 30px;border-top:1px solid ${C.cream};font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:${C.muted}">
-Life after 40. Connection with intention.<br>
+Connection with intention.<br>
 The Art of Connect, LLC · <a href="mailto:info@theartofconnect.com" style="color:${C.goldText}">info@theartofconnect.com</a><br>
 For your privacy, we never include journal entries, assessments or private messages in email.
 </td></tr>

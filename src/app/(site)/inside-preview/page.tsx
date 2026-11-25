@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { requireStaff } from "@/lib/auth";
 import { INSIDE_PREVIEW_ENABLED } from "@/lib/inside-preview";
 import { PREVIEW_GROUPS as GROUPS } from "@/lib/preview-pages";
 
@@ -9,22 +10,24 @@ export const metadata: Metadata = {
 };
 
 /** TEMPORARY owner review page for the signed-in member area. */
-export default function InsidePreview() {
+export default async function InsidePreview() {
   if (!INSIDE_PREVIEW_ENABLED) notFound();
+  // Owner and executives only, signed in with two-step verification.
+  await requireStaff(["owner", "executive"]);
   return (
     <>
       <div className="band theme-dark">
         <section className="mx-auto max-w-5xl px-4 py-16 sm:px-8 lg:py-20">
-          <p className="eyebrow">Owner review · temporary</p>
+          <p className="eyebrow">Owner review · private</p>
           <h1 className="display mt-4 text-5xl sm:text-6xl">Inside The Art of Connect</h1>
           <p className="mt-5 max-w-2xl text-muted">
-            Browse every page members see after they sign in — no membership needed. Signed in as the owner, each page has a
-            <strong> Review this page</strong> button: approve it, ask for changes, ask for more, or switch it to Coming soon.
-            Signed out, you browse as an empty preview member — nothing is saved, no payments can start, and no real member information is ever shown.
+            Every page members see, without a membership. Each page has a <strong>Review this page</strong> button: approve it,
+            ask for changes, ask for more, or switch it to Coming soon. This preview is visible only to owner accounts. It never
+            shows members&rsquo; private information, and nothing here starts a payment or a billable AI request.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a href="/inside-preview/enter?to=/app" className="btn btn-gold">Start the preview</a>
-            <a href="/inside-preview/enter?exit=1" className="btn btn-ghost">End preview</a>
+            <a href="/app" className="btn btn-gold">Start the preview</a>
+            <a href="/admin/reviews" className="btn btn-ghost">My review notes</a>
           </div>
         </section>
       </div>
@@ -43,7 +46,7 @@ export default function InsidePreview() {
                       <span className="block font-semibold">{title}</span>
                       <span className="block text-xs text-muted">{what}</span>
                     </span>
-                    <a href={`/inside-preview/enter?to=${href}`} className="btn btn-ghost btn-sm shrink-0">View</a>
+                    <a href={href} className="btn btn-ghost btn-sm shrink-0">View</a>
                   </li>
                 ))}
               </ul>
