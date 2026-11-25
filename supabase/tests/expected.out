@@ -645,3 +645,16 @@ v26-6) A member saves private support preferences (expect either):
 either
 v26-7) The OWNER cannot read members' support preferences (expect 0):
 0
+v27-1) A single member moves to Couples (expect couples):
+couples
+v27-2) Their Art of Self history and society access are kept (expect 1|couples|1):
+1|couples|1
+v27-3) A member still cannot change their society directly (expect error):
+ERROR:  Not permitted to change these account fields
+v27-4) A 25-year-old cannot move into singles (expect error):
+ERROR:  The Personal Society singles experience is for members 30 and older.
+v27-5) A 25-year-old business member can move to Couples; free business access is released (expect couples|0|1):
+couples
+couples|0|1
+v27-6) Each change is logged (expect 1):
+1

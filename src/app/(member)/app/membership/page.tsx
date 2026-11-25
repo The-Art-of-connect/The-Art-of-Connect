@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CancelMembership } from "@/components/CancelMembership";
+import { SocietyPanel } from "@/components/SocietyPanel";
 import { MemberBilling } from "@/components/MemberBilling";
 import { getViewer } from "@/lib/auth";
 import { getCatalogue } from "@/lib/catalogue";
@@ -27,10 +28,15 @@ export default async function MyMembershipPage() {
 
   if (!sub) {
     return (
-      <div className="glass p-8 text-center">
-        <h1 className="display text-4xl">You don’t have a membership yet.</h1>
-        <Link href="/app/onboarding" className="btn btn-gold mt-8">Build Your Membership</Link>
-      </div>
+      <>
+        <div className="glass p-8 text-center">
+          <p className="eyebrow">My membership</p>
+          <h1 className="display mt-3 text-4xl">{viewer.society ? "Free membership" : "You don’t have a membership yet."}</h1>
+          <p className="mt-3 text-sm text-muted">{viewer.society ? "The Art of Self plus your society’s complimentary features. Journey is included with every paid membership." : "Choose a free society or build a paid membership."}</p>
+          <Link href="/membership#build" className="btn btn-gold mt-8">Explore paid memberships</Link>
+        </div>
+        {viewer.society && <SocietyPanel current={viewer.society} />}
+      </>
     );
   }
 
@@ -46,6 +52,7 @@ export default async function MyMembershipPage() {
       {["active", "trialing", "past_due"].includes(sub.status) && <CancelMembership cancelling={sub.cancel_at_period_end} />}
       <h2 className="mt-14 mb-6 text-lg font-semibold">Add or remove experiences, or change billing</h2>
       <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live} kind="change" />
+      {viewer.society && <SocietyPanel current={viewer.society} />}
     </>
   );
 }
