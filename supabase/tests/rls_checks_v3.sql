@@ -3,9 +3,8 @@
 -- and rls_checks_v2.sql on the same throwaway database.
 reset role;
 reset request.jwt.claim.sub;
-grant all on all tables in schema public to anon, authenticated; -- Supabase default
 
-\echo 'v3-1) Anonymous reads pricing tables directly (expect 0, 0):'
+\echo 'v3-1) Anonymous reads pricing tables directly (expect permission denied):'
 set role anon;
 select (select count(*) from public.experience_offerings), (select count(*) from public.membership_tiers);
 \echo 'v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 3, null):'
@@ -88,6 +87,6 @@ reset request.jwt.claim.sub; -- a real anonymous visitor has no login
 set role anon;
 \echo 'v3-21) Valid promo code (expect 20), inactive code (expect null), public offers (expect 1):'
 select public.check_promotion('founding40')->>'percent_off', public.check_promotion('OLDCODE'), jsonb_array_length(public.get_public_offers());
-\echo 'v3-22) Anonymous reads promotions table directly (expect 0):'
+\echo 'v3-22) Anonymous reads promotions table directly (expect permission denied):'
 select count(*) from public.promotions;
 reset role;

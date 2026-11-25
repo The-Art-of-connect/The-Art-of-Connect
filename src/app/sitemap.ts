@@ -11,7 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/life", priority: 0.8 },
     { path: "/love", priority: 0.8 },
     { path: "/professionals", priority: 0.7 },
-    { path: "/privacy", priority: 0.2 },
-    { path: "/terms", priority: 0.2 },
+    { path: "/legal", priority: 0.3 },
   ].map(({ path, priority }) => ({ url: `${base}${path}`, lastModified: now, changeFrequency: "weekly", priority }));
 }

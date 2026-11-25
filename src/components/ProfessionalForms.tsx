@@ -107,6 +107,10 @@ export function ProfessionalApplicationForm() {
       </div>
       <label className="block"><Label>Specializations (comma separated)</Label><input name="specialties" className="field" /></label>
       <ExperiencePicker />
+      <label className="flex items-start gap-3 text-sm">
+        <input type="checkbox" name="agree" required className="mt-1 h-4 w-4 accent-[var(--champagne)]" />
+        <span>I agree to the <a href="/legal/professional-agreement" target="_blank" className="text-gold underline">Professional Agreement</a> and <a href="/legal/community-standards" target="_blank" className="text-gold underline">Community Standards</a>, and consent to verification of my credentials and identity.</span>
+      </label>
       {state && !state.ok && <p className="text-sm text-danger" role="alert">{state.message}</p>}
       <button className="btn btn-gold w-full sm:w-auto" disabled={pending}>{pending ? "Submitting…" : "Submit application"}</button>
     </form>

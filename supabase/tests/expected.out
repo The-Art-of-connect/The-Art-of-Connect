@@ -1,0 +1,166 @@
+1) Signup while closed, not allow-listed (expect error):
+ERROR:  Membership enrollment is not open yet
+2) Allow-listed signups + owner bootstrap:
+
+   second bootstrap (expect error):
+ERROR:  An owner already exists
+3) Member with grant, experience not live: own row only (expect 1):
+1
+4) Member changes own account status (expect error):
+ERROR:  Not permitted to change these account fields
+5) Member tries to open registrations (expect false):
+false
+6) Member reads counseling notes / appointments (expect 0, 0):
+0|0
+7) Owner reads clinical session notes (expect 0, confidential):
+0
+8) Owner reads counselor listing (expect 1):
+1
+9) Owner changes a launch setting (expect true):
+true
+10) Counselor reads own notes, sees own client (expect 1, 1):
+1|1
+11) Counselor sees dating profiles (expect 0):
+0
+12) Client reads session notes (expect 0):
+0
+13) Anonymous joins waitlist, cannot read it (expect permission denied):
+ERROR:  permission denied for table waitlist
+v2-0) Start a couple (expect a couple id), then try a second one (expect error):
+t
+ERROR:  You are already in a couple
+     Try to insert a couple directly (expect error):
+ERROR:  new row violates row-level security policy for table "couples"
+v2-1) Single sees other visible singles before couple forms (expect 3: own + partner + single2):
+3
+v2-2) Wrong person tries to accept the invitation (expect error):
+ERROR:  This invitation was sent to a different email address
+v2-3) Bad token (expect error):
+ERROR:  This invitation is not valid
+v2-4) Invited partner accepts (expect couple id):
+t
+v2-5) Partner sees couple members (expect 2):
+2
+v2-6) Partner reads the other partner private reflections (expect 0):
+0
+v2-7) Partner adds and sees a shared goal (expect 1):
+1
+v2-8) A single no longer sees the couple in matchmaking (expect 1: own only):
+1
+v2-9) Outsider sees the couple shared goals (expect 0):
+0
+v2-10) Outsider tries to join the couple directly (expect error):
+ERROR:  new row violates row-level security policy for table "couple_members"
+v2-11) OWNER reads private journals and reflections (expect 0, 0):
+0|0
+v2-12) Author reads own journal (expect 1):
+1
+v2-13) Anonymous professional interest: insert ok, cannot read (expect permission denied):
+ERROR:  permission denied for table professional_interest
+v2-14) Licensed application without license (expect error):
+ERROR:  new row for relation "applications" violates check constraint "licensed_requires_license"
+v2-15) Coach application without license (expect ok, 1):
+1
+v3-1) Anonymous reads pricing tables directly (expect permission denied):
+ERROR:  permission denied for table experience_offerings
+v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 3, null):
+3|3|
+v3-3) Finance sets prices (expect 3 rows updated):
+3
+v3-4) Finance tries to publish (expect error):
+ERROR:  Only the owner can publish pricing
+v3-5) Finance preview sees draft prices (expect 5000, preview true):
+5000|true
+v3-6) A member asking for a preview still sees no prices (expect null):
+
+v3-7) Member tries to change prices (expect 0 rows):
+0
+v3-8) Owner publishes with an unpriced active add-on (expect error):
+ERROR:  Set a price for every active add-on before publishing
+v3-9) Owner prices the add-on and publishes (expect true):
+t
+v3-10) Public now sees published prices (expect 5000, 15.00):
+5000|15.00
+v3-11) Consumer sign-up without date of birth (expect error):
+ERROR:  A valid date of birth is required
+v3-12) Consumer aged 39 (expect error):
+ERROR:  Membership is available to adults 40 and older
+v3-13) Consumer turning 40 today, with a referral code (expect ok):
+member|t
+v3-14) Date of birth removed from auth metadata (expect false):
+f
+v3-15) Referral recorded for the referrer (expect 1):
+1
+v3-16) Owner raises minimum age to 45; a 42-year-old is refused (expect error):
+ERROR:  Membership is available to adults 45 and older
+v3-17) Professional sign-up while applications are closed (expect error):
+ERROR:  Professional applications are not open yet
+v3-18) Member reads own date of birth (expect 1):
+1
+v3-19) Member tries to mark themselves age-eligible / change referral code (expect error):
+ERROR:  Not permitted to change these account fields
+v3-20) OWNER reads members dates of birth (expect 0):
+0
+v3-21) Valid promo code (expect 20), inactive code (expect null), public offers (expect 1):
+20||1
+v3-22) Anonymous reads promotions table directly (expect permission denied):
+ERROR:  permission denied for table promotions
+v4-1) Singles see each other before any block (expect 2):
+2
+v4-2) Single 6 blocks 8; 6 sees only own profile (expect 1):
+1
+v4-3) Blocked member no longer sees the blocker either (expect 1):
+1
+v4-4) Blocked member tries to send a connection request (expect error):
+ERROR:  new row violates row-level security policy for table "connections"
+v4-5) Blocked member reads the block list (expect 0):
+0
+v4-6) Owner requires verified identity: unverified singles see only themselves (expect 1):
+1
+v4-7) Member tries to mark themselves identity-verified (expect error):
+ERROR:  Not permitted to change these account fields
+v4-8) Member tries to write a verification result (expect error):
+ERROR:  permission denied for table identity_verifications
+v4-9) Both verified: they see each other again (expect 2):
+2
+v4-10) Three reports against member 8 automatically open a safety flag (expect 1):
+1
+v4-11) Same person reports the same member twice in a day (expect error):
+ERROR:  duplicate key value violates unique constraint "one_report_per_day"
+v4-12) Flagged member hidden from matchmaking (expect 1):
+1
+v4-13) Member reads safety flags (expect 0):
+0
+v4-14) Daily connection cap of 1: first request ok, second refused (expect 1 then error):
+1
+ERROR:  Daily connection request limit reached
+v4-15) Blocking closes the existing connection (expect blocked):
+blocked
+v4-16) Rate limit 2 per minute: allowed, allowed, refused (expect t t f):
+t|t|f
+v4-17) Anonymous reads rate-limit records (expect permission denied):
+ERROR:  permission denied for table rate_limit_events
+v4-18) Approve licensed clinician without verification (expect error):
+ERROR:  Confirm the applicant's identity before approval
+v4-19) Approve after identity, license lookup and disciplinary check (expect approved):
+approved
+v4-20) Owner updates the launch checklist (expect done):
+done
+v4-21) Finance reads the checklist but cannot change it (expect 18 rows, then 0 updated):
+18
+0
+v4-22) Member reads the checklist (expect 0); records a versioned consent (expect 1):
+0
+1
+v5-1) Owner signed in with password only (aal1) reads the audit log (expect 0):
+0
+v5-2) Owner with password only tries to change a launch setting (expect 0 rows):
+0
+v5-3) Owner with password only reads members (expect only own profile, 1):
+1
+v5-4) Owner after MFA (aal2) reads the audit log (expect more than 0):
+t
+v5-5) Owner after MFA still cannot read private journals or dates of birth (expect 0, 0):
+0|0
+v5-6) Ordinary member without MFA still uses their account normally (expect 1 journal):
+1

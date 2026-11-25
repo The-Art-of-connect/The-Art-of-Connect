@@ -9,5 +9,11 @@ create table storage.buckets (id text primary key, name text, public boolean);
 create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text);
 alter table storage.objects enable row level security;
 create function storage.foldername(name text) returns text[] language sql as $$ select string_to_array(name,'/') $$;
+create function auth.jwt() returns jsonb language sql stable as $$ select nullif(current_setting('request.jwt.claims', true), '')::jsonb $$;
 grant usage on schema public, auth to anon, authenticated, service_role;
 grant execute on function auth.uid() to anon, authenticated;
+grant execute on function auth.jwt() to anon, authenticated;
+
+-- Mirror Supabase with automatic table API access turned off: nothing is
+-- granted by default; every grant must come from the migrations.
+alter default privileges revoke execute on functions from public;

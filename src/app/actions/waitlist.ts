@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ATTR_COOKIE, REF_COOKIE, parseAttribution } from "@/lib/attribution";
 import { checkPromotion } from "@/lib/catalogue";
 import type { Promotion } from "@/lib/pricing";
+import { allow } from "@/lib/ratelimit";
 
 const schema = z.object({
   email: z.email().max(254),
@@ -40,6 +41,7 @@ export async function joinWaitlist(_prev: WaitlistState, form: FormData): Promis
   const d = parsed.data;
   if (d.website) return { ok: true, message: "Thank you." };
 
+  if (!(await allow("waitlist", 5, 3600))) return { ok: false, message: "Too many attempts. Please try again later." };
   const supabase = await createClient();
   if (!supabase) return { ok: false, message: "Enrollment opens soon. Please write to info@theartofconnect.com." };
 
@@ -65,5 +67,7 @@ export async function joinWaitlist(_prev: WaitlistState, form: FormData): Promis
 
 /** Validates a promotional code for the membership builder. */
 export async function validatePromo(code: string): Promise<Promotion | null> {
+  // Prevents guessing codes by brute force.
+  if (!(await allow("promo", 10, 600))) return null;
   return checkPromotion(String(code ?? ""));
 }

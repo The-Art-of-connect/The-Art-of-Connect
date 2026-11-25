@@ -16,7 +16,7 @@ const fail = (message: string): ActionResult => ({ ok: false, message });
 const done = (message: string): ActionResult => ({ ok: true, message });
 
 /** Switches that open the platform to the public need a typed confirmation. */
-const CRITICAL = new Set(["registrations_open", "payments_live", "counseling_live", "relationships_live", "business_live", "counselor_applications_open"]);
+const CRITICAL = new Set(["registrations_open", "payments_live", "counseling_live", "relationships_live", "business_live", "counselor_applications_open", "identity_verification_live"]);
 
 export async function setLaunchSetting(_prev: ActionResult, form: FormData): Promise<ActionResult> {
   await requireStaff(rolesFor("/admin/settings"));
@@ -55,18 +55,32 @@ export async function addToAllowlist(_prev: ActionResult, form: FormData): Promi
 export async function reviewApplication(_prev: ActionResult, form: FormData): Promise<ActionResult> {
   const viewer = await requireStaff(rolesFor("/admin/counselors"));
   const parsed = z
-    .object({ id: z.uuid(), decision: z.enum(["in_review", "approved", "rejected", "more_info"]), notes: z.string().max(2000) })
-    .safeParse({ id: form.get("id"), decision: form.get("decision"), notes: String(form.get("notes") ?? "") });
-  if (!parsed.success) return fail("Choose a decision.");
+    .object({
+      id: z.uuid(),
+      decision: z.enum(["in_review", "approved", "rejected", "more_info"]),
+      notes: z.string().max(2000),
+      lookupUrl: z.union([z.literal(""), z.url().max(500)]),
+    })
+    .safeParse({ id: form.get("id"), decision: form.get("decision"), notes: String(form.get("notes") ?? ""), lookupUrl: String(form.get("lookupUrl") ?? "").trim() });
+  if (!parsed.success) return fail("Choose a decision (and use a full https:// link for the license lookup).");
+  const checklist = {
+    identity_checked: form.get("identity_checked") === "on",
+    license_verified: form.get("license_verified") === "on",
+    disciplinary_check_clear: form.get("disciplinary_check_clear") === "on",
+    insurance_confirmed: form.get("insurance_confirmed") === "on",
+    references_checked: form.get("references_checked") === "on",
+    license_lookup_url: parsed.data.lookupUrl || null,
+  };
   const supabase = (await createClient())!;
   const counseling = supabase.schema("counseling");
   const { data: app, error } = await counseling
     .from("applications")
-    .update({ status: parsed.data.decision, reviewer_notes: parsed.data.notes || null, reviewer_id: viewer.id, reviewed_at: new Date().toISOString() })
+    .update({ ...checklist, status: parsed.data.decision, reviewer_notes: parsed.data.notes || null, reviewer_id: viewer.id, reviewed_at: new Date().toISOString() })
     .eq("id", parsed.data.id)
     .select("user_id, legal_name, license_type, certifications, specialties, professional_type")
     .single();
-  if (error || !app) return fail("The review was not saved.");
+  // The database refuses approval until the credential checklist is complete.
+  if (error || !app) return fail(error?.message?.match(/before approval/) ? error.message : "The review was not saved.");
 
   if (parsed.data.decision === "approved") {
     // Verified, but not listed until the counselor completes their profile
@@ -210,4 +224,107 @@ export async function reviewReferral(_prev: ActionResult, form: FormData): Promi
   await audit(`referral.${parsed.data.status}`, "referrals", parsed.data.id);
   revalidatePath("/admin/access");
   return done("Referral updated.");
+}
+
+const SAFETY_TOGGLES = ["require_identity_for_matchmaking", "hide_flagged_from_matchmaking"] as const;
+const SAFETY_NUMBERS = { report_flag_threshold: [1, 50], max_daily_connection_requests: [1, 500] } as const;
+
+/** Owner-only safety settings (identity requirement, thresholds, caps). */
+export async function saveSafetySettings(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(["owner"]);
+  const supabase = (await createClient())!;
+  for (const key of SAFETY_TOGGLES) {
+    await supabase.from("platform_settings").update({ value: form.get(key) === "on" }).eq("key", key);
+  }
+  for (const [key, [min, max]] of Object.entries(SAFETY_NUMBERS)) {
+    const n = Number(form.get(key));
+    if (!Number.isInteger(n) || n < min || n > max) return fail(`${key.replaceAll("_", " ")} must be between ${min} and ${max}.`);
+    await supabase.from("platform_settings").update({ value: n }).eq("key", key);
+  }
+  await audit("safety.settings", "platform_settings", "safety");
+  revalidatePath("/admin/safety");
+  return done("Safety settings saved.");
+}
+
+export async function updateSafetyFlag(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner", "admin", "moderator"]);
+  const parsed = z.object({ id: z.uuid(), status: z.enum(["reviewing", "resolved", "dismissed"]) }).safeParse({ id: form.get("id"), status: form.get("status") });
+  if (!parsed.success) return fail("Invalid request.");
+  const supabase = (await createClient())!;
+  const { error } = await supabase
+    .from("safety_flags")
+    .update({ status: parsed.data.status, resolved_by: viewer.id, resolved_at: parsed.data.status === "reviewing" ? null : new Date().toISOString() })
+    .eq("id", parsed.data.id);
+  if (error) return fail("Not updated.");
+  await audit("safety.flag", "safety_flags", parsed.data.id, { status: parsed.data.status });
+  revalidatePath("/admin/safety");
+  return done("Flag updated.");
+}
+
+export async function flagAccount(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner", "admin", "moderator"]);
+  const parsed = z
+    .object({ email: z.email(), reason: z.enum(["payment_fraud", "spam", "manual"]), details: z.string().trim().max(1000) })
+    .safeParse({ email: String(form.get("email") ?? "").trim().toLowerCase(), reason: form.get("reason"), details: String(form.get("details") ?? "") });
+  if (!parsed.success) return fail("Enter the member’s email and a reason.");
+  const supabase = (await createClient())!;
+  const { data: member } = await supabase.from("profiles").select("id").eq("email", parsed.data.email).maybeSingle();
+  if (!member) return fail("No member with that email.");
+  const { error } = await supabase.from("safety_flags").insert({ user_id: member.id, reason: parsed.data.reason, details: parsed.data.details || null, created_by: viewer.id });
+  if (error) return fail(error.code === "23505" ? "That member already has an open flag for this reason." : "Not flagged.");
+  await audit("safety.flag.create", "safety_flags", member.id, { reason: parsed.data.reason });
+  revalidatePath("/admin/safety");
+  return done("Account flagged for review.");
+}
+
+/** Owner updates a Launch Readiness checklist item (status, note, approval). */
+export async function updateChecklistItem(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const parsed = z
+    .object({ key: z.string().regex(/^[a-z0-9:_-]{2,60}$/), status: z.enum(["pending", "in_progress", "done", "blocked", "not_applicable"]), note: z.string().trim().max(1000) })
+    .safeParse({ key: form.get("key"), status: form.get("status"), note: String(form.get("note") ?? "") });
+  if (!parsed.success) return fail("Invalid update.");
+  const approve = form.get("approve") === "on";
+  const supabase = (await createClient())!;
+  const { error, count } = await supabase
+    .from("launch_checklist")
+    .update(
+      {
+        status: parsed.data.status,
+        note: parsed.data.note || null,
+        approved_by: approve ? viewer.id : null,
+        approved_at: approve ? new Date().toISOString() : null,
+      },
+      { count: "exact" },
+    )
+    .eq("key", parsed.data.key);
+  if (error || !count) return fail("Not saved.");
+  await audit("launch.checklist", "launch_checklist", parsed.data.key, { status: parsed.data.status, approved: approve });
+  revalidatePath("/admin/launch");
+  return done("Saved.");
+}
+
+/** Full or partial refund of a recorded payment (owner or finance). */
+export async function refundPayment(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(["owner", "finance"]);
+  const parsed = z.object({ id: z.uuid(), amount: z.string().trim().max(12) }).safeParse({ id: form.get("id"), amount: String(form.get("amount") ?? "") });
+  if (!parsed.success) return fail("Invalid request.");
+  const supabase = (await createClient())!;
+  const { data: p } = await supabase.from("payments").select("amount_cents, refunded_amount_cents, stripe_payment_ref, livemode").eq("id", parsed.data.id).maybeSingle();
+  if (!p) return fail("Payment not found.");
+  if (!p.stripe_payment_ref) return fail("This payment can’t be refunded automatically. Refund it in the Stripe Dashboard.");
+  const remaining = p.amount_cents - p.refunded_amount_cents;
+  const amount = parsed.data.amount ? Math.round(Number(parsed.data.amount.replace(/[$,]/g, "")) * 100) : remaining;
+  if (!Number.isFinite(amount) || amount <= 0 || amount > remaining) return fail(`Enter an amount up to ${(remaining / 100).toFixed(2)}.`);
+  const { getStripe } = await import("@/lib/stripe");
+  const { stripe, reason } = await getStripe();
+  if (!stripe) return fail(reason ?? "Payments are not configured.");
+  try {
+    await stripe.refunds.create({ payment_intent: p.stripe_payment_ref, amount, metadata: { payment_id: parsed.data.id } });
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Stripe could not process the refund.");
+  }
+  await audit("payment.refund", "payments", parsed.data.id, { amount_cents: amount, livemode: p.livemode });
+  revalidatePath("/admin/revenue");
+  return done(`Refund of $${(amount / 100).toFixed(2)} sent to Stripe. The payment updates when Stripe confirms.`);
 }

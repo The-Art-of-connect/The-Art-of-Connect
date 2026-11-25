@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createClient } from "@/lib/supabase/server";
+import { allow } from "@/lib/ratelimit";
+import { consentVersions } from "@/lib/legal";
 
 export type ProState = { ok: boolean; message: string } | null;
 
@@ -44,6 +46,7 @@ export async function submitProfessionalInterest(_prev: ProState, form: FormData
     return { ok: false, message: "Licensed professionals, please include your license type and the state where you are licensed." };
   }
 
+  if (!(await allow("pro-interest", 5, 3600))) return { ok: false, message: "Too many attempts. Please try again later." };
   const supabase = await createClient();
   if (!supabase) return { ok: false, message: "Applications open soon. Please write to info@theartofconnect.com." };
   const { error } = await supabase.from("professional_interest").insert({
@@ -95,6 +98,7 @@ export async function submitProfessionalApplication(_prev: ProState, form: FormD
       website: String(form.get("website") ?? ""),
     });
   if (!parsed.success) return { ok: false, message: "Please complete all required fields." };
+  if (form.get("agree") !== "on") return { ok: false, message: "Please agree to the Professional Agreement." };
   const d = parsed.data;
   if (d.professionalType === "licensed_clinical" && !(d.licenseType && d.licenseNumber && d.licenseState)) {
     return { ok: false, message: "Licensed professionals must provide license type, number and state." };
@@ -115,5 +119,6 @@ export async function submitProfessionalApplication(_prev: ProState, form: FormD
     website: d.website,
   });
   if (error) return { ok: false, message: "Your application could not be submitted. Please try again." };
+  await supabase.from("consents").insert(consentVersions(["professional_agreement", "community_standards", "terms", "privacy"]).map((c) => ({ user_id: viewer.id, ...c })));
   return { ok: true, message: "Application received. We’ll review your credentials and contact you." };
 }

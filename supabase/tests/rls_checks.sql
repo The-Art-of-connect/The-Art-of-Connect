@@ -4,7 +4,6 @@
 -- stub.sql stands in for Supabase's auth/storage schemas on plain Postgres.
 -- Each \echo line states the expected result.
 
-grant all on all tables in schema public to anon, authenticated; -- Supabase default
 
 \echo '1) Signup while closed, not allow-listed (expect error):'
 insert into auth.users(email) values ('stranger@example.com');
@@ -61,6 +60,6 @@ select count(*) from counseling.session_notes;
 reset role;
 set role anon;
 reset request.jwt.claim.sub;
-\echo '13) Anonymous joins waitlist, cannot read it (expect 0):'
+\echo '13) Anonymous joins waitlist, cannot read it (expect permission denied):'
 insert into public.waitlist(email) values ('fan@example.com');
 select count(*) from public.waitlist;
