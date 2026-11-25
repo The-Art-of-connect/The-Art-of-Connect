@@ -34,7 +34,7 @@ const SAFETY_NOTE =
   "If you or someone else may be in danger, contact local emergency services (911 in the U.S.) or call or text 988 for the Suicide & Crisis Lifeline. You can also reach our safety team from Safety in your member menu.";
 
 export type JourneyReply =
-  | { ok: true; reply: string; conversationId: string | null; allowance: AllowanceView | null }
+  | { ok: true; reply: string; conversationId: string | null; allowance: AllowanceView | null; test?: { id: string | null; model: string; latencyMs: number; inputTokens: number; outputTokens: number; costCents: number; instructionVersion: number | null } }
   | { ok: false; status: number; message: string; allowance?: AllowanceView | null; safety: string };
 
 const refuse = (status: number, message: string, allowance?: AllowanceView | null): JourneyReply => ({ ok: false, status, message, allowance, safety: SAFETY_NOTE });
@@ -118,6 +118,10 @@ export async function sendJourneyMessage(input: {
   hasAttachment?: boolean;
   /** A purchased Journey Private Session (time- and message-limited; doesn't use the monthly allowance). */
   sessionId?: string | null;
+  /** Owner tests only: try an approved model and/or a specific personality version (draft or published). */
+  model?: string | null;
+  instructionVersion?: number | null;
+  comparisonId?: string | null;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
   if (!viewer) return refuse(401, "Please sign in to talk with Journey.");
@@ -167,6 +171,8 @@ export async function sendJourneyMessage(input: {
   }
 
   if (!isOpenAIConfigured()) return refuse(503, "Journey isn't available yet.");
+  // Owner tests may choose any approved model (it must have rates entered, so cost is tracked).
+  if (input.ownerTest && input.model) cfg.settings = { ...cfg.settings, defaultModel: input.model };
 
   const { data: u } = await db.rpc("journey_holder_usage", { p_holder: holderId, p_period_start: periodStart.toISOString() });
   const usage = u as Record<string, number | string> | null;
@@ -176,7 +182,9 @@ export async function sendJourneyMessage(input: {
 
   // Instructions: founder's philosophy and guardrails first, then the owner's published version.
   const [{ data: published }, { data: knowledge }, { data: examples }] = await Promise.all([
-    db.from("journey_instruction_versions").select("version, body").eq("status", "published").maybeSingle(),
+    input.ownerTest && input.instructionVersion
+      ? db.from("journey_instruction_versions").select("version, body").eq("version", input.instructionVersion).maybeSingle()
+      : db.from("journey_instruction_versions").select("version, body").eq("status", "published").maybeSingle(),
     db.from("journey_knowledge").select("title, body").eq("status", "approved").in("mode", ["all", input.mode]).order("updated_at", { ascending: false }).limit(20),
     db.from("journey_examples").select("member_message, ideal_reply").eq("status", "approved").eq("mode", input.mode).order("updated_at", { ascending: false }).limit(5),
   ]);
@@ -244,28 +252,35 @@ export async function sendJourneyMessage(input: {
   }
   const usageId = Number(reserved);
 
+  const started = Date.now();
   const result = await createResponse({ model: d.model, instructions, history, message: input.message, maxOutputTokens: d.maxOutputTokens });
+  const latencyMs = Date.now() - started;
   const rate = cfg.settings.models.find((m) => m.id === d.model)!;
   const actual = costCents(rate, result.inputTokens, result.outputTokens) ?? d.reserveCents;
   await db.rpc("journey_complete", { p_id: usageId, p_ok: result.ok, p_in: result.inputTokens, p_out: result.outputTokens, p_cost: actual });
   if (!result.ok) return refuse(502, "Journey couldn't reply just now. This message didn't count toward your allowance.", view);
 
+  let testRunId: string | null = null;
   if (input.ownerTest) {
-    await db.from("journey_test_runs").insert({ mode: input.mode, instruction_version: published?.version ?? null, prompt: input.message, reply: result.text, created_by: viewer.id });
+    const { data: run } = await db.from("journey_test_runs").insert({
+      mode: input.mode, instruction_version: published?.version ?? null, prompt: input.message.slice(0, 4000), reply: result.text, created_by: viewer.id,
+      model: d.model, latency_ms: latencyMs, input_tokens: result.inputTokens, output_tokens: result.outputTokens, cost_cents: actual, comparison_id: input.comparisonId ?? null,
+    }).select("id").single();
+    testRunId = run?.id ?? null;
   }
 
   let conversationId = input.conversationId ?? null;
-  if (!conversationId) {
+  if (!conversationId && !input.comparisonId) {
     const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, title: `${input.ownerTest ? "[Owner test] " : ""}${input.message}`.slice(0, 80) }).select("id").single();
     conversationId = c?.id ?? null;
   }
-  if (conversationId) {
+  if (conversationId && !input.comparisonId) {
     await db.from("journey_messages").insert([
       { conversation_id: conversationId, user_id: viewer.id, role: "member", content: input.message },
       { conversation_id: conversationId, user_id: viewer.id, role: "journey", content: result.text },
     ]);
   }
-  if (input.ownerTest) return { ok: true, reply: result.text, conversationId, allowance: null };
+  if (input.ownerTest) return { ok: true, reply: result.text, conversationId, allowance: null, test: { id: testRunId, model: d.model, latencyMs, inputTokens: result.inputTokens, outputTokens: result.outputTokens, costCents: actual, instructionVersion: published?.version ?? null } };
   const after = view && !d.usesPurchased
     ? allowanceView(view.allowance, view.used + 1, view.purchasedRemaining, periodEnd)
     : view && { ...view, purchasedRemaining: Math.max(0, view.purchasedRemaining - 1) };

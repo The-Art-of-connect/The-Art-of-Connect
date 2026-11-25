@@ -118,6 +118,7 @@ export async function publishInstructions(_p: ActionResult, f: FormData): Promis
   await requireStaff(["owner"]);
   const id = z.uuid().safeParse(f.get("id"));
   if (!id.success) return fail("Unknown version.");
+  if (String(f.get("confirm") ?? "").trim().toUpperCase() !== "PUBLISH") return fail("Type PUBLISH to make this version live for Journey.");
   const supabase = (await createClient())!;
   await supabase.from("journey_instruction_versions").update({ status: "retired" }).eq("status", "published");
   const { error } = await supabase.from("journey_instruction_versions").update({ status: "published", published_at: new Date().toISOString() }).eq("id", id.data);
@@ -245,11 +246,38 @@ export async function savePersonality(_p: ActionResult, f: FormData): Promise<Ac
   if (error || !data) return fail("Not saved.");
   await done("journey.instructions.draft", "personality", { version: data.version });
   revalidatePath("/admin/journey/personality");
-  if (f.get("publish") === "1" && viewer.roles.includes("owner")) {
+  if (f.get("publish") === "1" && viewer.roles.includes("owner") && String(f.get("confirm") ?? "").trim().toUpperCase() === "PUBLISH") {
     await supabase.from("journey_instruction_versions").update({ status: "retired" }).eq("status", "published");
     await supabase.from("journey_instruction_versions").update({ status: "published", published_at: new Date().toISOString() }).eq("id", data.id);
     await done("journey.instructions.publish", data.id);
     return ok(`Version ${data.version} saved and published. Journey uses it from the next message.`);
   }
   return ok(`Saved as draft version ${data.version}. Test it privately, then publish.`);
+}
+
+/** Owner: choose which approved model Journey uses (can be changed any time). */
+export async function setJourneyModel(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const id = String(f.get("id") ?? "");
+  const supabase = (await createClient())!;
+  const { data: m } = await supabase.from("journey_models").select("id, enabled, input_cents_per_million, output_cents_per_million").eq("id", id).maybeSingle();
+  if (!m || !m.enabled || m.input_cents_per_million == null || m.output_cents_per_million == null) return fail("Approve the model and enter its rates first.");
+  const { error } = await supabase.from("journey_settings").update({ default_model: id, updated_by: viewer.id }).eq("id", true);
+  if (error) return fail("Not saved.");
+  await done("journey.model.default", id);
+  revalidatePath("/admin/journey/models");
+  return ok(`Journey now uses ${id}. You can switch back any time.`);
+}
+
+/** Owner: rate a private test reply (1–5) on quality, comprehension and emotional awareness. */
+export async function rateTestRun(input: { id: string; ratings: Record<string, number>; note?: string }): Promise<ActionResult> {
+  await requireStaff(["owner"]);
+  const id = z.uuid().safeParse(input.id);
+  if (!id.success) return fail("Unknown test.");
+  const ratings = Object.fromEntries(Object.entries(input.ratings).filter(([k, v]) => ["quality", "comprehension", "emotion"].includes(k) && Number.isInteger(v) && v >= 1 && v <= 5));
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("journey_test_runs").update({ ratings, rating_note: input.note?.slice(0, 2000) || null }).eq("id", id.data);
+  if (error) return fail("Rating not saved.");
+  revalidatePath("/admin/journey/models");
+  return ok("Rating saved.");
 }
