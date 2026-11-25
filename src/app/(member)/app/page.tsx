@@ -10,6 +10,9 @@ import { LivingHero } from "@/components/business/SocietyHero";
 import { DiscoveryInvite } from "@/components/DiscoveryInvite";
 import { Greeting } from "@/components/business/Greeting";
 import { ReferralShare } from "@/components/ReferralShare";
+import { DashboardHub } from "@/components/DashboardHub";
+import { getNavState } from "@/lib/nav-state";
+import { getDiscovery, nextModuleHref } from "@/lib/know-yourself-server";
 
 const PHOTO: Record<string, string> = {
   business: "/images/society/roundtable.webp",
@@ -22,9 +25,11 @@ export default async function MemberHome() {
   const launch = await getLaunchState();
   const staff = isStaff(viewer) || isInsidePreview(viewer);
   const supabase = (await createClient())!;
-  const [{ data: sub }, catalogue] = await Promise.all([
+  const [{ data: sub }, catalogue, nav, discovery] = await Promise.all([
     supabase.from("subscriptions").select("tier_name").eq("user_id", viewer.id).in("status", ["active", "trialing", "past_due"]).maybeSingle(),
     getCatalogue(),
+    getNavState(),
+    getDiscovery(viewer.id),
   ]);
   const referralLink = viewer.referralCode ? `${env.siteUrl}/membership?ref=${viewer.referralCode}` : null;
 
@@ -60,6 +65,7 @@ export default async function MemberHome() {
           {sub.tier_name} · <Link href="/app/membership" className="text-gold underline">Manage membership</Link>
         </p>
       )}
+      <DashboardHub state={nav} discovery={{ percent: discovery.percent, modulesDone: discovery.modulesDone, totalModules: discovery.totalModules, nextHref: nextModuleHref(discovery.answers, discovery.special) }} />
       <DiscoveryInvite userId={viewer.id} back="/app" />
       <div className="mt-10 grid gap-5 md:grid-cols-3">
         {EXPERIENCE_ORDER.map((key) => {

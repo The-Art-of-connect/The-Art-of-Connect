@@ -6,6 +6,11 @@ import { OwnerReview, SectionGate } from "@/components/OwnerReview";
 import { AgreementForm } from "@/components/AgreementForm";
 import { createClient } from "@/lib/supabase/server";
 import { SiteSearch } from "@/components/SiteSearch";
+import { DesktopNav } from "@/components/nav/DesktopNav";
+import { ProfileMenu } from "@/components/nav/ProfileMenu";
+import { MemberTabBar } from "@/components/nav/MemberTabBar";
+import { MobileMenu } from "@/components/MobileMenu";
+import { getNavState } from "@/lib/nav-state";
 import { entriesFor, pick } from "@/lib/search-scope";
 
 export const dynamic = "force-dynamic";
@@ -28,28 +33,19 @@ export default async function MemberLayout({ children }: { children: React.React
   const notes = Object.fromEntries((statusRows ?? []).map((r) => [r.path, r.member_note]));
   const reviewer = hasRole(viewer, ["owner", "executive"]);
   const searchable = entriesFor(viewer);
+  const nav = await getNavState();
   const quick = pick(searchable, ["/app", "/app/journey", "/app/business", "/app/relationships", "/app/counseling", "/app/membership", "/app/safety", "/"]);
   return (
     <div className="theme-ivory min-h-dvh">
       <header className="theme-dark sticky top-0 z-30 border-b border-line !bg-espresso/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
-          <Link href="/app"><Wordmark /></Link>
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-8">
+          <Link href="/app" aria-label="My dashboard"><Wordmark /></Link>
+          <DesktopNav state={nav} />
           <div className="flex items-center gap-2 sm:gap-3">
-            <SiteSearch entries={searchable} quick={quick} home={{ href: "/app", label: "Member home" }} />
-            <Link href="/" className="hidden text-sm text-muted hover:text-text md:inline">Main site</Link>
-            <Link href="/app/journey" className="hidden text-sm text-muted hover:text-text sm:inline">Journey</Link>
-            <Link href="/app/membership" className="hidden text-sm text-muted hover:text-text sm:inline">My membership</Link>
-            <Link href="/app/safety" className="hidden text-sm text-muted hover:text-text sm:inline">Safety</Link>
-            <Link href="/legal" className="hidden text-sm text-muted hover:text-text sm:inline">Legal</Link>
-            {reviewer && <Link href="/inside-preview" className="btn btn-ghost btn-sm hidden sm:inline-flex">All preview pages</Link>}
-            {isStaff(viewer) && <Link href="/admin" className="btn btn-ghost btn-sm">Owner Portal</Link>}
-            {preview ? (
-              <a href="/" className="btn btn-ghost btn-sm">Home</a>
-            ) : (
-              <form action="/auth/sign-out" method="post">
-                <button className="text-sm text-muted hover:text-text">Sign out</button>
-              </form>
-            )}
+            <SiteSearch entries={searchable} quick={quick} home={{ href: "/app", label: "My dashboard" }} />
+            {reviewer && <Link href="/inside-preview" className="btn btn-ghost btn-sm hidden xl:inline-flex">All preview pages</Link>}
+            {preview ? <a href="/" className="btn btn-ghost btn-sm">Home</a> : <ProfileMenu state={nav} />}
+            <MobileMenu state={nav} />
           </div>
         </div>
       </header>
@@ -59,7 +55,7 @@ export default async function MemberLayout({ children }: { children: React.React
           <a href="/inside-preview/enter?exit=1" className="font-semibold underline">End preview</a>
         </div>
       )}
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-8">
+      <main className="mx-auto max-w-7xl px-4 pb-28 pt-10 sm:px-8 lg:pb-10">
         {pending.length ? (
           <section className="glass mx-auto max-w-2xl p-7 sm:p-9">
             <p className="eyebrow">Your agreements</p>
@@ -72,6 +68,7 @@ export default async function MemberLayout({ children }: { children: React.React
         )}
       </main>
       {reviewer && <OwnerReview status={status} />}
+      {!preview && <MemberTabBar state={nav} />}
     </div>
   );
 }

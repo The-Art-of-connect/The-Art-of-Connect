@@ -22,7 +22,7 @@ export function OwnerReview({ status }: { status: Record<string, string> }) {
   const current = status[path] === "coming_soon" ? "Coming soon for members" : "Open to members";
 
   return (
-    <div className="theme-dark fixed inset-x-3 bottom-3 z-50 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[24rem]">
+    <div className="theme-dark fixed inset-x-3 bottom-[5.5rem] z-50 sm:inset-x-auto sm:right-6 sm:bottom-24 sm:w-[24rem] lg:bottom-6">
       {open ? (
         <form action={action} className="rounded-2xl border border-gold/40 !bg-espresso/95 p-5 shadow-2xl backdrop-blur-xl">
           <div className="flex items-start justify-between gap-3">
