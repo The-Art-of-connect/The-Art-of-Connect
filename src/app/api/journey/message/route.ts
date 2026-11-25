@@ -15,6 +15,7 @@ const Body = z.object({
   model: z.string().regex(/^[A-Za-z0-9._:-]{2,80}$/).nullish(),
   instructionVersion: z.number().int().positive().nullish(),
   comparisonId: z.uuid().nullish(),
+  discovery: z.object({ sessionId: z.uuid(), summarize: z.boolean().optional(), skip: z.boolean().optional() }).nullish(),
   lesson: z.string().regex(/^[a-z0-9-]{2,60}(\/[a-z0-9-]{2,60})?$/).nullish(),
 });
 
