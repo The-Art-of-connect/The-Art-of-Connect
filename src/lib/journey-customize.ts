@@ -62,12 +62,19 @@ export const PACES = [
   { id: "brisker", label: "A little brisker", speed: 1.1 },
 ];
 
-/** Fictional avatar styles. Illustrated people are added only from founder-approved artwork. */
-export const AVATARS = [
+/**
+ * Journey's appearance: signature orbs, or fictional portraits from founder-approved artwork.
+ * Portraits are fictional and never represent a real person; labels are neutral by design.
+ */
+export type Avatar = { id: string; label: string; from?: string; to?: string; image?: string };
+const LETTERS = "abcdefghijklmno";
+export const AVATARS: Avatar[] = [
   { id: "champagne", label: "Champagne orb", from: "#f3dfb6", to: "#b08a4e" },
   { id: "rose", label: "Rose orb", from: "#f0c9cf", to: "#7a2e3e" },
   { id: "midnight", label: "Midnight orb", from: "#c9b8a0", to: "#2b1d16" },
+  ...Array.from({ length: 15 }, (_, i) => ({ id: `portrait-${LETTERS[i]}`, label: `Journey portrait ${i + 1}`, image: `/images/avatars/portrait-${i + 1}.webp` })),
 ];
+export const avatarById = (id: string | null | undefined) => AVATARS.find((a) => a.id === id) ?? AVATARS[0];
 
 export type JourneyPrefs = {
   presentation: Presentation; voice: string; age: string; language: string; accent: string;

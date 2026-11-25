@@ -7,7 +7,7 @@ import { VoiceStudio } from "@/components/JourneyPickers";
 import { LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
 import { saveVoicePrefs } from "@/app/actions/journey-member";
 import { CURRICULA } from "@/lib/curricula";
-import { voiceById } from "@/lib/journey-customize";
+import { avatarById, voiceById } from "@/lib/journey-customize";
 import { discoveryCategory, discoveryMode } from "@/lib/journey-discovery";
 
 export const metadata = { title: "Talk to Journey" };
@@ -26,7 +26,7 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
   const supabase = await createClient();
   const db = createAdminClient();
   const { data: prefs } = supabase && !isInsidePreview(viewer)
-    ? await supabase.from("journey_voice_preferences").select("voice_style, save_transcripts, voice, presentation").eq("user_id", viewer.id).maybeSingle()
+    ? await supabase.from("journey_voice_preferences").select("voice_style, save_transcripts, voice, presentation, avatar").eq("user_id", viewer.id).maybeSingle()
     : { data: null };
   const { data: s } = db ? await db.from("journey_settings").select("voice_enabled, voice_model, voice_cents_per_minute").maybeSingle() : { data: null };
   let minutes: { remaining: number; total: number } | null = null;
@@ -55,6 +55,7 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
         <VoiceStudio minutes={minutes} available={available} reason={reason} ownerTest={owner && status.access === "staff"}
           initialStyle={(prefs?.voice_style as "warm") ?? "warm"} initialTranscripts={prefs?.save_transcripts ?? false} onSavePrefs={saveVoicePrefs}
           voiceSummary={prefs?.voice ? `${voiceById(prefs.voice)?.name ?? "Journey"} (${prefs.presentation} voice)` : null}
+          avatarImage={prefs?.avatar ? avatarById(prefs.avatar).image ?? null : null}
           lesson={lesson} discovery={disc?.key ?? null} mode={disc ? discoveryMode(disc.key) : "life"} />
       </div>
       <LuxSection title="Designed around you">

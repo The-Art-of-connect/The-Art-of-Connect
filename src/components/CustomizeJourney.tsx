@@ -33,7 +33,7 @@ export function CustomizeJourney({ initial, action }: { initial: JourneyPrefs; a
     PERSONALITIES.find((x) => x.id === p.personality)?.label,
     LANGUAGES.find((l) => l.id === p.language)?.label,
   ].filter(Boolean).join(" · ");
-  const av = AVATARS.find((a) => a.id === p.avatar)!;
+  const av = AVATARS.find((a) => a.id === p.avatar) ?? AVATARS[0];
 
   return (
     <form action={formAction} className="theme-dark mx-auto max-w-3xl space-y-8 rounded-[28px] bg-ink px-6 py-10 text-ivory shadow-2xl sm:px-12" aria-busy={pending}>
@@ -94,17 +94,20 @@ export function CustomizeJourney({ initial, action }: { initial: JourneyPrefs; a
       </div>
 
       <fieldset>
-        <legend className={label}>Avatar appearance (optional)</legend>
-        <div className="mt-3 flex flex-wrap gap-4">
+        <legend className={label}>Choose Journey&rsquo;s appearance (optional)</legend>
+        <p className="mt-1 text-xs text-ivory/60">Select the avatar that feels most aligned with you.</p>
+        <div className="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-6">
           {AVATARS.map((a) => (
-            <label key={a.id} className="cursor-pointer text-center">
+            <label key={a.id} className="cursor-pointer text-center" title={a.label}>
               <input type="radio" name="avatar" value={a.id} checked={p.avatar === a.id} onChange={() => set("avatar", a.id)} className={radio} />
-              <span className="block h-14 w-14 rounded-full ring-2 ring-transparent transition peer-checked:ring-gold" style={{ background: `radial-gradient(circle at 35% 30%, ${a.from}, ${a.to})` }} />
-              <span className="mt-1 block text-xs text-ivory/70">{a.label}</span>
+              {a.image
+                ? <img src={a.image} alt={a.label} loading="lazy" className="mx-auto aspect-square w-full rounded-2xl object-cover ring-2 ring-transparent transition peer-checked:ring-gold" />
+                : <span className="mx-auto block aspect-square w-full rounded-full ring-2 ring-transparent transition peer-checked:ring-gold" style={{ background: `radial-gradient(circle at 35% 30%, ${a.from}, ${a.to})` }} />}
+              <span className="mt-1 block text-[0.62rem] text-ivory/60">{a.image ? a.label.replace("Journey portrait ", "") : a.label.replace(" orb", "")}</span>
             </label>
           ))}
         </div>
-        <p className="mt-2 text-xs text-ivory/55">Fictional illustrated avatars are coming. Journey never represents a real person or any racial or demographic group.</p>
+        <p className="mt-2 text-xs text-ivory/55">Every portrait is fictional, created for The Art of Connect. Journey never represents a real person or any racial or demographic group, and stays the same Journey whichever face you choose.</p>
       </fieldset>
 
       <fieldset>
@@ -122,7 +125,9 @@ export function CustomizeJourney({ initial, action }: { initial: JourneyPrefs; a
       </fieldset>
 
       <div className="border-t border-gold/40 pt-6 text-center">
-        <span className="mx-auto block h-12 w-12 rounded-full" style={{ background: `radial-gradient(circle at 35% 30%, ${av.from}, ${av.to})` }} aria-hidden="true" />
+        {av.image
+          ? <img src={av.image} alt="" className="mx-auto h-20 w-20 rounded-full object-cover ring-2 ring-gold" />
+          : <span className="mx-auto block h-12 w-12 rounded-full" style={{ background: `radial-gradient(circle at 35% 30%, ${av.from}, ${av.to})` }} aria-hidden="true" />}
         <p className="mt-3 text-xs tracking-[0.25em] uppercase text-gold">Your personalized Journey</p>
         <p className="mt-2 text-lg text-ivory">{summary}</p>
         <p className="mt-2 text-sm text-ivory/60">Your comfort. Your connection. Your Journey.</p>

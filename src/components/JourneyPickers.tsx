@@ -29,7 +29,9 @@ const VOICES: { id: "warm" | "calm" | "confident" | "soft" | "friendly"; name: s
 
 type Status = "idle" | "connecting" | "live" | "paused" | "ended";
 
-export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, lesson = null, discovery = null, mode = "life", voiceSummary = null }: {
+export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, lesson = null, discovery = null, mode = "life", voiceSummary = null, avatarImage = null }: {
+  /** The member's chosen Journey portrait (fictional), shown in the listening circle. */
+  avatarImage?: string | null;
   /** When set, the member's saved Customize Your Journey choice is shown instead of the legacy style picker. */
   voiceSummary?: string | null;
   minutes: { remaining: number; total: number } | null;
@@ -139,9 +141,13 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
   return (
     <div className="theme-dark overflow-hidden rounded-[2rem] border border-gold/25 px-6 py-10 text-center sm:px-12" style={{ background: "var(--ink)" }}>
       <div className={`mx-auto flex h-40 w-40 items-center justify-center rounded-full border border-gold/40 sm:h-48 sm:w-48 ${status === "live" ? "animate-pulse" : ""}`} style={{ boxShadow: "0 0 0 14px rgb(197 165 114 / 0.06), 0 0 0 28px rgb(197 165 114 / 0.04)" }}>
-        <div className="flex h-14 items-end gap-1" aria-hidden="true">
-          {[6, 10, 16, 24, 32, 40, 32, 24, 16, 10, 6].map((h, i) => <span key={i} className="w-1 rounded-full bg-gold" style={{ height: h }} />)}
-        </div>
+        {avatarImage ? (
+          <img src={avatarImage} alt="Journey" className="h-[85%] w-[85%] rounded-full object-cover" />
+        ) : (
+          <div className="flex h-14 items-end gap-1" aria-hidden="true">
+            {[6, 10, 16, 24, 32, 40, 32, 24, 16, 10, 6].map((h, i) => <span key={i} className="w-1 rounded-full bg-gold" style={{ height: h }} />)}
+          </div>
+        )}
       </div>
       <p className="display mt-8 text-3xl text-gold-bright">{live ? (status === "paused" ? "Paused" : "Journey is listening") : "A space to be heard. A place to grow."}</p>
       {left !== null && <p className="mt-2 text-sm text-gold">{mmss(left)} remaining in this conversation</p>}
