@@ -26,24 +26,3 @@ export function PhotoCard({ image, title, body, href, status, delay = 0, positio
     <div className={cls} style={{ animationDelay: `${delay}ms` }}>{inner}</div>
   );
 }
-
-/** The invitation to begin with yourself — shown in every area. */
-export function KnowYourselfBanner({ context, done = 0 }: { context: string; done?: number }) {
-  return (
-    <Link href="/app/know-yourself" className="theme-dark lift tile-in group relative mt-8 block overflow-hidden rounded-[26px] bg-ink">
-      <div className="absolute inset-0">
-        <Image src="/images/library/brand/gold-waves.webp" alt="" fill sizes="100vw" className="object-cover opacity-70 transition-transform duration-[2000ms] group-hover:scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/80 to-ink/30" />
-      </div>
-      <div className="relative grid items-center gap-6 p-7 sm:p-10 md:grid-cols-[1fr_auto]">
-        <div>
-          <p className="eyebrow">Know yourself first</p>
-          <p className="display mt-3 text-3xl leading-tight sm:text-4xl">{context}</p>
-          <p className="mt-3 max-w-xl text-muted">What you will do. What you won’t. And how to say it with respect. Private to you — always.</p>
-          {done > 0 && <p className="mt-3 text-sm text-gold-bright">{done} of 4 reflections written — continue where you left off.</p>}
-        </div>
-        <span className="btn btn-gold shimmer">{done ? "Continue my reflection" : "Begin my reflection"}</span>
-      </div>
-    </Link>
-  );
-}

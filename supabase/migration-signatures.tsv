@@ -21,3 +21,4 @@
 20261210000001_age_requirements.sql	to_regprocedure('relationships.guard_singles_age()') is not null
 20261211000001_journey_complete.sql	to_regclass('public.dev_tracker') is not null
 20261212000001_know_yourself.sql	to_regclass('public.self_discovery') is not null
+20261213000001_art_of_knowing_yourself.sql	to_regclass('public.discovery_answers') is not null

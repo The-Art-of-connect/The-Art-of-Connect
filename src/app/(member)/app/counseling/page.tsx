@@ -1,7 +1,7 @@
 import { requireExperience } from "@/lib/auth";
-import { reflectionsWritten } from "@/lib/know-yourself-server";
 import { LivingHero } from "@/components/business/SocietyHero";
-import { KnowYourselfBanner, PhotoCard } from "@/components/Living";
+import { PhotoCard } from "@/components/Living";
+import { DiscoveryInvite } from "@/components/DiscoveryInvite";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,6 @@ const MODULES = [
 
 export default async function InLife() {
   const { viewer, preview } = await requireExperience("counseling");
-  const done = await reflectionsWritten(viewer.id);
   return (
     <>
       {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — In Life is not open to members yet.</p>}
@@ -28,14 +27,14 @@ export default async function InLife() {
         ]}
         eyebrow="The Art of Becoming · In Life" title="Discover who you are" gilded="becoming."
         subtitle="Self-discovery, emotional awareness and personal growth — a private space to understand yourself before you choose your next chapter."
-        cta={{ href: "/app/know-yourself", label: "Know yourself first" }}
+        cta={{ href: "/app/know-yourself", label: "The Art of Knowing Yourself" }}
         secondary={{ href: "/app/counseling/journal", label: "Open my private journal" }}
       />
       <p className="mt-6 rounded-2xl border border-line-strong bg-ivory/60 p-5 text-sm text-muted">
         Private space. Your journal and reflections are visible only to you, and your In Life activity never appears on your In Love or In Business profiles.
       </p>
 
-      <KnowYourselfBanner context="Who are you when no one is watching — and what will you no longer accept?" done={done} />
+      <DiscoveryInvite userId={viewer.id} back="/app/counseling" context="Who are you beyond your titles and responsibilities? Rediscover your values, your patterns and what you want your life to represent." />
 
       <section className="mt-12">
         <p className="eyebrow">Your growth</p>

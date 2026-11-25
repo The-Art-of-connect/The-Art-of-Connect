@@ -1,22 +1,20 @@
 import Image from "next/image";
-import { getViewer } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
-import { AREAS, RESPECT_GUIDE, type Area } from "@/lib/know-yourself";
-import { saveSelfDiscovery } from "@/app/actions/know-yourself";
-import { ActionForm } from "@/components/admin/ActionForm";
+import Link from "next/link";
+import { getViewer, isInsidePreview } from "@/lib/auth";
+import { getDiscovery, moduleProgress } from "@/lib/know-yourself-server";
+import { BRAND_MESSAGE, JOURNEY_DEEPER, MODULES, PILLARS } from "@/lib/who-am-i";
+import { setDiscoveryChoice } from "@/app/actions/who-am-i";
 import { LivingHero } from "@/components/business/SocietyHero";
+import { PillarIcon } from "@/components/PillarIcon";
 
-export const metadata = { title: "Know Yourself First" };
+export const metadata = { title: "The Art of Knowing Yourself" };
 export const dynamic = "force-dynamic";
 
-type Row = { area: Area; core_values: string | null; will_do: string | null; wont_do: string | null; say_it: string | null };
-
-export default async function KnowYourself() {
+export default async function ArtOfKnowingYourself() {
   const viewer = (await getViewer())!;
-  const supabase = (await createClient())!;
-  const { data } = await supabase.from("self_discovery").select("area, core_values, will_do, wont_do, say_it").eq("user_id", viewer.id);
-  const answers = Object.fromEntries(((data ?? []) as Row[]).map((r) => [r.area, r])) as Partial<Record<Area, Row>>;
-  const complete = AREAS.filter((a) => { const r = answers[a.key]; return r && (r.will_do || r.wont_do); });
+  const d = await getDiscovery(viewer.id);
+  const started = d.percent > 0;
+  const paused = d.choice === "explore_first" || d.choice === "later";
 
   return (
     <>
@@ -25,93 +23,119 @@ export default async function KnowYourself() {
           { src: "/images/library/life/journaling.webp", alt: "A woman writing in her journal by a sunlit window" },
           { src: "/images/library/life/meditation.webp", alt: "Meditating at sunrise above the sea" },
           { src: "/images/library/life/garden-walk.webp", alt: "A calm walk through a flowering garden" },
+          { src: "/images/library/business/executive-portrait.webp", alt: "A confident woman seated in a stately room" },
         ]}
-        eyebrow="Know yourself first" title="Before dating, marriage or work —" gilded="begin with you."
-        subtitle="What you value. What you will do. What you won’t. And how to say it with grace. A private reflection only you can see."
-        cta={{ href: "#self", label: "Begin my reflection" }} secondary={{ href: "#respect", label: "How to say it respectfully" }}
+        eyebrow="The Art of Knowing Yourself" title="Your first connection is" gilded="with yourself."
+        subtitle="Before the career, the relationship, the marriage and the responsibilities, there is you. Discover who you are, what you value and what you want your life to become."
+        cta={{ href: "#who-am-i", label: started ? "Continue My Personal Journey" : "Begin My Personal Journey" }}
+        secondary={{ href: "/app", label: "Explore My Society First" }}
       />
 
-      <section className="mt-8 grid gap-3 sm:grid-cols-4" aria-label="Your progress">
-        {AREAS.map((a, i) => {
-          const done = complete.some((c) => c.key === a.key);
-          return (
-            <a key={a.key} href={`#${a.key}`} className={`lift tile-in rounded-2xl border p-4 ${done ? "border-champagne bg-champagne/20" : "border-line bg-ivory/60"}`} style={{ animationDelay: `${i * 80}ms` }}>
-              <span className="text-[0.65rem] tracking-[0.22em] uppercase text-muted">{a.eyebrow}</span>
-              <span className="display mt-1 block text-2xl">{a.title}</span>
-              <span className={`mt-1 block text-xs font-semibold ${done ? "text-gold-deep" : "text-faint"}`}>{done ? "✓ Written" : "Not started"}</span>
-            </a>
-          );
-        })}
-      </section>
-      <p className="mt-3 text-xs text-muted">Private by design: your answers are never shown to partners, matches, other members or The Art of Connect team. Educational reflection — not counseling or therapy.</p>
-
-      {complete.length > 0 && (
-        <section className="theme-dark relative mt-10 overflow-hidden rounded-[26px] bg-ink p-7 sm:p-10">
-          <div className="glow-breathe pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgb(197_165_114/0.4),transparent_70%)]" aria-hidden="true" />
-          <p className="eyebrow relative">My standards</p>
-          <div className="relative mt-5 grid gap-6 md:grid-cols-2">
-            {complete.map((a) => {
-              const r = answers[a.key]!;
-              return (
-                <div key={a.key} className="border-l border-champagne/40 pl-5">
-                  <p className="display text-2xl text-gold-bright">{a.title}</p>
-                  {r.core_values && <p className="mt-2 text-sm"><span className="text-muted">I value</span> {r.core_values}</p>}
-                  {r.will_do && <p className="mt-1 text-sm"><span className="text-muted">I will</span> {r.will_do}</p>}
-                  {r.wont_do && <p className="mt-1 text-sm"><span className="text-muted">I won’t</span> {r.wont_do}</p>}
-                  {r.say_it && <p className="display mt-2 text-lg italic">“{r.say_it}”</p>}
-                </div>
-              );
-            })}
-          </div>
-        </section>
+      {paused && (
+        <p className="mt-6 rounded-2xl border border-champagne/50 bg-champagne/10 px-5 py-3 text-sm">
+          Welcome back. You chose to {d.choice === "later" ? "return when you’re ready" : "explore your society first"} — we won’t prompt you elsewhere. Everything here is waiting whenever you are.
+        </p>
       )}
 
-      {AREAS.map((a, i) => {
-        const r = answers[a.key];
-        return (
-          <section key={a.key} id={a.key} className="glass mt-10 scroll-mt-24 overflow-hidden !p-0">
-            <div className="grid lg:grid-cols-[2fr_3fr]">
-              <div className="relative min-h-56 lg:min-h-full">
-                <Image src={a.image} alt="" fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-espresso/85 via-espresso/25 to-transparent" />
-                <div className="absolute bottom-5 left-6 right-6 text-ivory">
-                  <p className="text-[0.65rem] tracking-[0.25em] uppercase text-champagne">{i + 1} · {a.eyebrow}</p>
-                  <h2 className="display mt-1 text-4xl">{a.title}</h2>
-                </div>
-              </div>
-              <ActionForm action={saveSelfDiscovery} className="space-y-4 p-6 sm:p-8">
-                <p className="text-muted">{a.intro}</p>
-                <input type="hidden" name="area" value={a.key} />
-                <label className="block space-y-1.5"><span className="text-sm font-semibold">{a.values}</span>
-                  <input name="core_values" defaultValue={r?.core_values ?? ""} maxLength={2000} className="field" placeholder="e.g. honesty, peace, growth" /></label>
-                <label className="block space-y-1.5"><span className="text-sm font-semibold">{a.will}</span>
-                  <textarea name="will_do" defaultValue={r?.will_do ?? ""} maxLength={4000} className="field !min-h-[84px]" placeholder="I will…" /></label>
-                <label className="block space-y-1.5"><span className="text-sm font-semibold">{a.wont}</span>
-                  <textarea name="wont_do" defaultValue={r?.wont_do ?? ""} maxLength={4000} className="field !min-h-[84px]" placeholder="I won’t…" /></label>
-                <label className="block space-y-1.5"><span className="text-sm font-semibold">{a.say}</span>
-                  <textarea name="say_it" defaultValue={r?.say_it ?? ""} maxLength={4000} className="field !min-h-[84px]" placeholder="When it matters, I’ll say…" /></label>
-                <p className="rounded-xl border border-champagne/40 bg-champagne/10 p-3 text-xs italic text-muted">Example: {a.example}</p>
-                <button className="btn btn-gold">Save privately</button>
-              </ActionForm>
-            </div>
-          </section>
-        );
-      })}
-
-      <section id="respect" className="mt-12 scroll-mt-24">
-        <p className="eyebrow">Saying it with respect</p>
-        <h2 className="display mt-2 text-4xl">A boundary is a kindness — to you and to them.</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {RESPECT_GUIDE.map((g, i) => (
-            <div key={g.title} className="glass lift tile-in p-6" style={{ animationDelay: `${i * 90}ms` }}>
-              <span className="display text-3xl text-gold">{i + 1}</span>
-              <p className="mt-2 font-semibold">{g.title}</p>
-              <p className="mt-1 text-sm text-muted">{g.body}</p>
-            </div>
+      <section className="theme-dark relative mt-10 overflow-hidden rounded-[28px] bg-ink px-6 py-10 sm:px-12">
+        <div className="glow-breathe pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgb(197_165_114/0.35),transparent_70%)]" aria-hidden="true" />
+        <p className="eyebrow relative text-center">The Art of Connect</p>
+        <p className="display relative mt-3 text-center text-3xl sm:text-4xl">{BRAND_MESSAGE}</p>
+        <p className="display relative mt-2 text-center text-xl italic text-gold-bright">Your first and most important connection is with you.</p>
+        <div className="relative mx-auto mt-8 h-px max-w-3xl bg-champagne/30" />
+        <ul className="relative mx-auto mt-8 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {PILLARS.map((p, i) => (
+            <li key={p.key} className="tile-in flex gap-4" style={{ animationDelay: `${i * 90}ms` }}>
+              <PillarIcon pillar={p.key} className="mt-1 h-7 w-7 shrink-0 text-gold-bright" />
+              <span><span className="display block text-2xl text-gold-bright">{p.title}</span><span className="mt-1 block text-sm text-muted">{p.line}</span></span>
+            </li>
           ))}
-        </div>
-        <p className="display mt-10 text-center text-2xl italic text-gold-deep">Know yourself. Then connect with intention.</p>
+        </ul>
+        <p className="relative mt-10 text-center text-xs tracking-[0.3em] uppercase text-gold">In Business. In Life. In Love.</p>
       </section>
+
+      <section id="who-am-i" className="mt-14 scroll-mt-24">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">Your personal discovery program</p>
+            <h2 className="display mt-2 text-5xl">Who Am I?</h2>
+            <p className="mt-3 max-w-2xl text-muted">Nine short, private modules. Complete them in any order, at your own pace — one shared profile across Business, Life, Singles and Couples, so you’ll never be asked the same question twice.</p>
+          </div>
+          {started && (
+            <div className="w-full max-w-xs">
+              <div className="h-2 overflow-hidden rounded-full bg-ivory"><div className="progress-fill h-full rounded-full bg-gradient-to-r from-gold-deep via-champagne to-gold-bright" style={{ width: `${Math.max(d.percent, 3)}%` }} /></div>
+              <p className="mt-2 text-sm text-muted">{d.percent}% explored · {d.modulesDone} of {d.totalModules} complete</p>
+            </div>
+          )}
+        </div>
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {MODULES.map((m, i) => {
+            const pr = moduleProgress(m.slug, d.answers, d.boundaries);
+            const done = pr.done >= pr.total;
+            const pillar = PILLARS.find((p) => p.key === m.pillar)!;
+            const href = m.slug === "boundaries" ? "/app/know-yourself/boundaries" : `/app/know-yourself/who-am-i/${m.slug}`;
+            return (
+              <Link key={m.slug} href={href} className="glass lift tile-in group block overflow-hidden !p-0" style={{ animationDelay: `${i * 70}ms` }}>
+                <div className="relative aspect-[16/9] overflow-hidden">
+                  <Image src={m.image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-[1200ms] group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-espresso/75 via-espresso/10 to-transparent" />
+                  <span className="absolute left-4 top-4 rounded-full bg-ivory/90 px-3 py-1 text-[0.68rem] font-semibold text-gold-deep">{done ? "✓ Complete" : pr.done ? `${pr.done} of ${pr.total}` : `${m.minutes} min`}</span>
+                  <span className="absolute bottom-3 left-4 flex items-center gap-2 text-xs text-ivory"><PillarIcon pillar={m.pillar} className="h-4 w-4" />{pillar.title}</span>
+                </div>
+                <div className="p-5">
+                  <p className="text-[0.65rem] tracking-[0.22em] uppercase text-faint">Module {i + 1}</p>
+                  <h3 className="display mt-1 text-2xl">{m.title}</h3>
+                  <p className="mt-2 text-sm text-muted">{m.intro}</p>
+                  <p className="mt-3 text-sm font-semibold text-gold">{done ? "Revisit" : pr.done ? "Continue" : "Begin"} <span aria-hidden="true">→</span></p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mt-14 grid gap-5 lg:grid-cols-3">
+        <Link href="/app/know-yourself/learn" className="glass lift tile-in block p-7">
+          <PillarIcon pillar="educate" className="h-8 w-8 text-gold" />
+          <p className="display mt-4 text-3xl">Learn</p>
+          <p className="mt-2 text-sm text-muted">Short lessons on values, patterns, boundaries, confidence and intentional connection — free to explore anytime.</p>
+          <p className="mt-4 text-sm font-semibold text-gold">Open the lessons →</p>
+        </Link>
+        <Link href="/app/know-yourself/growth" className="glass lift tile-in block p-7" style={{ animationDelay: "90ms" }}>
+          <PillarIcon pillar="grow" className="h-8 w-8 text-gold" />
+          <p className="display mt-4 text-3xl">My growth plan</p>
+          <p className="mt-2 text-sm text-muted">Set personal development goals and see how your answers have changed over time.</p>
+          <p className="mt-4 text-sm font-semibold text-gold">See my growth →</p>
+        </Link>
+        <Link href="/app/journey" className="theme-dark lift tile-in relative block overflow-hidden rounded-[24px] bg-ink p-7" style={{ animationDelay: "180ms" }}>
+          <div className="orb-halo pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgb(240_200_140/0.45),transparent_70%)]" aria-hidden="true" />
+          <p className="eyebrow relative">Paid members</p>
+          <p className="display relative mt-2 text-3xl text-gold-bright">Go deeper with Journey</p>
+          <p className="relative mt-2 text-sm text-muted">Personalized guidance that helps you reflect and reach your own understanding — never decisions made for you.</p>
+          <ul className="relative mt-4 flex flex-wrap gap-1.5">
+            {JOURNEY_DEEPER.slice(0, 6).map((j) => <li key={j} className="rounded-full border border-champagne/40 px-2.5 py-1 text-[0.68rem] text-ivory/85">{j}</li>)}
+          </ul>
+          <p className="relative mt-4 text-xs text-muted">Included with paid memberships, within your Journey allowance.</p>
+        </Link>
+      </section>
+
+      <section className="mt-12 rounded-2xl border border-line-strong bg-ivory/60 p-6 text-sm text-muted">
+        <p className="font-semibold text-text">Private, optional and yours</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>Your answers and reflections are visible only to you — never to business connections, dating matches, partners, providers or our team.</li>
+          <li>Participation is entirely optional and never affects your membership, matchmaking eligibility or access to features you’ve purchased.</li>
+          <li>This is education and reflection — not a diagnosis, therapy or a judgment of whether you’re ready for a relationship.</li>
+          <li>The basic program uses our own written content; no AI processes your answers unless you choose to talk with Journey.</li>
+        </ul>
+      </section>
+
+      {!paused && !isInsidePreview(viewer) && (
+        <form action={setDiscoveryChoice} className="mt-8 text-center">
+          <input type="hidden" name="choice" value="later" /><input type="hidden" name="back" value="/app" />
+          <button className="text-sm text-muted underline underline-offset-4 hover:text-gold">Return When I’m Ready</button>
+        </form>
+      )}
+      <p className="display mt-10 text-center text-2xl italic text-gold-deep">Your discovery. Your pace. Your choice.</p>
     </>
   );
 }
