@@ -19,7 +19,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <Link href="/sign-in" className="hidden text-sm text-muted hover:text-text lg:inline">Sign in</Link>
-          <Link href="/#invitation" className="btn btn-gold btn-sm hidden sm:inline-flex">Request invitation</Link>
+          <Link href="/membership#build" className="btn btn-gold btn-sm hidden sm:inline-flex">Build Your Membership</Link>
           <MobileMenu />
         </div>
       </div>

@@ -5,28 +5,49 @@ import { Monogram, Ornament } from "@/components/Emblem";
 import { ExperienceExplorer } from "@/components/ExperienceExplorer";
 import { Reveal } from "@/components/Reveal";
 import { WaitlistForm } from "@/components/WaitlistForm";
+import { getCatalogue } from "@/lib/catalogue";
 import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
+import { getLaunchState } from "@/lib/launch";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const [catalogue, launch] = await Promise.all([getCatalogue(), getLaunchState()]);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "The Art of Connect, LLC",
+    alternateName: "The Art of Connect",
+    url: "https://theartofconnect.com",
+    logo: "https://theartofconnect.com/icon-512.png",
+    email: "info@theartofconnect.com",
+    slogan: "In Business. In Life. In Love.",
+    description: "A premium membership platform for adults 40 and older seeking meaningful personal, professional and romantic connections.",
+  };
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="band theme-dark">
         {/* ── Hero ─────────────────────────────────────────────── */}
         <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pb-24 lg:pt-24">
           <div>
             <p className="eyebrow rise">In Business. In Life. In Love.</p>
+            <p className="rise mt-4 inline-flex rounded-full border border-champagne/50 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] text-gold uppercase">
+              Exclusively for adults {catalogue.minimum_member_age}+
+            </p>
             <h1 className="display rise rise-2 mt-6 text-[3.3rem] sm:text-7xl lg:text-[6.2rem]">
               The art of <br />
               <span className="gilded italic">being known.</span>
             </h1>
+            <p className="display rise rise-2 mt-6 text-2xl italic text-ivory sm:text-3xl">Life after 40. Connection with intention.</p>
             <p className="rise rise-3 mt-8 max-w-xl text-lg leading-relaxed text-muted">
               Meaningful connections begin with understanding who you are. Discover yourself, build intentional
               relationships, connect with compatible business professionals, and access trusted guidance — all within one
               extraordinary ecosystem.
             </p>
             <div className="rise rise-4 mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link href="#invitation" className="btn btn-gold">Request your invitation</Link>
-              <Link href="#experiences" className="btn btn-ghost">Explore the experiences</Link>
+              <Link href="/membership#build" className="btn btn-gold">Build Your Membership</Link>
+              <Link href="#experiences" className="btn btn-ghost">Choose Your Experience</Link>
             </div>
           </div>
           <div className="relative mx-auto w-full max-w-[560px]">
@@ -75,9 +96,9 @@ export default function HomePage() {
               Every meaningful connection begins <span className="gilded italic">with you.</span>
             </p>
             <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted">
-              The Art of Connect is not a dating site, a business directory or a counseling listing. It is one place to
-              understand yourself — and, from that understanding, to find the people who genuinely align with you:
-              personally, professionally and romantically.
+              The Art of Connect is a premium membership platform designed for adults 40 and older seeking meaningful
+              personal, professional and romantic connections. Not a dating site, a business directory or a counseling
+              listing — one place to understand yourself, and to find the people who genuinely align with you.
             </p>
           </Reveal>
           <ol className="mt-16 grid gap-6 text-left sm:grid-cols-2 lg:grid-cols-4">
@@ -216,18 +237,38 @@ export default function HomePage() {
       </div>
 
       <div className="band theme-ivory">
-        {/* ── Invitation ───────────────────────────────────────── */}
+        {/* ── Become a member ──────────────────────────────────── */}
         <Ornament className="px-4 pt-20 lg:pt-28" />
-        <section id="invitation" className="mx-auto max-w-3xl scroll-mt-28 px-4 pb-24 pt-12 sm:px-8 lg:pb-32">
-          <div className="glass glass-edge p-7 sm:p-12">
-            <p className="eyebrow">By invitation</p>
-            <h2 className="display mt-5 text-4xl sm:text-5xl">Reserve your place.</h2>
-            <p className="mt-4 mb-10 text-muted">
-              We’re opening our doors to a small number of founding members first. Request an invitation and we’ll reach
-              out personally before launch.
-            </p>
-            <WaitlistForm />
+        <section id="membership" className="mx-auto max-w-7xl scroll-mt-28 px-4 pb-24 pt-12 sm:px-8 lg:pb-32">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="eyebrow">Become a member · Adults {catalogue.minimum_member_age}+</p>
+            <h2 className="display mt-5 text-4xl sm:text-6xl">Choose one experience, or all three.</h2>
+            <p className="mt-5 text-muted">One account and one subscription. Combine experiences for bundled savings, and change your membership whenever life does.</p>
           </div>
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {catalogue.tiers.map((t, i) => (
+              <Reveal key={t.slug} delay={i * 100}>
+                <Link href={`/membership#build`} className={`glass group flex h-full flex-col p-7 transition-transform duration-500 hover:-translate-y-1 ${t.experience_count === 3 ? "glass-edge" : ""}`}>
+                  <p className="eyebrow">{t.experience_count === 3 ? "All three experiences" : `Any ${t.experience_count === 1 ? "one experience" : "two experiences"}`}</p>
+                  <h3 className="display mt-3 text-3xl">{t.name}</h3>
+                  <p className="mt-2 flex-1 text-sm text-muted">{t.description}</p>
+                  <span className="mt-6 text-sm text-gold">Explore {t.name.replace(" Membership", "")} →</span>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/membership#build" className="btn btn-gold">Build Your Membership</Link>
+            <Link href="/membership#compare" className="btn btn-ghost">Explore Memberships</Link>
+          </div>
+          {!launch.registrations_open && (
+            <div className="glass glass-edge mx-auto mt-16 max-w-3xl p-7 sm:p-10">
+              <p className="eyebrow">Membership enrollment opens soon</p>
+              <h3 className="display mt-4 text-3xl sm:text-4xl">Be the first to know.</h3>
+              <p className="mt-3 mb-8 text-muted">Leave your details and we’ll email you the moment enrollment opens.</p>
+              <WaitlistForm />
+            </div>
+          )}
         </section>
       </div>
     </>

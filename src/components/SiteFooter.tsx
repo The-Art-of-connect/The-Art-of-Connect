@@ -8,9 +8,10 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="space-y-4">
           <Wordmark />
-          <p className="eyebrow !tracking-[0.25em]">In business. In life. In love.</p>
+          <p className="eyebrow !tracking-[0.25em]">In Business. In Life. In Love.</p>
+          <p className="display text-2xl italic">Life after 40. Connection with intention.</p>
           <p className="max-w-xs text-sm leading-relaxed text-muted">
-            A private membership for the relationships that shape a life.
+            A premium membership for adults 40 and older seeking meaningful personal, professional and romantic connections.
           </p>
           <a href="mailto:info@theartofconnect.com" className="text-sm text-gold hover:text-gold-bright">
             info@theartofconnect.com
@@ -18,7 +19,7 @@ export function SiteFooter() {
         </div>
         {[
           { title: "Experiences", items: [["In Business", "/business"], ["In Life", "/life"], ["In Love", "/love"]] },
-          { title: "Membership", items: [["How membership works", "/membership"], ["Request invitation", "/#invitation"], ["Sign in", "/sign-in"]] },
+          { title: "Membership", items: [["Build Your Membership", "/membership#build"], ["Compare memberships", "/membership#compare"], ["Sign in", "/sign-in"]] },
           { title: "Company", items: [["For professionals", "/professionals"], ["Privacy", "/privacy"], ["Terms", "/terms"]] },
         ].map((col) => (
           <div key={col.title}>

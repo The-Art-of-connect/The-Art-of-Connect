@@ -52,41 +52,6 @@ export async function addToAllowlist(_prev: ActionResult, form: FormData): Promi
   return done(`${parsed.data.email} can now create an account.`);
 }
 
-export async function updatePlan(_prev: ActionResult, form: FormData): Promise<ActionResult> {
-  await requireStaff(rolesFor("/admin/pricing"));
-  const parsed = z
-    .object({
-      id: z.uuid(),
-      name: z.string().trim().min(1).max(60),
-      price: z.coerce.number().min(0).max(100000),
-      interval: z.enum(["month", "year"]),
-      stripePriceId: z.string().trim().max(100).regex(/^(price_[A-Za-z0-9]+)?$/, "Stripe price IDs start with price_"),
-      active: z.boolean(),
-    })
-    .safeParse({
-      id: form.get("id"),
-      name: form.get("name"),
-      price: form.get("price"),
-      interval: form.get("interval"),
-      stripePriceId: form.get("stripePriceId") ?? "",
-      active: form.get("active") === "on",
-    });
-  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Check the package details.");
-  const p = parsed.data;
-  const supabase = (await createClient())!;
-  const { error, count } = await supabase
-    .from("membership_plans")
-    .update(
-      { name: p.name, price_cents: Math.round(p.price * 100), billing_interval: p.interval, stripe_price_id: p.stripePriceId || null, is_active: p.active },
-      { count: "exact" },
-    )
-    .eq("id", p.id);
-  if (error || !count) return fail("The package was not saved.");
-  await audit("plan.update", "membership_plans", p.id, { price_cents: Math.round(p.price * 100), active: p.active });
-  revalidatePath("/admin/pricing");
-  return done(`${p.name} saved.`);
-}
-
 export async function reviewApplication(_prev: ActionResult, form: FormData): Promise<ActionResult> {
   const viewer = await requireStaff(rolesFor("/admin/counselors"));
   const parsed = z
@@ -183,17 +148,56 @@ export async function createPromotion(_prev: ActionResult, form: FormData): Prom
     .object({
       code: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,24}$/, "Codes use 3–24 letters, numbers or dashes."),
       description: z.string().max(200),
-      percentOff: z.coerce.number().int().min(1).max(100),
+      kind: z.enum(["percent", "amount"]),
+      value: z.coerce.number().positive("Enter the discount."),
+      startsAt: z.string().max(20),
+      endsAt: z.string().max(20),
+      maxRedemptions: z.string().max(9),
+      tiers: z.array(z.string().max(40)).max(10),
     })
-    .safeParse({ code: form.get("code"), description: String(form.get("description") ?? ""), percentOff: form.get("percentOff") });
+    .safeParse({
+      code: form.get("code"),
+      description: String(form.get("description") ?? ""),
+      kind: form.get("kind"),
+      value: form.get("value"),
+      startsAt: String(form.get("startsAt") ?? ""),
+      endsAt: String(form.get("endsAt") ?? ""),
+      maxRedemptions: String(form.get("maxRedemptions") ?? ""),
+      tiers: form.getAll("tiers").map(String),
+    });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Check the promotion.");
+  const d = parsed.data;
+  if (d.kind === "percent" && (d.value < 1 || d.value > 100)) return fail("Percent off must be 1–100.");
   const supabase = (await createClient())!;
-  // Created inactive; promotions only take effect once payments launch.
-  const { error } = await supabase.from("promotions").insert({ code: parsed.data.code, description: parsed.data.description || null, percent_off: parsed.data.percentOff });
+  // Created inactive; switch it on when ready. Codes only apply once payments launch.
+  const { error } = await supabase.from("promotions").insert({
+    code: d.code,
+    description: d.description || null,
+    percent_off: d.kind === "percent" ? Math.round(d.value) : null,
+    amount_off_cents: d.kind === "amount" ? Math.round(d.value * 100) : null,
+    starts_at: d.startsAt ? new Date(d.startsAt).toISOString() : null,
+    ends_at: d.endsAt ? new Date(d.endsAt).toISOString() : null,
+    max_redemptions: d.maxRedemptions ? Number(d.maxRedemptions) : null,
+    applies_to_tiers: d.tiers,
+    is_public_offer: form.get("publicOffer") === "on",
+  });
   if (error) return fail(error.code === "23505" ? "That code already exists." : "Promotion not created.");
-  await audit("promotion.create", "promotions", parsed.data.code);
+  await audit("promotion.create", "promotions", d.code);
   revalidatePath("/admin/marketing");
-  return done(`${parsed.data.code} created (inactive).`);
+  return done(`${d.code} created (inactive).`);
+}
+
+export async function togglePromotion(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(rolesFor("/admin/marketing"));
+  const parsed = z.object({ id: z.uuid(), field: z.enum(["is_active", "is_public_offer"]), on: z.boolean() }).safeParse({ id: form.get("id"), field: form.get("field"), on: form.get("on") === "true" });
+  if (!parsed.success) return fail("Invalid request.");
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("promotions").update({ [parsed.data.field]: parsed.data.on }).eq("id", parsed.data.id);
+  if (error) return fail("Not updated.");
+  await audit("promotion.toggle", "promotions", parsed.data.id, { [parsed.data.field]: parsed.data.on });
+  revalidatePath("/admin/marketing");
+  revalidatePath("/membership");
+  return done("Updated.");
 }
 
 export async function reviewReferral(_prev: ActionResult, form: FormData): Promise<ActionResult> {

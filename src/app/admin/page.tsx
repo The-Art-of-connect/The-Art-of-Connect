@@ -9,21 +9,14 @@ import { NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
 async function monthlyRecurring() {
   const supabase = await createClient();
   if (!supabase) return 0;
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("membership_plans(price_cents, billing_interval)")
-    .in("status", ["active", "trialing", "past_due"]);
-  return (data ?? []).reduce((sum, row: any) => {
-    const p = row.membership_plans;
-    if (!p) return sum;
-    return sum + (p.billing_interval === "year" ? p.price_cents / 12 : p.price_cents);
-  }, 0);
+  const { data } = await supabase.from("subscriptions").select("monthly_equivalent_cents").in("status", ["active", "trialing", "past_due"]);
+  return (data ?? []).reduce((sum, row) => sum + (row.monthly_equivalent_cents ?? 0), 0);
 }
 
 export default async function AdminOverview() {
   const viewer = await requireStaff();
   const launch = await getLaunchState();
-  const [members, active, waitlist, applications, tickets, reports, mrr] = await Promise.all([
+  const [members, active, waitlist, applications, tickets, reports, mrr, failed, canceled] = await Promise.all([
     countRows("profiles"),
     countRows("subscriptions", (q) => q.eq("status", "active")),
     countRows("waitlist"),
@@ -31,6 +24,8 @@ export default async function AdminOverview() {
     countRows("support_tickets", (q) => q.in("status", ["open", "pending"])),
     countRows("moderation_reports", (q) => q.in("status", ["open", "reviewing"])),
     monthlyRecurring(),
+    countRows("payments", (q) => q.eq("status", "failed")),
+    countRows("subscriptions", (q) => q.eq("status", "canceled")),
   ]);
 
   const switches: [string, boolean][] = [
@@ -50,7 +45,13 @@ export default async function AdminOverview() {
         <Stat label="Members" value={members} />
         <Stat label="Active memberships" value={active} accent="var(--success)" />
         <Stat label="Monthly recurring" value={money(mrr)} accent="var(--gold-bright)" />
-        <Stat label="Waitlist" value={waitlist} accent="var(--relationships)" />
+        <Stat label="Annual recurring" value={money(mrr * 12)} hint="Monthly recurring × 12" />
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat label="Notify-me list" value={waitlist} />
+        <Stat label="Failed payments" value={failed} accent="var(--danger)" />
+        <Stat label="Cancellations" value={canceled} />
+        <Stat label="Pending professional applications" value={applications} />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <Panel title="Launch status" action={viewer.roles.includes("owner") ? <Link href="/admin/settings" className="text-xs text-gold">Manage →</Link> : null}>

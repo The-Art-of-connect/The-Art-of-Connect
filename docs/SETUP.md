@@ -38,6 +38,7 @@ Set these in **Netlify → Site configuration → Environment variables** (and i
 1. **Run the database migrations, in order.** Either paste each file from `supabase/migrations/` into the Supabase SQL Editor and run it, or use `supabase db push` with the Supabase CLI.
    - `20261124000001_foundation.sql`
    - `20261125000001_experiences_v2.sql`
+   - `20261126000001_membership_enrollment.sql`
 2. **Expose the experience schemas.** Go to Project Settings → Data API → Exposed schemas and add `relationships`, `business` and `counseling`.
 3. **Turn off public sign-ups.** Go to Authentication → Sign In / Providers and switch off "Allow new users to sign up". (The database also refuses sign-ups while registrations are closed. This is a second lock.)
 4. **Set the auth URLs.** Go to Authentication → URL Configuration. Set the Site URL to `https://theartofconnect.com` and add `https://theartofconnect.com/auth/callback` as a redirect URL.
@@ -110,5 +111,31 @@ psql -f supabase/tests/stub.sql \
      -f supabase/migrations/20261124000001_foundation.sql \
      -f supabase/migrations/20261125000001_experiences_v2.sql \
      -f supabase/tests/rls_checks.sql \
-     -f supabase/tests/rls_checks_v2.sql
+     -f supabase/migrations/20261126000001_membership_enrollment.sql \
+     -f supabase/tests/rls_checks.sql \
+     -f supabase/tests/rls_checks_v2.sql \
+     -f supabase/tests/rls_checks_v3.sql
+```
+
+`rls_checks_v3.sql` (22 checks) covers enrollment and pricing:
+- prices stay hidden until the owner publishes them, and only the owner can publish
+- sign-up requires a date of birth meeting the owner-set minimum age (40 by default)
+- the date of birth is removed from account metadata after sign-up, and staff can't read it
+- referral codes are recorded
+- promo codes are validated without exposing the promotions table
+
+The pricing calculator has its own unit tests: `npm test`.
+
+## 8. Setting prices and opening enrollment
+
+1. **Set prices.** In Owner Portal → Pricing & packages, set every price, bundle discount, annual discount, setup fee, add-on and professional package. The live preview at the bottom shows exactly what customers will see.
+2. **Publish pricing.** Type `PUBLISH` (owner only). Prices then appear on the Memberships page. This does **not** open enrollment.
+3. **Open enrollment.** Set `LAUNCH_LOCK=false` in Netlify, then turn on **Public registrations** and **Live payments** in Launch controls (type `AUTHORIZE`). Customers can then build a membership, register, confirm their email, complete onboarding and pay, with no invitation or approval needed.
+
+## 9. Social sharing images
+
+The preview cards in `public/og/` are generated from the site's photography and fonts. After changing photos, regenerate them with:
+
+```bash
+node scripts/generate-og-images.mjs
 ```

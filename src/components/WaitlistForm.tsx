@@ -1,16 +1,19 @@
 "use client";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { joinWaitlist, type WaitlistState } from "@/app/actions/waitlist";
-import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
+import { EXPERIENCES, EXPERIENCE_ORDER, type Experience } from "@/lib/experiences";
 
+/** Optional pre-launch "notify me when enrollment opens" form. */
 export function WaitlistForm() {
   const [state, action, pending] = useActionState<WaitlistState, FormData>(joinWaitlist, null);
+  const [chosen, setChosen] = useState<Experience[]>([]);
+  const love = chosen.includes("relationships");
 
   if (state?.ok) {
     return (
-      <div className="py-10 text-center" role="status">
-        <p className="display text-3xl text-gold-bright">Thank you. Your place is reserved.</p>
+      <div className="py-8 text-center" role="status">
+        <p className="display text-3xl text-gold">Thank you.</p>
         <p className="mt-3 text-muted">{state.message}</p>
       </div>
     );
@@ -32,37 +35,39 @@ export function WaitlistForm() {
         <legend className="mb-3 text-sm text-muted">I’m interested in</legend>
         <div className="flex flex-wrap gap-2">
           {EXPERIENCE_ORDER.map((key) => (
-            <label key={key} className="chip min-h-11 cursor-pointer !px-4 !text-[0.72rem] has-[:checked]:border-gold has-[:checked]:bg-gold/10 has-[:checked]:text-text">
-              <input type="checkbox" name="interests" value={key} className="sr-only" />
+            <label key={key} className="chip min-h-11 cursor-pointer !px-4 !text-[0.72rem] has-[:checked]:border-champagne has-[:checked]:bg-champagne/15 has-[:checked]:text-text">
+              <input
+                type="checkbox"
+                name="interests"
+                value={key}
+                className="sr-only"
+                onChange={(e) => setChosen((c) => (e.target.checked ? [...c, key] : c.filter((x) => x !== key)))}
+              />
               {EXPERIENCES[key].name}
             </label>
           ))}
         </div>
       </fieldset>
-      <fieldset>
-        <legend className="mb-3 text-sm text-muted">For In Love, I am</legend>
-        <div className="flex flex-wrap gap-2">
-          {[
-            ["single", "Single, seeking a connection"],
-            ["couple", "In a relationship"],
-            ["", "Not applicable"],
-          ].map(([value, label]) => (
-            <label key={label} className="chip min-h-11 cursor-pointer !px-4 normal-case !tracking-normal !text-sm has-[:checked]:border-gold has-[:checked]:bg-gold/10 has-[:checked]:text-text">
-              <input type="radio" name="loveTrack" value={value} defaultChecked={value === ""} className="sr-only" />
-              {label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {love && (
+        <fieldset className="explorer-panel">
+          <legend className="mb-3 text-sm text-muted">For In Love, I am</legend>
+          <div className="flex flex-wrap gap-2">
+            {([["single", "Single, seeking a connection"], ["couple", "In a relationship"]] as const).map(([value, label]) => (
+              <label key={value} className="chip min-h-11 cursor-pointer !px-4 normal-case !tracking-normal !text-sm has-[:checked]:border-champagne has-[:checked]:bg-champagne/15 has-[:checked]:text-text">
+                <input type="radio" name="loveTrack" value={value} className="sr-only" />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
       {state && !state.ok && <p className="text-sm text-danger" role="alert">{state.message}</p>}
-      <button className="btn btn-gold w-full sm:w-auto" disabled={pending}>
-        {pending ? "Reserving…" : "Request your invitation"}
-      </button>
+      <button className="btn btn-gold w-full sm:w-auto" disabled={pending}>{pending ? "Saving…" : "Notify me"}</button>
       <p className="text-sm text-muted">
-        Are you a counselor, coach or mentor? <Link href="/professionals" className="text-gold underline-offset-4 hover:underline">Visit the professional pathway</Link>.
+        Are you a counselor, coach or mentor? <Link href="/professionals" className="text-gold underline underline-offset-4">Visit the professional pathway</Link>.
       </p>
-      <p className="text-xs text-faint">We’ll only use your email to contact you about membership. No spam, ever.</p>
+      <p className="text-xs text-faint">We’ll only use your email to tell you when enrollment opens. No spam, ever.</p>
     </form>
   );
 }
