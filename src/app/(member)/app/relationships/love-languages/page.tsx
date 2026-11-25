@@ -1,8 +1,8 @@
+import { SelfBanner } from "@/components/SelfBanner";
 import Link from "next/link";
 import { requireExperience, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LOVE_LANGUAGES, isLanguage, pairInsights } from "@/lib/love-languages";
-import { LivingHero } from "@/components/business/SocietyHero";
 
 export const metadata = { title: "Love languages together" };
 export const dynamic = "force-dynamic";
@@ -25,16 +25,8 @@ export default async function LoveLanguagesTogether() {
   return (
     <>
       {staffPreview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — In Love is not open to members yet.</p>}
-      <LivingHero
-        slides={[
-          { src: "/images/library/love/sunset-dinner.webp", alt: "A couple laughing over a candlelit dinner" },
-          { src: "/images/library/love/mature-dinner.webp", alt: "Two people smiling across a dinner table" },
-          { src: "/images/library/love/first-dance.webp", alt: "A couple dancing at sunset", position: "50% 60%" },
-        ]}
-        eyebrow="The Personal Society · In Love" title="Speaking each other’s" gilded="language of love."
-        subtitle="Understand how you each feel loved, how you each show it — and where your needs may differ. Insight, never a score."
-        cta={{ href: "/app/know-yourself/love-languages#profile", label: mine ? "Update my profile" : "Discover my love languages" }}
-      />
+      <SelfBanner section="love-languages" actions={[{ href: "/app/know-yourself/love-languages#profile", label: mine ? "Update my profile" : "Discover my love languages", primary: true }]} />
+      <p className="mt-5 max-w-2xl text-muted">Understand how you each feel loved, how you each show it, and where your needs may differ. Insight, never a score.</p>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
         <section className="glass p-7">
