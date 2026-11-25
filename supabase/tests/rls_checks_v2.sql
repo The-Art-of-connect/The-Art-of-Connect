@@ -2,7 +2,6 @@
 -- throwaway database (it reuses the users created there).
 reset role; -- start as the database owner, whatever ran before
 reset request.jwt.claim.sub;
-grant all on all tables in schema public to anon, authenticated; -- Supabase default
 
 -- Setup as superuser: open In Love for testing, two partners + a single.
 update public.platform_settings set value = 'true' where key = 'relationships_live';
@@ -27,7 +26,7 @@ select relationships.start_couple();
 \echo '     Try to insert a couple directly (expect error):'
 insert into relationships.couples(created_by) values ('00000000-0000-0000-0000-000000000002');
 insert into relationships.partner_invitations(couple_id, inviter_id, invitee_email, token_hash)
-  values (:'couple_id','00000000-0000-0000-0000-000000000002','partner@example.com', encode(digest('secret-token','sha256'),'hex'));
+  values (:'couple_id','00000000-0000-0000-0000-000000000002','partner@example.com', '930bbdc51b6aed5c2a5678fd6e28dee7a05e8a4b643cfc0b4427c3efb86c0d94'); -- sha256 of 'secret-token' (the app computes this server-side)
 insert into relationships.private_reflections(user_id, body) values ('00000000-0000-0000-0000-000000000002','my private thought');
 insert into counseling.journal_entries(user_id, body) values ('00000000-0000-0000-0000-000000000002','dear diary');
 
@@ -68,7 +67,7 @@ select count(*) from counseling.journal_entries;
 reset role;
 set role anon;
 reset request.jwt.claim.sub;
-\echo 'v2-13) Anonymous professional interest: insert ok, cannot read (expect 0):'
+\echo 'v2-13) Anonymous professional interest: insert ok, cannot read (expect permission denied):'
 insert into public.professional_interest(full_name, email, professional_type) values ('Coach C','coach@example.com','coach');
 select count(*) from public.professional_interest;
 reset role;

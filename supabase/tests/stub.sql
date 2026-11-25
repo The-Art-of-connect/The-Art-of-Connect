@@ -11,3 +11,7 @@ alter table storage.objects enable row level security;
 create function storage.foldername(name text) returns text[] language sql as $$ select string_to_array(name,'/') $$;
 grant usage on schema public, auth to anon, authenticated, service_role;
 grant execute on function auth.uid() to anon, authenticated;
+
+-- Mirror Supabase with automatic table API access turned off: nothing is
+-- granted by default; every grant must come from the migrations.
+alter default privileges revoke execute on functions from public;

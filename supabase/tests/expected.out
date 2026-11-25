@@ -24,8 +24,8 @@ true
 0
 12) Client reads session notes (expect 0):
 0
-13) Anonymous joins waitlist, cannot read it (expect 0):
-0
+13) Anonymous joins waitlist, cannot read it (expect permission denied):
+ERROR:  permission denied for table waitlist
 v2-0) Start a couple (expect a couple id), then try a second one (expect error):
 t
 ERROR:  You are already in a couple
@@ -55,14 +55,14 @@ v2-11) OWNER reads private journals and reflections (expect 0, 0):
 0|0
 v2-12) Author reads own journal (expect 1):
 1
-v2-13) Anonymous professional interest: insert ok, cannot read (expect 0):
-0
+v2-13) Anonymous professional interest: insert ok, cannot read (expect permission denied):
+ERROR:  permission denied for table professional_interest
 v2-14) Licensed application without license (expect error):
 ERROR:  new row for relation "applications" violates check constraint "licensed_requires_license"
 v2-15) Coach application without license (expect ok, 1):
 1
-v3-1) Anonymous reads pricing tables directly (expect 0, 0):
-0|0
+v3-1) Anonymous reads pricing tables directly (expect permission denied):
+ERROR:  permission denied for table experience_offerings
 v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 3, null):
 3|3|
 v3-3) Finance sets prices (expect 3 rows updated):
@@ -103,8 +103,8 @@ v3-20) OWNER reads members dates of birth (expect 0):
 0
 v3-21) Valid promo code (expect 20), inactive code (expect null), public offers (expect 1):
 20||1
-v3-22) Anonymous reads promotions table directly (expect 0):
-0
+v3-22) Anonymous reads promotions table directly (expect permission denied):
+ERROR:  permission denied for table promotions
 v4-1) Singles see each other before any block (expect 2):
 2
 v4-2) Single 6 blocks 8; 6 sees only own profile (expect 1):
@@ -120,7 +120,7 @@ v4-6) Owner requires verified identity: unverified singles see only themselves (
 v4-7) Member tries to mark themselves identity-verified (expect error):
 ERROR:  Not permitted to change these account fields
 v4-8) Member tries to write a verification result (expect error):
-ERROR:  new row violates row-level security policy for table "identity_verifications"
+ERROR:  permission denied for table identity_verifications
 v4-9) Both verified: they see each other again (expect 2):
 2
 v4-10) Three reports against member 8 automatically open a safety flag (expect 1):
@@ -138,8 +138,8 @@ v4-15) Blocking closes the existing connection (expect blocked):
 blocked
 v4-16) Rate limit 2 per minute: allowed, allowed, refused (expect t t f):
 t|t|f
-v4-17) Anonymous reads rate-limit records (expect 0):
-0
+v4-17) Anonymous reads rate-limit records (expect permission denied):
+ERROR:  permission denied for table rate_limit_events
 v4-18) Approve licensed clinician without verification (expect error):
 ERROR:  Confirm the applicant's identity before approval
 v4-19) Approve after identity, license lookup and disciplinary check (expect approved):

@@ -2,7 +2,6 @@
 -- rls_checks.sql, _v2 and _v3 on the same throwaway database.
 reset role;
 reset request.jwt.claim.sub;
-grant all on all tables in schema public to anon, authenticated; -- Supabase default
 
 -- Setup: two visible singles (6 and 8) in In Love.
 insert into public.experience_access(user_id, experience, source) values ('00000000-0000-0000-0000-000000000008','relationships','owner_grant')
@@ -84,7 +83,7 @@ set role anon;
 reset request.jwt.claim.sub;
 \echo 'v4-16) Rate limit 2 per minute: allowed, allowed, refused (expect t t f):'
 select public.rate_limit_hit('test:ip', 2, 60), public.rate_limit_hit('test:ip', 2, 60), public.rate_limit_hit('test:ip', 2, 60);
-\echo 'v4-17) Anonymous reads rate-limit records (expect 0):'
+\echo 'v4-17) Anonymous reads rate-limit records (expect permission denied):'
 select count(*) from public.rate_limit_events;
 reset role;
 reset request.jwt.claim.sub;
