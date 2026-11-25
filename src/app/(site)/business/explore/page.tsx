@@ -183,7 +183,7 @@ export default async function ExploreProfessionalSociety() {
             ) : (
               <Link href="/#membership" className="btn btn-gold">Notify me when founding enrollment opens</Link>
             )}
-            <Link href="/business" className="btn btn-ghost">About In Business</Link>
+            <Link href="/webinars" className="btn btn-ghost">The Knowledge Exchange</Link>
           </div>
           <p className="mt-6 text-xs text-faint">No credit card required for a free account. We don’t guarantee funding, partnerships or business outcomes.</p>
         </section>
