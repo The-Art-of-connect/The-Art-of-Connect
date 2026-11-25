@@ -22,3 +22,4 @@
 20261211000001_journey_complete.sql	to_regclass('public.dev_tracker') is not null
 20261212000001_know_yourself.sql	to_regclass('public.self_discovery') is not null
 20261213000001_art_of_knowing_yourself.sql	to_regclass('public.discovery_answers') is not null
+20261215000001_journey_model_lab.sql	exists (select 1 from information_schema.columns where table_name = 'journey_test_runs' and column_name = 'latency_ms')

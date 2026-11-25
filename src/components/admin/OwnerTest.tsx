@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 type Turn = { who: "you" | "journey" | "note"; text: string };
 
 /** Owner's private Journey conversation. Uses the separate owner testing budget, never a member allowance. */
-export function OwnerTest() {
+export function OwnerTest({ instructionVersion = null, note }: { instructionVersion?: number | null; note?: string } = {}) {
   const [mode, setMode] = useState("life");
   const [msg, setMsg] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -19,7 +19,7 @@ export function OwnerTest() {
     setTurns((t) => [...t, { who: "you", text }]);
     const res = await fetch("/api/journey/message", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode, message: text, ownerTest: true, conversationId: conversation.current, requestKey: crypto.randomUUID().replace(/-/g, "") }),
+      body: JSON.stringify({ mode, message: text, ownerTest: true, instructionVersion, conversationId: conversation.current, requestKey: crypto.randomUUID().replace(/-/g, "") }),
     });
     const d = await res.json().catch(() => null);
     if (d?.ok) {
@@ -50,6 +50,7 @@ export function OwnerTest() {
       )}
       <textarea value={msg} onChange={(e) => setMsg(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); run(); } }} rows={3} className="field w-full" placeholder="Try a fictional scenario, e.g. ‘My partner wants a night alone and I feel rejected.’" />
       <button type="button" onClick={run} disabled={busy || !msg.trim()} className="btn btn-gold btn-sm">{busy ? "Journey is reflecting…" : turns.length ? "Reply" : "Test privately"}</button>
+      {note && <p className="text-xs text-gold">{note}</p>}
       <p className="text-xs text-faint">Private to you and drawn from your owner testing budget. Use fictional scenarios — never real member information.</p>
     </div>
   );

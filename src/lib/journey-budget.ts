@@ -151,7 +151,8 @@ export function decide(input: {
   const modelId = tier?.model ?? s.defaultModel;
   const rate = s.models.find((m) => m.id === modelId && m.enabled);
   if (!rate) return deny("No approved model is configured");
-  const maxOut = tier?.maxOutputTokens ?? 700;
+  // Owner tests get more room, so newer reasoning models can think and still reply in full.
+  const maxOut = tier?.maxOutputTokens ?? (input.ownerTest ? 1600 : 700);
   const reserve = costCents(rate, estimateTokens(input.promptChars + input.messageChars), maxOut);
   if (reserve === null) return deny("The approved model has no rate entered");
 

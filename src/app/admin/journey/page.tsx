@@ -111,7 +111,10 @@ export default async function JourneyAdmin() {
             <p className={`rounded-xl border px-4 py-3 text-xs ${launch.payments_live ? "border-success/40 text-success" : "border-gold/40 text-gold"}`}>
               {launch.payments_live ? "Members with paid memberships can use Journey within their allowances." : "Public access is closed: members cannot use Journey until you open enrollment and live payments. Only your private owner tests run."}
             </p>
-            <a href="/admin/journey/personality" className="btn btn-ghost btn-sm">Edit Journey’s master personality →</a>
+            <div className="flex flex-wrap gap-2">
+              <a href="/admin/journey/models" className="btn btn-gold btn-sm">Model Lab — choose & compare models →</a>
+              <a href="/admin/journey/personality" className="btn btn-ghost btn-sm">Edit Journey’s master personality →</a>
+            </div>
           </div>
         </Panel>
         <Panel title="Owner testing budget & last 14 days">
@@ -283,7 +286,7 @@ export default async function JourneyAdmin() {
               <li key={v.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
                 <span>Version {v.version} <span className={`chip ml-2 ${v.status === "published" ? "chip-live" : ""}`}>{v.status}</span><span className="block text-xs text-faint">{v.note}</span></span>
                 {v.status !== "published" && owner && (
-                  <ActionForm action={publishInstructions}><input type="hidden" name="id" value={v.id} /><button className="btn btn-ghost btn-sm">{v.status === "retired" ? "Roll back to this" : "Publish"}</button></ActionForm>
+                  <ActionForm action={publishInstructions} className="flex items-center gap-1"><input type="hidden" name="id" value={v.id} /><input name="confirm" placeholder="Type PUBLISH" aria-label="Type PUBLISH to confirm" className="field !min-h-0 !w-28 !py-1 text-xs" /><button className="btn btn-ghost btn-sm">{v.status === "retired" ? "Roll back to this" : "Publish"}</button></ActionForm>
                 )}
               </li>
             ))}

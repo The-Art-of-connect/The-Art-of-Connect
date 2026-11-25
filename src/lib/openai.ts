@@ -17,6 +17,9 @@ export const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
+/** Models that think before answering (their reasoning is billed as output tokens). */
+export const isReasoningModel = (model: string) => /^(gpt-5|gpt-6|o\d)/.test(model);
+
 export const isOpenAIConfigured = () => Boolean(serverSecret("OPENAI_API_KEY"));
 
 export async function createResponse(input: {
@@ -26,6 +29,7 @@ export async function createResponse(input: {
   message: string;
   maxOutputTokens: number;
   timeoutMs?: number;
+  noReasoningParam?: boolean;
 }): Promise<OpenAIResult> {
   const key = serverSecret("OPENAI_API_KEY");
   if (!key) return { ok: false, error: "OPENAI_API_KEY is not set", inputTokens: 0, outputTokens: 0 };
@@ -38,6 +42,8 @@ export async function createResponse(input: {
         instructions: input.instructions,
         input: [...input.history, { role: "user", content: input.message }],
         max_output_tokens: input.maxOutputTokens,
+        // Reasoning models: keep thinking brief so replies stay warm and quick.
+        ...(isReasoningModel(input.model) && !input.noReasoningParam ? { reasoning: { effort: "low" } } : {}),
         // Member conversations are kept in our own private tables, not stored at OpenAI.
         store: false,
       }),
@@ -47,6 +53,7 @@ export async function createResponse(input: {
     const json = await res.json().catch(() => null);
     if (!res.ok) {
       const detail = (json as { error?: { message?: string } } | null)?.error?.message ?? "";
+      if (res.status === 400 && /reasoning/i.test(detail) && !input.noReasoningParam) return createResponse({ ...input, noReasoningParam: true });
       return { ok: false, error: `OpenAI HTTP ${res.status}${detail ? `: ${detail}` : ""}`, inputTokens: 0, outputTokens: 0 };
     }
     return parseResponse(json);

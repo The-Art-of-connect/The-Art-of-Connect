@@ -44,15 +44,15 @@ export default async function JourneyPersonality() {
             ))}
             <input name="note" maxLength={300} placeholder="What changed in this version? (optional)" className="field" />
             <div className="flex flex-wrap gap-2">
-              <button name="publish" value="0" className="btn btn-ghost btn-sm">Save as draft</button>
-              {owner && <button name="publish" value="1" className="btn btn-gold btn-sm">Save & publish</button>}
+              <button name="publish" value="0" className="btn btn-gold btn-sm">Save as draft</button>
             </div>
+            <p className="text-xs text-muted">Drafts are private to the Owner Portal. Test any draft in the Model Lab or below — nothing reaches members until you publish it.</p>
           </ActionForm>
         </Panel>
 
         <div className="space-y-6">
           <Panel title="Test privately">
-            <OwnerTest />
+            <OwnerTest instructionVersion={latest?.version ?? null} note={latest ? `Testing draft version ${latest.version} with Journey’s current model.` : "Testing the founding philosophy only (no version written yet)."} />
           </Panel>
           <Panel title="Versions">
             <ul className="divide-y divide-line text-sm">
@@ -64,7 +64,7 @@ export default async function JourneyPersonality() {
                     <span className="block text-xs text-muted">{v.note ?? "—"} · {date(v.published_at ?? v.created_at)}</span>
                   </span>
                   {owner && v.status !== "published" && (
-                    <ActionForm action={publishInstructions}><input type="hidden" name="id" value={v.id} /><button className="text-xs text-gold underline">{published && v.version < published.version ? "Roll back to this" : "Publish"}</button></ActionForm>
+                    <ActionForm action={publishInstructions} className="flex items-center gap-1"><input type="hidden" name="id" value={v.id} /><input name="confirm" placeholder="Type PUBLISH" aria-label={`Type PUBLISH to publish version ${v.version}`} className="field !min-h-0 !w-28 !py-1 text-xs" /><button className="text-xs text-gold underline">{published && v.version < published.version ? "Roll back to this" : "Publish"}</button></ActionForm>
                   )}
                 </li>
               ))}
