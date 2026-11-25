@@ -15,6 +15,7 @@ const Body = z.object({
   model: z.string().regex(/^[A-Za-z0-9._:-]{2,80}$/).nullish(),
   instructionVersion: z.number().int().positive().nullish(),
   comparisonId: z.uuid().nullish(),
+  lesson: z.string().regex(/^[a-z0-9-]{2,60}(\/[a-z0-9-]{2,60})?$/).nullish(),
 });
 
 /** Journey written conversations. Every permission and spending check runs on the server before OpenAI is called. */

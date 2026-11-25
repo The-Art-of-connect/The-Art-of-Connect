@@ -23,8 +23,10 @@ const MORE = [
   { href: "/app/journey/plus", title: "Journey Plus", body: "Optional additional messages and voice minutes." },
 ];
 
-export default async function JourneyHome({ searchParams }: { searchParams: Promise<{ ask?: string }> }) {
-  const ask = String((await searchParams).ask ?? "").slice(0, 300);
+export default async function JourneyHome({ searchParams }: { searchParams: Promise<{ ask?: string; lesson?: string }> }) {
+  const sp = await searchParams;
+  const ask = String(sp.ask ?? "").slice(0, 300);
+  const lesson = /^[a-z0-9-]{2,60}(\/[a-z0-9-]{2,60})?$/.test(sp.lesson ?? "") ? sp.lesson! : null;
   const status = await getJourneyStatus();
   const viewer = await getViewer();
   const ownerTest = status.access === "staff" && hasRole(viewer, ["owner"]);
@@ -37,7 +39,7 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
       <JourneyOrbHero />
 
       <div id="chat" className="mt-10 scroll-mt-24">
-        <JourneyChat allowance={status.allowance} available={available} reason={reason} ownerTest={ownerTest} initialText={ask} />
+        <JourneyChat allowance={status.allowance} available={available} reason={reason} ownerTest={ownerTest} initialText={ask} lesson={lesson} />
       </div>
 
       <LuxSection eyebrow="Four ways Journey walks with you" title="One philosophy. Every part of your life.">

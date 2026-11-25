@@ -1,3 +1,4 @@
+import { SelfBanner } from "@/components/SelfBanner";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -50,17 +51,21 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
   return (
     <>
       <Link href="/app/know-yourself#who-am-i" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold"><span aria-hidden="true">←</span> Who Am I?</Link>
+      {mod.slug === "what-my-life-represents" ? (
+        <div className="mt-4"><SelfBanner section="purpose" /><p className="mt-4 flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-gold-deep"><PillarIcon pillar={mod.pillar} className="h-4 w-4" /> {pillar.title} · Module {idx + 1} of {MODULES.length}</p><p className="mt-2 max-w-2xl text-muted">{mod.intro}</p></div>
+      ) : (
       <section className="theme-dark relative mt-4 overflow-hidden rounded-[28px] bg-ink">
-        <div className="relative aspect-[16/9] sm:aspect-[21/8]">
-          <Image src={mod.image} alt="" fill priority sizes="100vw" className="kenburns object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/75 to-ink/5" />
-        </div>
-        <div className="relative -mt-24 px-6 pb-8 sm:-mt-28 sm:px-10">
-          <p className="flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-gold"><PillarIcon pillar={mod.pillar} className="h-4 w-4" /> {pillar.title} · Module {idx + 1} of {MODULES.length}</p>
-          <h1 className="display rise mt-3 text-4xl sm:text-6xl">{mod.title}</h1>
-          <p className="rise rise-2 mt-3 max-w-2xl text-muted">{mod.intro}</p>
-        </div>
-      </section>
+          <div className="relative aspect-[16/9] sm:aspect-[21/8]">
+            <Image src={mod.image} alt="" fill priority sizes="100vw" className="kenburns object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/75 to-ink/5" />
+          </div>
+          <div className="relative -mt-24 px-6 pb-8 sm:-mt-28 sm:px-10">
+            <p className="flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-gold"><PillarIcon pillar={mod.pillar} className="h-4 w-4" /> {pillar.title} · Module {idx + 1} of {MODULES.length}</p>
+            <h1 className="display rise mt-3 text-4xl sm:text-6xl">{mod.title}</h1>
+            <p className="rise rise-2 mt-3 max-w-2xl text-muted">{mod.intro}</p>
+          </div>
+        </section>
+      )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <ActionForm action={saveDiscoveryModule} className="glass space-y-7 p-6 sm:p-8">

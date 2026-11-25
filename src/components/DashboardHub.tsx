@@ -53,8 +53,8 @@ export function DashboardHub({ state, discovery }: { state: NavState; discovery:
             </svg>
             <div>
               <p className="text-xs uppercase tracking-wide text-faint">The Art of Knowing Yourself</p>
-              <p className="display mt-1 text-2xl text-burgundy">{discovery.percent}% discovered</p>
-              <p className="mt-1 text-sm text-muted">{started ? `${discovery.modulesDone} of ${discovery.totalModules} chapters complete · Continue` : "Begin whenever you're ready"} <span aria-hidden="true">→</span></p>
+              <p className="display mt-1 text-2xl text-burgundy">{started ? `${discovery.modulesDone} of ${discovery.totalModules} explored` : "Your discovery awaits"}</p>
+              <p className="mt-1 text-sm text-muted">{started ? "Continue where you left off" : "Begin whenever you're ready"} <span aria-hidden="true">→</span></p>
             </div>
           </Link>
 

@@ -1,8 +1,8 @@
+import { SelfBanner } from "@/components/SelfBanner";
 import Link from "next/link";
 import { getViewer, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LANGUAGE_KEYS, LOVE_LANGUAGES } from "@/lib/love-languages";
-import { LivingHero } from "@/components/business/SocietyHero";
 import { LoveLanguageForm } from "@/components/LoveLanguageForm";
 
 export const metadata = { title: "How I give and receive love" };
@@ -18,17 +18,7 @@ export default async function LoveLanguages() {
   ]);
   return (
     <>
-      <LivingHero
-        slides={[
-          { src: "/images/library/love/sunlit-anniversary.webp", alt: "A couple sharing a warm moment over dinner" },
-          { src: "/images/library/love/cooking-together.webp", alt: "A couple laughing while cooking together" },
-          { src: "/images/library/love/laughing-dinner.webp", alt: "A couple laughing together at dinner" },
-        ]}
-        eyebrow="The Art of Knowing Yourself · Understand Yourself" title="How you give and" gilded="receive love."
-        subtitle="Discover what makes you feel truly loved, how you naturally show love, and what helps you feel connected — for dating, for partnership and for knowing yourself."
-        cta={{ href: "#profile", label: p ? "Update my Love Language Profile" : "Discover my love languages" }}
-        secondary={{ href: "/app/know-yourself", label: "Back to Who Am I?" }}
-      />
+      <SelfBanner section="love-languages" actions={[{ href: "#profile", label: p ? "Update my Love Language Profile" : "Discover my love languages", primary: true }, { href: "/app/know-yourself", label: "Back to Who Am I?" }]} />
 
       <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {LANGUAGE_KEYS.map((k, i) => (

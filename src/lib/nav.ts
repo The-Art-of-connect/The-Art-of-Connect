@@ -20,6 +20,7 @@ export const NAV: NavGroup[] = [
     key: "self", label: "The Art of Self", href: "/app/know-yourself", intro: "Before you connect with the world, connect with yourself.",
     links: [
       { href: "/app/know-yourself", label: "The Art of Knowing Yourself", note: "Who Am I? — identity & self-love", access: "member" },
+      { href: "/app/know-yourself/identity-self-love", label: "Identity & Self-Love", note: "Six lessons · founding curriculum", access: "member" },
       { href: "/emotional-intelligence", label: "Emotional Intelligence" },
       { href: "/app/know-yourself/love-languages", label: "The Five Love Languages", access: "member" },
       { href: "/emotional-intelligence/self-awareness", label: "Levels of Consciousness", note: "Within Self-Awareness" },

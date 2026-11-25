@@ -43,7 +43,7 @@ test("Journey prompt fits the input limit and only includes this chapter", () =>
 });
 
 test("Journey reply is split into the four sections", () => {
-  const r = parseJourneyDiscovery("## What You've Discovered About Yourself\nA\n**Your Beautiful Qualities**\nB\n### Opportunities for Personal Growth\nC\nMoving Forward\nD");
+  const r = parseJourneyDiscovery("## What You Discovered About Yourself\nA\n**Your Personal Strengths**\nB\n### Areas for Personal Development\nC\nMoving Forward\nD");
   assert.deepEqual(r, { discovered: ["A"], qualities: ["B"], growth: ["C"], forward: ["D"] });
   assert.equal(parseJourneyDiscovery("just text"), null);
   assert.match(analysisKey("interests-and-aspirations"), /^[a-z0-9_]{2,60}$/);

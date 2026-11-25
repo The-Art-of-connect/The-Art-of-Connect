@@ -1,3 +1,4 @@
+import { SelfCollection } from "@/components/SelfCollection";
 import Image from "next/image";
 import Link from "next/link";
 import { getViewer, isInsidePreview } from "@/lib/auth";
@@ -53,6 +54,8 @@ export default async function ArtOfKnowingYourself() {
         </ul>
         <p className="relative mt-10 text-center text-xs tracking-[0.3em] uppercase text-gold">In Business. In Life. In Love.</p>
       </section>
+
+      <SelfCollection />
 
       <section id="who-am-i" className="mt-14 scroll-mt-24">
         <div className="flex flex-wrap items-end justify-between gap-4">

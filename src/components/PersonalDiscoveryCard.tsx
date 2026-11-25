@@ -9,15 +9,20 @@ type JourneyOption =
   | { kind: "none" };
 
 const SECTIONS: { key: keyof PersonalDiscovery; title: string }[] = [
-  { key: "discovered", title: "What You’ve Discovered About Yourself" },
-  { key: "qualities", title: "Your Beautiful Qualities" },
-  { key: "growth", title: "Opportunities for Personal Growth" },
+  { key: "discovered", title: "What You Discovered About Yourself" },
+  { key: "qualities", title: "Your Personal Strengths" },
+  { key: "growth", title: "Areas for Personal Development" },
   { key: "forward", title: "Moving Forward" },
 ];
 
 /** "Your Personal Discovery": the end-of-chapter reflection, self-guided or written with Journey. Private to the member. */
-export function PersonalDiscoveryCard({ slug, reflection, journey, journeyWritten, option }: {
+export function PersonalDiscoveryCard({ slug, reflection, journey, journeyWritten, option, action = createJourneyDiscovery, field = "module", consent = "this chapter\u2019s answers", title = "Your Personal Discovery", selfLine = "Composed from your own answers, with no AI and no credits. Update your answers anytime and your reflection grows with you." }: {
   slug: string;
+  action?: (p: import("@/app/actions/admin").ActionResult, f: FormData) => Promise<import("@/app/actions/admin").ActionResult>;
+  field?: string;
+  consent?: string;
+  title?: string;
+  selfLine?: string;
   reflection: PersonalDiscovery;
   journey: PersonalDiscovery | null;
   journeyWritten: string | null;
@@ -28,7 +33,7 @@ export function PersonalDiscoveryCard({ slug, reflection, journey, journeyWritte
     <section id="personal-discovery" aria-labelledby="pd-title" className="tile-in mt-10 scroll-mt-24">
       <div className="theme-ivory mx-auto max-w-3xl rounded-[28px] border border-champagne bg-ivory px-6 py-10 shadow-xl sm:px-12">
         <p className="text-center text-xs tracking-[0.25em] uppercase text-gold-deep">The Art of Connect</p>
-        <h2 id="pd-title" className="display mt-3 text-center text-4xl text-burgundy sm:text-5xl">Your Personal Discovery</h2>
+        <h2 id="pd-title" className="display mt-3 text-center text-4xl text-burgundy sm:text-5xl">{title}</h2>
         <p className="mt-2 text-center italic text-gold-deep">Understanding the person within.</p>
         <p className="mt-3 text-center text-xs text-muted">
           {journey ? <>Written with Journey{journeyWritten && ` on ${journeyWritten}`} · </> : <>A reflection drawn from your own words · </>}
@@ -50,7 +55,7 @@ export function PersonalDiscoveryCard({ slug, reflection, journey, journeyWritte
         <div className="glass p-6">
           <p className="eyebrow">Self-guided</p>
           <p className="display mt-2 text-2xl">{journey ? "Your reflection" : "Included for everyone"}</p>
-          <p className="mt-2 text-sm text-muted">Composed from your own answers, with no AI and no credits. Update your answers anytime and your reflection grows with you.</p>
+          <p className="mt-2 text-sm text-muted">{selfLine}</p>
         </div>
         <div className="theme-dark relative overflow-hidden rounded-[24px] bg-ink p-6 text-ivory">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgb(240_200_140/0.35),transparent_70%)]" aria-hidden="true" />
@@ -58,7 +63,7 @@ export function PersonalDiscoveryCard({ slug, reflection, journey, journeyWritte
           <p className="display relative mt-2 text-2xl text-gold-bright">{journey ? "Ask Journey again" : "A deeper personal analysis"}</p>
           {option.kind === "none" ? (
             <>
-              <p className="relative mt-2 text-sm text-muted">Journey can read this chapter with you and write a personal analysis. Journey is included with paid memberships.</p>
+              <p className="relative mt-2 text-sm text-muted">Journey can read your answers with you and write a deeper, individualized analysis. Journey is included with paid memberships.</p>
               <Link href="/membership" className="btn btn-gold btn-sm relative mt-4">Explore memberships</Link>
             </>
           ) : !option.enabled ? (
@@ -69,14 +74,14 @@ export function PersonalDiscoveryCard({ slug, reflection, journey, journeyWritte
               <Link href="/app/journey/plus" className="btn btn-gold btn-sm relative mt-4">Add Journey credits</Link>
             </>
           ) : (
-            <ActionForm action={createJourneyDiscovery} className="relative mt-3 space-y-3">
-              <input type="hidden" name="module" value={slug} />
+            <ActionForm action={action} className="relative mt-3 space-y-3">
+              <input type="hidden" name={field} value={slug} />
               <p className="text-sm text-muted">
                 {option.kind === "member" ? <>You have <span className="font-semibold text-gold-bright">{option.credits}</span> credits. This uses 1 credit, only when Journey writes your analysis.</> : "Owner test: uses your private test budget."}
               </p>
               <label className="flex items-start gap-2 text-xs text-ivory/85">
                 <input type="checkbox" name="consent" value="yes" required className="mt-0.5" />
-                I&rsquo;m happy for Journey to read my answers to this chapter. They stay private to me.
+                I&rsquo;m happy for Journey to read {consent}. They stay private to me.
               </label>
               <button className="btn btn-gold btn-sm">Create my analysis with Journey</button>
             </ActionForm>
