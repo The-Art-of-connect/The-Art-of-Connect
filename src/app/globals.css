@@ -337,6 +337,18 @@ select.field { appearance: none; }
 .zoom-img img { transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.1, 1); }
 .zoom-img:hover img { transform: scale(1.05); }
 
+/* Header links: soft champagne pills so they read as tappable. */
+.nav-pill {
+  display: inline-flex; align-items: center; min-height: 2.25rem; padding: 0.4rem 0.95rem;
+  border-radius: 999px; border: 1px solid rgba(197, 165, 114, 0.28);
+  background: rgba(248, 243, 233, 0.05);
+  transition: color .25s ease, background-color .25s ease, border-color .25s ease, transform .25s ease;
+}
+.nav-pill:hover, .nav-pill:focus-visible {
+  color: var(--gold-bright, #e6c98f); border-color: rgba(197, 165, 114, 0.7);
+  background: rgba(197, 165, 114, 0.14); transform: translateY(-1px);
+}
+
 /* ── Motion ─────────────────────────────────────────────────────── */
 @keyframes drift {
   0% { transform: translate3d(0, 0, 0) scale(1); }

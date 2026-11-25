@@ -29,7 +29,7 @@ export default async function HomePage() {
       <div className="band theme-dark relative overflow-hidden">
         {/* ── Hero artwork: burgundy glow, the AC monogram and lotus ── */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_12%_35%,rgba(120,31,53,0.5),transparent_62%)]" />
-        <div aria-hidden="true" className="hero-art hero-art-mask pointer-events-none absolute inset-y-0 right-0 w-[64%] opacity-80 sm:w-[58%] lg:right-[4%] lg:aspect-[0.62] lg:w-auto lg:opacity-100">
+        <div aria-hidden="true" className="hero-art hero-art-mask pointer-events-none absolute inset-y-0 right-0 w-[60%] opacity-95 sm:w-[56%] lg:right-[4%] lg:aspect-[0.62] lg:w-auto lg:opacity-100">
           <div className="hero-art-float absolute inset-0">
             <Image src="/brand/hero-art.webp" alt="" fill priority sizes="(min-width: 1024px) 40vw, 64vw" className="object-cover object-[center_55%] lg:object-[center_58%]" />
           </div>
@@ -37,24 +37,25 @@ export default async function HomePage() {
         </div>
         {/* ── Hero ─────────────────────────────────────────────── */}
         <section className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pb-24 lg:pt-24">
-          <div>
-            <p className="eyebrow rise">In Business. In Life. In Love.</p>
-            <p className="rise mt-4 inline-flex rounded-full border border-champagne/50 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] text-gold uppercase">
+          {/* Phones: a narrower, smaller text column on the left so the artwork shows on the right, as on desktop. */}
+          <div className="max-w-[62%] sm:max-w-[60%] lg:max-w-none">
+            <p className="eyebrow rise max-sm:!text-[0.58rem] max-sm:!tracking-[0.22em]">In Business. In Life. In Love.</p>
+            <p className="rise mt-4 inline-flex rounded-full border border-champagne/50 px-3 py-1 text-[0.58rem] font-semibold tracking-[0.16em] text-gold uppercase sm:px-4 sm:py-1.5 sm:text-xs sm:tracking-[0.18em]">
               Exclusively for adults {catalogue.minimum_member_age}+
             </p>
-            <h1 className="display rise rise-2 mt-6 text-[3.3rem] sm:text-7xl lg:text-[6.2rem]">
+            <h1 className="display rise rise-2 mt-5 text-[2.35rem] leading-[1.02] sm:mt-6 sm:text-6xl lg:text-[6.2rem]">
               The art of <br />
               <span className="gilded italic">being known.</span>
             </h1>
-            <p className="display rise rise-2 mt-6 text-2xl italic text-ivory sm:text-3xl">Life after 40. Connection with intention.</p>
-            <p className="rise rise-3 mt-8 max-w-xl text-lg leading-relaxed text-muted">
+            <p className="display rise rise-2 mt-4 text-[1.05rem] italic text-ivory sm:mt-6 sm:text-2xl lg:text-3xl">Life after 40. Connection with intention.</p>
+            <p className="rise rise-3 mt-5 max-w-xl text-[0.82rem] leading-relaxed text-muted sm:mt-8 sm:text-base lg:text-lg">
               Meaningful connections begin with understanding who you are. Discover yourself, build intentional
               relationships, connect with compatible business professionals, and access trusted guidance — all within one
               extraordinary ecosystem.
             </p>
-            <div className="rise rise-4 mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link href="/membership#build" className="btn btn-gold">Build Your Membership</Link>
-              <Link href="#experiences" className="btn btn-ghost">Choose Your Experience</Link>
+            <div className="rise rise-4 mt-7 flex flex-col gap-2.5 sm:mt-10 sm:gap-3 lg:flex-row">
+              <Link href="/membership#build" className="btn btn-gold max-sm:!min-h-0 max-sm:!px-4 max-sm:!py-2.5 max-sm:!text-[0.8rem]">Build Your Membership</Link>
+              <Link href="#experiences" className="btn btn-ghost max-sm:!min-h-0 max-sm:!px-4 max-sm:!py-2.5 max-sm:!text-[0.8rem]">Choose Your Experience</Link>
             </div>
           </div>
           {/* Right column is the artwork behind (desktop). */}
