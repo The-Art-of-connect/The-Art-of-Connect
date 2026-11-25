@@ -1,5 +1,6 @@
 /**
- * Journey — The Art of Connect's AI connection concierge.
+ * Journey — The Art of Connect's AI connection concierge (paid members only),
+ * powered by the OpenAI API on the server.
  *
  * Pure functions shared by the server and the Owner Portal preview. They
  * build Journey's operating instructions in a fixed order of authority:
@@ -85,17 +86,60 @@ export const JOURNEY_MODES: Record<JourneyMode, { name: string; purpose: string 
   },
 };
 
-// ─── Membership access ──────────────────────────────────────────────
-export type JourneyAccess = "basic" | "enhanced";
-
+// ─── Membership access (paid members only) ─────────────────────────
 /**
- * Default mapping from membership package to Journey access. The owner can
- * replace it in the Journey Intelligence Center; pricing is never touched.
+ * Founder directive: Journey exists only on the paid membership side.
+ * Public visitors, free business accounts, free assessments, complimentary
+ * webinars and owner-granted access without a paid subscription get "none".
+ * Owner/staff access for configuration and testing is authorized separately
+ * (see ownerTestAccess) and is never derived from a membership.
  */
-export const DEFAULT_ENHANCED_PACKAGES: readonly string[] = ["complete-society", "executive-private", "elite-concierge"];
+export type JourneyAccess = "none" | "standard" | "enhanced";
 
-export function journeyAccessFor(packageSlug: string | null | undefined, enhancedPackages: readonly string[] = DEFAULT_ENHANCED_PACKAGES): JourneyAccess {
-  return packageSlug && enhancedPackages.includes(packageSlug) ? "enhanced" : "basic";
+/** Which Journey experience needs which membership experience. Private Concierge needs enhanced access. */
+export const MODE_EXPERIENCE: Record<Exclude<JourneyMode, "concierge">, "business" | "counseling" | "relationships"> = {
+  business: "business",
+  life: "counseling",
+  love: "relationships",
+};
+
+/** Packages with enhanced concierge capabilities. Owner-configurable in the Journey Intelligence Center. */
+export const DEFAULT_ENHANCED_PACKAGES: readonly string[] = ["executive-private", "elite-concierge"];
+
+/** Only fully paid subscriptions use Journey by default (no trials, no past-due accounts). Owner-configurable. */
+export const DEFAULT_ENTITLED_STATUSES: readonly string[] = ["active"];
+
+export type PaidMembership = {
+  kind: "member" | "professional";
+  status: string;
+  packageSlug: string | null;
+  experiences: readonly string[];
+  /** Amount actually billed for the membership; a zero-price membership is not paid. */
+  amountCents: number | null;
+};
+
+export function journeyAccessFor(
+  membership: PaidMembership | null | undefined,
+  opts: { enhancedPackages?: readonly string[]; entitledStatuses?: readonly string[] } = {},
+): JourneyAccess {
+  if (!membership) return "none";
+  if (membership.kind !== "member") return "none";
+  if (!(opts.entitledStatuses ?? DEFAULT_ENTITLED_STATUSES).includes(membership.status)) return "none";
+  if (!membership.amountCents || membership.amountCents <= 0) return "none";
+  if (!membership.experiences.length) return "none";
+  return membership.packageSlug && (opts.enhancedPackages ?? DEFAULT_ENHANCED_PACKAGES).includes(membership.packageSlug) ? "enhanced" : "standard";
+}
+
+/** Whether a paid member may open a particular Journey experience. */
+export function modeAllowed(mode: JourneyMode, access: JourneyAccess, membership: PaidMembership | null | undefined): boolean {
+  if (access === "none" || !membership) return false;
+  if (mode === "concierge") return access === "enhanced";
+  return membership.experiences.includes(MODE_EXPERIENCE[mode]);
+}
+
+/** Owner testing is its own permission: owner role, MFA verified, and the testing switch on. */
+export function ownerTestAccess(input: { roles: readonly string[]; mfaVerified: boolean; ownerTestingEnabled: boolean }): boolean {
+  return input.roles.includes("owner") && input.mfaVerified && input.ownerTestingEnabled;
 }
 
 /** Capabilities the owner can switch on or off individually. */
@@ -104,15 +148,16 @@ export type JourneyCapability =
   | "shared_interests" | "romantic_experiences" | "occasion_planning" | "gift_ideas"
   | "shared_goals" | "growth_recommendations" | "professional_referrals";
 
-const BASIC: readonly JourneyCapability[] = ["onboarding_guidance", "self_discovery", "growth_recommendations", "professional_referrals"];
-const ENHANCED: readonly JourneyCapability[] = [
-  ...BASIC, "communication_help", "date_planning", "shared_interests", "romantic_experiences",
-  "occasion_planning", "gift_ideas", "shared_goals",
+const STANDARD: readonly JourneyCapability[] = [
+  "onboarding_guidance", "self_discovery", "growth_recommendations", "professional_referrals",
+  "communication_help", "date_planning", "shared_interests", "shared_goals",
 ];
+const ENHANCED: readonly JourneyCapability[] = [...STANDARD, "romantic_experiences", "occasion_planning", "gift_ideas"];
 
 /** What a member may use: their access level, minus anything the owner has disabled. */
 export function allowedCapabilities(access: JourneyAccess, disabled: readonly JourneyCapability[] = []): JourneyCapability[] {
-  return (access === "enhanced" ? ENHANCED : BASIC).filter((c) => !disabled.includes(c));
+  if (access === "none") return [];
+  return (access === "enhanced" ? ENHANCED : STANDARD).filter((c) => !disabled.includes(c));
 }
 
 // ─── Consequential actions ──────────────────────────────────────────
@@ -133,7 +178,7 @@ export const MAX_OWNER_INSTRUCTIONS = 20_000;
 
 export function buildJourneyInstructions(input: {
   mode: JourneyMode;
-  access: JourneyAccess;
+  access: Exclude<JourneyAccess, "none">;
   ownerInstructions?: string | null;
   disabledCapabilities?: readonly JourneyCapability[];
 }): string {
