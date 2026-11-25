@@ -5,6 +5,8 @@ import { getViewer, hasRole, isInsidePreview, isStaff } from "@/lib/auth";
 import { OwnerReview, SectionGate } from "@/components/OwnerReview";
 import { AgreementForm } from "@/components/AgreementForm";
 import { createClient } from "@/lib/supabase/server";
+import { SiteSearch } from "@/components/SiteSearch";
+import { entriesFor, pick } from "@/lib/search-scope";
 
 export const dynamic = "force-dynamic";
 
@@ -25,12 +27,16 @@ export default async function MemberLayout({ children }: { children: React.React
   const status = Object.fromEntries((statusRows ?? []).map((r) => [r.path, r.status]));
   const notes = Object.fromEntries((statusRows ?? []).map((r) => [r.path, r.member_note]));
   const reviewer = hasRole(viewer, ["owner", "executive"]);
+  const searchable = entriesFor(viewer);
+  const quick = pick(searchable, ["/app", "/app/journey", "/app/business", "/app/relationships", "/app/counseling", "/app/membership", "/app/safety", "/"]);
   return (
     <div className="theme-ivory min-h-dvh">
       <header className="theme-dark sticky top-0 z-30 border-b border-line !bg-espresso/95 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
           <Link href="/app"><Wordmark /></Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <SiteSearch entries={searchable} quick={quick} home={{ href: "/app", label: "Member home" }} />
+            <Link href="/" className="hidden text-sm text-muted hover:text-text md:inline">Main site</Link>
             <Link href="/app/journey" className="hidden text-sm text-muted hover:text-text sm:inline">Journey</Link>
             <Link href="/app/membership" className="hidden text-sm text-muted hover:text-text sm:inline">My membership</Link>
             <Link href="/app/safety" className="hidden text-sm text-muted hover:text-text sm:inline">Safety</Link>

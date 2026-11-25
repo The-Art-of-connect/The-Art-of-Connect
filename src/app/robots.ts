@@ -4,7 +4,7 @@ const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://theartofconnect.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/app", "/inside-preview", "/api", "/auth", "/join", "/sign-in"] }],
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/app", "/inside-preview", "/search", "/api", "/auth", "/join", "/sign-in"] }],
     sitemap: `${base}/sitemap.xml`,
     host: base,
   };

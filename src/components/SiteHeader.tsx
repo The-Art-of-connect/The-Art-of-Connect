@@ -3,6 +3,12 @@ import { Wordmark } from "@/components/Emblem";
 import { MobileMenu } from "@/components/MobileMenu";
 import { SITE_NAV } from "@/lib/nav";
 import { PreviewButton } from "@/components/PreviewButton";
+import { SiteSearch } from "@/components/SiteSearch";
+import { SITE_PAGES } from "@/lib/search-index";
+
+const QUICK = ["/", "/membership", "/business/explore", "/webinars", "/love", "/life", "/legal", "/sign-in"]
+  .map((h) => SITE_PAGES.find((e) => e.href === h)!)
+  .filter(Boolean);
 
 export function SiteHeader() {
   return (
@@ -18,7 +24,8 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <SiteSearch entries={SITE_PAGES} quick={QUICK} />
           <PreviewButton />
           <Link href="/sign-in" className="nav-pill hidden text-[0.82rem] text-ivory/85 lg:inline-flex">Sign in</Link>
           <Link href="/membership#build" className="btn btn-gold btn-sm hidden sm:inline-flex">Build Your Membership</Link>
