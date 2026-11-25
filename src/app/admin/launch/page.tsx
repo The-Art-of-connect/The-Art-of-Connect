@@ -3,6 +3,7 @@ import { requireStaff, hasRole, getMfaStatus } from "@/lib/auth";
 import { date, rolesFor } from "@/lib/admin";
 import { env, isSupabaseConfigured, serverConfig, serverSecret } from "@/lib/env";
 import { isEmailConfigured } from "@/lib/email";
+import { turnstileStatus } from "@/lib/turnstile";
 import { getLaunchState } from "@/lib/launch";
 import { getLegalDocs, isDraft } from "@/lib/legal";
 import { getStripe } from "@/lib/stripe";
@@ -93,7 +94,9 @@ export default async function LaunchReadinessPage() {
     { label: "Owner account", ok: owners > 0, detail: owners ? "Owner role assigned." : "No owner assigned yet." },
     { label: "Your two-step verification", ok: mfa.verified, detail: mfa.verified ? "This session is MFA-verified." : "Not verified in this session." },
     { label: "Staff MFA enforced by the database", ok: schemaCurrent, detail: "Staff permissions apply only to MFA-verified sessions." },
-    { label: "Automated security tests", ok: null, detail: "79 database checks, 10 pricing tests, build, audit and secret scan run on every pull request (GitHub Actions)." },
+    { label: "Bot protection (Cloudflare Turnstile)", ok: turnstileStatus() === "active", detail: turnstileStatus() === "active" ? "Server-verified on registration, sign-in, password recovery, waitlist and professional forms. Invalid, expired and reused tokens are refused." : "Add NEXT_PUBLIC_TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY in Netlify.", action: "Security Center" },
+    { label: "Rate limiting", ok: dbOk, detail: "Every public form is limited per visitor in the database; refusals are logged in the Security Center." },
+    { label: "Automated security tests", ok: null, detail: "90 database security checks, 25 unit tests (pricing, email privacy, Turnstile), live Cloudflare verification, build, dependency audit and secret scan run on every pull request." },
   ];
 
   const commercial: Check[] = [

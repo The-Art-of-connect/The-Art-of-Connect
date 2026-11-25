@@ -1,27 +1,41 @@
 import "server-only";
-import { clientMeta } from "@/lib/security";
+import { clientMeta, logSecurityEvent } from "@/lib/security";
+import { allowedHostnames, siteverify, type TurnstileAction, type TurnstileResult } from "@/lib/turnstile-core";
 
 /**
- * Cloudflare Turnstile bot protection, verified server-side on every
- * protected form. Free, privacy-friendly, and needs no DNS or nameserver
- * changes. Until the keys are added it is skipped (reported as "not
- * configured" in the Security Center) so the site keeps working.
+ * Cloudflare Turnstile bot protection, verified on the server for every
+ * public form (see turnstile-core for the rules).
+ *
+ * Mandatory: once the site key is live, a request without a valid token is
+ * refused — including when the secret key is missing or Cloudflare can't be
+ * reached (fail closed). Only a build with no Turnstile keys at all (local
+ * development) skips the check.
  */
-export const isTurnstileConfigured = () => Boolean(process.env.TURNSTILE_SECRET_KEY && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
+const siteKey = () => process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+const secretKey = () => process.env.TURNSTILE_SECRET_KEY ?? "";
 
-export async function verifyTurnstile(form: FormData): Promise<{ ok: boolean; skipped?: boolean }> {
-  if (!isTurnstileConfigured()) return { ok: true, skipped: true };
-  const token = String(form.get("cf-turnstile-response") ?? "");
-  if (!token || token.length > 2048) return { ok: false };
-  try {
-    const { ip } = await clientMeta();
-    const body = new URLSearchParams({ secret: process.env.TURNSTILE_SECRET_KEY!, response: token });
-    if (ip) body.set("remoteip", ip);
-    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body });
-    const data = (await res.json()) as { success?: boolean };
-    return { ok: data.success === true };
-  } catch {
-    // Fail closed when configured: an unverifiable request is treated as a bot.
-    return { ok: false };
+export const isTurnstileConfigured = () => Boolean(secretKey() && siteKey());
+export const turnstileStatus = () =>
+  isTurnstileConfigured() ? "active" : siteKey() || secretKey() ? "misconfigured" : "not_configured";
+
+export async function verifyTurnstile(form: FormData, action: TurnstileAction, email?: string | null): Promise<TurnstileResult & { skipped?: boolean }> {
+  if (!siteKey() && !secretKey()) return { ok: true, skipped: true };
+  const { ip } = await clientMeta();
+  const result = await siteverify({
+    secret: secretKey(),
+    token: form.get("cf-turnstile-response"),
+    remoteip: ip,
+    expectedAction: action,
+    allowedHostnames: allowedHostnames(process.env.TURNSTILE_ALLOWED_HOSTNAMES, process.env.NEXT_PUBLIC_SITE_URL),
+  });
+  if (!result.ok) {
+    // Logged without the token itself.
+    await logSecurityEvent("bot_check_failed", {
+      email: email ?? null,
+      details: { form: action, reason: result.reason, ...(result.codes?.length ? { codes: result.codes.join(",") } : {}), ...(result.hostname ? { hostname: result.hostname } : {}) },
+    });
   }
+  return result;
 }
+
+export const BOT_CHECK_MESSAGE = "Please complete the security check and try again.";

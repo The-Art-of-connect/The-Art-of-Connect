@@ -4,6 +4,8 @@ import { getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createClient } from "@/lib/supabase/server";
 import { allow } from "@/lib/ratelimit";
+import { logSecurityEvent } from "@/lib/security";
+import { BOT_CHECK_MESSAGE, verifyTurnstile } from "@/lib/turnstile";
 import { consentVersions } from "@/lib/legal";
 
 export type ProState = { ok: boolean; message: string } | null;
@@ -46,7 +48,11 @@ export async function submitProfessionalInterest(_prev: ProState, form: FormData
     return { ok: false, message: "Licensed professionals, please include your license type and the state where you are licensed." };
   }
 
-  if (!(await allow("pro-interest", 5, 3600))) return { ok: false, message: "Too many attempts. Please try again later." };
+  if (!(await allow("pro-interest", 5, 3600))) {
+    await logSecurityEvent("rate_limited", { email: d.email, details: { form: "pro-interest" } });
+    return { ok: false, message: "Too many attempts. Please try again later." };
+  }
+  if (!(await verifyTurnstile(form, "pro_interest", d.email)).ok) return { ok: false, message: BOT_CHECK_MESSAGE };
   const supabase = await createClient();
   if (!supabase) return { ok: false, message: "Applications open soon. Please write to info@theartofconnect.com." };
   const { error } = await supabase.from("professional_interest").insert({
@@ -103,6 +109,11 @@ export async function submitProfessionalApplication(_prev: ProState, form: FormD
   if (d.professionalType === "licensed_clinical" && !(d.licenseType && d.licenseNumber && d.licenseState)) {
     return { ok: false, message: "Licensed professionals must provide license type, number and state." };
   }
+  if (!(await allow("pro-application", 3, 3600))) {
+    await logSecurityEvent("rate_limited", { userId: viewer.id, details: { form: "pro-application" } });
+    return { ok: false, message: "Too many attempts. Please try again later." };
+  }
+  if (!(await verifyTurnstile(form, "pro_application", viewer.email)).ok) return { ok: false, message: BOT_CHECK_MESSAGE };
   const supabase = (await createClient())!;
   const { error } = await supabase.schema("counseling").from("applications").insert({
     user_id: viewer.id,

@@ -3,16 +3,19 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signIn, signUp, type AuthState } from "@/app/actions/auth";
 import type { Selection } from "@/lib/pricing";
+import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
 
 export function SignInForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(signIn, null);
+  const [verified, setVerified] = useTurnstileReady();
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="next" value={next ?? "/app"} />
       <input name="email" type="email" required autoComplete="email" placeholder="Email" className="field" aria-label="Email" />
       <input name="password" type="password" required minLength={8} autoComplete="current-password" placeholder="Password" className="field" aria-label="Password" />
+      <Turnstile action="sign_in" resetSignal={state} onReady={setVerified} />
       {state?.error && <p className="text-sm text-danger" role="alert">{state.error}</p>}
-      <button className="btn btn-gold w-full" disabled={pending}>{pending ? "Signing in…" : "Sign in"}</button>
+      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Signing in…" : verified ? "Sign in" : "Verifying…"}</button>
     </form>
   );
 }
@@ -21,6 +24,7 @@ const MONTHS = ["January", "February", "March", "April", "May", "June", "July", 
 
 export function JoinForm({ selection, loveStatus, minimumAge }: { selection: Selection; loveStatus: "single" | "couple" | null; minimumAge: number }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(signUp, null);
+  const [verified, setVerified] = useTurnstileReady();
   if (state?.notice) return <p className="py-6 text-center text-muted" role="status">{state.notice}</p>;
   const thisYear = new Date().getFullYear();
   const years = Array.from({ length: 90 }, (_, i) => thisYear - minimumAge - i);
@@ -58,8 +62,9 @@ export function JoinForm({ selection, loveStatus, minimumAge }: { selection: Sel
         <input type="checkbox" name="agree" required className="mt-1 h-4 w-4 accent-[var(--champagne)]" />
         <span>I agree to the <Link href="/legal/terms-of-service" className="text-gold underline">Terms of Service</Link>, <Link href="/legal/membership-agreement" className="text-gold underline">Membership Agreement</Link>, <Link href="/legal/community-standards" className="text-gold underline">Community Standards</Link> and <Link href="/legal/refund-policy" className="text-gold underline">Refund Policy</Link>, and I have read the <Link href="/legal/privacy-policy" className="text-gold underline">Privacy Policy</Link>.</span>
       </label>
+      <Turnstile action="sign_up" resetSignal={state} onReady={setVerified} />
       {state?.error && <p className="text-sm text-danger" role="alert">{state.error}</p>}
-      <button className="btn btn-gold w-full" disabled={pending}>{pending ? "Creating your account…" : "Become a Member"}</button>
+      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Creating your account…" : verified ? "Become a Member" : "Verifying…"}</button>
     </form>
   );
 }

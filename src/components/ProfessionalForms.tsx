@@ -1,5 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
+import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
 import { submitProfessionalApplication, submitProfessionalInterest, type ProState } from "@/app/actions/professionals";
 
 const TYPES = [
@@ -58,6 +59,7 @@ function Done({ state }: { state: ProState }) {
 
 export function ProfessionalInterestForm() {
   const [state, action, pending] = useActionState<ProState, FormData>(submitProfessionalInterest, null);
+  const [verified, setVerified] = useTurnstileReady();
   const [type, setType] = useState("licensed_clinical");
   if (state?.ok) return <Done state={state} />;
   const licensed = type === "licensed_clinical";
@@ -75,8 +77,9 @@ export function ProfessionalInterestForm() {
       <label className="block"><Label>Website or professional profile</Label><input name="website" type="url" className="field" placeholder="https://" /></label>
       <label className="block"><Label>Anything you’d like us to know</Label><textarea name="message" className="field" /></label>
       <input type="text" name="company" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+      <Turnstile action="pro_interest" resetSignal={state} onReady={setVerified} />
       {state && !state.ok && <p className="text-sm text-danger" role="alert">{state.message}</p>}
-      <button className="btn btn-gold w-full sm:w-auto" disabled={pending}>{pending ? "Sending…" : "Express interest"}</button>
+      <button className="btn btn-gold w-full sm:w-auto" disabled={pending || !verified}>{pending ? "Sending…" : verified ? "Express interest" : "Verifying…"}</button>
       <p className="text-xs text-faint">Please don’t include client information. Credential documents are requested securely during the full application.</p>
     </form>
   );
@@ -84,6 +87,7 @@ export function ProfessionalInterestForm() {
 
 export function ProfessionalApplicationForm() {
   const [state, action, pending] = useActionState<ProState, FormData>(submitProfessionalApplication, null);
+  const [verified, setVerified] = useTurnstileReady();
   const [type, setType] = useState("licensed_clinical");
   if (state?.ok) return <Done state={state} />;
   const licensed = type === "licensed_clinical";
@@ -111,8 +115,9 @@ export function ProfessionalApplicationForm() {
         <input type="checkbox" name="agree" required className="mt-1 h-4 w-4 accent-[var(--champagne)]" />
         <span>I agree to the <a href="/legal/professional-agreement" target="_blank" className="text-gold underline">Professional Agreement</a> and <a href="/legal/community-standards" target="_blank" className="text-gold underline">Community Standards</a>, and consent to verification of my credentials and identity.</span>
       </label>
+      <Turnstile action="pro_application" resetSignal={state} onReady={setVerified} />
       {state && !state.ok && <p className="text-sm text-danger" role="alert">{state.message}</p>}
-      <button className="btn btn-gold w-full sm:w-auto" disabled={pending}>{pending ? "Submitting…" : "Submit application"}</button>
+      <button className="btn btn-gold w-full sm:w-auto" disabled={pending || !verified}>{pending ? "Submitting…" : verified ? "Submit application" : "Verifying…"}</button>
     </form>
   );
 }

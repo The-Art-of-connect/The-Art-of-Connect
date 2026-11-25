@@ -351,3 +351,33 @@ export async function refundPayment(_prev: ActionResult, form: FormData): Promis
   revalidatePath("/admin/revenue");
   return done(`Refund of $${(amount / 100).toFixed(2)} sent to Stripe. The payment updates when Stripe confirms.`);
 }
+
+// ─── Security Center ───────────────────────────────────────────────
+export async function updateSecurityAlert(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(rolesFor("/admin/security"));
+  const parsed = z.object({ id: z.uuid(), status: z.enum(["acknowledged", "resolved"]) }).safeParse({ id: form.get("id"), status: form.get("status") });
+  if (!parsed.success) return fail("Invalid request.");
+  const supabase = (await createClient())!;
+  const resolved = parsed.data.status === "resolved";
+  const { error } = await supabase
+    .from("security_alerts")
+    .update({ status: parsed.data.status, resolved_by: resolved ? viewer.id : null, resolved_at: resolved ? new Date().toISOString() : null })
+    .eq("id", parsed.data.id);
+  if (error) return fail("The alert was not updated.");
+  await audit(`security_alert.${parsed.data.status}`, "security_alerts", parsed.data.id);
+  revalidatePath("/admin/security");
+  return done(resolved ? "Alert resolved." : "Alert acknowledged.");
+}
+
+/** Signs a member out of every device (e.g. a suspected account takeover). */
+export async function revokeMemberSessions(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(rolesFor("/admin/security"));
+  const parsed = z.object({ userId: z.uuid(), sessionId: z.union([z.literal(""), z.uuid()]) }).safeParse({ userId: form.get("userId"), sessionId: String(form.get("sessionId") ?? "") });
+  if (!parsed.success) return fail("Invalid request.");
+  const supabase = (await createClient())!;
+  const { data, error } = await supabase.rpc("revoke_sessions", { target: parsed.data.userId, session_id: parsed.data.sessionId || null });
+  if (error) return fail("Sessions could not be revoked.");
+  await audit(parsed.data.sessionId ? "security.session_revoked" : "security.sessions_revoked_all", "profiles", parsed.data.userId, { count: data ?? 0 });
+  revalidatePath("/admin/security");
+  return done(`${data ?? 0} session(s) signed out.`);
+}
