@@ -141,7 +141,8 @@ export const templates = {
     })),
   passwordReset: (f: { name?: string | null; link: string }) =>
     t(f, ({ name, link }) => ({
-      subject: "Reset your password — The Art of Connect",
+      // A unique subject keeps each link in its own email (Gmail otherwise threads them and opens an older, used link).
+      subject: `Reset your password — The Art of Connect · Ref ${Math.floor(1000 + Math.random() * 9000)}`,
       preheader: "Your secure link to choose a new password.",
       heading: "Reset your password.",
       paragraphs: [`Hello ${first(name)}, we received a request to reset your password. Use the secure link below — it works once and expires within the hour.`, "If you didn’t ask for this, you can ignore this email; your password stays the same."],

@@ -201,6 +201,7 @@ export async function setNewPassword(_prev: AuthState, form: FormData): Promise<
   if (!data.user) return { error: "This reset link has expired. Please request a new one." };
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {
+    await logSecurityEvent("login_failed", { userId: data.user.id, details: { form: "set_password", reason: error.code ?? String(error.status ?? "unknown") } });
     if (error.code === "same_password") return { error: "That’s already your current password — choose a different one, or sign in with it." };
     if (error.code === "weak_password") return { error: "Please choose a stronger password: mix words, numbers and symbols, and avoid common passwords." };
     if (error.code === "session_expired" || error.code === "reauthentication_needed" || error.status === 401)
