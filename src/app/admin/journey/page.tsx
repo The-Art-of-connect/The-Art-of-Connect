@@ -100,7 +100,7 @@ export default async function JourneyAdmin() {
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <Stat label="Written conversation expense" value={usd(spent)} />
         <Stat label="Voice expense" value={usd(Number(voiceRow?.cost_cents ?? 0))} hint={`${Math.round(Number(voiceRow?.seconds ?? 0) / 60)} minutes · ${voiceRow?.sessions ?? 0} conversations`} />
-        <div className="glass flex flex-col justify-center gap-2 p-5"><a href="/admin/journey/evaluations" className="btn btn-gold btn-sm">Evaluation scenarios</a><a href="/admin/development" className="btn btn-ghost btn-sm">Development tracker</a></div>
+        <div className="glass flex flex-col justify-center gap-2 p-5"><a href="/admin/journey/training" className="btn btn-gold btn-sm">Knowledge &amp; Training Library</a><a href="/admin/journey/evaluations" className="btn btn-ghost btn-sm">Evaluation scenarios</a><a href="/admin/development" className="btn btn-ghost btn-sm">Development tracker</a></div>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">

@@ -1,5 +1,7 @@
 import "server-only";
 import { teachingGuidance } from "@/lib/curricula";
+import { formatTraining, selectTraining, type TrainingEntry } from "@/lib/journey-training";
+import { RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -218,6 +220,16 @@ export async function sendJourneyMessage(input: {
   let instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
   instructions += `\n\n${JOURNEY_EI_GUIDANCE}`;
   if (input.lesson) instructions += `\n\n${await teachingGuidance(db, input.lesson)}`;
+  instructions += `\n\n# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`;
+  // Founder-approved training: only APPROVED entries, only the few most relevant to this message.
+  const [{ data: trained }, { data: tcats }] = await Promise.all([
+    db.from("journey_training_entries").select("category, topic, scenario, founder_principles, interpretation, approach, example_response, follow_ups, safety").eq("status", "approved").limit(600),
+    db.from("journey_training_categories").select("key, title, founder_decisions"),
+  ]);
+  const picked = selectTraining((trained ?? []) as TrainingEntry[], input.message, { lesson: input.lesson, mode: input.mode });
+  const pickedCats = new Set(picked.map((e) => e.category));
+  const training = formatTraining(picked, (tcats ?? []).filter((c) => pickedCats.has(c.key)).map((c) => ({ title: c.title, decisions: c.founder_decisions ?? [] })));
+  if (training) instructions += `\n\n${training}`;
   if (input.mode === "life" || input.mode === "love") instructions += await loveLanguageContext(db, viewer.id);
 
   // Context: only this member's own conversation, trimmed to the owner's limits.

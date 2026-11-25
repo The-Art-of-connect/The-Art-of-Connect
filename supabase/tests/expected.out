@@ -596,3 +596,14 @@ v21-5) Publishing v2 archives v1 and keeps it (expect 1:archived|2:published):
 1:archived|2:published
 v21-6) A member reads only the published version (expect v2):
 v2
+v22-1) The owner adds two drafts, one waiting on a founder decision (expect 2):
+2
+v22-2) Approving the category approves only the entry without an open question (expect 1 then approved,pending):
+1
+approved,pending
+v22-3) An entry with an open founder question cannot be approved directly (expect error):
+ERROR:  new row for relation "journey_training_entries" violates check constraint "journey_training_entries_check"
+v22-4) A member cannot read the library or categories (expect 0|0):
+0|0
+v22-5) A member cannot approve a category (expect error):
+ERROR:  Only the owner can approve training
