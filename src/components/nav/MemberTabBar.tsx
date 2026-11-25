@@ -32,7 +32,7 @@ export function MemberTabBar({ state }: { state: NavState }) {
                 {t.href === "#profile" ? (
                   <button type="button" onClick={() => setSheet(!sheet)} aria-expanded={sheet} className={cls}><NavIcon name={t.icon} className="h-6 w-6" />{t.label}</button>
                 ) : (
-                  <Link href={t.href} aria-current={on ? "page" : undefined} className={cls}><NavIcon name={t.icon} className="h-6 w-6" />{t.label}</Link>
+                  <Link href={t.label === "Connect" ? (state.experiences.includes("relationships") ? "/app/relationships" : state.experiences.includes("business") ? "/app/business" : "/membership#build") : t.href} aria-current={on ? "page" : undefined} className={cls}><NavIcon name={t.icon} className="h-6 w-6" />{t.label}</Link>
                 )}
               </li>
             );

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Experience, StaffRole } from "@/lib/experiences";
 import { getLaunchState } from "@/lib/launch";
 import { cookies, headers } from "next/headers";
+import { isPersona, PERSONAS, VIEW_AS_COOKIE, type Society } from "@/lib/view-as";
 import { INSIDE_PREVIEW_COOKIE, INSIDE_PREVIEW_ENABLED, ANONYMOUS_PREVIEW_ENABLED, INSIDE_PREVIEW_ID } from "@/lib/inside-preview";
 
 /** Temporary read-only preview viewer: no account, no session, no data. */
@@ -28,6 +29,9 @@ export type Viewer = {
   accountType: "member" | "professional" | "staff";
   ageEligible: boolean;
   referralCode: string | null;
+  /** Owner-only "View as" persona: the owner is seeing the site as this membership. */
+  viewAs?: string | null;
+  society?: Society | null;
 };
 
 /** The signed-in user with their staff roles and experience grants, or null. */
@@ -45,6 +49,19 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   if (profile?.status && profile.status !== "active") return null;
 
   const now = Date.now();
+  const roleList = (roles ?? []).map((r) => r.role as StaffRole);
+  // Owner-only "View as": only an owner with a verified second factor can apply a persona.
+  const persona = roleList.includes("owner") ? (await cookies()).get(VIEW_AS_COOKIE)?.value : undefined;
+  if (persona && isPersona(persona)) {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.currentLevel === "aal2") {
+      return {
+        id: auth.user.id, email: auth.user.email ?? "", displayName: profile?.display_name ?? null, accountType: "member",
+        ageEligible: true, referralCode: profile?.referral_code ?? null, roles: roleList,
+        experiences: PERSONAS[persona].experiences, viewAs: persona, society: PERSONAS[persona].society,
+      };
+    }
+  }
   return {
     id: auth.user.id,
     email: auth.user.email ?? "",
@@ -52,14 +69,15 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     accountType: (profile?.account_type as Viewer["accountType"]) ?? "member",
     ageEligible: Boolean(profile?.age_eligible),
     referralCode: profile?.referral_code ?? null,
-    roles: (roles ?? []).map((r) => r.role as StaffRole),
+    roles: roleList,
     experiences: (access ?? [])
       .filter((a) => a.status === "active" && (!a.expires_at || new Date(a.expires_at).getTime() > now))
       .map((a) => a.experience as Experience),
   };
 });
 
-export const isStaff = (v: Viewer | null) => Boolean(v && v.roles.length > 0);
+/** Staff powers on member pages. Switched off while the owner is viewing as a member persona. */
+export const isStaff = (v: Viewer | null) => Boolean(v && v.roles.length > 0 && !v.viewAs);
 export const hasRole = (v: Viewer | null, roles: StaffRole[]) => Boolean(v && v.roles.some((r) => roles.includes(r)));
 
 /** Multi-factor status of the current session (Supabase assurance levels). */

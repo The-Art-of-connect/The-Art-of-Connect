@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Wordmark } from "@/components/Emblem";
 import { getViewer, hasRole, isInsidePreview, isStaff } from "@/lib/auth";
 import { OwnerReview, SectionGate } from "@/components/OwnerReview";
+import { ViewAsBar } from "@/components/ViewAsBar";
 import { AgreementForm } from "@/components/AgreementForm";
 import { createClient } from "@/lib/supabase/server";
 import { SiteSearch } from "@/components/SiteSearch";
@@ -31,7 +32,7 @@ export default async function MemberLayout({ children }: { children: React.React
   const { data: statusRows } = (await sb?.from("section_status").select("path, status, member_note")) ?? { data: null };
   const status = Object.fromEntries((statusRows ?? []).map((r) => [r.path, r.status]));
   const notes = Object.fromEntries((statusRows ?? []).map((r) => [r.path, r.member_note]));
-  const reviewer = hasRole(viewer, ["owner", "executive"]);
+  const reviewer = hasRole(viewer, ["owner", "executive"]) && !viewer.viewAs;
   const searchable = entriesFor(viewer);
   const nav = await getNavState();
   const quick = pick(searchable, ["/app", "/app/journey", "/app/business", "/app/relationships", "/app/counseling", "/app/membership", "/app/safety", "/"]);
@@ -49,6 +50,7 @@ export default async function MemberLayout({ children }: { children: React.React
           </div>
         </div>
       </header>
+      {hasRole(viewer, ["owner"]) && !preview && <ViewAsBar current={viewer.viewAs} />}
       {preview && (
         <div className="border-b border-gold/30 bg-gold/10 px-4 py-2.5 text-center text-xs text-gold sm:text-sm">
           Owner review preview — you’re seeing the member area as an empty new member. Nothing can be saved.{" "}

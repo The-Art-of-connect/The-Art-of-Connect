@@ -1,5 +1,6 @@
 import "server-only";
 import { teachingGuidance } from "@/lib/curricula";
+import { PERSONAS, personaIsPaid } from "@/lib/view-as";
 import { cleanPrefs, styleInstructions } from "@/lib/journey-customize";
 import { formatTraining, selectTraining, type TrainingEntry } from "@/lib/journey-training";
 import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
@@ -14,7 +15,7 @@ import { maybeAutoReload } from "@/lib/journey-commerce";
 import { JOURNEY_EI_GUIDANCE } from "@/lib/emotional-intelligence";
 import { JOURNEY_LOVE_LANGUAGE_GUIDANCE, LOVE_LANGUAGES, isLanguage } from "@/lib/love-languages";
 import {
-  buildJourneyInstructions, effectiveMode, journeyAccessFor, modeAllowed, ownerTestAccess,
+  buildJourneyInstructions, DEFAULT_ENHANCED_PACKAGES, effectiveMode, journeyAccessFor, modeAllowed, ownerTestAccess,
   type JourneyCapability, type JourneyMode, type PaidMembership,
 } from "@/lib/journey";
 import {
@@ -139,6 +140,11 @@ export async function sendJourneyMessage(input: {
   portfolio?: boolean;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
+  // Owner "View as": free personas are refused like any free member; paid personas use the owner's private test budget.
+  if (viewer?.viewAs) {
+    if (!personaIsPaid(viewer.viewAs)) return refuse(403, "Journey is a benefit of paid memberships.");
+    input = { ...input, ownerTest: true };
+  }
   if (!viewer) return refuse(401, "Please sign in to talk with Journey.");
   const db = createAdminClient();
   if (!db) return refuse(503, "Journey isn't available yet.");
@@ -364,6 +370,14 @@ export async function getJourneyStatus(): Promise<{
   const db = createAdminClient();
   const cfg = db ? await loadSettings(db) : null;
   const enabled = Boolean(cfg?.settings.enabled && cfg.settings.paidUsageAuthorized);
+  if (viewer.viewAs) {
+    // Owner "View as": show exactly what this membership would see (a full, unused allowance).
+    const pkg = PERSONAS[viewer.viewAs]?.packageSlug;
+    if (!pkg || !db) return { ...none, enabled };
+    const { data: t } = await db.from("journey_tier_limits").select("monthly_messages").eq("package_slug", pkg).maybeSingle();
+    const access = (cfg?.enhancedPackages ?? DEFAULT_ENHANCED_PACKAGES).includes(pkg) ? "enhanced" : "standard";
+    return { access, enabled, packageSlug: pkg, allowance: t?.monthly_messages != null ? allowanceView(t.monthly_messages, 0, 0, new Date(Date.now() + 30 * 86_400_000)) : null };
+  }
   if (viewer.roles.length) return { access: "staff", enabled, allowance: null, packageSlug: null };
   if (!db || !cfg) return none;
   const m = await membershipFor(db, viewer.id);

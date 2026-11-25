@@ -1,5 +1,6 @@
 import "server-only";
 import { teachingGuidance } from "@/lib/curricula";
+import { personaIsPaid } from "@/lib/view-as";
 import { cleanPrefs, DEFAULT_PREFS, paceSpeed, styleInstructions } from "@/lib/journey-customize";
 import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
 import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
@@ -34,6 +35,10 @@ export type VoiceStart =
 export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; ownerTest?: boolean; lesson?: string | null; discovery?: string | null }): Promise<VoiceStart> {
   const viewer = await getViewer();
   if (!viewer) return { ok: false, message: "Please sign in to talk with Journey." };
+  if (viewer.viewAs) {
+    if (!personaIsPaid(viewer.viewAs)) return { ok: false, message: "Journey is a benefit of paid memberships." };
+    input = { ...input, ownerTest: true };
+  }
   const db = createAdminClient();
   const key = serverSecret("OPENAI_API_KEY");
   if (!db || !key) return { ok: false, message: "Talk to Journey opens soon." };
