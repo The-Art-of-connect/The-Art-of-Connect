@@ -241,6 +241,7 @@ export async function sendJourneyMessage(input: {
   if (input.lesson) instructions += `\n\n${await teachingGuidance(db, input.lesson)}`;
   const { data: prefRow } = await db.from("journey_voice_preferences").select("presentation, voice, age_style, language, accent, personality, pace, avatar").eq("user_id", viewer.id).maybeSingle();
   if (prefRow) instructions += `\n\n${styleInstructions(cleanPrefs({ ...prefRow, age: prefRow.age_style }), false)}`;
+  instructions += "\n\n# Professional support\nWhen qualified human support could genuinely help, you may gently offer the Counseling & Wellness Center (Counseling in the member menu), open to every member, as an option they are free to decline. Never present it as a diagnosis or a requirement. If anyone may be in danger, give emergency resources first (911 in the U.S.; call or text 988).";
   instructions += `\n\n# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`;
   // Founder-approved training: only APPROVED entries, only the few most relevant to this message.
   const [{ data: trained }, { data: tcats }] = await Promise.all([

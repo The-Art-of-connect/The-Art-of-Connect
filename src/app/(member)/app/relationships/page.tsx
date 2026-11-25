@@ -21,7 +21,7 @@ const COUPLES = [
   { title: "Private reflections", body: "Your individual reflections — never shared with your partner unless you choose.", image: "/images/library/love/sunlit-anniversary.webp" },
   { title: "Invite your partner", body: "A secure invitation. Your shared space opens only when your partner accepts.", image: "/images/library/love/first-dance.webp", position: "50% 60%" },
   { title: "Journey for couples", body: "Plan memorable dates, communicate intentionally and surprise your partner.", href: "/app/journey", image: "/images/library/journey/orb-glow.webp" },
-  { title: "Professional support", body: "Consent-based referrals to counselors and coaches, and appointment scheduling.", href: "/app/counseling/professionals", image: "/images/library/business/advisory-lounge.webp" },
+  { title: "Professional support", body: "Consent-based referrals to counselors and coaches, and appointment scheduling.", href: "/app/wellness", image: "/images/library/business/advisory-lounge.webp" },
 ];
 
 export default async function InLove() {

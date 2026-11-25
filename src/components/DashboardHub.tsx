@@ -16,7 +16,7 @@ const QUICK = [
 type Discovery = { percent: number; modulesDone: number; totalModules: number; nextHref: string };
 
 /** The member's home base: search, pick up where you left off, and every space one tap away. */
-const GROUP_EXPERIENCE: Record<string, string> = { relationships: "relationships", professional: "business", counseling: "counseling" };
+const GROUP_EXPERIENCE: Record<string, string> = { relationships: "relationships", professional: "business" };
 
 export function DashboardHub({ state, discovery, experiences }: { state: NavState; discovery: Discovery; experiences: string[] }) {
   // The Art of Self and Journey are for everyone; society spaces only for members who have them.
