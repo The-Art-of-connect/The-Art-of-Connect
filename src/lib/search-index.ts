@@ -39,6 +39,7 @@ export const MEMBER_PAGES: SearchEntry[] = [
   member("/app/verify", "Verify your identity", "Your membership", "Confirm your identity for a verified badge.", "verification id identity verified badge"),
   member("/app/safety", "Safety & privacy", "Your membership", "Blocking, reporting and privacy controls.", "block report privacy safety harassment appeal"),
   member("/app/journey", "Journey", "Journey", "Your AI concierge for business, life and love.", "ai assistant chat concierge journey guidance"),
+  member("/app/journey/check-ins", "Journey check-ins", "Journey", "Morning manifestations, evening reflections and personal check-ins.", "check in check-ins reminders manifestation affirmation reflection notifications quiet hours"),
   member("/app/journey/daily", "My Daily Journey", "Journey", "Daily manifestations, reflections and journaling.", "daily manifestation affirmation reflection"),
   member("/app/journey/library", "The Library", "Journey", "The Art of… knowledge library.", "library knowledge learn modules art of"),
   member("/app/journey/sessions", "Private Sessions", "Journey", "Private guided sessions with Journey.", "sessions private session guided"),

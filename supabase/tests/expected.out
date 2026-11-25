@@ -540,3 +540,25 @@ v16-9) The member can erase their own history (expect 0):
 0
 v16-10) Anonymous visitors are refused (expect permission denied):
 ERROR:  permission denied for table discovery_answers
+v17-1) A member chooses morning manifestations and email check-ins (expect t|t|f):
+t|t|f
+v17-2) The member asks Journey to check in after an interview (expect 1):
+1
+v17-3) A member cannot pretend a check-in came from Journey (expect error):
+ERROR:  new row violates row-level security policy for table "journey_checkins"
+v17-4) A member cannot create check-ins for someone else (expect error):
+ERROR:  new row violates row-level security policy for table "journey_checkins"
+v17-5) Another member sees nothing (expect 0|0):
+0|0
+v17-6) A member cannot change the global settings (expect 0):
+0
+v17-7) The OWNER cannot read members check-ins or preferences (expect 0|0):
+0|0
+v17-8) The owner sees totals only (expect 1|1|1):
+1|1|1
+v17-9) The owner can change the global settings (expect 1):
+1
+v17-10) A member gets no totals (expect t = nothing returned):
+t
+v17-11) Anonymous visitors are refused (expect permission denied):
+ERROR:  permission denied for table journey_checkins
