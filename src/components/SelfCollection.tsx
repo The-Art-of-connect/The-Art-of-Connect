@@ -9,6 +9,10 @@ export function SelfCollection() {
       <p className="eyebrow">The Art of Self</p>
       <h2 id="aos-title" className="display mt-2 text-4xl sm:text-5xl">Every part of you, <span className="italic text-burgundy">honored.</span></h2>
       <p className="mt-3 max-w-2xl text-muted">Explore at your own pace, in any order. Each section is optional, private and yours to return to whenever you wish.</p>
+      <Link href="/app/know-yourself/portfolio" className="theme-dark mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-ink px-6 py-5 text-ivory transition hover:brightness-110">
+        <span><span className="eyebrow block">Everything you&rsquo;ve discovered, together</span><span className="display mt-1 block text-2xl text-gold-bright">My Personal Discovery Portfolio</span></span>
+        <span className="btn btn-gold btn-sm">Open my portfolio</span>
+      </Link>
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {SELF_SECTIONS.map((s, i) => {
           const card = (
