@@ -4,7 +4,10 @@ import { startVoice } from "@/lib/journey-voice";
 import { allow } from "@/lib/ratelimit";
 
 export const dynamic = "force-dynamic";
-const Body = z.object({ mode: z.enum(["business", "life", "love", "concierge"]), style: z.enum(["warm", "calm", "confident", "soft", "friendly"]), ownerTest: z.boolean().optional() });
+const Body = z.object({ mode: z.enum(["business", "life", "love", "concierge"]), style: z.enum(["warm", "calm", "confident", "soft", "friendly"]), ownerTest: z.boolean().optional(),
+  lesson: z.string().regex(/^[a-z0-9-]{2,60}(\/[a-z0-9-]{2,60})?$/).nullish(),
+  discovery: z.string().regex(/^[a-z-]{2,40}$/).nullish(),
+});
 
 /** Mints a short-lived voice key only after membership, minutes and budget checks pass. */
 export async function POST(req: Request) {

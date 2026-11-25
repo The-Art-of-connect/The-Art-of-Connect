@@ -6,14 +6,14 @@ import { PROFILE_LINKS } from "@/lib/nav";
 import type { NavState } from "@/lib/nav-state";
 import { NavIcon } from "@/components/nav/NavIcons";
 
-/** The member's own menu: dashboard, profile, membership, credits, notifications, privacy and sign out. */
+/** The member's own menu: dashboard, profile, membership, Journey allowance, notifications, privacy and sign out. */
 export function ProfileList({ state, onNavigate }: { state: NavState; onNavigate?: () => void }) {
   return (
     <div className="theme-ivory overflow-hidden rounded-2xl border border-champagne/70 bg-ivory text-left text-text shadow-2xl">
       <div className="border-b border-champagne/50 px-5 py-4">
         <p className="display text-xl text-burgundy">{state.name ?? "My account"}</p>
         {state.paid ? (
-          <p className="mt-1 text-xs text-muted">Journey credits: <span className="font-semibold text-gold-deep">{state.credits ?? "—"}</span> available</p>
+          <p className="mt-1 text-xs text-muted">Journey, included: <span className="font-semibold text-gold-deep">{state.credits ?? "—"}</span> messages left this month</p>
         ) : state.staff ? (
           <p className="mt-1 text-xs text-muted">Team account</p>
         ) : (

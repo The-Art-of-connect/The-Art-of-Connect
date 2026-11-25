@@ -61,7 +61,7 @@ export function DashboardHub({ state, discovery }: { state: NavState; discovery:
           <Link href={state.paid ? "/app/journey" : "/membership"} className="glass lift flex flex-col justify-between p-6">
             <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy text-ivory"><NavIcon name="journey" /></span><p className="text-xs uppercase tracking-wide text-faint">Journey</p></div>
             {state.paid ? (
-              <><p className="display mt-3 text-2xl text-burgundy">{state.credits ?? 0} credits available</p><p className="mt-1 text-sm text-muted">Talk with Journey, or continue self-guided at no cost.</p></>
+              <><p className="display mt-3 text-2xl text-burgundy">{state.credits ?? 0} Journey messages left</p><p className="mt-1 text-sm text-muted">Talk with Journey, or continue self-guided at no cost.</p></>
             ) : (
               <><p className="display mt-3 text-2xl text-burgundy">Self-guided learning</p><p className="mt-1 text-sm text-muted">Every lesson is open to you. Journey is included with paid memberships.</p></>
             )}
@@ -103,7 +103,7 @@ export function DashboardHub({ state, discovery }: { state: NavState; discovery:
           ))}
           <Link href="/app/membership" className="glass lift flex items-start gap-4 p-6">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-champagne/40 text-burgundy"><NavIcon name="profile" className="h-6 w-6" /></span>
-            <span><span className="display block text-2xl text-burgundy">My account</span><span className="block text-sm text-muted">Membership, credits, notifications, privacy and verification.</span></span>
+            <span><span className="display block text-2xl text-burgundy">My account</span><span className="block text-sm text-muted">Membership, Journey allowance, notifications, privacy and verification.</span></span>
           </Link>
         </div>
       </div>

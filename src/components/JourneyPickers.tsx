@@ -29,8 +29,12 @@ const VOICES: { id: "warm" | "calm" | "confident" | "soft" | "friendly"; name: s
 
 type Status = "idle" | "connecting" | "live" | "paused" | "ended";
 
-export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs }: {
+export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, lesson = null, discovery = null, mode = "life" }: {
   minutes: { remaining: number; total: number } | null;
+  /** A curriculum lesson ("section/lesson") or discovery category this live session is about. */
+  lesson?: string | null;
+  discovery?: string | null;
+  mode?: "business" | "life" | "love" | "concierge";
   initialStyle?: (typeof VOICES)[number]["id"];
   initialTranscripts?: boolean;
   available: boolean;
@@ -81,7 +85,7 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
     } catch {
       setStatus("idle"); setNote("Journey needs permission to use your microphone. You can allow it in your browser settings, or chat in writing instead."); return;
     }
-    const r = await fetch("/api/journey/voice/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "life", style: voice, ownerTest }) }).then((x) => x.json()).catch(() => null);
+    const r = await fetch("/api/journey/voice/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, style: voice, ownerTest, lesson, discovery }) }).then((x) => x.json()).catch(() => null);
     if (!r?.ok) { stream.getTracks().forEach((t) => t.stop()); setStatus("idle"); setNote(r?.message ?? "Talk to Journey isn't available right now."); return; }
     const pc = new RTCPeerConnection();
     const audio = new Audio(); audio.autoplay = true;

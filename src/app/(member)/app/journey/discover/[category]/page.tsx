@@ -35,6 +35,7 @@ export default async function DiscoverySession({ params }: { params: Promise<{ c
       <Link href="/app/journey/discover" className="text-sm font-semibold text-gold">← All discovery sessions</Link>
       <h1 className="display mt-4 text-4xl sm:text-5xl">{c.title}</h1>
       <p className="mt-2 max-w-2xl text-muted">{c.intro}</p>
+      {paid && <Link href={`/app/journey/voice?discover=${c.key}`} className="btn btn-gold btn-sm mt-4">Prefer to talk? Start a live session</Link>}
 
       <div className="mt-8">
         {session ? (

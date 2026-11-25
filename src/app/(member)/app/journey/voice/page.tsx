@@ -6,10 +6,20 @@ import { getJourneyStatus, membershipFor } from "@/lib/journey-server";
 import { VoiceStudio } from "@/components/JourneyPickers";
 import { LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
 import { saveVoicePrefs } from "@/app/actions/journey-member";
+import { CURRICULA } from "@/lib/curricula";
+import { discoveryCategory, discoveryMode } from "@/lib/journey-discovery";
 
 export const metadata = { title: "Talk to Journey" };
 
-export default async function TalkToJourney() {
+export default async function TalkToJourney({ searchParams }: { searchParams: Promise<{ lesson?: string; discover?: string }> }) {
+  const sp = await searchParams;
+  const lesson = /^[a-z0-9-]{2,60}(\/[a-z0-9-]{2,60})?$/.test(sp.lesson ?? "") ? sp.lesson! : null;
+  const [sectionKey, lessonSlug] = (lesson ?? "").split("/");
+  const curriculum = lesson ? CURRICULA[sectionKey] : null;
+  const lessonTitle = curriculum ? (curriculum.lessons.find((l) => l.slug === lessonSlug)?.title ?? curriculum.title) : null;
+  const disc = sp.discover ? discoveryCategory(sp.discover) : null;
+  const topicTitle = lessonTitle ?? (disc ? `${disc.title} discovery` : null);
+  const backHref = curriculum ? `/app/know-yourself/${sectionKey === "emotional-intelligence" ? "emotional-intelligence/lessons" : sectionKey}${lessonSlug ? `#${lessonSlug}` : ""}` : disc ? `/app/journey/discover/${disc.key}` : null;
   const viewer = (await getViewer())!;
   const status = await getJourneyStatus();
   const supabase = await createClient();
@@ -32,16 +42,23 @@ export default async function TalkToJourney() {
   return (
     <>
       <p className="eyebrow">Journey</p>
-      <h1 className="display mt-3 text-5xl sm:text-6xl">Talk to Journey</h1>
+      <h1 className="display mt-3 text-5xl sm:text-6xl">{topicTitle ? "Live session with Journey" : "Talk to Journey"}</h1>
+      {topicTitle && (
+        <p className="mt-4 inline-flex flex-wrap items-center gap-3 rounded-full border border-champagne/70 bg-champagne/15 px-5 py-2 text-sm">
+          <span className="font-semibold text-burgundy">{topicTitle}</span>
+          {backHref && <Link href={backHref} className="text-gold-deep underline-offset-2 hover:underline">Back to the lesson</Link>}
+        </p>
+      )}
       <p className="mt-3 max-w-2xl text-muted">Natural, two-way spoken conversation with the same warmth, memory permissions and philosophy as written Journey. Switch between voice and chat whenever you like.</p>
       <div className="mt-10">
         <VoiceStudio minutes={minutes} available={available} reason={reason} ownerTest={owner && status.access === "staff"}
-          initialStyle={(prefs?.voice_style as "warm") ?? "warm"} initialTranscripts={prefs?.save_transcripts ?? false} onSavePrefs={saveVoicePrefs} />
+          initialStyle={(prefs?.voice_style as "warm") ?? "warm"} initialTranscripts={prefs?.save_transcripts ?? false} onSavePrefs={saveVoicePrefs}
+          lesson={lesson} discovery={disc?.key ?? null} mode={disc ? discoveryMode(disc.key) : "life"} />
       </div>
       <LuxSection title="Designed around you">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <LuxCard title="Speak naturally" body="Interrupt, pause or change direction anytime — Journey follows the conversation as a thoughtful listener would." />
-          <LuxCard title="Your voice, your choice" body="Choose from approved voices, preview them, and Journey remembers your preference." />
+          <LuxCard title="Your voice, your choice" body="Choose from approved voices and preview them. Journey remembers your choice and uses it in every live session across The Art of Connect: lessons, discovery sessions and conversations." />
           <LuxCard title="Always in control" body="Mute, pause or end at any moment. Conversations close automatically after a quiet period or when your minutes are used." />
           <LuxCard title="Optional transcripts" body="Keep a private written record of what Journey said, or don't — your choice each time." />
           <LuxCard title="Clear minutes" body="Your remaining voice minutes are always visible. Nothing is ever charged automatically unless you turn on Auto-Reload." />
