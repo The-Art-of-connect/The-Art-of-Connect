@@ -6,11 +6,11 @@ import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
 import { joinWaitlist, validatePromo, type WaitlistState } from "@/app/actions/waitlist";
 import { EXPERIENCES, type Experience } from "@/lib/experiences";
 import {
+  annualIncentiveLabel,
   formatMoney,
   normalizeSelection,
   quote,
   selectionToQuery,
-  tierFor,
   type PricingCatalogue,
   type Promotion,
   type Selection,
@@ -18,6 +18,12 @@ import {
 
 type Mode = "enroll" | "preview" | "change" | "checkout";
 
+/**
+ * Membership builder. Visitors choose experiences (and, for In Love, single or
+ * couple) or an exclusive membership; the matching package, its benefits, the
+ * bundle saving and monthly/annual totals update live. Amounts shown here are
+ * recalculated on the server at checkout — nothing here is trusted for billing.
+ */
 export function MembershipBuilder({
   catalogue,
   initial,
@@ -32,7 +38,7 @@ export function MembershipBuilder({
   onChangeSubmit?: (sel: Selection, promo: string | null) => void;
 }) {
   const [sel, setSel] = useState<Selection>(() => normalizeSelection(catalogue, initial));
-  const [loveStatus, setLoveStatus] = useState<"single" | "couple" | null>(initial.couples ? "couple" : null);
+  const [loveChosen, setLoveChosen] = useState<boolean>(Boolean(initial.couples) || initial.experiences?.includes("relationships"));
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<Promotion | null>(null);
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
@@ -41,10 +47,13 @@ export function MembershipBuilder({
 
   const q = useMemo(() => quote(catalogue, sel, promo), [catalogue, sel, promo]);
   const money = (c: number | null | undefined) => formatMoney(c, catalogue.currency);
-  const hasLove = sel.experiences.includes("relationships");
-  const memberAddons = catalogue.addons.filter((a) => a.audience === "member" && (!a.requires_experience || sel.experiences.includes(a.requires_experience)));
-  const annualPct = q.tier?.annual_discount_percent ?? catalogue.annual_discount_percent;
   const showPrices = catalogue.published || catalogue.preview;
+  const exclusives = catalogue.packages.filter((p) => p.category === "exclusive");
+  const hasLove = sel.experiences.includes("relationships") && !sel.package;
+  const memberAddons = catalogue.addons.filter((a) => a.audience === "member" && (!a.requires_experience || sel.experiences.includes(a.requires_experience)));
+  const incentive = annualIncentiveLabel(q.pkg?.annual_months_charged ?? catalogue.annual_months_charged);
+  const loveStatus: "single" | "couple" | null = sel.experiences.includes("relationships") ? (sel.couples ? "couple" : loveChosen ? "single" : null) : null;
+  const ready = Boolean(q.pkg) && (!hasLove || loveStatus !== null);
 
   // Keep the URL shareable as the selection changes (no page reload).
   useEffect(() => {
@@ -55,12 +64,15 @@ export function MembershipBuilder({
 
   const toggle = (e: Experience) =>
     setSel((s) => {
-      const experiences = s.experiences.includes(e) ? s.experiences.filter((x) => x !== e) : [...s.experiences, e];
-      return normalizeSelection(catalogue, { ...s, experiences, couples: experiences.includes("relationships") ? s.couples : false });
+      const base = s.package ? [] : s.experiences;
+      const experiences = base.includes(e) ? base.filter((x) => x !== e) : [...base, e];
+      return normalizeSelection(catalogue, { ...s, package: null, experiences, couples: experiences.includes("relationships") ? s.couples : false });
     });
+  const chooseExclusive = (slug: string) =>
+    setSel((s) => normalizeSelection(catalogue, { ...s, package: s.package === slug ? null : slug, experiences: s.package === slug ? [] : s.experiences, couples: false }));
   const setStatus = (st: "single" | "couple") => {
-    setLoveStatus(st);
-    if (st === "single") setSel((s) => ({ ...s, couples: false }));
+    setLoveChosen(true);
+    setSel((s) => ({ ...s, couples: st === "couple" }));
   };
 
   const share = async () => {
@@ -84,44 +96,26 @@ export function MembershipBuilder({
       setPromoMsg(p ? `${p.code} applied${p.description ? ` — ${p.description}` : ""}` : "That code isn’t valid right now.");
     });
 
-  const tierCards = [1, 2, 3].map((n) => tierFor(catalogue, n)).filter(Boolean);
   const joinHref = `/join?${selectionToQuery(sel)}${loveStatus ? `&status=${loveStatus}` : ""}`;
+  let step = 0;
+  const next = () => String(++step).padStart(2, "0");
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:items-start">
       {/* ── Steps ─────────────────────────────────────── */}
       <div className="space-y-12">
-        {/* Tier ladder */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3" aria-live="polite">
-          {tierCards.map((t) => {
-            const active = q.tier?.slug === t!.slug;
-            return (
-              <div
-                key={t!.slug}
-                className={`rounded-2xl border p-3 text-center transition-all duration-500 sm:p-4 ${active ? "border-champagne bg-champagne/15 shadow-[0_12px_40px_-20px_rgb(168_138_92/0.9)]" : "border-line"}`}
-              >
-                <p className={`text-[0.62rem] font-semibold tracking-[0.2em] uppercase ${active ? "text-gold" : "text-faint"}`}>
-                  {t!.experience_count === 3 ? "All three" : `${t!.experience_count} experience${t!.experience_count > 1 ? "s" : ""}`}
-                </p>
-                <p className="display mt-1 text-xl leading-tight sm:text-2xl">{t!.name.replace(" Membership", "")}</p>
-                {showPrices && t!.bundle_discount_percent ? (
-                  <p className="mt-1 text-xs text-muted">Save {Number(t!.bundle_discount_percent)}%</p>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Step 1: experiences */}
+        {/* Step: experiences */}
         <fieldset>
           <legend className="flex items-baseline gap-3">
-            <span className="display text-3xl text-gold">01</span>
+            <span className="display text-3xl text-gold">{next()}</span>
             <span className="text-lg font-semibold">Choose your experiences</span>
           </legend>
+          <p className="mt-2 text-sm text-muted">Choose one, two or all three — combinations are bundled at a lower rate.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             {catalogue.experiences.map((e) => {
-              const on = sel.experiences.includes(e.experience);
+              const on = !sel.package && sel.experiences.includes(e.experience);
               const info = EXPERIENCES[e.experience];
+              const single = catalogue.packages.find((p) => p.category === "single" && p.experiences.length === 1 && p.experiences[0] === e.experience && p.love_track !== "couple");
               return (
                 <button
                   key={e.experience}
@@ -138,10 +132,10 @@ export function MembershipBuilder({
                       ✓
                     </span>
                     <div className="absolute inset-x-0 bottom-0 p-4">
-                      <p className="eyebrow !text-[0.6rem]">{e.subtitle}</p>
+                      <p className="eyebrow !text-[0.6rem]">{single?.name ?? e.subtitle}</p>
                       <p className="display mt-1 text-3xl text-ivory">{e.name}</p>
                       <p className="mt-1 text-sm text-ivory/90">
-                        {showPrices && e.monthly_price_cents != null ? `${money(e.monthly_price_cents)} / month` : info.caption}
+                        {showPrices && single?.monthly_price_cents != null ? `From ${money(single.monthly_price_cents)} / month` : info.caption}
                       </p>
                     </div>
                   </div>
@@ -151,17 +145,17 @@ export function MembershipBuilder({
           </div>
         </fieldset>
 
-        {/* In Love: relationship status (only when In Love is chosen) */}
+        {/* Step: In Love track */}
         {hasLove && (
           <fieldset className="explorer-panel">
             <legend className="flex items-baseline gap-3">
-              <span className="display text-3xl text-gold">02</span>
+              <span className="display text-3xl text-gold">{next()}</span>
               <span className="text-lg font-semibold">For In Love, are you…</span>
             </legend>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {([
-                ["single", "Single, seeking a connection", "Intentional matchmaking and introductions"],
-                ["couple", "In a relationship", "Tools to grow together, with an optional couples upgrade"],
+                ["single", "Single, seeking a connection", "Intentional matchmaking and meaningful introductions"],
+                ["couple", "In a relationship", "Two secure logins, a shared space and tools to grow together"],
               ] as const).map(([v, label, hint]) => (
                 <label key={v} className={`cursor-pointer rounded-2xl border p-4 transition-colors ${loveStatus === v ? "border-champagne bg-champagne/10" : "border-line-strong hover:border-champagne/60"}`}>
                   <input type="radio" name="loveStatus" value={v} checked={loveStatus === v} onChange={() => setStatus(v)} className="sr-only" />
@@ -170,27 +164,48 @@ export function MembershipBuilder({
                 </label>
               ))}
             </div>
-            {loveStatus === "couple" && (
-              <label className="glass mt-4 flex cursor-pointer items-start gap-4 p-5">
-                <input type="checkbox" checked={sel.couples} onChange={(e) => setSel((s) => ({ ...s, couples: e.target.checked }))} className="mt-1 h-5 w-5 accent-[var(--champagne)]" />
-                <span>
-                  <span className="block font-semibold">
-                    {catalogue.couples_upgrade.name}
-                    {showPrices && catalogue.couples_upgrade.monthly_price_cents != null && (
-                      <span className="ml-2 text-sm font-normal text-muted">+{money(catalogue.couples_upgrade.monthly_price_cents)} / month</span>
-                    )}
-                  </span>
-                  <span className="mt-1 block text-sm text-muted">{catalogue.couples_upgrade.description}</span>
-                </span>
-              </label>
-            )}
+          </fieldset>
+        )}
+
+        {/* Exclusive memberships */}
+        {exclusives.length > 0 && (
+          <fieldset>
+            <legend className="flex items-baseline gap-3">
+              <span className="display text-3xl text-gold">{next()}</span>
+              <span className="text-lg font-semibold">Or choose an exclusive membership</span>
+            </legend>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {exclusives.map((p) => {
+                const on = sel.package === p.slug;
+                return (
+                  <button
+                    key={p.slug}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    onClick={() => chooseExclusive(p.slug)}
+                    className={`theme-dark band relative rounded-[22px] border-2 p-6 text-left transition-all duration-300 ${on ? "border-champagne shadow-[0_18px_50px_-24px_rgb(168_138_92/0.9)]" : "border-line-strong hover:border-champagne/60"}`}
+                  >
+                    {p.highlight && <span className="chip chip-locked absolute right-4 top-4">{p.highlight}</span>}
+                    <p className="eyebrow">{p.tagline}</p>
+                    <p className="display mt-2 text-3xl text-ivory">{p.name}</p>
+                    {showPrices && p.monthly_price_cents != null && <p className="mt-1 text-gold-bright">{money(p.monthly_price_cents)} / month</p>}
+                    <ul className="mt-4 space-y-1.5 text-sm text-ivory/85">
+                      {p.benefits.map((b) => (
+                        <li key={b} className="flex gap-2"><span className="text-gold" aria-hidden="true">✦</span>{b}</li>
+                      ))}
+                    </ul>
+                  </button>
+                );
+              })}
+            </div>
           </fieldset>
         )}
 
         {/* Billing */}
         <fieldset>
           <legend className="flex items-baseline gap-3">
-            <span className="display text-3xl text-gold">{hasLove ? "03" : "02"}</span>
+            <span className="display text-3xl text-gold">{next()}</span>
             <span className="text-lg font-semibold">Billing</span>
           </legend>
           <div className="mt-5 grid grid-cols-2 gap-2 rounded-full border border-line-strong p-1.5 sm:max-w-md">
@@ -203,17 +218,17 @@ export function MembershipBuilder({
                 className={`min-h-11 rounded-full px-3 text-sm font-semibold transition-all ${sel.interval === iv ? "bg-champagne text-espresso" : "text-muted hover:text-text"}`}
               >
                 {iv === "month" ? "Monthly" : "Annual"}
-                {iv === "year" && showPrices && annualPct ? <span className="ml-1.5 text-xs font-medium">· save {Number(annualPct)}%</span> : null}
               </button>
             ))}
           </div>
+          {showPrices && incentive && <p className="mt-3 text-sm text-gold">Annual membership: {incentive}.</p>}
         </fieldset>
 
         {/* Add-ons */}
         {memberAddons.length > 0 && (
           <fieldset>
             <legend className="flex items-baseline gap-3">
-              <span className="display text-3xl text-gold">{hasLove ? "04" : "03"}</span>
+              <span className="display text-3xl text-gold">{next()}</span>
               <span className="text-lg font-semibold">Premium add-ons <span className="text-sm font-normal text-muted">(optional)</span></span>
             </legend>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -229,9 +244,7 @@ export function MembershipBuilder({
                     />
                     <span className="flex items-baseline justify-between gap-3">
                       <span className="font-semibold">{a.name}</span>
-                      {showPrices && a.price_cents != null && (
-                        <span className="shrink-0 text-sm text-muted">{money(a.price_cents)}{a.billing === "monthly" ? " / mo" : " once"}</span>
-                      )}
+                      {showPrices && a.price_cents != null && <span className="shrink-0 text-sm text-muted">{money(a.price_cents)}{a.billing === "monthly" ? " / mo" : " once"}</span>}
                     </span>
                     <span className="mt-1 block text-sm text-muted">{a.description}</span>
                   </label>
@@ -246,68 +259,57 @@ export function MembershipBuilder({
       <aside className="lg:sticky lg:top-28" aria-label="Your membership summary">
         <div className="theme-dark band glass-edge relative overflow-hidden rounded-[28px] p-7 sm:p-8">
           <p className="eyebrow">Your membership</p>
-          <p className="display mt-3 text-4xl" aria-live="polite">{q.tier ? q.tier.name : "Choose an experience"}</p>
-          {q.tier && <p className="mt-2 text-sm text-muted">{q.tier.description}</p>}
+          <p className="display mt-3 text-4xl" aria-live="polite">
+            {q.pkg ? q.pkg.name : sel.experiences.length ? "Not yet offered" : "Choose an experience"}
+          </p>
+          {q.pkg ? (
+            <p className="mt-2 text-sm text-muted">{q.pkg.tagline}{q.pkg.tagline && q.pkg.description ? " — " : ""}{q.pkg.description}</p>
+          ) : sel.experiences.length ? (
+            <p className="mt-2 text-sm text-muted">This combination isn’t available yet. Try another combination or an exclusive membership.</p>
+          ) : null}
 
-          {sel.experiences.length > 0 && (
-            <dl className="mt-7 space-y-3 border-t border-line pt-6 text-sm">
-              {q.lines.map((l) => (
-                <div key={l.label} className="flex justify-between gap-4">
-                  <dt className="text-muted">{l.label}</dt>
-                  <dd>{showPrices ? money(l.monthly_cents) ?? "—" : "—"}<span className="text-faint"> /mo</span></dd>
-                </div>
+          {q.pkg && q.pkg.benefits.length > 0 && (
+            <ul className="mt-6 space-y-2 border-t border-line pt-6 text-sm">
+              {q.pkg.benefits.map((b) => (
+                <li key={b} className="flex gap-2.5"><span className="text-gold" aria-hidden="true">✓</span><span>{b}</span></li>
               ))}
-              {q.priced && q.bundleDiscountMonthly! > 0 && (
-                <div className="flex justify-between gap-4 text-gold">
-                  <dt>Bundle savings</dt>
-                  <dd>−{money(q.bundleDiscountMonthly)}<span className="opacity-80"> /mo</span></dd>
-                </div>
-              )}
-              {sel.couples && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted">{catalogue.couples_upgrade.name}</dt>
-                  <dd>{showPrices ? money(q.couplesMonthly) ?? "—" : "—"}<span className="text-faint"> /mo</span></dd>
-                </div>
-              )}
-              {q.priced && q.addonsMonthly! > 0 && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted">Add-ons</dt>
-                  <dd>{money(q.addonsMonthly)}<span className="text-faint"> /mo</span></dd>
-                </div>
-              )}
-            </dl>
+              {q.couplesMonthly! > 0 && <li className="flex gap-2.5"><span className="text-gold" aria-hidden="true">✓</span><span>{catalogue.couples_upgrade.name}: {catalogue.couples_upgrade.description}</span></li>}
+            </ul>
           )}
 
-          {q.priced ? (
-            <div className="mt-6 space-y-3 border-t border-line pt-6">
-              <div className="flex items-baseline justify-between gap-4">
-                <span className="text-sm text-muted">{sel.interval === "year" ? "Annual total" : "Monthly total"}</span>
+          {hasLove && loveStatus === null && <p className="mt-6 rounded-2xl border border-line px-4 py-3 text-sm text-muted">Tell us whether you’re single or in a relationship to see your In Love membership.</p>}
+
+          {q.priced && ready ? (
+            <div className="mt-6 space-y-3 border-t border-line pt-6 text-sm">
+              <div className="flex justify-between gap-4"><span className="text-muted">{q.pkg!.name}</span><span>{money(q.packageMonthly)}<span className="text-faint"> /mo</span></span></div>
+              {q.couplesMonthly! > 0 && <div className="flex justify-between gap-4"><span className="text-muted">{catalogue.couples_upgrade.name}</span><span>{money(q.couplesMonthly)}<span className="text-faint"> /mo</span></span></div>}
+              {q.addonsMonthly! > 0 && <div className="flex justify-between gap-4"><span className="text-muted">Add-ons</span><span>{money(q.addonsMonthly)}<span className="text-faint"> /mo</span></span></div>}
+              {q.bundleSavingsMonthly! > 0 && (
+                <p className="rounded-xl bg-champagne/15 px-4 py-2.5 text-center text-gold-bright">
+                  Bundled: you save {money(q.bundleSavingsMonthly)} a month versus {money(q.separateMonthly)} separately
+                </p>
+              )}
+              <div className="flex items-baseline justify-between gap-4 border-t border-line pt-4">
+                <span className="text-muted">{sel.interval === "year" ? "Annual total" : "Monthly total"}</span>
                 <span className="display text-4xl text-gold-bright">{money(q.recurringTotal)}</span>
               </div>
-              {sel.interval === "year" && q.annualDiscount! > 0 && (
-                <p className="text-right text-xs text-muted">Includes {money(q.annualDiscount)} annual discount · {money(Math.round(q.annualTotal! / 12))} / month equivalent</p>
+              {sel.interval === "year" ? (
+                <p className="text-right text-xs text-muted">{money(Math.round(q.annualTotal! / 12))} / month equivalent{q.annualSavings! > 0 ? ` · you save ${money(q.annualSavings)} a year` : ""}</p>
+              ) : (
+                <p className="text-right text-xs text-muted">or {money(q.annualTotal)} per year billed annually{q.annualSavings! > 0 ? ` (save ${money(q.annualSavings)})` : ""}</p>
               )}
-              {sel.interval === "month" && <p className="text-right text-xs text-muted">or {money(q.annualTotal)} per year when billed annually</p>}
-              {q.annualSavings! > 0 && (
-                <p className="rounded-xl bg-champagne/15 px-4 py-2.5 text-center text-sm text-gold-bright">You save {money(q.annualSavings)} a year</p>
-              )}
-              {q.oneTimeTotal! > 0 && (
-                <div className="flex justify-between text-sm"><span className="text-muted">One-time fees</span><span>{money(q.oneTimeTotal)}</span></div>
-              )}
-              {q.promotionDiscount! > 0 && (
-                <div className="flex justify-between text-sm text-gold"><span>Promotion</span><span>−{money(q.promotionDiscount)}</span></div>
-              )}
-              <div className="flex justify-between border-t border-line pt-3 text-sm font-semibold"><span>Due today</span><span>{money(q.dueToday)}</span></div>
+              {q.onboardingFee! > 0 && <div className="flex justify-between"><span className="text-muted">One-time onboarding</span><span>{money(q.onboardingFee)}</span></div>}
+              {q.oneTimeTotal! - q.onboardingFee! > 0 && <div className="flex justify-between"><span className="text-muted">One-time add-ons</span><span>{money(q.oneTimeTotal! - q.onboardingFee!)}</span></div>}
+              {q.promotionDiscount! > 0 && <div className="flex justify-between text-gold"><span>Promotion</span><span>−{money(q.promotionDiscount)}</span></div>}
+              <div className="flex justify-between border-t border-line pt-3 font-semibold"><span>Due today</span><span>{money(q.dueToday)}</span></div>
             </div>
-          ) : sel.experiences.length > 0 ? (
-            <p className="mt-6 rounded-2xl border border-line px-4 py-3 text-sm text-muted">
-              Membership pricing will be announced when enrollment opens. Your selection is saved in this page’s link.
-            </p>
+          ) : q.pkg && ready ? (
+            <p className="mt-6 rounded-2xl border border-line px-4 py-3 text-sm text-muted">Membership pricing will be announced when enrollment opens. Your selection is saved in this page’s link.</p>
           ) : null}
 
           {catalogue.preview && <p className="mt-4 text-xs text-gold">Owner preview — draft prices, not visible to the public.</p>}
 
-          {showPrices && q.priced && (mode === "enroll" || mode === "checkout") && (
+          {showPrices && q.priced && ready && (mode === "enroll" || mode === "checkout") && (
             <div className="mt-5 flex gap-2">
               <input value={promoInput} onChange={(e) => setPromoInput(e.target.value)} placeholder="Promo code" className="field !min-h-11 uppercase" aria-label="Promo code" />
               <button type="button" onClick={applyPromo} disabled={!promoInput || checking} className="btn btn-ghost btn-sm !min-h-11 shrink-0">Apply</button>
@@ -317,11 +319,11 @@ export function MembershipBuilder({
 
           <div className="mt-7 space-y-3">
             {mode === "change" || mode === "checkout" ? (
-              <button type="button" disabled={!q.tier || !enrollmentOpen} onClick={() => onChangeSubmit?.(sel, promo?.code ?? null)} className="btn btn-gold w-full">
+              <button type="button" disabled={!ready || !q.priced || !enrollmentOpen} onClick={() => onChangeSubmit?.(sel, promo?.code ?? null)} className="btn btn-gold w-full">
                 {mode === "change" ? "Update my membership" : "Continue to secure payment"}
               </button>
             ) : mode === "preview" ? null : enrollmentOpen ? (
-              <Link href={q.tier ? joinHref : "#build"} aria-disabled={!q.tier} className={`btn btn-gold w-full ${q.tier ? "" : "pointer-events-none opacity-50"}`}>Become a Member</Link>
+              <Link href={ready ? joinHref : "#build"} aria-disabled={!ready} className={`btn btn-gold w-full ${ready ? "" : "pointer-events-none opacity-50"}`}>Become a Member</Link>
             ) : (
               <p className="rounded-2xl bg-champagne/15 px-4 py-3 text-center text-sm font-semibold text-gold-bright">Membership enrollment opens soon</p>
             )}
@@ -329,17 +331,16 @@ export function MembershipBuilder({
               <button type="button" onClick={share} className="btn btn-ghost w-full">{copied ? "Link copied" : "Share this membership"}</button>
             )}
           </div>
-          <p className="mt-5 text-center text-xs text-faint">One account · one subscription · every device, no extra fees · change or cancel any time</p>
+          <p className="mt-5 text-center text-xs text-faint">One private account on every device — no extra device fees · change or cancel any time</p>
           <p className="mt-2 text-center text-xs font-semibold tracking-wide text-gold">Exclusively for adults {catalogue.minimum_member_age}+</p>
         </div>
-
-        {mode === "enroll" && !enrollmentOpen && <NotifyForm sel={sel} loveStatus={loveStatus} tierSlug={q.tier?.slug ?? null} />}
+        {mode === "enroll" && !enrollmentOpen && <NotifyForm sel={sel} loveStatus={loveStatus} packageSlug={q.pkg?.slug ?? null} />}
       </aside>
     </div>
   );
 }
 
-function NotifyForm({ sel, loveStatus, tierSlug }: { sel: Selection; loveStatus: "single" | "couple" | null; tierSlug: string | null }) {
+function NotifyForm({ sel, loveStatus, packageSlug }: { sel: Selection; loveStatus: "single" | "couple" | null; packageSlug: string | null }) {
   const [state, action, pending] = useActionState<WaitlistState, FormData>(joinWaitlist, null);
   const [verified, setVerified] = useTurnstileReady();
   if (state?.ok) return <p className="glass mt-5 p-5 text-center text-sm" role="status">{state.message}</p>;
@@ -350,7 +351,7 @@ function NotifyForm({ sel, loveStatus, tierSlug }: { sel: Selection; loveStatus:
       {sel.experiences.map((e) => <input key={e} type="hidden" name="interests" value={e} />)}
       {sel.addons.map((a) => <input key={a} type="hidden" name="addons" value={a} />)}
       <input type="hidden" name="loveTrack" value={sel.experiences.includes("relationships") ? loveStatus ?? "" : ""} />
-      <input type="hidden" name="desiredTier" value={tierSlug ?? ""} />
+      <input type="hidden" name="desiredTier" value={packageSlug ?? ""} />
       <input type="hidden" name="desiredInterval" value={sel.interval} />
       <input type="hidden" name="couples" value={sel.couples ? "1" : ""} />
       <input name="fullName" autoComplete="name" placeholder="Your name" className="field" aria-label="Your name" />

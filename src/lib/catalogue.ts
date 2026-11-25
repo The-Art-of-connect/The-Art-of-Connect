@@ -12,19 +12,15 @@ const OFFLINE: PricingCatalogue = {
   published: false,
   preview: false,
   currency: "usd",
-  annual_discount_percent: null,
+  annual_months_charged: null,
   minimum_member_age: 40,
   couples_upgrade: { name: "Couples upgrade", description: "Adds a second, secure login for your partner and your shared relationship space.", monthly_price_cents: null },
   referral_reward: null,
   experiences: EXPERIENCE_ORDER.map((k) => ({
     experience: k, name: EXPERIENCES[k].name, subtitle: EXPERIENCES[k].subtitle, description: EXPERIENCES[k].summary,
-    benefits: EXPERIENCES[k].pillars.slice(0, 4), monthly_price_cents: null,
+    benefits: EXPERIENCES[k].pillars.slice(0, 4),
   })),
-  tiers: [
-    { slug: "signature", name: "Signature Membership", description: "Choose any one experience.", experience_count: 1, benefits: ["One experience of your choice", "One secure account on every device", "Upgrade at any time"], eligibility: null, bundle_discount_percent: null, annual_discount_percent: null, setup_fee_cents: null },
-    { slug: "premier", name: "Premier Membership", description: "Choose any two experiences at a bundled rate.", experience_count: 2, benefits: ["Any two experiences", "Bundled savings", "One account, one subscription"], eligibility: null, bundle_discount_percent: null, annual_discount_percent: null, setup_fee_cents: null },
-    { slug: "elite", name: "Elite Membership", description: "All three experiences at our best bundled rate.", experience_count: 3, benefits: ["In Business, In Life and In Love", "Our best bundled rate", "Priority access to new features"], eligibility: null, bundle_discount_percent: null, annual_discount_percent: null, setup_fee_cents: null },
-  ],
+  packages: [],
   addons: [],
   professional_packages: [],
 };
@@ -34,7 +30,17 @@ export const getCatalogue = cache(async (preview = false): Promise<PricingCatalo
   if (!supabase) return OFFLINE;
   const { data, error } = await supabase.rpc("get_public_pricing", { preview });
   if (error || !data) return OFFLINE;
-  return data as PricingCatalogue;
+  // Tolerate an older database (before membership packages) without breaking pages.
+  const d = data as Partial<PricingCatalogue>;
+  return {
+    ...OFFLINE,
+    ...d,
+    annual_months_charged: d.annual_months_charged ?? null,
+    experiences: d.experiences?.length ? d.experiences : OFFLINE.experiences,
+    packages: Array.isArray(d.packages) ? d.packages : [],
+    addons: Array.isArray(d.addons) ? d.addons : [],
+    professional_packages: Array.isArray(d.professional_packages) ? d.professional_packages : [],
+  } as PricingCatalogue;
 });
 
 export async function getPublicOffers(): Promise<{ code: string; description: string | null; percent_off: number | null; amount_off_cents: number | null; ends_at: string | null }[]> {

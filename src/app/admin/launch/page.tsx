@@ -50,7 +50,7 @@ export default async function LaunchReadinessPage() {
     const [cfg, mfaSetting, offerings, roles, checklist] = await Promise.all([
       supabase.from("pricing_config").select("is_published").maybeSingle(),
       supabase.from("platform_settings").select("key").eq("key", "require_mfa_for_staff").maybeSingle(),
-      supabase.from("experience_offerings").select("monthly_price_cents, is_active"),
+      supabase.from("membership_packages").select("monthly_price_cents, is_active"),
       supabase.from("staff_roles").select("role").eq("role", "owner"),
       supabase.from("launch_checklist").select("*").order("sort_order"),
     ]);
@@ -100,7 +100,7 @@ export default async function LaunchReadinessPage() {
   ];
 
   const commercial: Check[] = [
-    { label: "Pricing", ok: pricing?.is_published ?? false, detail: pricing?.is_published ? "Published." : unpriced ? `Draft — ${unpriced} experience price(s) still empty.` : "Draft — ready for your approval.", action: "Pricing & packages" },
+    { label: "Pricing", ok: pricing?.is_published ?? false, detail: pricing?.is_published ? "Published." : unpriced ? `Draft — ${unpriced} package price(s) still empty.` : "Draft — ready for your approval.", action: "Pricing & packages" },
     { label: "Legal documents", ok: draftDocs === 0, detail: draftDocs ? `${draftDocs} of ${legal.length} documents are drafts pending counsel review.` : "All documents finalized." },
   ];
 
