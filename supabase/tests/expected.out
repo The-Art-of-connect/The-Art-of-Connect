@@ -658,3 +658,18 @@ couples
 couples|0|1
 v27-6) Each change is logged (expect 1):
 1
+v28-1) First message uses an included message (expect t|0):
+t
+0
+v28-2) The last remaining message is kept for the closing summary (expect refused:keep_for_summary):
+refused:keep_for_summary
+v28-3) The summary may use it (expect t):
+t
+v28-4) With nothing left the session pauses; no overdraw (expect refused:paused|t):
+refused:paused
+true
+v28-5) After the member buys credits, the session resumes and uses a purchased credit (expect t|1|f):
+t
+1|false
+v28-6) Members cannot call the billing function (expect error):
+ERROR:  permission denied for function journey_reserve_session

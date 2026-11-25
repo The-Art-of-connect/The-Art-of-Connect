@@ -1,4 +1,6 @@
 "use server";
+import { randomUUID } from "node:crypto";
+import { sendJourneyMessage } from "@/lib/journey-server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getViewer, isInsidePreview, isStaff } from "@/lib/auth";
@@ -6,7 +8,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { startAutoReloadSetup, startPurchase } from "@/lib/journey-commerce";
 import { membershipFor } from "@/lib/journey-server";
-import { createResponse } from "@/lib/openai";
 import type { ActionResult } from "@/app/actions/admin";
 
 /**
@@ -162,21 +163,17 @@ export async function setSessionObjective(_p: R, f: FormData): Promise<R> {
 }
 
 export async function summarizeSession(_p: R, f: FormData): Promise<R> {
-  const db = createAdminClient();
   const m = await me();
-  if (!m || !db) return fail("Preview only.");
+  if (!m) return fail("Preview only.");
   const id = z.uuid().safeParse(f.get("id"));
   const notes = str(f, "notes", 12000);
   if (!id.success || !notes) return fail("Nothing to summarize yet.");
-  const { data: s } = await db.from("journey_settings").select("enabled, paid_usage_authorized, default_model").maybeSingle();
-  if (!s?.enabled || !s.paid_usage_authorized || !s.default_model) return fail("Summaries are available once Journey is live.");
-  const r = await createResponse({
-    model: s.default_model, maxOutputTokens: 500, history: [],
-    instructions: "Write a short, warm, private summary of this Journey Private Session for the member: their objective, key reflections, and 2–4 practical next steps. No diagnosis. Address the member as 'you'.",
-    message: notes,
+  // Same protected path as every session message: the member's own session, the reserved closing message, no unmetered AI.
+  const r = await sendJourneyMessage({
+    mode: "life", sessionId: id.data, sessionSummary: true, requestKey: randomUUID(),
+    message: `Please write my private session summary. Our conversation:\n${notes.slice(-3600)}`,
   });
-  if (!r.ok) return fail("The summary couldn't be created right now.");
-  await db.from("journey_sessions").update({ summary: r.text.slice(0, 6000), status: "completed" }).eq("id", id.data).eq("user_id", m.viewer.id);
+  if (!r.ok) return fail(r.message);
   revalidatePath("/app/journey/sessions");
   return ok("Your private summary is saved.");
 }

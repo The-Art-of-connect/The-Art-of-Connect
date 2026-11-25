@@ -78,6 +78,7 @@ export async function loadSettings(db: Db) {
   return {
     settings,
     ownerTestingEnabled: Boolean(s.owner_testing_enabled),
+    creditOnlyEnabled: Boolean(s.credit_only_enabled),
     enhancedPackages: (s.enhanced_packages ?? []) as string[],
     entitledStatuses: (s.entitled_statuses ?? []) as string[],
     disabled: (s.disabled_capabilities ?? []) as JourneyCapability[],
@@ -126,8 +127,10 @@ export async function sendJourneyMessage(input: {
   conversationId?: string | null;
   ownerTest?: boolean;
   hasAttachment?: boolean;
-  /** A purchased Journey Private Session (time- and message-limited; doesn't use the monthly allowance). */
+  /** A purchased Journey Private Session: session fee PLUS included messages or purchased credits. */
   sessionId?: string | null;
+  /** Server-side only: write this Private Session's closing summary (uses the message kept in reserve). */
+  sessionSummary?: boolean;
   /** Owner tests only: try an approved model and/or a specific personality version (draft or published). */
   model?: string | null;
   instructionVersion?: number | null;
@@ -158,13 +161,21 @@ export async function sendJourneyMessage(input: {
   let periodEnd = new Date();
   let tier: TierLimit | null = null;
 
+  let sessionBilling: SessionBilling | null = null;
   if (input.sessionId && !input.ownerTest) {
     const m = await membershipFor(db, viewer.id);
     const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
-    if (!m || level === "none") return refuse(403, "Journey is a benefit of paid memberships.");
+    const member = Boolean(m && level !== "none");
+    // Without a paid membership, sessions are possible only once the owner turns on credit-only access.
+    if (!member && !cfg.creditOnlyEnabled) return refuse(403, "Journey is a benefit of paid memberships.");
     const { data: js } = await db.from("journey_sessions").select("id, status, ends_at, objective, product_slug").eq("id", input.sessionId).eq("user_id", viewer.id).maybeSingle();
     if (!js || ["completed", "expired", "refunded"].includes(js.status)) return refuse(403, "This session has ended. Your private summary is on the Sessions page.");
-    access = level;
+    access = member ? (level as "standard" | "enhanced") : "standard";
+    const now = new Date();
+    const { data: t } = member ? await db.from("journey_tier_limits").select("monthly_messages").eq("package_slug", m!.membership.packageSlug ?? "").maybeSingle() : { data: null };
+    sessionBilling = member
+      ? { holder: m!.holderId, allowance: t?.monthly_messages ?? 0, periodStart: m!.periodStart, periodEnd: m!.periodEnd, member: true }
+      : { holder: viewer.id, allowance: 0, periodStart: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)), periodEnd: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)), member: false };
   } else if (input.ownerTest) {
     const mfa = await getMfaStatus();
     if (!ownerTestAccess({ roles: viewer.roles, mfaVerified: mfa.verified, ownerTestingEnabled: cfg.ownerTestingEnabled }))
@@ -285,7 +296,7 @@ export async function sendJourneyMessage(input: {
   const promptChars = instructions.length + history.reduce((n, h) => n + h.content.length, 0);
 
   if (input.sessionId && !input.ownerTest) {
-    return runSession(db, cfg.settings, viewer.id, input, instructions, history);
+    return runSession(db, cfg.settings, viewer.id, input, instructions, history, sessionBilling!);
   }
   const d = decide({
     settings: cfg.settings, tier, ownerTest: input.ownerTest, promptChars, messageChars: input.message.length, hasAttachment: input.hasAttachment,
@@ -396,29 +407,56 @@ export async function getJourneyStatus(): Promise<{
 }
 
 /** A message inside a purchased Private Session. */
-async function runSession(db: Db, settings: JourneySettings, userId: string, input: { sessionId?: string | null; message: string; requestKey: string; mode: JourneyMode }, instructions: string, history: ChatTurn[]): Promise<JourneyReply> {
+type SessionBilling = { holder: string; allowance: number; periodStart: Date; periodEnd: Date; member: boolean };
+
+const SESSION_REFUSALS: Record<string, string> = {
+  "refused:session_ended": "This session has reached its time limit. You can create your private summary now.",
+  "refused:session_limit": "This session has reached its message limit. You can create your private summary now.",
+  "refused:keep_for_summary": "You have one message left, kept for your closing summary. Create your summary now, or add messages to continue. Nothing is charged automatically.",
+  "refused:paused": "Your session is paused because your available messages are used. Your remaining session time is saved. Add messages within 7 days to resume, or create your summary. Nothing is charged automatically.",
+  "refused:no_balance": "You'll need available messages to begin this session. Add messages to start; your session time hasn't begun.",
+  "refused:pause_expired": "This session was paused longer than the resume window, so it has closed. Please contact us if you need help.",
+};
+
+/** A message inside a purchased Private Session: session fee already paid; each reply uses an included message or a purchased credit. */
+async function runSession(db: Db, settings: JourneySettings, userId: string, input: { sessionId?: string | null; message: string; requestKey: string; mode: JourneyMode; sessionSummary?: boolean }, instructions: string, history: ChatTurn[], billing: SessionBilling): Promise<JourneyReply> {
   if (!settings.enabled || !settings.paidUsageAuthorized) return refuse(503, "Journey is resting right now. Your session time hasn't started.");
   if (input.message.length > settings.maxInputChars) return refuse(400, `Please keep your message under ${settings.maxInputChars} characters.`);
   const rate = settings.models.find((m) => m.id === settings.defaultModel && m.enabled);
   if (!rate) return refuse(503, "Journey is resting right now. Your session time hasn't started.");
   const { data: js } = await db.from("journey_sessions").select("objective, product_slug").eq("id", input.sessionId!).maybeSingle();
   const { data: prod } = await db.from("journey_session_products").select("name, minutes, objective").eq("slug", js?.product_slug ?? "").maybeSingle();
-  const sessionInstructions = `${instructions}\n\n# This is a Journey Private Session: ${prod?.name ?? "Private Session"} (${prod?.minutes ?? ""} minutes)\nPurpose: ${prod?.objective ?? ""}\nThe member's objective: ${js?.objective ?? "to be explored together"}.\nStructure: clarify the objective, guide the conversation, invite reflection, agree practical next steps. This is AI-guided personal development, not therapy.`;
+  const sessionInstructions = `${instructions}\n\n# This is a Journey Private Session: ${prod?.name ?? "Private Session"} (${prod?.minutes ?? ""} minutes)\nPurpose: ${prod?.objective ?? ""}\nThe member's objective: ${js?.objective ?? "to be explored together"}.\nStructure: clarify the objective, guide the conversation, invite reflection, agree practical next steps. This is nonclinical, AI-guided personal development, not therapy.`
+    + (input.sessionSummary ? "\n\nThe member has ended the session. Write a short, warm, private summary: their objective, key reflections, and 2 to 4 practical next steps. No diagnosis. Address the member as 'you'." : "");
   const reserve = costCents(rate, Math.ceil((sessionInstructions.length + input.message.length) / 4) + 16, 900) ?? 0;
-  const { data: reserved } = await db.rpc("journey_reserve_session", { p_user: userId, p_session: input.sessionId, p_request_key: input.requestKey, p_model: rate.id, p_reserve: reserve });
+  const { data: reserved } = await db.rpc("journey_reserve_session", {
+    p_user: userId, p_session: input.sessionId, p_request_key: input.requestKey, p_model: rate.id, p_reserve: reserve,
+    p_holder: billing.holder, p_allowance: billing.allowance, p_period_start: billing.periodStart.toISOString(), p_summary: Boolean(input.sessionSummary),
+  });
+  const balanceView = async (extraUsed = 0) => {
+    const { data: u } = await db.rpc("journey_holder_usage", { p_holder: billing.holder, p_period_start: billing.periodStart.toISOString() });
+    const usage = u as Record<string, number> | null;
+    return allowanceView(billing.allowance, Number(usage?.period_messages ?? 0) + extraUsed, Number(usage?.purchased_remaining ?? 0), billing.periodEnd);
+  };
   if (typeof reserved !== "string" || reserved.startsWith("refused:")) {
     const why = String(reserved);
-    return refuse(429, why === "refused:session_ended" ? "This session has reached its time limit. You can create your private summary now." : why === "refused:session_limit" ? "This session has reached its message limit. You can create your private summary now." : "Journey is resting right now.");
+    // Auto-Reload only when the member explicitly turned it on; company safeguards still apply.
+    if ((why === "refused:paused" || why === "refused:keep_for_summary") && billing.member) {
+      const r = await maybeAutoReload(userId, billing.holder);
+      if (r === "started") return refuse(402, "Your Auto-Reload is being processed. Your session will be ready to continue in a moment. Nothing else is charged.", await balanceView());
+    }
+    return refuse(why === "refused:paused" || why === "refused:keep_for_summary" || why === "refused:no_balance" ? 402 : 429, SESSION_REFUSALS[why] ?? "Journey is resting right now.", await balanceView());
   }
   const result = await createResponse({ model: rate.id, instructions: sessionInstructions, history, message: input.message, maxOutputTokens: 900 });
   await db.rpc("journey_complete", { p_id: Number(reserved), p_ok: result.ok, p_in: result.inputTokens, p_out: result.outputTokens, p_cost: costCents(rate, result.inputTokens, result.outputTokens) ?? reserve });
   if (!result.ok) {
-    // A failed reply gives the session message back.
+    // A failed reply gives the session message back (journey_complete also returns any purchased credit).
     const { data: cur } = await db.from("journey_sessions").select("messages_used").eq("id", input.sessionId!).maybeSingle();
     if (cur && cur.messages_used > 0) await db.from("journey_sessions").update({ messages_used: cur.messages_used - 1 }).eq("id", input.sessionId!);
-    return refuse(502, "Journey couldn't reply just now. Please try again.");
+    return refuse(502, "Journey couldn't reply just now. Nothing was used. Please try again.");
   }
-  return { ok: true, reply: result.text, conversationId: null, allowance: null };
+  if (input.sessionSummary) await db.from("journey_sessions").update({ summary: result.text.slice(0, 6000), status: "completed" }).eq("id", input.sessionId!).eq("user_id", userId);
+  return { ok: true, reply: result.text, conversationId: null, allowance: await balanceView() };
 }
 
 /** Love-language guidance for Life and Love conversations, plus the member's own profile when they allow Journey to use it. */

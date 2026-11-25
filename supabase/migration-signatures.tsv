@@ -32,3 +32,4 @@
 20261223000001_primary_society.sql	exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'primary_society')
 20261224000001_wellness_center.sql	to_regclass('counseling.support_preferences') is not null
 20261225000001_society_transitions.sql	to_regclass('public.society_transitions') is not null
+20261226000001_session_billing.sql	exists (select 1 from information_schema.columns where table_name = 'journey_sessions' and column_name = 'paused_at')
