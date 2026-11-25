@@ -5,6 +5,7 @@ import { requireStaff } from "@/lib/auth";
 import { audit, rolesFor } from "@/lib/admin";
 import { LAUNCH_KEYS } from "@/lib/launch";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Owner Portal actions. Each one re-checks the caller's role on the server,
@@ -94,6 +95,16 @@ export async function reviewApplication(_prev: ActionResult, form: FormData): Pr
       is_verified: true,
     });
     if (e2) return fail("Application approved, but the counselor record could not be created.");
+  }
+  if (parsed.data.decision !== "in_review") {
+    // Decision email: outcome only — reviewer notes stay internal.
+    const admin = createAdminClient();
+    const { data: u } = (await admin?.auth.admin.getUserById(app.user_id)) ?? { data: null };
+    if (u?.user?.email) {
+      const { sendEmail } = await import("@/lib/email");
+      const { templates } = await import("@/lib/email-templates");
+      await sendEmail(u.user.email, templates.professionalDecision({ name: app.legal_name, decision: parsed.data.decision }), { category: "professional" }).catch(() => null);
+    }
   }
   await audit(`counselor.${parsed.data.decision}`, "counseling.applications", parsed.data.id);
   revalidatePath("/admin/counselors");
@@ -310,20 +321,32 @@ export async function refundPayment(_prev: ActionResult, form: FormData): Promis
   const parsed = z.object({ id: z.uuid(), amount: z.string().trim().max(12) }).safeParse({ id: form.get("id"), amount: String(form.get("amount") ?? "") });
   if (!parsed.success) return fail("Invalid request.");
   const supabase = (await createClient())!;
-  const { data: p } = await supabase.from("payments").select("amount_cents, refunded_amount_cents, stripe_payment_ref, livemode").eq("id", parsed.data.id).maybeSingle();
+  const { data: p } = await supabase.from("payments").select("amount_cents, refunded_amount_cents, stripe_payment_ref, stripe_invoice_id, livemode, status").eq("id", parsed.data.id).maybeSingle();
   if (!p) return fail("Payment not found.");
-  if (!p.stripe_payment_ref) return fail("This payment can’t be refunded automatically. Refund it in the Stripe Dashboard.");
+  if (p.status !== "succeeded" && p.status !== "partially_refunded") return fail("Only successful payments can be refunded.");
   const remaining = p.amount_cents - p.refunded_amount_cents;
   const amount = parsed.data.amount ? Math.round(Number(parsed.data.amount.replace(/[$,]/g, "")) * 100) : remaining;
   if (!Number.isFinite(amount) || amount <= 0 || amount > remaining) return fail(`Enter an amount up to ${(remaining / 100).toFixed(2)}.`);
   const { getStripe } = await import("@/lib/stripe");
   const { stripe, reason } = await getStripe();
   if (!stripe) return fail(reason ?? "Payments are not configured.");
+  let paymentIntent = p.stripe_payment_ref as string | null;
+  if (!paymentIntent && p.stripe_invoice_id) {
+    const { paymentIntentForInvoice } = await import("@/lib/billing");
+    paymentIntent = await paymentIntentForInvoice(stripe, p.stripe_invoice_id);
+  }
+  if (!paymentIntent) return fail("This payment can’t be refunded automatically. Refund it in the Stripe Dashboard.");
   try {
-    await stripe.refunds.create({ payment_intent: p.stripe_payment_ref, amount, metadata: { payment_id: parsed.data.id } });
+    await stripe.refunds.create({ payment_intent: paymentIntent, amount, metadata: { payment_id: parsed.data.id } });
   } catch (e) {
     return fail(e instanceof Error ? e.message : "Stripe could not process the refund.");
   }
+  // Record immediately; the charge.refunded webhook confirms the same values.
+  const refunded = p.refunded_amount_cents + amount;
+  await createAdminClient()
+    ?.from("payments")
+    .update({ stripe_payment_ref: paymentIntent, refunded_amount_cents: refunded, status: refunded >= p.amount_cents ? "refunded" : "partially_refunded" })
+    .eq("id", parsed.data.id);
   await audit("payment.refund", "payments", parsed.data.id, { amount_cents: amount, livemode: p.livemode });
   revalidatePath("/admin/revenue");
   return done(`Refund of $${(amount / 100).toFixed(2)} sent to Stripe. The payment updates when Stripe confirms.`);

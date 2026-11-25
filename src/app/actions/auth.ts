@@ -8,6 +8,8 @@ import { getCatalogue } from "@/lib/catalogue";
 import { ATTR_COOKIE, REF_COOKIE, parseAttribution } from "@/lib/attribution";
 import { env } from "@/lib/env";
 import { allow } from "@/lib/ratelimit";
+import { isDisposableEmail, logSecurityEvent } from "@/lib/security";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export type AuthState = { error?: string; notice?: string } | null;
 
@@ -22,13 +24,25 @@ export async function signIn(_prev: AuthState, form: FormData): Promise<AuthStat
     password: form.get("password"),
   });
   if (!parsed.success) return { error: "Enter your email and password." };
+  const email = parsed.data.email.toLowerCase();
 
-  if (!(await allow("sign-in", 10, 900))) return { error: "Too many attempts. Please wait a few minutes and try again." };
+  if (!(await verifyTurnstile(form)).ok) {
+    await logSecurityEvent("bot_check_failed", { email, details: { form: "sign-in" } });
+    return { error: "Please complete the security check and try again." };
+  }
+  if (!(await allow("sign-in", 10, 900))) {
+    await logSecurityEvent("rate_limited", { email, details: { form: "sign-in" } });
+    return { error: "Too many attempts. Please wait a few minutes and try again." };
+  }
   const supabase = await createClient();
   if (!supabase) return { error: "Sign-in is not available yet." };
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   // One generic message: never reveal whether an account exists.
-  if (error) return { error: "Those details don’t match our records." };
+  if (error) {
+    await logSecurityEvent("login_failed", { email, details: { reason: error.code ?? "invalid_credentials" } });
+    return { error: "Those details don’t match our records." };
+  }
+  await logSecurityEvent("login_succeeded", { email, userId: data.user?.id });
   redirect(safeNext(form.get("next")));
 }
 
@@ -80,6 +94,14 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
   const d = parsed.data;
+  if (!(await verifyTurnstile(form)).ok) {
+    await logSecurityEvent("bot_check_failed", { email: d.email, details: { form: "join" } });
+    return { error: "Please complete the security check and try again." };
+  }
+  if (isDisposableEmail(d.email)) {
+    await logSecurityEvent("signup_blocked", { email: d.email, details: { reason: "disposable_email" } });
+    return { error: "Please use a permanent email address." };
+  }
 
   const dob = new Date(Date.UTC(d.dobYear, d.dobMonth - 1, d.dobDay));
   if (dob.getUTCMonth() !== d.dobMonth - 1 || dob.getUTCDate() !== d.dobDay) return { error: "Please enter a valid date of birth." };
@@ -127,7 +149,15 @@ export async function requestPasswordReset(_prev: AuthState, form: FormData): Pr
   const email = z.email().safeParse(String(form.get("email") ?? "").trim().toLowerCase());
   const generic = { notice: "If an account exists for that email, a secure reset link is on its way. It expires shortly." };
   if (!email.success) return { error: "Please enter a valid email." };
-  if (!(await allow("password-reset", 3, 3600))) return generic;
+  if (!(await verifyTurnstile(form)).ok) {
+    await logSecurityEvent("bot_check_failed", { email: email.data, details: { form: "password-reset" } });
+    return { error: "Please complete the security check and try again." };
+  }
+  if (!(await allow("password-reset", 3, 3600))) {
+    await logSecurityEvent("rate_limited", { email: email.data, details: { form: "password-reset" } });
+    return generic;
+  }
+  await logSecurityEvent("password_reset_requested", { email: email.data });
   const supabase = await createClient();
   if (supabase) await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${env.siteUrl}/auth/callback?next=/reset-password` });
   return generic;
@@ -143,5 +173,6 @@ export async function setNewPassword(_prev: AuthState, form: FormData): Promise<
   if (!data.user) return { error: "This reset link has expired. Please request a new one." };
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: "Your password could not be changed. Please request a new link." };
+  await logSecurityEvent("password_changed", { userId: data.user.id, email: data.user.email ?? undefined });
   return { notice: "Your password has been changed. You can now sign in." };
 }

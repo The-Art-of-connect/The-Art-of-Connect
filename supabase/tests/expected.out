@@ -146,8 +146,8 @@ v4-19) Approve after identity, license lookup and disciplinary check (expect app
 approved
 v4-20) Owner updates the launch checklist (expect done):
 done
-v4-21) Finance reads the checklist but cannot change it (expect 18 rows, then 0 updated):
-18
+v4-21) Finance reads the checklist but cannot change it (expect 25 rows, then 0 updated):
+25
 0
 v4-22) Member reads the checklist (expect 0); records a versioned consent (expect 1):
 0
@@ -164,3 +164,25 @@ v5-5) Owner after MFA still cannot read private journals or dates of birth (expe
 0|0
 v5-6) Ordinary member without MFA still uses their account normally (expect 1 journal):
 1
+v6-1) Five failed sign-ins raise a high-severity alert (expect 1):
+1
+v6-2) Member reads security events and alerts (expect 0, 0):
+0|0
+v6-3) Member tries to write a security event (expect permission denied):
+ERROR:  permission denied for table security_events
+v6-4) Member lists own sessions — coarse location only, no secrets (expect 1, 203.0.x.x):
+1|203.0.x.x
+v6-5) Member lists another member's sessions (expect error):
+ERROR:  Not permitted
+v6-6) Member asks for staff MFA status (expect error):
+ERROR:  Not permitted
+v6-7) Member signs out of all own devices (expect 1):
+1
+v6-8) Owner WITHOUT MFA revokes a member's sessions (expect error):
+ERROR:  Not permitted
+v6-9) Owner with MFA sees the alert and revokes a member's sessions (expect 1, 1):
+1|1
+v6-10) Owner with MFA sees staff MFA status (expect at least 1 row):
+t
+v6-11) Anonymous visitor lists sessions (expect permission denied):
+ERROR:  permission denied for function list_sessions

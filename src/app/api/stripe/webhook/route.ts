@@ -4,9 +4,14 @@ import { serverSecret } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordVerification } from "@/lib/identity";
-import { paymentIntentForInvoice } from "@/lib/billing";
+import { invoiceForPaymentIntent, paymentIntentForInvoice } from "@/lib/billing";
+import { ownerAlertAddress, sendEmail } from "@/lib/email";
+import { templates, type EmailContent } from "@/lib/email-templates";
 
 const ALL = ["business", "counseling", "relationships"] as const;
+const LABEL: Record<string, string> = { business: "In Business", counseling: "In Life", relationships: "In Love" };
+const day = (unix?: number | null) =>
+  unix ? new Date(unix * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }) : null;
 
 /**
  * Stripe → database sync. Signature-verified; the only place subscriptions,
@@ -30,6 +35,32 @@ export async function POST(request: NextRequest) {
     if (!mine) return [];
     const { data } = await db.schema("relationships").from("couple_members").select("user_id").eq("couple_id", mine.couple_id).neq("user_id", userId);
     return (data ?? []).map((r) => r.user_id as string);
+  };
+
+  /**
+   * Member notification. Only the account email and first name are read —
+   * never journals, assessments or other private content. Failures never
+   * block the webhook; the Stripe event id prevents duplicate sends.
+   */
+  const notify = async (userId: string | null | undefined, build: (name: string | null) => EmailContent, category: "membership" | "billing") => {
+    if (!userId) return;
+    try {
+      const [{ data: u }, { data: prof }] = await Promise.all([
+        db.auth.admin.getUserById(userId),
+        db.from("profiles").select("display_name").eq("id", userId).maybeSingle(),
+      ]);
+      const email = u?.user?.email;
+      if (email) await sendEmail(email, build((prof?.display_name as string | null) ?? null), { category, idempotencyKey: `${event.id}:${category}` });
+    } catch {
+      /* email is best-effort */
+    }
+  };
+  const alertOwner = async (title: string, summary: string, portalPath: string) => {
+    try {
+      await sendEmail(ownerAlertAddress(), templates.ownerAlert({ title, summary, portalPath }), { category: "owner_alert", idempotencyKey: `${event.id}:owner` });
+    } catch {
+      /* best-effort */
+    }
   };
 
   const syncSubscription = async (subscription: Stripe.Subscription) => {
@@ -92,9 +123,35 @@ export async function POST(request: NextRequest) {
   switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
-    case "customer.subscription.deleted":
-      await syncSubscription(event.data.object);
+    case "customer.subscription.deleted": {
+      const s = event.data.object;
+      await syncSubscription(s);
+      const m = s.metadata ?? {};
+      if (m.kind === "professional") break;
+      if (event.type === "customer.subscription.created" && ["active", "trialing"].includes(s.status)) {
+        const amount = s.items.data[0]?.price?.unit_amount ?? Number(m.amount_cents) ?? 0;
+        await notify(
+          m.user_id,
+          (name) =>
+            templates.membershipConfirmed({
+              name,
+              tierName: m.tier_name || "membership",
+              experiences: (m.experiences ?? "").split(",").filter(Boolean).map((e) => LABEL[e] ?? e),
+              amount,
+              currency: s.currency,
+              interval: m.interval === "year" ? "year" : "month",
+            }),
+          "membership",
+        );
+      }
+      const prev = (event.data as { previous_attributes?: Partial<Stripe.Subscription> }).previous_attributes;
+      const scheduledCancel = event.type === "customer.subscription.updated" && s.cancel_at_period_end && prev?.cancel_at_period_end === false;
+      if (event.type === "customer.subscription.deleted" || scheduledCancel) {
+        const end = scheduledCancel ? day((s as any).current_period_end ?? s.items.data[0]?.current_period_end) : null;
+        await notify(m.user_id, (name) => templates.membershipCanceled({ name, endDate: end }), "membership");
+      }
       break;
+    }
     case "checkout.session.completed": {
       const code = event.data.object.metadata?.promo;
       if (code) {
@@ -106,10 +163,21 @@ export async function POST(request: NextRequest) {
     case "invoice.paid":
     case "invoice.payment_failed": {
       const inv = event.data.object as any;
-      const subId = inv.subscription ?? inv.parent?.subscription_details?.subscription ?? null;
-      const { data: sub } = subId
-        ? await db.from("subscriptions").select("id, user_id").eq("stripe_subscription_id", subId).maybeSingle()
-        : { data: null };
+      const rawSub = inv.subscription ?? inv.parent?.subscription_details?.subscription ?? null;
+      const subId: string | null = rawSub ? (typeof rawSub === "string" ? rawSub : rawSub.id) : null;
+      const findSub = async () =>
+        subId ? (await db.from("subscriptions").select("id, user_id").eq("stripe_subscription_id", subId).maybeSingle()).data : null;
+      let sub = await findSub();
+      // Stripe may deliver invoice.paid before customer.subscription.created:
+      // record the membership first so the payment is linked to it.
+      if (subId && !sub) {
+        try {
+          await syncSubscription(await stripe.subscriptions.retrieve(subId));
+          sub = await findSub();
+        } catch {
+          /* recorded without a link; a later delivery fills it in */
+        }
+      }
       await db.from("payments").upsert(
         {
           user_id: sub?.user_id ?? null,
@@ -125,6 +193,13 @@ export async function POST(request: NextRequest) {
         },
         { onConflict: "stripe_payment_intent_id" },
       );
+      if (event.type === "invoice.paid" && inv.amount_paid > 0) {
+        await notify(sub?.user_id, (name) => templates.paymentReceipt({ name, amount: inv.amount_paid, currency: inv.currency, date: day(inv.status_transitions?.paid_at ?? inv.created) ?? "today" }), "billing");
+      }
+      if (event.type === "invoice.payment_failed") {
+        await notify(sub?.user_id, (name) => templates.paymentFailed({ name, amount: inv.amount_due, currency: inv.currency }), "billing");
+        await alertOwner("A membership payment failed", "A member’s payment did not go through. Stripe will retry automatically.", "/admin/revenue");
+      }
       break;
     }
     case "identity.verification_session.verified":
@@ -139,10 +214,16 @@ export async function POST(request: NextRequest) {
       const charge = event.data.object;
       const pi = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
       if (pi) {
-        await db
-          .from("payments")
-          .update({ refunded_amount_cents: charge.amount_refunded, status: charge.refunded ? "refunded" : "partially_refunded" })
-          .eq("stripe_payment_ref", pi);
+        const patch = { refunded_amount_cents: charge.amount_refunded, status: charge.refunded ? "refunded" : "partially_refunded" };
+        let { data: hit } = await db.from("payments").update(patch).eq("stripe_payment_ref", pi).select("user_id");
+        if (!hit?.length) {
+          // Payment row not yet linked to its PaymentIntent: match through the invoice.
+          const invoiceId = await invoiceForPaymentIntent(stripe, pi);
+          if (invoiceId) ({ data: hit } = await db.from("payments").update({ ...patch, stripe_payment_ref: pi }).eq("stripe_invoice_id", invoiceId).select("user_id"));
+        }
+        const prevRefunded = (event.data as { previous_attributes?: { amount_refunded?: number } }).previous_attributes?.amount_refunded ?? 0;
+        const thisRefund = charge.amount_refunded - prevRefunded;
+        if (thisRefund > 0) await notify(hit?.[0]?.user_id as string | undefined, (name) => templates.refundIssued({ name, amount: thisRefund, currency: charge.currency }), "billing");
       }
       break;
     }

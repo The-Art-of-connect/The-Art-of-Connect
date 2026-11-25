@@ -3,9 +3,21 @@
  * server and are never hard-coded. Missing values degrade gracefully so the
  * site can be built and previewed before every service is connected.
  */
+/** Returns a clean https URL, or "" if the value isn't a valid web address (stray spaces/quotes are tolerated). */
+export function validUrl(raw: string | undefined) {
+  const v = (raw ?? "").trim().replace(/^["']|["']$/g, "").replace(/\/+$/, "");
+  try {
+    const u = new URL(v);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.origin : "";
+  } catch {
+    return "";
+  }
+}
+
 export const env = {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+  // An invalid value is treated as "not configured" so a typo can never take the whole site down.
+  supabaseUrl: validUrl(process.env.NEXT_PUBLIC_SUPABASE_URL),
   /** Supabase publishable key (new "sb_publishable_…" format) or legacy anon key. */
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
   /** Master safety switch. Anything other than the exact string "false" keeps the platform locked. */
