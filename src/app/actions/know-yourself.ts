@@ -22,7 +22,7 @@ export async function saveSelfDiscovery(_p: ActionResult, f: FormData): Promise<
   const supabase = (await createClient())!;
   const { error } = await supabase.from("self_discovery").upsert(row, { onConflict: "user_id,area" });
   if (error) return { ok: false, message: "Not saved. Please try again." };
-  revalidatePath("/app/know-yourself");
+  revalidatePath("/app/know-yourself", "layout");
   revalidatePath("/app");
   return { ok: true, message: "Saved privately — only you can see this." };
 }

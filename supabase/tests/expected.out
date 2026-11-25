@@ -520,3 +520,23 @@ v15-7) The OWNER cannot read members answers (expect 0):
 0
 v15-8) Anonymous visitors are refused (expect permission denied):
 ERROR:  permission denied for table self_discovery
+v16-1) A member answers two questions and picks values (expect 2):
+2
+v16-2) Updating an answer keeps the earlier version in their history (expect 2 versions):
+2 versions
+v16-3) The member cannot forge history (expect error):
+ERROR:  permission denied for table discovery_history
+v16-4) The member cannot rewrite history (expect permission denied):
+ERROR:  permission denied for table discovery_history
+v16-5) The member sets a growth goal and chooses to explore first (expect 1|explore_first):
+1|explore_first
+v16-6) A member cannot write into someone else's profile (expect error):
+ERROR:  new row violates row-level security policy for table "discovery_answers"
+v16-7) Another member — even a partner or match — sees nothing (expect 0|0|0|0):
+0|0|0|0
+v16-8) The OWNER sees nothing (expect 0|0|0|0):
+0|0|0|0
+v16-9) The member can erase their own history (expect 0):
+0
+v16-10) Anonymous visitors are refused (expect permission denied):
+ERROR:  permission denied for table discovery_answers

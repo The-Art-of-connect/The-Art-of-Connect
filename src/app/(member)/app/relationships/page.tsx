@@ -1,7 +1,7 @@
 import { requireExperience } from "@/lib/auth";
-import { reflectionsWritten } from "@/lib/know-yourself-server";
 import { LivingHero } from "@/components/business/SocietyHero";
-import { KnowYourselfBanner, PhotoCard } from "@/components/Living";
+import { PhotoCard } from "@/components/Living";
+import { DiscoveryInvite } from "@/components/DiscoveryInvite";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,6 @@ const COUPLES = [
 
 export default async function InLove() {
   const { viewer, preview } = await requireExperience("relationships");
-  const done = await reflectionsWritten(viewer.id);
   return (
     <>
       {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — In Love is not open to members yet.</p>}
@@ -38,10 +37,10 @@ export default async function InLove() {
         eyebrow="The Personal Society · In Love" title="Love begins with" gilded="knowing yourself."
         subtitle="Intentional connection for singles 30+ and enrichment for couples — built on self-awareness, respect and honest communication."
         cta={{ href: "/app/relationships/onboarding", label: "Begin your Personal Society journey" }}
-        secondary={{ href: "/app/know-yourself#love", label: "Know yourself first" }}
+        secondary={{ href: "/app/know-yourself", label: "The Art of Knowing Yourself" }}
       />
 
-      <KnowYourselfBanner context="Before you date or marry — know what you need, what you offer and what you won’t accept." done={done} />
+      <DiscoveryInvite userId={viewer.id} back="/app/relationships" context="Before you date, marry or recommit — understand what you need, what you offer, and how to keep your individuality within a partnership." />
 
       <section className="mt-12">
         <p className="eyebrow">For singles · 30+</p>

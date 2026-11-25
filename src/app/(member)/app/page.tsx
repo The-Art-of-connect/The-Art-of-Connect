@@ -7,9 +7,8 @@ import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import { LivingHero } from "@/components/business/SocietyHero";
-import { KnowYourselfBanner } from "@/components/Living";
+import { DiscoveryInvite } from "@/components/DiscoveryInvite";
 import { Greeting } from "@/components/business/Greeting";
-import { reflectionsWritten } from "@/lib/know-yourself-server";
 
 const PHOTO: Record<string, string> = {
   business: "/images/society/roundtable.webp",
@@ -26,7 +25,6 @@ export default async function MemberHome() {
     supabase.from("subscriptions").select("tier_name").eq("user_id", viewer.id).in("status", ["active", "trialing", "past_due"]).maybeSingle(),
     getCatalogue(),
   ]);
-  const done = isInsidePreview(viewer) ? 0 : await reflectionsWritten(viewer.id);
   const referralLink = viewer.referralCode ? `${env.siteUrl}/membership?ref=${viewer.referralCode}` : null;
 
   return (
@@ -40,7 +38,7 @@ export default async function MemberHome() {
         ]}
         eyebrow="The Art of Connect" title="In Business. In Life." gilded="In Love."
         subtitle="Every meaningful connection begins with understanding yourself. Your journey starts here."
-        cta={{ href: "/app/know-yourself", label: "Know yourself first" }}
+        cta={{ href: "/app/know-yourself", label: "The Art of Knowing Yourself" }}
         secondary={{ href: "/app/journey", label: "Meet Journey" }}
       />
       <div className="mt-10">
@@ -61,7 +59,7 @@ export default async function MemberHome() {
           {sub.tier_name} · <Link href="/app/membership" className="text-gold underline">Manage membership</Link>
         </p>
       )}
-      <KnowYourselfBanner context="Know what you will do, what you won’t — and how to say it with respect — before dating, marriage or work." done={done} />
+      <DiscoveryInvite userId={viewer.id} back="/app" />
       <div className="mt-10 grid gap-5 md:grid-cols-3">
         {EXPERIENCE_ORDER.map((key) => {
           const e = EXPERIENCES[key];
