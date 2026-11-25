@@ -1,9 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
 import { requireExperience } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { FEATURE_STATUS, HELP_NEEDED, HELP_OFFERED, basicPathway } from "@/lib/business-options";
 import { saveGoal, setFeatureInterest, toggleReadiness } from "@/app/actions/business";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { SocietyHero } from "@/components/business/SocietyHero";
+import { Greeting } from "@/components/business/Greeting";
+import { insightForToday } from "@/lib/business-insights";
+import { formatWhen } from "@/lib/webinars";
 
 export const metadata = { title: "The Professional Society" };
 export const dynamic = "force-dynamic";
@@ -23,6 +28,13 @@ export default async function BusinessHome({ searchParams }: { searchParams: Pro
     biz.rpc("member_tier"),
     biz.from("conversations").select("id, status, recipient_id").order("last_message_at", { ascending: false }),
   ]);
+  // Live community figures — real records only, never placeholders.
+  const [{ count: openPosts }, { data: nextWebinars }, { data: used }, { data: allowance }] = await Promise.all([
+    biz.from("posts").select("id", { count: "exact", head: true }).eq("status", "published"),
+    biz.from("webinars").select("id, title, host_display_name, starts_at, time_zone").eq("status", "approved").gt("starts_at", new Date().toISOString()).order("starts_at").limit(1),
+    biz.rpc("complimentary_used"),
+    biz.rpc("complimentary_allowance"),
+  ]);
 
   const doneSet = new Set((done ?? []).map((d) => d.item_key));
   const incomplete = (items ?? []).filter((i) => !doneSet.has(i.key));
@@ -32,31 +44,113 @@ export default async function BusinessHome({ searchParams }: { searchParams: Pro
     f.scheduled_at && f.scheduled_status && new Date(f.scheduled_at) <= new Date() ? f.scheduled_status : f.status;
   const pendingRequests = (convs ?? []).filter((c) => c.status === "requested" && c.recipient_id === viewer.id).length;
   const premium = tier === "premium";
+  const readinessShare = items?.length ? doneSet.size / items.length : 0;
+  const progress = Math.round((profile?.onboarding_completed_at ? 50 : 0) + 50 * readinessShare);
+  const next = nextWebinars?.[0];
+  const remaining = Math.max(0, Number(allowance ?? 3) - Number(used ?? 0));
+  const tiles = [
+    { href: "/app/business/board", title: "Connect", sub: "Find business connections", icon: "M12 4.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM6 15.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm12 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM12 8.5v3m0 0-5 4m5-4 5 4" },
+    { href: "/app/business/board/new", title: "Collaborate", sub: "Help or receive help", icon: "M4 6h10v7H8l-4 3.5zM10 16h6l4 3.5V10h-3" },
+    { href: "/app/business/learn", title: "Learn", sub: "Explore webinars", icon: "M4 7.5h11v9H4zM15 10.5l5-3v9l-5-3" },
+    { href: profile?.onboarding_completed_at ? "#pathway" : "/app/business/onboarding", title: "Grow", sub: "Build your business", icon: "M4 18l5.5-5.5 3.5 3.5L20 9m0 0h-5m5 0v5" },
+  ];
 
   return (
     <>
-      {preview && <p className="mb-8 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — The Professional Society is not open to members yet.</p>}
-      <div className="theme-dark band rounded-[28px] p-8 sm:p-10">
-        <p className="eyebrow">The Professional Society · In Business</p>
-        <h1 className="display mt-4 text-4xl sm:text-5xl">{profile?.display_name || profile?.company || "Your business"}</h1>
-        <p className="mt-2 text-muted">Your network. Your growth. Your next opportunity.</p>
-        <p className="mt-4 inline-flex rounded-full border border-champagne/50 px-4 py-1.5 text-xs font-semibold tracking-wide text-gold">
-          {premium ? "Professional Society Member" : "Founding Member · Free business account"}
-        </p>
+      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — The Professional Society is not open to members yet.</p>}
+
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="display text-3xl text-gold">AC</span>
+          <span><span className="block font-semibold leading-tight">The Professional Society</span><span className="block text-[0.65rem] tracking-[0.22em] uppercase text-muted">The Art of Connect</span></span>
+        </div>
+        <span className="rounded-full border border-champagne/50 px-3 py-1 text-xs font-semibold text-gold">{premium ? "Member" : "Founding Member"}</span>
       </div>
+
+      <SocietyHero ctaHref="/app/business/board" />
+
+      <section className="mt-10">
+        <Greeting name={profile?.display_name || viewer.displayName} />
+        <p className="mt-1 text-muted">Welcome to your society. What would you like to accomplish today?</p>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {tiles.map((t, i) => (
+            <Link key={t.title} href={t.href} className="glass lift tile-in group p-5 sm:p-6" style={{ animationDelay: `${120 + i * 90}ms` }}>
+              <svg viewBox="0 0 24 24" className="h-8 w-8 text-gold transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={t.icon} /></svg>
+              <span className="mt-4 block text-xl font-semibold">{t.title}</span>
+              <span className="mt-1 block text-sm text-muted">{t.sub}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <div className="mt-8 grid gap-5 lg:grid-cols-2">
+        <Link href="/app/business/onboarding" className="lift tile-in block rounded-[24px] border border-champagne/40 bg-champagne/20 p-6 sm:p-7" style={{ animationDelay: "500ms" }}>
+          <p className="eyebrow">Your business discovery</p>
+          <p className="display mt-3 text-3xl">{profile?.onboarding_completed_at ? "Your business profile" : "Let’s get to know your business."}</p>
+          <p className="mt-2 text-muted">Your goals. Your challenges. Your expertise.</p>
+          <div className="mt-5 h-2 overflow-hidden rounded-full bg-ivory/70" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Profile progress">
+            <div className="progress-fill h-full rounded-full bg-gradient-to-r from-gold-deep via-champagne to-gold-bright" style={{ width: `${Math.max(progress, 3)}%` }} />
+          </div>
+          <p className="mt-3 flex items-center justify-between text-sm"><span className="text-muted">{profile?.onboarding_completed_at ? `${progress}% complete — keep building` : "Begin your business profile"}</span><span className="text-gold" aria-hidden="true">→</span></p>
+        </Link>
+
+        <Link href="/app/business/board" className="glass lift tile-in block p-6 sm:p-7" style={{ animationDelay: "580ms" }}>
+          <p className="eyebrow">The Business Connection Board</p>
+          <p className="display mt-3 text-3xl">Connections without boundaries.</p>
+          <p className="mt-1 text-sm text-muted">City to city. State to state.</p>
+          <p className="mt-3 text-sm">Exchange expertise, find mentors and discover opportunities to collaborate with fellow business owners.</p>
+          <p className="mt-4 text-sm font-semibold text-gold">
+            {openPosts ? `${openPosts} open ${openPosts === 1 ? "post" : "posts"} from business owners →` : "Founding community · Be the first to post →"}
+            {pendingRequests ? <span className="ml-2 rounded-full bg-burgundy px-2 py-0.5 text-xs text-ivory">{pendingRequests} new request{pendingRequests > 1 ? "s" : ""}</span> : null}
+          </p>
+        </Link>
+
+        <Link href={next ? `/app/business/learn/${next.id}` : "/app/business/learn"} className="glass lift tile-in group block p-6 sm:p-7" style={{ animationDelay: "660ms" }}>
+          <div className="flex gap-4">
+            <div className="relative h-24 w-28 shrink-0 overflow-hidden rounded-2xl sm:h-28 sm:w-36">
+              <Image src="/images/society/presenter.webp" alt="" fill sizes="144px" className="object-cover object-[50%_30%] transition-transform duration-700 group-hover:scale-110" />
+            </div>
+            <div>
+              <p className="eyebrow">The Knowledge Exchange</p>
+              <p className="display mt-2 text-2xl sm:text-3xl">Learn from business owners.</p>
+            </div>
+          </div>
+          {next ? (
+            <p className="mt-3 text-sm"><span className="font-semibold">Next: {next.title}</span><span className="block text-muted">{next.host_display_name} · {formatWhen(next.starts_at, next.time_zone).date} · {formatWhen(next.starts_at, next.time_zone).time}</span></p>
+          ) : (
+            <p className="mt-3 text-sm text-muted">Discover webinars, share your knowledge and expand your expertise. The first webinars are being prepared.</p>
+          )}
+          <p className="mt-4 text-sm font-semibold text-gold">{premium ? "Unlimited webinars with your membership →" : `${remaining} complimentary ${remaining === 1 ? "webinar" : "webinars"} remaining →`}</p>
+        </Link>
+
+        <Link href={premium ? "/app/journey" : "/membership"} className="theme-dark lift tile-in relative block overflow-hidden rounded-[24px] bg-ink p-6 sm:p-7" style={{ animationDelay: "740ms" }}>
+          <div className="glow-breathe pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgb(197_165_114/0.45),transparent_70%)]" aria-hidden="true" />
+          <div className="relative flex items-start gap-4">
+            <span className="display flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-champagne/60 text-2xl text-gold-bright">J</span>
+            <span className="min-w-0 flex-1">
+              <span className="display block text-3xl text-gold-bright">Journey for Business</span>
+              <span className="block text-sm text-muted">{premium ? "Your AI business concierge" : "Exclusive paid membership benefit"}</span>
+            </span>
+            {!premium && <svg viewBox="0 0 24 24" className="h-6 w-6 text-gold" fill="none" stroke="currentColor" strokeWidth="1.6" aria-label="Locked"><rect x="5" y="10.5" width="14" height="9.5" rx="2" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>}
+          </div>
+          <p className="relative mt-4">Your vision deserves strategy, clarity and direction.</p>
+          <span className="relative mt-5 inline-flex rounded-full border border-champagne/60 px-5 py-2 text-sm text-gold-bright">{premium ? "Talk with Journey" : "Explore Membership Benefits"}</span>
+        </Link>
+      </div>
+
+      <figure className="theme-dark tile-in relative mt-8 overflow-hidden rounded-[24px] bg-ink px-6 py-8 sm:px-10" style={{ animationDelay: "820ms" }}>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_80%_at_0%_100%,rgb(116_63_77/0.45),transparent_70%)]" aria-hidden="true" />
+        <p className="relative eyebrow">Today’s business insight</p>
+        <blockquote className="display relative mt-3 text-2xl italic leading-snug text-ivory sm:text-3xl">“{insightForToday()}”</blockquote>
+        <figcaption className="relative mt-3 text-xs text-muted">The Art of Connect · a new insight every day</figcaption>
+      </figure>
 
       {welcome && <p className="mt-6 rounded-2xl border border-success/40 bg-success/10 p-4 text-sm text-success">Thank you — your business profile is saved.</p>}
 
-      {!profile?.onboarding_completed_at ? (
-        <div className="glass glass-edge mt-8 p-8 text-center">
-          <h2 className="display text-3xl">Let’s talk about your business.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-muted">Tell us how we can help your business — and how your business can help others. It takes about ten minutes, and you can update it any time.</p>
-          <Link href="/app/business/onboarding" className="btn btn-gold mt-6">Begin</Link>
-        </div>
-      ) : (
+      {!profile?.onboarding_completed_at ? null : (
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-6">
-            <section className="glass p-7">
+            <section id="pathway" className="glass scroll-mt-24 p-7">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="display text-3xl">Your business development pathway</h2>
                 <Link href="/app/business/onboarding" className="text-sm text-gold underline">Update my answers</Link>
