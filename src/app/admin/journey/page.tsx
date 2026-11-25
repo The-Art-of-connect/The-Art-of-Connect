@@ -5,6 +5,8 @@ import { isOpenAIConfigured } from "@/lib/openai";
 import { INITIAL_MONTHLY_MESSAGES } from "@/lib/journey-budget";
 import { JOURNEY_PHILOSOPHY } from "@/lib/journey";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { getLaunchState } from "@/lib/launch";
+import { verifyOpenAI } from "@/app/actions/journey-admin";
 import { OwnerTest } from "@/components/admin/OwnerTest";
 import { Empty, NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
 import {
@@ -29,7 +31,7 @@ export default async function JourneyAdmin() {
     supabase.from("journey_instruction_versions").select("id, version, note, status, created_at, published_at").order("version", { ascending: false }).limit(20),
     supabase.from("journey_knowledge").select("id, mode, title, status, updated_at").order("updated_at", { ascending: false }).limit(50),
     supabase.from("journey_examples").select("id, mode, member_message, status").order("updated_at", { ascending: false }).limit(30),
-    supabase.from("journey_usage").select("user_id, package_slug, mode, status, is_owner_test, reserved_cents, cost_cents, input_tokens, output_tokens").gte("created_at", monthStart).limit(50000),
+    supabase.from("journey_usage").select("user_id, package_slug, mode, status, is_owner_test, reserved_cents, cost_cents, input_tokens, output_tokens, created_at").gte("created_at", monthStart).limit(50000),
     supabase.from("membership_packages").select("slug, name").order("sort_order"),
   ]);
   const [{ data: sessions }, { data: voice }] = await Promise.all([
@@ -46,6 +48,25 @@ export default async function JourneyAdmin() {
   for (const r of rows) if (!r.is_owner_test) byTier.set(r.package_slug ?? "—", (byTier.get(r.package_slug ?? "—") ?? 0) + Number(r.cost_cents ?? r.reserved_cents));
   const limit = s?.company_monthly_limit_cents ? Number(s.company_monthly_limit_cents) : null;
   const tierMap = new Map((tiers ?? []).map((t) => [t.package_slug, t]));
+  const launch = await getLaunchState();
+  const { data: lastCheck } = await supabase.from("audit_log").select("action, created_at, details").like("action", "journey.openai.%").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const testCap = s?.owner_test_monthly_limit_cents != null ? Number(s.owner_test_monthly_limit_cents) : null;
+  const approvedModel = (models ?? []).find((m) => m.id === s?.default_model && m.enabled && m.input_cents_per_million != null);
+  const readiness: [string, boolean, string][] = [
+    ["OpenAI key visible to the website", isOpenAIConfigured(), "Set OPENAI_API_KEY in Netlify and redeploy."],
+    ["Connection verified", lastCheck?.action === "journey.openai.connected", "Press “Verify connection”."],
+    ["Approved model with rates", Boolean(approvedModel), "Add a model and its prices below, then choose it as the default."],
+    ["Company monthly AI budget", s?.company_monthly_limit_cents != null, "Set it under Company budgets."],
+    ["Owner testing budget", testCap != null, "Set it under Company budgets."],
+    ["Owner testing switched on", Boolean(s?.owner_testing_enabled), "Turn on below."],
+    ["Journey switched on and AI usage authorized", Boolean(s?.enabled && s?.paid_usage_authorized), "Turn on below (type AUTHORIZE)."],
+  ];
+  const days = Array.from({ length: 14 }, (_, i) => { const d = new Date(); d.setUTCDate(d.getUTCDate() - (13 - i)); return d.toISOString().slice(0, 10); });
+  const daily = days.map((day) => {
+    const r = rows.filter((x) => String(x.created_at).slice(0, 10) === day && x.status === "completed");
+    return { day, messages: r.length, cents: r.reduce((n, x) => n + Number(x.cost_cents ?? 0), 0) };
+  });
+  const peak = Math.max(1, ...daily.map((d) => d.cents));
 
   const Switch = ({ k, label, on, confirm }: { k: string; label: string; on: boolean; confirm?: string }) => (
     <ActionForm action={setJourneySwitch} className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -73,6 +94,43 @@ export default async function JourneyAdmin() {
         <Stat label="Written conversation expense" value={usd(spent)} />
         <Stat label="Voice expense" value={usd(Number(voiceRow?.cost_cents ?? 0))} hint={`${Math.round(Number(voiceRow?.seconds ?? 0) / 60)} minutes · ${voiceRow?.sessions ?? 0} conversations`} />
         <div className="glass flex flex-col justify-center gap-2 p-5"><a href="/admin/journey/evaluations" className="btn btn-gold btn-sm">Evaluation scenarios</a><a href="/admin/development" className="btn btn-ghost btn-sm">Development tracker</a></div>
+      </div>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+        <Panel title="Connection & readiness">
+          <div className="space-y-4 p-5">
+            <ActionForm action={verifyOpenAI} className="flex flex-wrap items-center gap-3">
+              <button className="btn btn-gold btn-sm">Verify OpenAI connection</button>
+              <span className="text-xs text-muted">{lastCheck ? `Last check ${new Date(lastCheck.created_at).toLocaleString("en-US")}: ${lastCheck.action === "journey.openai.connected" ? "connected" : "failed"}` : "Not checked yet"} · uses no tokens</span>
+            </ActionForm>
+            <ul className="space-y-2 text-sm">
+              {readiness.map(([label, done, next]) => (
+                <li key={label} className="flex items-start gap-2"><span className={done ? "text-success" : "text-gold"}>{done ? "✓" : "○"}</span><span>{label}{!done && <span className="block text-xs text-muted">{next}</span>}</span></li>
+              ))}
+            </ul>
+            <p className={`rounded-xl border px-4 py-3 text-xs ${launch.payments_live ? "border-success/40 text-success" : "border-gold/40 text-gold"}`}>
+              {launch.payments_live ? "Members with paid memberships can use Journey within their allowances." : "Public access is closed: members cannot use Journey until you open enrollment and live payments. Only your private owner tests run."}
+            </p>
+            <a href="/admin/journey/personality" className="btn btn-ghost btn-sm">Edit Journey’s master personality →</a>
+          </div>
+        </Panel>
+        <Panel title="Owner testing budget & last 14 days">
+          <div className="space-y-4 p-5">
+            <div>
+              <p className="flex justify-between text-sm"><span>Owner testing this month</span><span className="font-semibold">{usd(testSpent)}{testCap != null ? ` of ${usd(testCap)}` : ""}</span></p>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink-3"><div className="h-full rounded-full bg-champagne" style={{ width: `${testCap ? Math.min(100, (testSpent / testCap) * 100) : 0}%` }} /></div>
+            </div>
+            <div className="flex h-28 items-end gap-1" aria-label="Daily AI cost, last 14 days">
+              {daily.map((d) => (
+                <div key={d.day} className="flex flex-1 flex-col items-center gap-1" title={`${d.day}: ${d.messages} messages · ${usd(d.cents)}`}>
+                  <div className="w-full rounded-t bg-champagne/70" style={{ height: `${Math.max(2, (d.cents / peak) * 96)}px` }} />
+                  <span className="text-[0.55rem] text-faint">{d.day.slice(8)}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted">{rows.filter((r) => r.status === "completed").length} replies this month · {rows.reduce((n, r) => n + Number(r.input_tokens ?? 0) + Number(r.output_tokens ?? 0), 0).toLocaleString("en-US")} tokens · costs are recorded per reply from your approved model rates.</p>
+          </div>
+        </Panel>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">

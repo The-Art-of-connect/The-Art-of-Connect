@@ -220,3 +220,36 @@ export async function decideAppeal(_p: ActionResult, f: FormData): Promise<Actio
   revalidatePath("/admin/safety");
   return ok("Saved.");
 }
+
+/** Owner Portal: verify the OpenAI connection on the server (no tokens used) and record the result. */
+export async function verifyOpenAI(_p: ActionResult): Promise<ActionResult> {
+  await requireStaff(["owner", "executive", "finance"]);
+  const { checkOpenAIConnection } = await import("@/lib/openai");
+  const c = await checkOpenAIConnection();
+  await audit(c.reachable ? "journey.openai.connected" : "journey.openai.failed", "journey", "openai", { status: c.status, models: c.models.length, error: c.error ?? null });
+  revalidatePath(PATH);
+  if (!c.configured) return fail("The OpenAI key isn’t visible to the website yet. Check OPENAI_API_KEY in Netlify and redeploy.");
+  if (!c.reachable) return fail(`OpenAI connection failed${c.status ? ` (${c.status})` : ""}: ${c.error ?? "please try again"}.`);
+  return ok(`Connected securely. ${c.models.length} chat models available to your account.`);
+}
+
+/** The master personality, written in sections, saved as a new draft version (rollback = publish an earlier version). */
+export async function savePersonality(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner", "executive"]);
+  const { PERSONALITY_SECTIONS, composePersonality } = await import("@/lib/journey-personality");
+  const values = Object.fromEntries(PERSONALITY_SECTIONS.map((s) => [s.key, String(f.get(s.key) ?? "").slice(0, 6000)]));
+  const body = composePersonality(values);
+  if (!body.trim()) return fail("Write at least one section first.");
+  const supabase = (await createClient())!;
+  const { data, error } = await supabase.from("journey_instruction_versions").insert({ body: body.slice(0, 20000), note: String(f.get("note") ?? "").slice(0, 300) || null, created_by: viewer.id }).select("id, version").single();
+  if (error || !data) return fail("Not saved.");
+  await done("journey.instructions.draft", "personality", { version: data.version });
+  revalidatePath("/admin/journey/personality");
+  if (f.get("publish") === "1" && viewer.roles.includes("owner")) {
+    await supabase.from("journey_instruction_versions").update({ status: "retired" }).eq("status", "published");
+    await supabase.from("journey_instruction_versions").update({ status: "published", published_at: new Date().toISOString() }).eq("id", data.id);
+    await done("journey.instructions.publish", data.id);
+    return ok(`Version ${data.version} saved and published. Journey uses it from the next message.`);
+  }
+  return ok(`Saved as draft version ${data.version}. Test it privately, then publish.`);
+}
