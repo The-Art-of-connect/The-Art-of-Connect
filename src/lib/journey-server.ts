@@ -1,5 +1,6 @@
 import "server-only";
 import { teachingGuidance } from "@/lib/curricula";
+import { cleanPrefs, styleInstructions } from "@/lib/journey-customize";
 import { formatTraining, selectTraining, type TrainingEntry } from "@/lib/journey-training";
 import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
 import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
@@ -13,7 +14,7 @@ import { maybeAutoReload } from "@/lib/journey-commerce";
 import { JOURNEY_EI_GUIDANCE } from "@/lib/emotional-intelligence";
 import { JOURNEY_LOVE_LANGUAGE_GUIDANCE, LOVE_LANGUAGES, isLanguage } from "@/lib/love-languages";
 import {
-  buildJourneyInstructions, journeyAccessFor, modeAllowed, ownerTestAccess,
+  buildJourneyInstructions, effectiveMode, journeyAccessFor, modeAllowed, ownerTestAccess,
   type JourneyCapability, type JourneyMode, type PaidMembership,
 } from "@/lib/journey";
 import {
@@ -167,6 +168,11 @@ export async function sendJourneyMessage(input: {
     const m = await membershipFor(db, viewer.id);
     const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
     if (!m || level === "none") return refuse(403, "Journey is a benefit of paid memberships.");
+    // Lessons, discovery and the portfolio belong to every paid plan: use an experience the plan includes.
+    if ((input.lesson || input.discovery || input.portfolio) && input.mode !== "concierge") {
+      const em = effectiveMode(input.mode, level, m.membership);
+      if (em) input = { ...input, mode: em };
+    }
     if (!modeAllowed(input.mode, level, m.membership)) return refuse(403, "This Journey experience isn't part of your membership.");
     const launch = await getLaunchState();
     if (!launch.payments_live || (input.mode !== "concierge" && !launch[LAUNCH_KEY[input.mode]])) return refuse(403, "Journey opens soon.");
@@ -227,6 +233,8 @@ export async function sendJourneyMessage(input: {
   let instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
   instructions += `\n\n${JOURNEY_EI_GUIDANCE}`;
   if (input.lesson) instructions += `\n\n${await teachingGuidance(db, input.lesson)}`;
+  const { data: prefRow } = await db.from("journey_voice_preferences").select("presentation, voice, age_style, language, accent, personality, pace, avatar").eq("user_id", viewer.id).maybeSingle();
+  if (prefRow) instructions += `\n\n${styleInstructions(cleanPrefs({ ...prefRow, age: prefRow.age_style }), false)}`;
   instructions += `\n\n# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`;
   // Founder-approved training: only APPROVED entries, only the few most relevant to this message.
   const [{ data: trained }, { data: tcats }] = await Promise.all([

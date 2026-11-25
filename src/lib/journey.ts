@@ -137,6 +137,16 @@ export function modeAllowed(mode: JourneyMode, access: JourneyAccess, membership
   return membership.experiences.includes(MODE_EXPERIENCE[mode]);
 }
 
+/**
+ * The experience to use when a member starts something not tied to one experience (a lesson,
+ * discovery, portfolio or live voice): the requested one if their plan includes it, otherwise
+ * the first experience their plan does include. Every paid plan therefore has full access.
+ */
+export function effectiveMode(requested: JourneyMode, access: JourneyAccess, membership: PaidMembership | null | undefined): JourneyMode | null {
+  if (modeAllowed(requested, access, membership)) return requested;
+  return (["life", "love", "business"] as JourneyMode[]).find((m) => modeAllowed(m, access, membership)) ?? null;
+}
+
 /** Owner testing is its own permission: owner role, MFA verified, and the testing switch on. */
 export function ownerTestAccess(input: { roles: readonly string[]; mfaVerified: boolean; ownerTestingEnabled: boolean }): boolean {
   return input.roles.includes("owner") && input.mfaVerified && input.ownerTestingEnabled;

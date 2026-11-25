@@ -617,3 +617,11 @@ v23-4) Another member (even a partner) sees nothing (expect 0|0):
 0|0
 v23-5) The OWNER cannot read members' sessions or analyses (expect 0|0):
 0|0
+v24-1) A member saves their own preferences (expect masculine|cedar|calm):
+masculine|cedar|calm
+v24-2) An unsupported voice is refused (expect error):
+ERROR:  new row for relation "journey_voice_preferences" violates check constraint "journey_voice_preferences_voice_check"
+v24-3) A member cannot add a voice preview (expect error):
+ERROR:  permission denied for table journey_voice_previews
+v24-4) Another member cannot see those preferences (expect 0):
+0
