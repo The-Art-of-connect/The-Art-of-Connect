@@ -504,3 +504,19 @@ f
 25
 v14-14) Auto-Reload is refused while live payments are off, whatever the member chose (expect payments_off):
 payments_off
+v15-1) A member saves their love and work boundaries (expect 2):
+2
+v15-2) The member updates their answer (expect Honesty and kindness):
+Honesty and kindness
+v15-3) The member cannot write answers for someone else (expect error):
+ERROR:  new row violates row-level security policy for table "self_discovery"
+v15-4) An unknown area is refused (expect error):
+ERROR:  new row for relation "self_discovery" violates check constraint "self_discovery_area_check"
+v15-5) Another member reads nothing (expect 0):
+0
+v15-6) Another member cannot change or delete them (expect 0|0):
+0|0
+v15-7) The OWNER cannot read members answers (expect 0):
+0
+v15-8) Anonymous visitors are refused (expect permission denied):
+ERROR:  permission denied for table self_discovery

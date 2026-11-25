@@ -2,7 +2,9 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-const SLIDES = [
+export type Slide = { src: string; alt: string; position?: string };
+
+const SOCIETY: Slide[] = [
   { src: "/images/society/roundtable.webp", alt: "Business owners gathered around a boardroom table above the city" },
   { src: "/images/society/skyline-sunset.webp", alt: "A leadership meeting at sunset in a penthouse boardroom" },
   { src: "/images/society/boardroom-glass.webp", alt: "Colleagues collaborating in a glass boardroom" },
@@ -10,18 +12,19 @@ const SLIDES = [
 ];
 
 /** Slow cross-fading photographs with a gentle zoom. Pauses for reduced-motion users. */
-export function HeroSlides() {
+export function HeroSlides({ slides = SOCIETY }: { slides?: Slide[] }) {
+  const SLIDES = slides;
   const [i, setI] = useState(0);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setInterval(() => setI((n) => (n + 1) % SLIDES.length), 6500);
     return () => clearInterval(t);
-  }, []);
+  }, [SLIDES.length]);
   return (
     <>
       {SLIDES.map((s, n) => (
         <div key={s.src} className={`absolute inset-0 transition-opacity duration-[1800ms] ease-in-out ${n === i ? "opacity-100" : "opacity-0"}`} aria-hidden={n !== i}>
-          <Image src={s.src} alt={s.alt} fill priority={n === 0} sizes="(min-width: 1280px) 1200px, 100vw" className={`object-cover ${n === i ? "kenburns" : ""}`} />
+          <Image src={s.src} alt={s.alt} fill priority={n === 0} sizes="(min-width: 1280px) 1200px, 100vw" className={`object-cover ${n === i ? "kenburns" : ""}`} style={s.position ? { objectPosition: s.position } : undefined} />
         </div>
       ))}
       <div className="absolute bottom-3 right-4 z-10 flex gap-1.5" aria-hidden="true">

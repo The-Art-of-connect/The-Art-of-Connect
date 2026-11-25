@@ -20,3 +20,4 @@
 20261209000001_owner_review_onboarding.sql	to_regclass('public.page_reviews') is not null
 20261210000001_age_requirements.sql	to_regprocedure('relationships.guard_singles_age()') is not null
 20261211000001_journey_complete.sql	to_regclass('public.dev_tracker') is not null
+20261212000001_know_yourself.sql	to_regclass('public.self_discovery') is not null

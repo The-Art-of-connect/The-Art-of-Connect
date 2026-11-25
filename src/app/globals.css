@@ -433,3 +433,12 @@ select.field { appearance: none; }
   .kenburns, .flow-line, .node-pulse, .shimmer::after, .tile-in, .glow-breathe, .ticker-in { animation: none !important; }
   .lift, .progress-fill { transition: none !important; }
 }
+
+/* Journey orb: a slow breath of light. */
+@keyframes orb-breathe { 0%, 100% { transform: scale(0.97); filter: brightness(0.95) saturate(1); } 50% { transform: scale(1.03); filter: brightness(1.15) saturate(1.15); } }
+@keyframes orb-halo { 0%, 100% { opacity: 0.45; transform: scale(0.9); } 50% { opacity: 0.85; transform: scale(1.08); } }
+@keyframes waves-drift { 0% { transform: translateX(0) scale(1.05); } 100% { transform: translateX(-4%) scale(1.12); } }
+.orb-breathe { animation: orb-breathe 7s ease-in-out infinite; }
+.orb-halo { animation: orb-halo 7s ease-in-out infinite; }
+.waves-drift { animation: waves-drift 18s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .orb-breathe, .orb-halo, .waves-drift { animation: none !important; } }

@@ -5,6 +5,17 @@ import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
 import { getCatalogue } from "@/lib/catalogue";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import Image from "next/image";
+import { LivingHero } from "@/components/business/SocietyHero";
+import { KnowYourselfBanner } from "@/components/Living";
+import { Greeting } from "@/components/business/Greeting";
+import { reflectionsWritten } from "@/lib/know-yourself-server";
+
+const PHOTO: Record<string, string> = {
+  business: "/images/society/roundtable.webp",
+  counseling: "/images/library/life/meditation.webp",
+  relationships: "/images/library/love/candlelit-dinner.webp",
+};
 
 export default async function MemberHome() {
   const viewer = (await getViewer())!;
@@ -15,13 +26,27 @@ export default async function MemberHome() {
     supabase.from("subscriptions").select("tier_name").eq("user_id", viewer.id).in("status", ["active", "trialing", "past_due"]).maybeSingle(),
     getCatalogue(),
   ]);
+  const done = isInsidePreview(viewer) ? 0 : await reflectionsWritten(viewer.id);
   const referralLink = viewer.referralCode ? `${env.siteUrl}/membership?ref=${viewer.referralCode}` : null;
 
   return (
     <>
-      <p className="eyebrow">Your membership</p>
-      <h1 className="display mt-4 text-5xl">Welcome, {viewer.displayName ?? "member"}.</h1>
-      <p className="mt-4 max-w-xl text-muted">Each experience is a separate space with its own profile. What you share in one never appears in another.</p>
+      <LivingHero
+        slides={[
+          { src: "/images/library/life/journaling.webp", alt: "Writing in a journal by a sunlit window" },
+          { src: "/images/society/roundtable.webp", alt: "Business owners gathered around a boardroom table" },
+          { src: "/images/library/love/sunlit-anniversary.webp", alt: "A couple celebrating in warm afternoon light" },
+          { src: "/images/library/life/meditation.webp", alt: "Meditating at sunrise above the sea" },
+        ]}
+        eyebrow="The Art of Connect" title="In Business. In Life." gilded="In Love."
+        subtitle="Every meaningful connection begins with understanding yourself. Your journey starts here."
+        cta={{ href: "/app/know-yourself", label: "Know yourself first" }}
+        secondary={{ href: "/app/journey", label: "Meet Journey" }}
+      />
+      <div className="mt-10">
+        <Greeting name={viewer.displayName} />
+        <p className="mt-2 max-w-xl text-muted">Each experience is a separate space with its own profile. What you share in one never appears in another.</p>
+      </div>
       {viewer.accountType === "member" && !sub && (
         <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-champagne/50 bg-champagne/10 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -36,6 +61,7 @@ export default async function MemberHome() {
           {sub.tier_name} · <Link href="/app/membership" className="text-gold underline">Manage membership</Link>
         </p>
       )}
+      <KnowYourselfBanner context="Know what you will do, what you won’t — and how to say it with respect — before dating, marriage or work." done={done} />
       <div className="mt-10 grid gap-5 md:grid-cols-3">
         {EXPERIENCE_ORDER.map((key) => {
           const e = EXPERIENCES[key];
@@ -44,7 +70,12 @@ export default async function MemberHome() {
           const open = live && granted;
           const status = open ? "Active" : !live ? "Opening soon" : "Not in your membership";
           return (
-            <div key={key} className="glass flex min-h-64 flex-col justify-between p-7">
+            <div key={key} className="glass lift tile-in group flex min-h-64 flex-col justify-between overflow-hidden !p-0">
+              <div className="relative aspect-[16/10] overflow-hidden">
+                <Image src={PHOTO[key]} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition-transform duration-[1200ms] group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-espresso/50 to-transparent" />
+              </div>
+              <div className="flex flex-1 flex-col justify-between p-7">
               <div>
                 <span className={`chip ${open ? "chip-live" : "chip-locked"}`}>{status}</span>
                 <h2 className="display mt-5 text-3xl" style={{ color: e.accent }}>{e.name}</h2>
@@ -56,6 +87,7 @@ export default async function MemberHome() {
                   {open ? "Enter" : isInsidePreview(viewer) ? "Preview" : "Preview as staff"}
                 </Link>
               ) : null}
+              </div>
             </div>
           );
         })}

@@ -5,6 +5,7 @@ export const PREVIEW_GROUPS: { title: string; note: string; pages: [string, stri
     note: "What every member sees after signing in.",
     pages: [
       ["/app", "Member home", "Welcome, experiences included, referral link."],
+      ["/app/know-yourself", "Know Yourself First", "Private reflection: what I will do, won’t do, and how to say it respectfully."],
       ["/app/onboarding", "Complete your membership", "Membership builder and checkout."],
       ["/app/membership", "My membership", "Plan, billing, invoices, change or cancel."],
       ["/app/verify", "Verify your identity", "Identity verification."],

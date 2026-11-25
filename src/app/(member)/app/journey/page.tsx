@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getJourneyStatus } from "@/lib/journey-server";
 import { JourneyChat } from "@/components/JourneyChat";
-import { GoldRule, LuxCard, LuxHero, LuxSection, SafetyFooter } from "@/components/Lux";
+import { GoldRule, LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
+import { JourneyOrbHero } from "@/components/JourneyOrbHero";
 
 export const metadata = { title: "Journey" };
 
@@ -29,13 +29,7 @@ export default async function JourneyHome() {
     : "Journey opens soon. We'll let you know the moment your conversations can begin.";
   return (
     <>
-      <LuxHero eyebrow="The Art of Connect" title="Journey" tagline="Understanding. Clarity. Connection.">
-        <p className="max-w-2xl text-muted">Your personal connection concierge — a private space to be heard and a place to grow. Journey listens before advising, asks meaningful questions and helps you discover your own answers.</p>
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Link href="/app/journey/voice" className="btn btn-gold">Talk to Journey</Link>
-          <a href="#chat" className="btn btn-ghost">Chat with Journey</a>
-        </div>
-      </LuxHero>
+      <JourneyOrbHero />
 
       <div id="chat" className="mt-10 scroll-mt-24">
         <JourneyChat allowance={status.allowance} available={available} reason={reason} />

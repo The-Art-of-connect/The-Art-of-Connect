@@ -30,6 +30,7 @@ export const SITE_PAGES: SearchEntry[] = [
 
 export const MEMBER_PAGES: SearchEntry[] = [
   member("/app", "Member home", "Your membership", "Your experiences and what’s next.", "home dashboard start"),
+  member("/app/know-yourself", "Know Yourself First", "Your membership", "What you will do, what you won’t, and how to say it respectfully.", "boundaries values standards self discovery reflection know yourself respect dating marriage work"),
   member("/app/membership", "My membership & billing", "Your membership", "Plan, billing, invoices, change or cancel.", "billing invoice payment card cancel change plan upgrade downgrade receipt"),
   member("/app/onboarding", "Complete your membership", "Your membership", "Finish setting up your membership.", "checkout finish setup"),
   member("/app/verify", "Verify your identity", "Your membership", "Confirm your identity for a verified badge.", "verification id identity verified badge"),
