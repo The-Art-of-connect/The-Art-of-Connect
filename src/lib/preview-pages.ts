@@ -22,6 +22,7 @@ export const PREVIEW_GROUPS: { title: string; note: string; pages: [string, stri
     pages: [
       ["/app/journey", "Journey home & chat", "Chat, allowance meter and the four Journey experiences."],
       ["/app/journey/voice", "Talk to Journey", "Voice conversations, voice choice and minutes."],
+      ["/app/journey/check-ins", "Journey check-ins", "Manifestations, reflections, personal check-ins and notification preferences."],
       ["/app/journey/daily", "My Daily Journey", "Manifestations, affirmations, journaling and reflections."],
       ["/app/journey/library", "The Journey Library", "The ten Arts."],
       ["/app/journey/sessions", "Private Sessions", "15, 30, 45 and 60-minute guided sessions."],

@@ -148,6 +148,17 @@ export const templates = {
       paragraphs: [`Hello ${first(name)}, we received a request to reset your password. Use the secure link below — it works once and expires within the hour.`, "If you didn’t ask for this, you can ignore this email; your password stays the same."],
       action: { label: "Choose a new password", url: link },
     })),
+  journeyCheckin: (f: { subject: string; topic: string | null; link: string }) =>
+    t(f, ({ subject, topic, link }) => ({
+      subject,
+      preheader: "A gentle check-in from Journey — whenever you’re ready.",
+      heading: "Journey is thinking of you.",
+      paragraphs: [
+        topic ? `You asked Journey to check in about “${topic}”. Whenever you’re ready, Journey would love to hear how it went.` : "Journey has a check-in waiting for you in your private dashboard.",
+        "There’s no need to reply right away — your check-in will be there whenever the moment feels right. You can change or pause check-ins any time.",
+      ],
+      action: { label: "Open my check-in", url: link },
+    })),
   staffInvitation: (f: { roles: string; link: string }) =>
     t(f, ({ roles, link }) => ({
       subject: "You’re invited to The Art of Connect team",

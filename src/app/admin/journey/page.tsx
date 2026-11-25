@@ -6,7 +6,9 @@ import { INITIAL_MONTHLY_MESSAGES } from "@/lib/journey-budget";
 import { JOURNEY_PHILOSOPHY } from "@/lib/journey";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { getLaunchState } from "@/lib/launch";
+import { env } from "@/lib/env";
 import { verifyOpenAI } from "@/app/actions/journey-admin";
+import { saveCheckinSettings } from "@/app/actions/checkins";
 import { OwnerTest } from "@/components/admin/OwnerTest";
 import { Empty, NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
 import {
@@ -49,6 +51,11 @@ export default async function JourneyAdmin() {
   const limit = s?.company_monthly_limit_cents ? Number(s.company_monthly_limit_cents) : null;
   const tierMap = new Map((tiers ?? []).map((t) => [t.package_slug, t]));
   const launch = await getLaunchState();
+  const [{ data: ck }, { data: ckTotals }] = await Promise.all([
+    supabase.from("journey_checkin_settings").select("*").maybeSingle(),
+    supabase.rpc("journey_checkin_totals"),
+  ]);
+  const ct = (ckTotals ?? {}) as Record<string, number>;
   const { data: lastCheck } = await supabase.from("audit_log").select("action, created_at, details").like("action", "journey.openai.%").order("created_at", { ascending: false }).limit(1).maybeSingle();
   const testCap = s?.owner_test_monthly_limit_cents != null ? Number(s.owner_test_monthly_limit_cents) : null;
   const approvedModel = (models ?? []).find((m) => m.id === s?.default_model && m.enabled && m.input_cents_per_million != null);
@@ -132,6 +139,29 @@ export default async function JourneyAdmin() {
               ))}
             </div>
             <p className="text-xs text-muted">{rows.filter((r) => r.status === "completed").length} replies this month · {rows.reduce((n, r) => n + Number(r.input_tokens ?? 0) + Number(r.output_tokens ?? 0), 0).toLocaleString("en-US")} tokens · costs are recorded per reply from your approved model rates.</p>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Proactive care — check-ins & notifications">
+          <div className="grid gap-6 p-5 lg:grid-cols-[1fr_1fr]">
+            <ActionForm action={saveCheckinSettings} className="space-y-3 text-sm">
+              <label className="flex items-center gap-2"><input type="checkbox" name="enabled" defaultChecked={ck?.enabled ?? true} className="accent-[var(--champagne)]" /> Check-ins on (morning manifestations, evening reflections, wellness and personal check-ins in the member dashboard)</label>
+              <label className="flex items-center gap-2"><input type="checkbox" name="email_enabled" defaultChecked={ck?.email_enabled ?? false} className="accent-[var(--champagne)]" /> Email reminders for members who opt in {env.launchLocked && <span className="text-xs text-muted">(before launch, only @theartofconnect.com test addresses receive email)</span>}</label>
+              <p className="text-xs text-muted">Phone notifications and text messages: not yet available — they need a provider you authorize.</p>
+              <label className="block space-y-1"><span className="text-xs text-muted">Most emails per member per week</span><input name="max_emails_per_week" type="number" min={0} max={21} defaultValue={ck?.max_emails_per_week ?? 3} className="field !w-28" /></label>
+              <label className="block space-y-1"><span className="text-xs text-muted">Email subject (never includes personal details)</span><input name="email_subject" maxLength={80} defaultValue={ck?.email_subject ?? "Journey is thinking of you"} className="field" /></label>
+              {owner && <button className="btn btn-gold btn-sm">Save check-in settings</button>}
+            </ActionForm>
+            <div>
+              <p className="text-xs text-muted">Totals only — members’ check-ins, replies and preferences are private to them.</p>
+              <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                {[["Members using check-ins", ct.members_with_prefs], ["Morning manifestations", ct.morning], ["Evening reflections", ct.evening], ["Wellness check-ins", ct.wellness], ["Email opt-ins", ct.email_opt_in], ["Scheduled check-ins", ct.scheduled], ["Replies (30 days)", ct.responded_30d], ["Emails sent (30 days)", ct.emailed_30d]].map(([l, v]) => (
+                  <div key={String(l)} className="rounded-xl border border-line p-3"><dt className="text-xs text-muted">{String(l)}</dt><dd className="display text-2xl">{Number(v ?? 0)}</dd></div>
+                ))}
+              </dl>
+            </div>
           </div>
         </Panel>
       </div>
