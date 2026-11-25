@@ -52,6 +52,44 @@ export default async function EditCurriculum({ params }: { params: Promise<{ sec
             <Field name="closing" label="Closing line" value={c.closing} rows={2} />
             <Field name="journeyInstructions" label="Journey's specialized teaching instructions" value={c.journeyInstructions} rows={9} hint="Journey follows these whenever a member learns this section interactively. One instruction per line." />
 
+            <details className="rounded-2xl border border-line p-4">
+              <summary className="cursor-pointer font-semibold">Written analysis: headings &amp; wording</summary>
+              <div className="mt-4 space-y-4">
+                <Field name="analysisTitle" label="Analysis title" value={c.analysisTitle} />
+                {c.analysis.map((a) => (
+                  <div key={a.key} className="space-y-2 border-l-2 border-champagne pl-3">
+                    <Field name={`analysis.${a.key}.title`} label="Heading" value={a.title} />
+                    <Field name={`analysis.${a.key}.empty`} label="Shown when a member's answers don't yet speak to this heading" value={a.empty} rows={2} />
+                  </div>
+                ))}
+                <p className="text-xs text-muted">Each answer&rsquo;s interpretation (inside each lesson below) is what fills these headings.</p>
+              </div>
+            </details>
+
+            {c.foundations?.length ? (
+              <details className="rounded-2xl border border-line p-4">
+                <summary className="cursor-pointer font-semibold">Foundations</summary>
+                <div className="mt-4 space-y-3">
+                  {c.foundations.map((fd, i) => (
+                    <div key={i} className="space-y-2 border-l-2 border-champagne pl-3">
+                      <Field name={`foundation.${i}.title`} label="Title" value={fd.title} />
+                      <Field name={`foundation.${i}.text`} label="Description" value={fd.text} rows={2} />
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ) : null}
+
+            {c.scenarios ? (
+              <details className="rounded-2xl border border-line p-4">
+                <summary className="cursor-pointer font-semibold">Real-life scenarios &amp; practice</summary>
+                <div className="mt-4 space-y-3">
+                  <Field name="scenarios" label="Scenarios" value={c.scenarios.map((e) => `${e.who}: ${e.text}`).join("\n\n")} rows={14} hint="One scenario per paragraph, written as “Setting: scenario”." />
+                  {c.exercises && <Field name="exercises" label="Optional practice exercises (one per line)" value={c.exercises.join("\n")} rows={6} />}
+                </div>
+              </details>
+            ) : null}
+
             {c.lessons.map((l, n) => (
               <details key={l.slug} className="rounded-2xl border border-line p-4">
                 <summary className="cursor-pointer font-semibold">Lesson {n + 1}: {l.title}</summary>
@@ -61,6 +99,7 @@ export default async function EditCurriculum({ params }: { params: Promise<{ sec
                   {l.principles && <Field name={`${l.slug}.principles`} label="Founding principles (one per line)" value={l.principles.join("\n")} rows={6} />}
                   <Field name={`${l.slug}.understanding`} label="Guided understanding" value={para(l.understanding)} rows={6} />
                   <Field name={`${l.slug}.examples`} label="Real-life examples" value={l.examples.map((e) => `${e.who}: ${e.text}`).join("\n\n")} rows={6} hint="One example per paragraph, written as “Who: example”." />
+                  {l.exercise && <Field name={`${l.slug}.exercise`} label="Optional exercise" value={l.exercise} rows={3} />}
                   <Field name={`${l.slug}.reflection`} label="Optional reflection prompt" value={l.reflection} rows={2} />
                   <Field name={`${l.slug}.forward`} label="Moving forward suggestion (used in the analysis)" value={l.forward} rows={2} />
                   <Field name={`${l.slug}.journeyPrompt`} label="Opening message when a member explores this lesson with Journey" value={l.journeyPrompt} rows={2} />
@@ -72,7 +111,7 @@ export default async function EditCurriculum({ params }: { params: Promise<{ sec
                         <div key={ch.key} className="space-y-2 border-l-2 border-champagne pl-3">
                           <Field name={`${l.slug}.${q.key}.${ch.key}.label`} label={`Answer ${ci + 1}`} value={ch.label} />
                           <Field name={`${l.slug}.${q.key}.${ch.key}.guidance`} label="Guided explanation (shown when chosen)" value={ch.guidance} rows={3} />
-                          <Field name={`${l.slug}.${q.key}.${ch.key}.reading`} label={`Analysis interpretation (${ch.reading.kind === "strength" ? "Personal Strengths" : "Areas for Personal Development"})`} value={ch.reading.text} rows={2} />
+                          <Field name={`${l.slug}.${q.key}.${ch.key}.reading`} label={`Analysis interpretation (appears under “${c.analysis.find((a) => a.key === ch.reading.kind)?.title ?? ch.reading.kind}”)`} value={ch.reading.text} rows={2} />
                         </div>
                       ))}
                     </fieldset>

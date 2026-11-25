@@ -5,25 +5,22 @@
  * Understanding, not testing. Clarity, not judgment. Self-love, not selfishness.
  */
 
-export type Reading = { kind: "strength" | "develop"; text: string };
-export type Choice = { key: string; label: string; guidance: string; reading: Reading };
-export type CurriculumQuestion = { key: string; prompt: string; choices: Choice[] };
-export type Example = { who: string; text: string };
-export type Lesson = {
-  slug: string; title: string; focus: string[]; principles?: string[];
-  questions: CurriculumQuestion[]; understanding: string[]; examples: Example[];
-  reflection: string; forward: string; journeyPrompt: string;
-};
-export type Curriculum = {
-  section: string; title: string; tagline: string; purpose: string[]; philosophy: string;
-  lessons: Lesson[]; closing: string; journeyInstructions: string;
-};
+import type { Curriculum, Reading } from "@/lib/curricula/core";
 
 const s = (text: string): Reading => ({ kind: "strength", text });
 const d = (text: string): Reading => ({ kind: "develop", text });
 
 export const IDENTITY_SELF_LOVE: Curriculum = {
   section: "identity-self-love",
+  keyPrefix: "isl_",
+  banner: "identity",
+  analysisTitle: "Your Personal Analysis",
+  analysis: [
+    { key: "discovered", title: "What You Discovered About Yourself", empty: "Your discoveries will appear here as you answer each lesson." },
+    { key: "strength", title: "Your Personal Strengths", empty: "Choosing to explore these questions honestly is itself a meaningful strength." },
+    { key: "develop", title: "Areas for Personal Development", empty: "Continue returning to these lessons as life changes. Self-discovery deepens with every season." },
+    { key: "forward", title: "Moving Forward", empty: "Keep nurturing the strengths you discovered, and revisit these lessons whenever you want to reflect again." },
+  ],
   title: "Identity & Self-Love",
   tagline: "Discover who you are beyond roles, responsibilities and expectations.",
   purpose: [
@@ -365,36 +362,3 @@ export const IDENTITY_SELF_LOVE: Curriculum = {
   ],
 };
 
-export const ISL_KEY_PREFIX = "isl_";
-export const choiceKey = (q: string) => `${ISL_KEY_PREFIX}${q}`;
-export const lessonReflectionKey = (slug: string) => `${ISL_KEY_PREFIX}${slug.replace(/-/g, "_")}`.slice(0, 60);
-export const ISL_ANALYSIS_KEY = "analysis_identity_self_love";
-
-export type ISLAnswers = Record<string, { answer: string | null; choices: string[] | null }>;
-
-/** Final Personal Analysis assembled from prewritten interpretations of the member's selected answers. No scores, ever. */
-export function assembleAnalysis(c: Curriculum, answers: ISLAnswers) {
-  const discovered: string[] = []; const strengths: string[] = []; const develop: string[] = []; const forward: string[] = [];
-  for (const l of c.lessons) {
-    const picked = l.questions.flatMap((q) => {
-      const k = answers[choiceKey(q.key)]?.choices?.[0];
-      const ch = q.choices.find((x) => x.key === k);
-      return ch ? [ch] : [];
-    });
-    if (!picked.length) continue;
-    const labels = picked.map((p) => `“${p.label}”`);
-    discovered.push(`Reflecting on “${l.title}”, you answered ${labels.length > 1 ? `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}` : labels[0]}.`);
-    const own = answers[lessonReflectionKey(l.slug)]?.answer?.trim();
-    if (own) discovered.push(`In your own words: “${own.length > 220 ? own.slice(0, own.lastIndexOf(" ", 220)) + "…" : own}”`);
-    for (const p of picked) (p.reading.kind === "strength" ? strengths : develop).push(p.reading.text);
-    if (picked.some((p) => p.reading.kind === "develop")) forward.push(l.forward);
-  }
-  if (!discovered.length) return null;
-  if (!strengths.length) strengths.push("Choosing to explore these questions honestly is itself a meaningful strength.");
-  if (!develop.length) develop.push("Continue returning to these lessons as life changes. Self-discovery deepens with every season.");
-  if (!forward.length) forward.push("Keep nurturing the strengths you discovered, and revisit these lessons whenever you want to reflect again.");
-  return { discovered, qualities: strengths.slice(0, 6), growth: develop.slice(0, 6), forward: forward.slice(0, 4) };
-}
-
-/** Every question key the curriculum stores (for validation). */
-export const curriculumKeys = (c: Curriculum) => c.lessons.flatMap((l) => [...l.questions.map((q) => choiceKey(q.key)), lessonReflectionKey(l.slug)]);

@@ -9,7 +9,7 @@ import { LESSONS, MODULES, PILLARS, moduleBySlug } from "@/lib/who-am-i";
 import { saveDiscoveryModule } from "@/app/actions/who-am-i";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { PillarIcon } from "@/components/PillarIcon";
-import { PersonalDiscoveryCard } from "@/components/PersonalDiscoveryCard";
+import { PersonalDiscoveryCard, discoveryBlocks } from "@/components/PersonalDiscoveryCard";
 import { analysisKey, composeReflection, parseJourneyDiscovery } from "@/lib/personal-discovery";
 import { getJourneyStatus } from "@/lib/journey-server";
 
@@ -124,7 +124,7 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
         </aside>
       </div>
       {reflection && (
-        <PersonalDiscoveryCard slug={mod.slug} reflection={reflection} journey={journeyReflection}
+        <PersonalDiscoveryCard slug={mod.slug} sections={discoveryBlocks(journeyReflection ?? reflection)} fromJourney={Boolean(journeyReflection)}
           journeyWritten={journeyReflection && saved ? new Date(saved.updated_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : null}
           option={option} />
       )}

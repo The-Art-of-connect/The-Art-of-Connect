@@ -72,7 +72,7 @@ export default async function EmotionalIntelligence() {
                 </Link>
               </div>
               <div className="mt-8 text-center">
-                <Link href={`/app/journey?ask=${encodeURIComponent("I’d like to learn about emotional intelligence and how it shows up in my life.")}#chat`} className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-champagne via-gold-bright to-champagne px-12 py-4 text-lg font-semibold text-espresso shadow-lg transition hover:brightness-105">
+                <Link href={`/app/journey?lesson=emotional-intelligence&ask=${encodeURIComponent("I’d like to learn about emotional intelligence and how it shows up in my life.")}#chat`} className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-champagne via-gold-bright to-champagne px-12 py-4 text-lg font-semibold text-espresso shadow-lg transition hover:brightness-105">
                   Continue with Journey <span aria-hidden="true">→</span>
                 </Link>
               </div>
@@ -90,6 +90,18 @@ export default async function EmotionalIntelligence() {
             </Link>
           ))}
         </section>
+
+        <Link href={viewer ? "/app/know-yourself/emotional-intelligence/lessons" : "/sign-in?next=/app/know-yourself/emotional-intelligence/lessons"} className="group grid items-center overflow-hidden rounded-[24px] border border-champagne/70 bg-ivory/80 shadow-[0_20px_40px_-28px_rgba(116,63,77,0.45)] transition hover:border-gold md:grid-cols-[1.2fr_1fr]">
+          <span className="relative block aspect-[16/9]">
+            <Image src="/images/self/emotional-intelligence.webp" alt="Emotional Intelligence: Understand your emotions. Respond with intention." fill sizes="(min-width: 768px) 55vw, 100vw" className="object-cover" />
+          </span>
+          <span className="flex flex-col justify-center p-7 sm:p-9">
+            <span className="text-xs tracking-[0.28em] uppercase text-gold-deep">Season One · Founding Curriculum</span>
+            <span className="display mt-3 block text-3xl leading-snug text-burgundy">Six lessons in emotional intelligence</span>
+            <span className="mt-3 block text-text/75">Who controls your reaction, your triggers, empathy, the power of your delivery, accountability and emotional maturity, with a written personal analysis at the end.</span>
+            <span className="mt-5 font-medium text-burgundy">{viewer ? "Begin the lessons" : "Sign in to begin"} <span aria-hidden="true" className="inline-block transition group-hover:translate-x-1">→</span></span>
+          </span>
+        </Link>
 
         <section className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
           <div className="rounded-[22px] border border-champagne/70 bg-ivory/70 p-7 sm:p-9">

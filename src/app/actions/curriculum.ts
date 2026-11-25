@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getMfaStatus, getViewer, hasRole, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { CURRICULA, getCurriculum, mergeCurriculum } from "@/lib/curricula";
-import { choiceKey, lessonReflectionKey, type Curriculum, type ISLAnswers } from "@/lib/curricula/identity-self-love";
-import { analysisKey } from "@/lib/personal-discovery";
+import { analysisStoreKey, choiceKey, curriculumKeys, journeyAnalysisRequest, reflectionKey, type Answers, type Curriculum } from "@/lib/curricula/core";
 import { sendJourneyMessage } from "@/lib/journey-server";
 import type { ActionResult } from "@/app/actions/admin";
 
@@ -21,9 +20,9 @@ export async function saveLessonAnswers(_p: ActionResult, f: FormData): Promise<
   if (!c || !lesson) return { ok: false, message: "Unknown lesson." };
   const rows = lesson.questions.flatMap((q) => {
     const v = String(f.get(q.key) ?? "");
-    return q.choices.some((ch) => ch.key === v) ? [{ user_id: viewer.id, question_key: choiceKey(q.key), answer: null, choices: [v] }] : [];
+    return q.choices.some((ch) => ch.key === v) ? [{ user_id: viewer.id, question_key: choiceKey(c, q.key), answer: null, choices: [v] }] : [];
   });
-  rows.push({ user_id: viewer.id, question_key: lessonReflectionKey(lesson.slug), answer: (String(f.get("reflection") ?? "").trim().slice(0, 4000) || null) as never, choices: null as never });
+  rows.push({ user_id: viewer.id, question_key: reflectionKey(c, lesson.slug), answer: (String(f.get("reflection") ?? "").trim().slice(0, 4000) || null) as never, choices: null as never });
   const { error } = await supabase.from("discovery_answers").upsert(rows, { onConflict: "user_id,question_key" });
   if (error) return { ok: false, message: "Not saved. Please try again." };
   revalidatePath(pathFor(c.section));
@@ -38,23 +37,13 @@ export async function createJourneyCurriculumAnalysis(_p: ActionResult, f: FormD
   const supabase = (await createClient())!;
   const c = await getCurriculum(supabase, String(f.get("section") ?? ""));
   if (!c) return { ok: false, message: "Unknown section." };
-  const keys = c.lessons.flatMap((l) => [...l.questions.map((q) => choiceKey(q.key)), lessonReflectionKey(l.slug)]);
-  const { data } = await supabase.from("discovery_answers").select("question_key, answer, choices").eq("user_id", viewer.id).in("question_key", keys);
-  const answers: ISLAnswers = Object.fromEntries((data ?? []).map((r) => [r.question_key, r]));
-  let body = "";
-  for (const l of c.lessons) {
-    const lines = l.questions.flatMap((q) => {
-      const ch = q.choices.find((x) => x.key === answers[choiceKey(q.key)]?.choices?.[0]);
-      return ch ? [`- ${q.prompt} ${ch.label}`] : [];
-    });
-    const own = answers[lessonReflectionKey(l.slug)]?.answer;
-    if (lines.length || own) body += `\n${l.title}\n${lines.join("\n")}${own ? `\n- My reflection: ${own.slice(0, 400)}` : ""}\n`;
-  }
-  if (!body) return { ok: false, message: "Answer at least one lesson first." };
-  const head = `Personal analysis: ${c.title}. Based on my answers below, please write my personal analysis with exactly four short sections and these headings: What You Discovered About Yourself; Your Personal Strengths; Areas for Personal Development; Moving Forward. Speak warmly to me as "you". No scores, labels or diagnoses.\n`;
-  const reply = await sendJourneyMessage({ mode: "life", message: (head + body).slice(0, 3900), requestKey: randomUUID(), lesson: c.section, ownerTest: viewer.roles.length > 0 });
+  const { data } = await supabase.from("discovery_answers").select("question_key, answer, choices").eq("user_id", viewer.id).in("question_key", curriculumKeys(c));
+  const answers: Answers = Object.fromEntries((data ?? []).map((r) => [r.question_key, r]));
+  const message = journeyAnalysisRequest(c, answers, 3900);
+  if (!message) return { ok: false, message: "Answer at least one lesson first." };
+  const reply = await sendJourneyMessage({ mode: "life", message, requestKey: randomUUID(), lesson: c.section, ownerTest: viewer.roles.length > 0 });
   if (!reply.ok) return { ok: false, message: reply.message };
-  const { error } = await supabase.from("discovery_answers").upsert({ user_id: viewer.id, question_key: analysisKey(c.section), answer: reply.reply.slice(0, 4000), choices: null }, { onConflict: "user_id,question_key" });
+  const { error } = await supabase.from("discovery_answers").upsert({ user_id: viewer.id, question_key: analysisStoreKey(c), answer: reply.reply.slice(0, 4000), choices: null }, { onConflict: "user_id,question_key" });
   if (error) return { ok: false, message: "Journey wrote your analysis, but it couldn't be saved. It's in your Journey conversations." };
   revalidatePath(pathFor(c.section));
   return { ok: true, message: "Your personal analysis from Journey is ready, saved privately for you." };
@@ -70,6 +59,7 @@ async function owner() {
 
 const paras = (v: FormDataEntryValue | null) => String(v ?? "").split(/\n\s*\n/).map((x) => x.replace(/\s+/g, " ").trim()).filter(Boolean);
 const line = (v: FormDataEntryValue | null) => String(v ?? "").trim();
+const toExamples = (v: FormDataEntryValue | null) => paras(v).map((x) => { const i = x.indexOf(":"); return i > 0 && i < 80 ? { who: x.slice(0, i).trim(), text: x.slice(i + 1).trim() } : { who: "Example", text: x }; });
 
 /** Owner Portal: saves the edited curriculum as a NEW draft version (earlier versions are always kept). */
 export async function saveCurriculumDraft(_p: ActionResult, f: FormData): Promise<ActionResult> {
@@ -82,6 +72,11 @@ export async function saveCurriculumDraft(_p: ActionResult, f: FormData): Promis
     ...base,
     title: line(f.get("title")), tagline: line(f.get("tagline")), purpose: paras(f.get("purpose")), philosophy: line(f.get("philosophy")),
     closing: line(f.get("closing")), journeyInstructions: String(f.get("journeyInstructions") ?? "").trim(),
+    analysisTitle: line(f.get("analysisTitle")),
+    analysis: base.analysis.map((a) => ({ key: a.key, title: line(f.get(`analysis.${a.key}.title`)), empty: line(f.get(`analysis.${a.key}.empty`)) })),
+    foundations: base.foundations?.map((x, i) => ({ ...x, title: line(f.get(`foundation.${i}.title`)), text: line(f.get(`foundation.${i}.text`)) })),
+    scenarios: base.scenarios ? toExamples(f.get("scenarios")) : undefined,
+    exercises: base.exercises ? String(f.get("exercises") ?? "").split("\n").map((x) => x.trim()).filter(Boolean) : undefined,
     lessons: base.lessons.map((l) => {
       const p = (k: string) => f.get(`${l.slug}.${k}`);
       return {
@@ -89,7 +84,8 @@ export async function saveCurriculumDraft(_p: ActionResult, f: FormData): Promis
         title: line(p("title")), focus: paras(p("focus")), understanding: paras(p("understanding")),
         principles: l.principles ? String(p("principles") ?? "").split("\n").map((x) => x.trim()).filter(Boolean) : undefined,
         reflection: line(p("reflection")), forward: line(p("forward")), journeyPrompt: line(p("journeyPrompt")),
-        examples: paras(p("examples")).map((x) => { const i = x.indexOf(":"); return i > 0 ? { who: x.slice(0, i).trim(), text: x.slice(i + 1).trim() } : { who: "Example", text: x }; }),
+        examples: toExamples(p("examples")),
+        exercise: l.exercise ? line(p("exercise")) : undefined,
         questions: l.questions.map((q) => ({
           ...q, prompt: line(p(`${q.key}.prompt`)),
           choices: q.choices.map((c) => ({ ...c, label: line(p(`${q.key}.${c.key}.label`)), guidance: line(p(`${q.key}.${c.key}.guidance`)), reading: { kind: c.reading.kind, text: line(p(`${q.key}.${c.key}.reading`)) } })),

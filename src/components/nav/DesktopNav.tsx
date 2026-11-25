@@ -23,13 +23,13 @@ export function DesktopNav({ state }: { state: NavState }) {
   }, []);
 
   return (
-    <nav ref={ref} className="hidden items-center gap-1 text-[0.82rem] text-ivory/85 lg:flex" aria-label="Primary">
+    <nav ref={ref} className="hidden items-center gap-0.5 text-[0.82rem] text-ivory/85 xl:flex" aria-label="Primary">
       {NAV.map((g) => {
         const active = g.key === "home" ? path === "/" : inGroup(path, [g.href, ...g.links.map((l) => l.href)]);
         return (
           <div key={g.key} className="relative" onMouseEnter={() => setOpen(g.key)} onMouseLeave={() => setOpen(null)}>
             <button type="button" aria-expanded={open === g.key} aria-haspopup="true" onClick={() => setOpen(open === g.key ? null : g.key)}
-              className={`flex items-center gap-1 rounded-full px-3.5 py-2 transition ${active ? "bg-burgundy text-ivory" : "hover:bg-white/10"}`}>
+              className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 transition ${active ? "bg-burgundy text-ivory" : "hover:bg-white/10"}`}>
               {g.label}<NavIcon name="chevron" className="h-3.5 w-3.5 opacity-70" />
             </button>
             {open === g.key && (
