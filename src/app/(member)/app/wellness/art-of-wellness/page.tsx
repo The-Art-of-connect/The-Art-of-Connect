@@ -9,8 +9,8 @@ const SERVICES = [
   { title: "Marriage & Couples Counseling", body: "Communication, relationship concerns and rebuilding connection.", image: "/images/wellness/couples.webp", format: "Virtual or in-person" },
   { title: "Family Counseling", body: "Understanding, communication and healing within families.", image: "/images/wellness/family.webp", format: "Virtual or in-person" },
   { title: "Grief & Loss Support", body: "Compassionate care through loss and the changes it brings.", image: "/images/wellness/grief.webp", format: "Virtual or in-person" },
-  { title: "Divorce & Life Transitions", body: "Support through endings, new beginnings and change.", image: "/images/library/life/journaling.webp", format: "Virtual or in-person" },
-  { title: "Specialized Counseling", body: "Qualified professionals for specific personal and emotional concerns.", image: "/images/library/business/advisory-lounge.webp", format: "By specialty and availability" },
+  { title: "Divorce & Life Transitions", body: "Support through endings, new beginnings and change.", image: "/images/wellness/transitions.webp", format: "Virtual or in-person" },
+  { title: "Specialized Counseling", body: "Qualified professionals for specific personal and emotional concerns.", image: "/images/wellness/specialized.webp", format: "By specialty and availability" },
 ];
 
 /** The Art of Connect's future in-house counseling division. Coming Soon until legal, licensing and privacy requirements are met. */

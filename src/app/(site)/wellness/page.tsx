@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CRISIS, IN_HOUSE_SERVICES } from "@/lib/wellness";
 
@@ -13,6 +14,7 @@ export default function WellnessPublic() {
           <ul className="mt-3 space-y-2 text-sm">{CRISIS.map((c) => <li key={c.label}><span className="font-semibold">{c.label}:</span> {c.detail}</li>)}</ul>
           <p className="mt-3 text-xs text-muted">Always available. No account, membership or payment is ever required.</p>
         </section>
+        <div className="relative aspect-[3/2] overflow-hidden rounded-[28px] shadow-xl sm:aspect-[21/9]"><Image src="/images/wellness/center.webp" alt="A couple speaking warmly with a counselor in a calm, elegant room" fill priority sizes="(min-width: 1024px) 1000px, 100vw" className="object-cover" /></div>
         <header className="text-center">
           <p className="eyebrow">The Art of Connect</p>
           <h1 className="display mt-3 text-5xl text-burgundy sm:text-6xl">Counseling &amp; Wellness Center</h1>
