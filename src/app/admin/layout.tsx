@@ -5,6 +5,8 @@ import { Monogram } from "@/components/Emblem";
 import { getMfaStatus, getViewer, isStaff } from "@/lib/auth";
 import { ADMIN_SECTIONS } from "@/lib/admin";
 import { getLaunchState } from "@/lib/launch";
+import { SiteSearch } from "@/components/SiteSearch";
+import { entriesFor } from "@/lib/search-scope";
 
 export const metadata: Metadata = { title: "Owner Portal", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -18,11 +20,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const launch = await getLaunchState();
   const sections = ADMIN_SECTIONS.filter((s) => s.roles.some((r) => viewer.roles.includes(r)));
   const groups = [...new Set(sections.map((s) => s.group))];
+  const searchable = entriesFor(viewer);
 
   return (
     <div className="theme-ivory min-h-dvh lg:grid lg:grid-cols-[280px_1fr]">
       <aside className="theme-dark border-b border-line lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
-        <div className="flex items-center justify-between px-5 py-5">
+        <div className="flex items-center justify-between gap-3 px-5 py-5">
           <Link href="/admin" className="flex items-center gap-3">
             <Monogram height={30} />
             <span>
@@ -30,6 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="text-[0.65rem] tracking-[0.2em] uppercase text-faint">The Art of Connect</span>
             </span>
           </Link>
+          <SiteSearch entries={searchable} quick={searchable.filter((e) => e.area === "owner").slice(0, 8)} home={{ href: "/admin", label: "Owner Portal home" }} label="Find" />
         </div>
         <div className="mx-5 mb-4 rounded-xl border border-line px-3 py-2 text-xs">
           {launch.locked ? (
@@ -60,6 +64,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <p className="mt-1 capitalize text-gold">{viewer.roles.join(" · ")}</p>
             <div className="mt-3 flex gap-4">
               <Link href="/app" className="hover:text-text">Member view</Link>
+              <Link href="/" className="hover:text-text">Website</Link>
               <form action="/auth/sign-out" method="post"><button className="hover:text-text">Sign out</button></form>
             </div>
           </div>

@@ -65,7 +65,17 @@ export function MobileMenu() {
           </button>
         </div>
         <nav className="relative flex-1 overflow-y-auto px-4 pb-8 sm:px-8" aria-label="Mobile">
+          <form action="/search" role="search" className="mb-5 flex gap-2" onSubmit={() => setOpen(false)}>
+            <input name="q" placeholder="Search the site" aria-label="Search the site" enterKeyHint="search" className="field !bg-white/5 !text-ivory placeholder:!text-ivory/50" />
+            <button className="btn btn-gold shrink-0 !px-5">Search</button>
+          </form>
           <ul className="divide-y divide-line border-y border-line">
+            <li>
+              <Link href="/" className="flex items-baseline justify-between gap-4 py-5" onClick={() => setOpen(false)}>
+                <span className="display text-4xl">Home</span>
+                <span className="text-right text-xs text-muted">Back to the beginning</span>
+              </Link>
+            </li>
             {SITE_NAV.map((item, i) => (
               <li key={item.href} style={{ transitionDelay: open ? `${80 + i * 50}ms` : "0ms" }} className={`transition-all duration-500 ${open ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>
                 <Link href={item.href} className="flex items-baseline justify-between gap-4 py-5" onClick={() => setOpen(false)}>
