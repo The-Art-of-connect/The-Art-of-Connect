@@ -4,6 +4,7 @@ import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResponse, isOpenAIConfigured, type ChatTurn } from "@/lib/openai";
 import { maybeAutoReload } from "@/lib/journey-commerce";
+import { JOURNEY_EI_GUIDANCE } from "@/lib/emotional-intelligence";
 import { JOURNEY_LOVE_LANGUAGE_GUIDANCE, LOVE_LANGUAGES, isLanguage } from "@/lib/love-languages";
 import {
   buildJourneyInstructions, journeyAccessFor, modeAllowed, ownerTestAccess,
@@ -212,6 +213,7 @@ export async function sendJourneyMessage(input: {
     exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
   ].filter(Boolean).join("\n\n");
   let instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
+  instructions += `\n\n${JOURNEY_EI_GUIDANCE}`;
   if (input.mode === "life" || input.mode === "love") instructions += await loveLanguageContext(db, viewer.id);
 
   // Context: only this member's own conversation, trimmed to the owner's limits.

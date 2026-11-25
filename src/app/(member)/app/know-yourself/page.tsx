@@ -94,6 +94,15 @@ export default async function ArtOfKnowingYourself() {
         </div>
       </section>
 
+      <Link href="/emotional-intelligence" className="lift mt-14 grid items-center gap-6 rounded-[24px] border border-champagne/70 bg-ivory/80 p-7 sm:grid-cols-[1fr_auto] sm:p-9">
+        <span>
+          <span className="display block text-2xl italic text-burgundy">The Art of</span>
+          <span className="display block text-4xl">Emotional Intelligence</span>
+          <span className="mt-2 block text-muted">Understand yourself. Respond with intention. Five interactive lessons — with Journey as your personal educator.</span>
+        </span>
+        <span className="rounded-xl bg-burgundy px-6 py-3 text-center font-medium text-ivory">Explore →</span>
+      </Link>
+
       <section className="mt-14 grid gap-5 lg:grid-cols-3">
         <Link href="/app/know-yourself/learn" className="glass lift tile-in block p-7">
           <PillarIcon pillar="educate" className="h-8 w-8 text-gold" />
