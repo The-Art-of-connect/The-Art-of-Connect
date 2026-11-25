@@ -381,3 +381,71 @@ export async function revokeMemberSessions(_prev: ActionResult, form: FormData):
   revalidatePath("/admin/security");
   return done(`${data ?? 0} session(s) signed out.`);
 }
+
+// ─── Team & delegated permissions (owner only) ─────────────────────
+const DELEGABLE = ["admin", "finance", "support", "moderator"] as const;
+
+/** Invites a team member with specific permissions. They set a password and must enroll MFA. */
+export async function inviteTeamMember(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const parsed = z
+    .object({ email: z.email().max(254), roles: z.array(z.enum(DELEGABLE)).min(1, "Choose at least one permission.") })
+    .safeParse({ email: String(form.get("email") ?? "").trim().toLowerCase(), roles: form.getAll("roles").map(String) });
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Enter a valid email and choose permissions.");
+  const { email, roles } = parsed.data;
+  if (email === viewer.email.toLowerCase()) return fail("You already have full owner access.");
+  const supabase = (await createClient())!;
+  await supabase.from("signup_allowlist").upsert({ email, note: "Team invitation" }, { onConflict: "email" });
+
+  const { createAccountLink } = await import("@/lib/account-links");
+  const { sendEmail } = await import("@/lib/email");
+  const { templates } = await import("@/lib/email-templates");
+  let userId: string | null = null;
+  let link: string | null = null;
+  const invite = await createAccountLink(email, "invite");
+  if (invite) {
+    userId = invite.userId;
+    link = invite.link;
+  } else {
+    // Existing account (e.g. a member joining the team): grant roles; they sign in as usual.
+    const { data: p } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
+    userId = (p?.id as string) ?? null;
+  }
+  if (!userId) return fail("The invitation could not be created. Please try again.");
+
+  const { error } = await supabase.from("staff_roles").upsert(roles.map((role) => ({ user_id: userId, role })), { onConflict: "user_id,role" });
+  if (error) return fail("Permissions could not be saved.");
+  await audit("team.invite", "staff_roles", userId, { roles: roles.join(",") });
+
+  if (link) {
+    const sent = await sendEmail(email, templates.staffInvitation({ roles: roles.join(", "), link }), { category: "account" });
+    revalidatePath("/admin/team");
+    if (!sent.ok) return done(`Permissions saved, but the invitation email was not sent (${sent.skipped ?? sent.error}).`);
+    return done(`Invitation sent to ${email}.`);
+  }
+  revalidatePath("/admin/team");
+  return done(`${email} already has an account — permissions added. They’ll be asked to set up two-step verification at their next Owner Portal visit.`);
+}
+
+export async function updateTeamMember(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const parsed = z
+    .object({ userId: z.uuid(), roles: z.array(z.enum(DELEGABLE)) })
+    .safeParse({ userId: form.get("userId"), roles: form.getAll("roles").map(String) });
+  if (!parsed.success) return fail("Invalid request.");
+  const { userId, roles } = parsed.data;
+  if (userId === viewer.id) return fail("You can’t change your own owner access here.");
+  const supabase = (await createClient())!;
+  const { data: current } = await supabase.from("staff_roles").select("role").eq("user_id", userId);
+  if (current?.some((r) => r.role === "owner")) return fail("Owner access can’t be changed here.");
+  const remove = (current ?? []).map((r) => r.role as string).filter((r) => !roles.includes(r as (typeof DELEGABLE)[number]));
+  if (remove.length) await supabase.from("staff_roles").delete().eq("user_id", userId).in("role", remove);
+  if (roles.length) await supabase.from("staff_roles").upsert(roles.map((role) => ({ user_id: userId, role })), { onConflict: "user_id,role" });
+  if (!roles.length) {
+    // Removing every permission also signs them out of all devices.
+    await supabase.rpc("revoke_sessions", { target: userId, session_id: null });
+  }
+  await audit(roles.length ? "team.update" : "team.remove", "staff_roles", userId, { roles: roles.join(",") });
+  revalidatePath("/admin/team");
+  return done(roles.length ? "Permissions updated." : "Team access removed and all sessions signed out.");
+}
