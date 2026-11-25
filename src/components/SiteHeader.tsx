@@ -10,15 +10,15 @@ export function SiteHeader() {
         <Link href="/" aria-label="The Art of Connect — home" className="shrink-0">
           <Wordmark />
         </Link>
-        <nav className="hidden items-center gap-7 text-sm text-muted lg:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-1.5 text-[0.82rem] text-ivory/85 lg:flex xl:gap-2" aria-label="Primary">
           {SITE_NAV.map((l) => (
-            <Link key={l.href} href={l.href} className="transition-colors hover:text-gold-bright">
+            <Link key={l.href} href={l.href} className="nav-pill">
               {l.label}
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/sign-in" className="hidden text-sm text-muted hover:text-text lg:inline">Sign in</Link>
+          <Link href="/sign-in" className="nav-pill hidden text-[0.82rem] text-ivory/85 lg:inline-flex">Sign in</Link>
           <Link href="/membership#build" className="btn btn-gold btn-sm hidden sm:inline-flex">Build Your Membership</Link>
           <MobileMenu />
         </div>
