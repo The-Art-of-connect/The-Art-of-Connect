@@ -249,16 +249,23 @@ export default async function HomePage() {
             <p className="mt-5 text-muted">One account and one subscription. Combine experiences for bundled savings, and change your membership whenever life does.</p>
           </div>
           <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {catalogue.tiers.map((t, i) => (
-              <Reveal key={t.slug} delay={i * 100}>
-                <Link href={`/membership#build`} className={`glass group flex h-full flex-col p-7 transition-transform duration-500 hover:-translate-y-1 ${t.experience_count === 3 ? "glass-edge" : ""}`}>
-                  <p className="eyebrow">{t.experience_count === 3 ? "All three experiences" : `Any ${t.experience_count === 1 ? "one experience" : "two experiences"}`}</p>
-                  <h3 className="display mt-3 text-3xl">{t.name}</h3>
-                  <p className="mt-2 flex-1 text-sm text-muted">{t.description}</p>
-                  <span className="mt-6 text-sm text-gold">Explore {t.name.replace(" Membership", "")} →</span>
-                </Link>
-              </Reveal>
-            ))}
+            {([
+              ["single", "One experience", "Choose the experience that matters most right now."],
+              ["bundle", "Bundled memberships", "Combine experiences at a bundled rate — one account, one subscription."],
+              ["exclusive", "Exclusive memberships", "All three experiences with premium privacy, priority and concierge benefits."],
+            ] as const).map(([group, title, blurb], i) => {
+              const names = catalogue.packages.filter((p) => p.category === group).map((p) => p.name);
+              return (
+                <Reveal key={group} delay={i * 100}>
+                  <Link href="/membership#compare" className={`glass group flex h-full flex-col p-7 transition-transform duration-500 hover:-translate-y-1 ${group === "exclusive" ? "glass-edge" : ""}`}>
+                    <p className="eyebrow">{title}</p>
+                    <p className="mt-3 flex-1 text-sm text-muted">{blurb}</p>
+                    {names.length > 0 && <p className="display mt-4 text-2xl">{names.join(" · ")}</p>}
+                    <span className="mt-6 text-sm text-gold">Compare memberships →</span>
+                  </Link>
+                </Reveal>
+              );
+            })}
           </div>
           <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/membership#build" className="btn btn-gold">Build Your Membership</Link>

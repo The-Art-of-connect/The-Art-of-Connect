@@ -59,7 +59,8 @@ const joinSchema = z.object({
   dobMonth: z.coerce.number().int().min(1).max(12),
   dobDay: z.coerce.number().int().min(1).max(31),
   agree: z.literal("on", { message: "Please agree to the Terms and Privacy Policy." }),
-  experiences: z.array(z.enum(["business", "counseling", "relationships"])).min(1, "Choose at least one experience.").max(3),
+  experiences: z.array(z.enum(["business", "counseling", "relationships"])).max(3),
+  package: z.string().max(40).nullable(),
   interval: z.enum(["month", "year"]),
   couples: z.boolean(),
   loveStatus: z.enum(["single", "couple"]).nullable(),
@@ -84,6 +85,7 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
     dobDay: form.get("dobDay"),
     agree: form.get("agree"),
     experiences: form.getAll("experiences").map(String),
+    package: String(form.get("package") ?? "").trim() || null,
     interval: form.get("interval") === "year" ? "year" : "month",
     couples: form.get("couples") === "1",
     loveStatus: (form.get("loveStatus") as "single" | "couple" | null) || null,
@@ -91,6 +93,7 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
   const d = parsed.data;
+  if (!d.experiences.length && !d.package) return { error: "Choose at least one experience." };
   if (!(await allow("sign-up", 5, 3600))) {
     await logSecurityEvent("rate_limited", { email: d.email, details: { form: "sign-up" } });
     return { error: "Too many attempts. Please try again later." };
@@ -126,6 +129,7 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
         attribution: parseAttribution(jar.get(ATTR_COOKIE)?.value),
         selection: {
           experiences: d.experiences,
+          package: d.package,
           interval: d.interval,
           couples: d.couples && d.experiences.includes("relationships"),
           love_status: d.experiences.includes("relationships") ? d.loveStatus : null,

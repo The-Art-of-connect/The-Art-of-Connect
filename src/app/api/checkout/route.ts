@@ -14,10 +14,11 @@ const body = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("member"),
     selection: z.object({
-      experiences: z.array(z.enum(["business", "counseling", "relationships"])).min(1).max(3),
+      experiences: z.array(z.enum(["business", "counseling", "relationships"])).max(3),
       interval: z.enum(["month", "year"]),
       couples: z.boolean(),
       addons: z.array(z.string().max(40)).max(20),
+      package: z.string().max(40).nullable().optional(),
     }),
     promo: z.string().max(40).optional(),
   }),
@@ -59,21 +60,22 @@ export async function POST(request: NextRequest) {
     const selection = normalizeSelection(catalogue, parsed.data.selection);
     const promo = parsed.data.promo ? await checkPromotion(parsed.data.promo) : null;
     const q = quote(catalogue, selection, promo);
-    if (!q.priced || !q.tier || q.recurringTotal == null) return NextResponse.json({ error: "This membership is not available yet." }, { status: 409 });
+    if (!q.priced || !q.pkg || q.recurringTotal == null) return NextResponse.json({ error: "This membership is not available yet." }, { status: 409 });
+    const pkg = q.pkg;
 
     const names = selection.experiences.map((e) => EXPERIENCES[e].name);
-    const extras = [selection.couples ? catalogue.couples_upgrade.name : null, ...catalogue.addons.filter((a) => selection.addons.includes(a.slug) && a.billing === "monthly").map((a) => a.name)].filter(Boolean);
+    const extras = [q.couplesMonthly ? catalogue.couples_upgrade.name : null, ...catalogue.addons.filter((a) => selection.addons.includes(a.slug) && a.billing === "monthly").map((a) => a.name)].filter(Boolean);
     lineItems.push({
       quantity: 1,
       price_data: {
         currency,
         unit_amount: q.recurringTotal,
         recurring: recurring(selection.interval),
-        product_data: { name: q.tier.name, description: [names.join(" · "), ...extras].join(" + "), metadata: { role: "membership" } },
+        product_data: { name: pkg.name, description: [names.join(" · "), ...extras].join(" + "), metadata: { role: "membership" } },
       },
     });
-    if (q.tier.setup_fee_cents) {
-      lineItems.push({ quantity: 1, price_data: { currency, unit_amount: q.tier.setup_fee_cents, product_data: { name: `${q.tier.name} setup` } } });
+    if (q.onboardingFee) {
+      lineItems.push({ quantity: 1, price_data: { currency, unit_amount: q.onboardingFee, product_data: { name: `${pkg.name} onboarding` } } });
     }
     for (const a of catalogue.addons.filter((x) => selection.addons.includes(x.slug) && x.billing === "one_time" && x.price_cents)) {
       lineItems.push({ quantity: 1, price_data: { currency, unit_amount: a.price_cents!, product_data: { name: a.name } } });
@@ -85,11 +87,12 @@ export async function POST(request: NextRequest) {
     metadata = {
       ...metadata,
       kind: "member",
-      tier_slug: q.tier.slug,
-      tier_name: q.tier.name,
+      tier_slug: pkg.slug,
+      tier_name: pkg.name,
       experiences: selection.experiences.join(","),
       interval: selection.interval,
       couples: selection.couples ? "1" : "0",
+      couples_upgrade: q.couplesMonthly ? "1" : "0",
       addons: selection.addons.join(","),
       amount_cents: String(q.recurringTotal),
       monthly_equivalent_cents: String(selection.interval === "year" ? Math.round(q.annualTotal! / 12) : q.monthlyTotal!),
@@ -104,8 +107,8 @@ export async function POST(request: NextRequest) {
     if (!pkg || pkg.monthly_price_cents == null) return NextResponse.json({ error: "Package unavailable." }, { status: 404 });
     if (!pkg.eligible_types.includes(counselor.professional_type)) return NextResponse.json({ error: "This package isn’t available for your professional type." }, { status: 403 });
     const interval = parsed.data.interval;
-    const pct = Number(catalogue.annual_discount_percent ?? 0);
-    const amount = interval === "year" ? Math.round(pkg.monthly_price_cents * 12 * (1 - pct / 100)) : pkg.monthly_price_cents;
+    const months = Number(catalogue.annual_months_charged ?? 12);
+    const amount = interval === "year" ? Math.round(pkg.monthly_price_cents * months) : pkg.monthly_price_cents;
     lineItems = [{ quantity: 1, price_data: { currency, unit_amount: amount, recurring: recurring(interval), product_data: { name: pkg.name, metadata: { role: "membership" } } } }];
     if (pkg.onboarding_fee_cents) lineItems.push({ quantity: 1, price_data: { currency, unit_amount: pkg.onboarding_fee_cents, product_data: { name: `${pkg.name} onboarding` } } });
     metadata = { ...metadata, kind: "professional", tier_slug: pkg.slug, tier_name: pkg.name, experiences: "", interval, couples: "0", addons: "", amount_cents: String(amount), monthly_equivalent_cents: String(interval === "year" ? Math.round(amount / 12) : amount), promo: "" };

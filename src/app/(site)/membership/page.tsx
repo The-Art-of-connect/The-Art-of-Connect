@@ -4,7 +4,7 @@ import { MembershipBuilder } from "@/components/MembershipBuilder";
 import { Reveal } from "@/components/Reveal";
 import { getCatalogue, getPublicOffers } from "@/lib/catalogue";
 import { getLaunchState } from "@/lib/launch";
-import { formatMoney, selectionFromQuery } from "@/lib/pricing";
+import { annualIncentiveLabel, formatMoney, selectionFromQuery, selectionToQuery } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -68,57 +68,73 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       <div className="band theme-cream">
         <section id="compare" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-24 sm:px-8 lg:py-28">
           <p className="eyebrow">Compare memberships</p>
-          <h2 className="display mt-4 text-4xl sm:text-5xl">Signature, Premier or Elite.</h2>
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
-            {catalogue.tiers.map((t, i) => (
-              <Reveal key={t.slug} delay={i * 100}>
-                <article className={`glass flex h-full flex-col p-8 ${t.experience_count === 3 ? "glass-edge" : ""}`}>
-                  {t.experience_count === 3 && <span className="chip chip-locked mb-4 self-start">Best value</span>}
-                  <h3 className="display text-4xl">{t.name}</h3>
-                  <p className="mt-2 text-muted">{t.description}</p>
-                  <p className="mt-6 text-sm font-semibold text-gold">
-                    {showPrices
-                      ? t.bundle_discount_percent
-                        ? `Save ${Number(t.bundle_discount_percent)}% on bundled experiences`
-                        : "Individual experience pricing"
-                      : "Pricing announced at launch"}
-                  </p>
-                  <ul className="mt-6 flex-1 space-y-3 text-sm">
-                    {t.benefits.map((b) => (
-                      <li key={b} className="flex gap-3"><span className="mt-2 h-px w-4 shrink-0 bg-champagne" aria-hidden="true" />{b}</li>
-                    ))}
-                  </ul>
-                  {showPrices && t.setup_fee_cents ? <p className="mt-6 text-xs text-muted">One-time setup fee {money(t.setup_fee_cents)}</p> : null}
-                  {t.eligibility && <p className="mt-2 text-xs text-muted">{t.eligibility}</p>}
-                  <a href="#build" className={`btn mt-8 ${t.experience_count === 3 ? "btn-gold" : "btn-ghost"}`}>Choose {t.name.replace(" Membership", "")}</a>
-                </article>
-              </Reveal>
-            ))}
-          </div>
+          <h2 className="display mt-4 text-4xl sm:text-5xl">Find the membership that fits your life.</h2>
+          <p className="mt-4 max-w-2xl text-muted">Every membership is one private account you can use on your phone, tablet and computer — no extra device fees.</p>
+          {(["single", "bundle", "exclusive"] as const).map((group) => {
+            const list = catalogue.packages.filter((p) => p.category === group);
+            if (!list.length) return null;
+            return (
+              <div key={group} className="mt-14">
+                <h3 className="eyebrow">{group === "single" ? "Single experiences" : group === "bundle" ? "Bundled memberships" : "Exclusive memberships"}</h3>
+                <div className={`mt-6 grid gap-5 ${list.length > 2 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-2"}`}>
+                  {list.map((p, i) => {
+                    const href = `/membership?${selectionToQuery({ experiences: p.experiences, interval: "month", couples: p.love_track === "couple", addons: [], package: p.category === "exclusive" ? p.slug : null })}#build`;
+                    return (
+                      <Reveal key={p.slug} delay={i * 80}>
+                        <article className={`glass flex h-full flex-col p-7 ${group === "exclusive" ? "glass-edge" : ""}`}>
+                          {p.highlight && <span className="chip chip-locked mb-4 self-start">{p.highlight}</span>}
+                          <p className="eyebrow !text-[0.62rem]">{p.tagline}</p>
+                          <h4 className="display mt-2 text-3xl">{p.name}</h4>
+                          <p className="mt-2 text-sm text-muted">{p.description}</p>
+                          <p className="mt-5 font-semibold text-gold">
+                            {showPrices && p.monthly_price_cents != null ? `${money(p.monthly_price_cents)} / month` : "Pricing announced at launch"}
+                          </p>
+                          <ul className="mt-5 flex-1 space-y-2.5 text-sm">
+                            {p.benefits.map((b) => (
+                              <li key={b} className="flex gap-3"><span className="mt-2 h-px w-4 shrink-0 bg-champagne" aria-hidden="true" />{b}</li>
+                            ))}
+                          </ul>
+                          {showPrices && p.onboarding_fee_cents ? <p className="mt-5 text-xs text-muted">One-time onboarding {money(p.onboarding_fee_cents)}</p> : null}
+                          <a href={href} className={`btn mt-7 ${group === "exclusive" ? "btn-gold" : "btn-ghost"}`}>Choose {p.name}</a>
+                        </article>
+                      </Reveal>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
 
-          <div className="mt-16 overflow-x-auto">
-            <table className="data-table min-w-[640px] rounded-2xl">
-              <thead>
-                <tr><th>Included</th>{catalogue.tiers.map((t) => <th key={t.slug}>{t.name.replace(" Membership", "")}</th>)}</tr>
-              </thead>
-              <tbody>
-                {[
-                  ["Experiences", (n: number) => (n === 3 ? "All three" : `Any ${n}`)],
-                  ["One account & one subscription", () => "✓"],
-                  ["Phone, tablet & desktop at no extra cost", () => "✓"],
-                  ["Monthly or annual billing", () => "✓"],
-                  ["Add or remove experiences any time", () => "✓"],
-                  ["Couples upgrade available (with In Love)", () => "✓"],
-                  ["Bundled savings", (n: number) => (n === 1 ? "—" : n === 2 ? "Bundled rate" : "Best rate")],
-                ].map(([label, fn]) => (
-                  <tr key={label as string}>
-                    <td className="text-text">{label as string}</td>
-                    {catalogue.tiers.map((t) => <td key={t.slug}>{(fn as (n: number) => string)(t.experience_count)}</td>)}
+          {catalogue.packages.length > 0 && (
+            <div className="mt-16 overflow-x-auto">
+              <table className="data-table min-w-[720px] rounded-2xl">
+                <thead>
+                  <tr>
+                    <th>Membership</th>
+                    {catalogue.experiences.map((e) => <th key={e.experience}>{e.name}</th>)}
+                    <th>Monthly</th>
+                    <th>Annual</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {catalogue.packages.map((p) => {
+                    const yearly = p.monthly_price_cents == null ? null : p.annual_price_cents ?? Math.round(p.monthly_price_cents * Number(p.annual_months_charged ?? catalogue.annual_months_charged ?? 12));
+                    return (
+                      <tr key={p.slug}>
+                        <td className="text-text">{p.name}{p.love_track ? <span className="block text-xs text-muted">{p.love_track === "couple" ? "Couples" : "Singles"}</span> : null}</td>
+                        {catalogue.experiences.map((e) => <td key={e.experience}>{p.experiences.includes(e.experience) ? "✓" : "—"}</td>)}
+                        <td>{showPrices ? money(p.monthly_price_cents) ?? "—" : "At launch"}</td>
+                        <td>{showPrices ? money(yearly) ?? "—" : "At launch"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {showPrices && annualIncentiveLabel(catalogue.annual_months_charged) && (
+                <p className="mt-3 text-sm text-muted">Annual memberships: {annualIncentiveLabel(catalogue.annual_months_charged)}.</p>
+              )}
+            </div>
+          )}
         </section>
       </div>
 

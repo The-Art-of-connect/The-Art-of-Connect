@@ -33,6 +33,7 @@ export function JoinForm({ selection, loveStatus, minimumAge }: { selection: Sel
       {selection.experiences.map((e) => <input key={e} type="hidden" name="experiences" value={e} />)}
       {selection.addons.map((a) => <input key={a} type="hidden" name="addons" value={a} />)}
       <input type="hidden" name="interval" value={selection.interval} />
+      <input type="hidden" name="package" value={selection.package ?? ""} />
       <input type="hidden" name="couples" value={selection.couples ? "1" : ""} />
       <input type="hidden" name="loveStatus" value={loveStatus ?? ""} />
 
