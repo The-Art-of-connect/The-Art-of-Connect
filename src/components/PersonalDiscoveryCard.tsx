@@ -74,14 +74,14 @@ export function PersonalDiscoveryCard({ slug, sections, fromJourney, journeyWrit
             <p className="relative mt-2 text-sm text-muted">Journey is resting right now. Your self-guided reflection is always here for you.</p>
           ) : option.kind === "member" && option.credits < 1 ? (
             <>
-              <p className="relative mt-2 text-sm text-muted">You&rsquo;ve used this month&rsquo;s Journey credits. Continue self-guided at no cost, or add more credits.</p>
-              <Link href="/app/journey/plus" className="btn btn-gold btn-sm relative mt-4">Add Journey credits</Link>
+              <p className="relative mt-2 text-sm text-muted">You&rsquo;ve used this month&rsquo;s included Journey messages. Your self-guided analysis is always here, and your allowance renews with your membership. If you&rsquo;d like to continue with Journey sooner, you may add more.</p>
+              <Link href="/app/journey/plus" className="btn btn-gold btn-sm relative mt-4">Add more messages (optional)</Link>
             </>
           ) : (
             <ActionForm action={action} className="relative mt-3 space-y-3">
               <input type="hidden" name={field} value={slug} />
               <p className="text-sm text-muted">
-                {option.kind === "member" ? <>You have <span className="font-semibold text-gold-bright">{option.credits}</span> credits. This uses 1 credit, only when Journey writes your analysis.</> : "Owner test: uses your private test budget."}
+                {option.kind === "member" ? <>Included in your membership. This uses 1 of your <span className="font-semibold text-gold-bright">{option.credits}</span> remaining monthly messages, only when Journey writes your analysis.</> : "Owner test: uses your private test budget."}
               </p>
               <label className="flex items-start gap-2 text-xs text-ivory/85">
                 <input type="checkbox" name="consent" value="yes" required className="mt-0.5" />

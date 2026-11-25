@@ -43,7 +43,7 @@ export default async function DiscoverHub() {
           <div className="glass p-7">
             <p className="eyebrow">Included for every member</p>
             <p className="display mt-2 text-2xl">Self-guided discovery</p>
-            <p className="mt-2 text-sm text-muted">Standardized questions, thoughtful explanations and a written analysis, with no AI and no credits.</p>
+            <p className="mt-2 text-sm text-muted">Standardized questions, thoughtful explanations and a written analysis, with no AI and nothing to pay.</p>
             <ul className="mt-4 space-y-2 text-sm">{FREE.map((f) => <li key={f.href}><Link href={f.href} className="text-burgundy">{f.label} →</Link></li>)}</ul>
           </div>
           <div className="theme-dark rounded-[24px] bg-ink p-7 text-ivory">

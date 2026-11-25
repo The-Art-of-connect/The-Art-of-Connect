@@ -73,7 +73,7 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
               <li>✦ Optional private reflections</li>
               <li>✦ A written personal analysis at the end</li>
             </ul>
-            <p className="mt-4 text-sm font-semibold text-burgundy">No credits are ever used.</p>
+            <p className="mt-4 text-sm font-semibold text-burgundy">Never uses your Journey allowance.</p>
             <a href="#lessons" className="btn btn-ghost btn-sm mt-5">Begin self-guided</a>
           </div>
           <div className="theme-dark relative overflow-hidden rounded-[24px] bg-ink p-7 text-ivory">
@@ -82,7 +82,7 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
             <p className="display relative mt-2 text-2xl text-gold-bright">Personal, by text or voice</p>
             <p className="relative mt-3 text-sm text-muted">Journey listens, asks about your circumstances and adapts each lesson to you, then writes an individualized analysis grounded in your conversations.</p>
             {paid ? (
-              <p className="relative mt-4 rounded-xl border border-champagne/30 bg-white/5 p-3 text-sm">You have <span className="font-semibold text-gold-bright">{credits}</span> credits available. Each message to Journey uses 1 credit; opening lessons and learning self-guided never do.</p>
+              <p className="relative mt-4 rounded-xl border border-champagne/30 bg-white/5 p-3 text-sm">Included in your membership, live by voice or in writing. You have <span className="font-semibold text-gold-bright">{credits}</span> Journey messages left this month; opening lessons and learning self-guided never use them.</p>
             ) : staff ? (
               <p className="relative mt-4 text-sm text-muted">Owner testing uses your private test budget.</p>
             ) : (
@@ -119,6 +119,21 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
                     <ul className="mt-3 space-y-2">{l.principles.map((p) => <li key={p} className="display text-xl italic text-burgundy">{p}</li>)}</ul>
                   </div>
                 )}
+
+                <div className="theme-dark mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-ink px-5 py-4 text-ivory">
+                  <div>
+                    <p className="text-xs tracking-[0.2em] uppercase text-gold">Learn this lesson with Journey</p>
+                    <p className="mt-1 text-sm text-ivory/80">{paid || staff ? `A private, one-on-one session${paid ? " · included in your membership" : " · owner test"}` : "Live and written sessions with Journey are included with paid memberships."}</p>
+                  </div>
+                  {paid || staff ? (
+                    <div className="flex flex-wrap gap-2">
+                      <Link href={`/app/journey/voice?lesson=${SECTION}/${l.slug}`} className="btn btn-gold btn-sm">Start a live session</Link>
+                      <Link href={`/app/journey?lesson=${SECTION}/${l.slug}&ask=${encodeURIComponent(l.journeyPrompt)}#chat`} className="btn btn-ghost btn-sm">Chat with Journey</Link>
+                    </div>
+                  ) : (
+                    <Link href="/membership" className="btn btn-ghost btn-sm">Explore memberships</Link>
+                  )}
+                </div>
 
                 <ActionForm action={saveLessonAnswers} className="mt-8 space-y-7">
                   <input type="hidden" name="section" value={SECTION} />
@@ -175,11 +190,6 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
 
                   <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
                     <button className="btn btn-gold">Save privately</button>
-                    {(paid || staff) && (
-                      <Link href={`/app/journey?lesson=${SECTION}/${l.slug}&ask=${encodeURIComponent(l.journeyPrompt)}#chat`} className="btn btn-ghost">
-                        Explore with Journey{paid ? ` · ${credits} credits` : ""}
-                      </Link>
-                    )}
                     {n < c.lessons.length - 1 && <a href={`#${c.lessons[n + 1].slug}`} className="text-sm text-burgundy">Next lesson →</a>}
                   </div>
                 </ActionForm>

@@ -1,4 +1,7 @@
 import "server-only";
+import { teachingGuidance } from "@/lib/curricula";
+import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
+import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { serverSecret } from "@/lib/env";
@@ -27,7 +30,7 @@ export type VoiceStart =
   | { ok: true; clientSecret: string; voiceSessionId: string; allowedSeconds: number; inactivitySeconds: number; model: string }
   | { ok: false; message: string };
 
-export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; ownerTest?: boolean }): Promise<VoiceStart> {
+export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; ownerTest?: boolean; lesson?: string | null; discovery?: string | null }): Promise<VoiceStart> {
   const viewer = await getViewer();
   if (!viewer) return { ok: false, message: "Please sign in to talk with Journey." };
   const db = createAdminClient();
@@ -66,7 +69,14 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     return { ok: false, message: started === "refused:in_progress" ? "You already have a voice conversation open." : "Talk to Journey is resting right now. Please try again later." };
   }
 
-  const instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: null, disabledCapabilities: cfg.disabled })
+  let topic = `\n\n# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`;
+  if (input.lesson) topic += `\n\n${await teachingGuidance(db, input.lesson)}\nThis is a live, spoken lesson: teach conversationally, one idea and one question at a time.`;
+  const dc = input.discovery ? discoveryCategory(input.discovery) : null;
+  if (dc) {
+    const { data: tc } = await db.from("journey_training_categories").select("learning_objectives").eq("key", dc.key).maybeSingle();
+    topic += `\n\n${discoveryInstructions(dc, tc?.learning_objectives ?? [], FOUNDER_PRINCIPLES[dc.key] ?? [], false)}\nThis discovery is spoken aloud: ask one short question at a time and wait.`;
+  }
+  const instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: null, disabledCapabilities: cfg.disabled }) + topic
     + "\n\n# Voice conversation\nYou are speaking aloud. Begin by briefly saying you are Journey, an AI assistant with an AI-generated voice. Keep replies warm, natural and concise (a few sentences), and pause to let the member speak.";
   const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
     method: "POST",

@@ -1,7 +1,7 @@
 /**
  * The site's navigation: six primary categories with dropdowns.
  * Every link points to an existing page — reorganizing never duplicates pages.
- * `access`: "public" (anyone), "member" (signed in), "paid" (Journey — uses credits).
+ * `access`: "public" (anyone), "member" (signed in), "paid" (Journey — included with paid memberships, within the monthly allowance).
  */
 export type NavAccess = "public" | "member" | "paid";
 export type NavLink = { href: string; label: string; note?: string; access?: NavAccess };
@@ -80,12 +80,13 @@ export const NAV: NavGroup[] = [
   },
 ];
 
-/** The signed-in member's profile menu: account, membership, credits and preferences. */
+/** The signed-in member's profile menu: account, membership, Journey allowance and preferences. */
 export const PROFILE_LINKS: NavLink[] = [
   { href: "/app", label: "My dashboard" },
   { href: "/app/know-yourself/portfolio", label: "My Personal Discovery Portfolio" },
   { href: "/app/membership", label: "Membership & billing" },
-  { href: "/app/journey/plus", label: "Journey credits" },
+  { href: "/app/journey/plus", label: "My Journey allowance" },
+  { href: "/app/journey/voice", label: "My Journey voice" },
   { href: "/app/journey/check-ins", label: "Notifications & check-ins" },
   { href: "/app/verify", label: "Identity verification" },
   { href: "/app/safety", label: "Privacy & safety" },
