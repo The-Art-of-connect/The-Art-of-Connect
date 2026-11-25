@@ -125,6 +125,7 @@ export default async function BusinessHome({ searchParams }: { searchParams: Pro
               <div className="mt-5 flex flex-col gap-2">
                 <Link href="/app/business/board" className="btn btn-gold">Browse the board</Link>
                 <Link href="/app/business/board/new" className="btn btn-ghost">Create a business post</Link>
+                <Link href="/app/business/learn" className="btn btn-ghost">The Knowledge Exchange · webinars</Link>
                 <Link href="/app/business/inbox" className="btn btn-ghost">
                   Private inbox{pendingRequests ? ` · ${pendingRequests} new request${pendingRequests > 1 ? "s" : ""}` : ""}
                 </Link>

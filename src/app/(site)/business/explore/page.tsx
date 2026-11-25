@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getCatalogue } from "@/lib/catalogue";
 import { getExplore } from "@/lib/business";
@@ -13,26 +14,12 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-/** Network illustration: owners in different places connected through The Art of Connect. */
+/** Owners in different places connected through The Art of Connect (owner-supplied artwork). */
 function Network() {
-  const nodes = [[60, 70], [250, 40], [20, 150], [95, 205], [300, 175]];
   return (
-    <svg viewBox="0 0 330 240" className="mx-auto h-auto w-full max-w-md" role="img" aria-label="Business owners in different cities connected through The Art of Connect">
-      {nodes.map(([x, y], i) => (
-        <path key={`p${i}`} d={`M165 120 Q ${(x + 165) / 2} ${Math.min(y, 120) - 40} ${x} ${y}`} fill="none" stroke="currentColor" strokeOpacity="0.45" strokeWidth="1.2" className="text-gold" />
-      ))}
-      <path d="M60 70 Q 160 10 250 40" fill="none" stroke="currentColor" strokeOpacity="0.3" className="text-gold" />
-      <path d="M20 150 Q 50 150 95 205" fill="none" stroke="currentColor" strokeOpacity="0.3" className="text-gold" />
-      {nodes.map(([x, y], i) => (
-        <g key={i}>
-          <circle cx={x} cy={y} r="16" className="fill-champagne/15" />
-          <circle cx={x} cy={y} r="6" className="fill-champagne" />
-        </g>
-      ))}
-      <circle cx="165" cy="120" r="34" className="fill-champagne/10" />
-      <circle cx="165" cy="120" r="26" className="fill-espresso stroke-champagne" strokeWidth="1.5" />
-      <text x="165" y="127" textAnchor="middle" className="fill-ivory" style={{ font: "500 20px var(--font-display, Georgia)" }}>AC</text>
-    </svg>
+    <div className="relative mx-auto aspect-[1260/790] w-full max-w-xl">
+      <Image src="/brand/network-ac.webp" alt="Business owners in different cities connected through The Art of Connect" fill priority sizes="(min-width: 1024px) 560px, 100vw" className="object-contain mix-blend-lighten" />
+    </div>
   );
 }
 
@@ -183,7 +170,7 @@ export default async function ExploreProfessionalSociety() {
             ) : (
               <Link href="/#membership" className="btn btn-gold">Notify me when founding enrollment opens</Link>
             )}
-            <Link href="/business" className="btn btn-ghost">About In Business</Link>
+            <Link href="/webinars" className="btn btn-ghost">The Knowledge Exchange</Link>
           </div>
           <p className="mt-6 text-xs text-faint">No credit card required for a free account. We don’t guarantee funding, partnerships or business outcomes.</p>
         </section>

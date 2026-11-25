@@ -115,3 +115,24 @@ export function basicPathway(needs: string[], incompleteReadiness: { title: stri
   if (!steps.length) add("Complete “How Can We Help Your Business?”", "Your answers shape your pathway and the owners you can help each other with.");
   return steps;
 }
+
+/** Webinar topics that answer each kind of need (for recommendations). */
+export const TOPIC_FOR_NEED: Record<string, string[]> = {
+  growth: ["business-growth", "expansion"], partner: ["partnerships"], strategic: ["partnerships"], funding: ["funding-readiness", "finance"],
+  leadership: ["leadership"], structure: ["operations", "finance"], mentor: ["leadership"], technology: ["technology"],
+  operations: ["operations", "technology"], succession: ["succession"], expansion: ["expansion"], marketing: ["marketing"],
+};
+
+/** Ranks webinars for a member: topic matches their needs, then industry, then soonest. */
+export function recommendWebinars<T extends { topic: string | null; industry: string | null; starts_at: string }>(list: T[], needs: string[], industry: string | null) {
+  const topics = new Set(needs.flatMap((n) => TOPIC_FOR_NEED[n] ?? []));
+  const score = (w: T) => (w.topic && topics.has(w.topic) ? 2 : 0) + (industry && w.industry === industry ? 1 : 0);
+  return list
+    .map((w) => ({ w, s: score(w) }))
+    .filter((x) => x.s > 0)
+    .sort((a, b) => b.s - a.s || a.w.starts_at.localeCompare(b.w.starts_at))
+    .map((x) => x.w);
+}
+
+export const PROVIDERS: Record<string, string> = { zoom: "Zoom", google_meet: "Google Meet", teams: "Microsoft Teams", other: "Other provider" };
+export const TEMPLATES: Record<string, string> = { espresso: "Espresso & gold", cream: "Cream & champagne", burgundy: "Burgundy & gold", own_flyer: "Use my own flyer" };

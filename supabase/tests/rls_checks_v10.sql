@@ -13,12 +13,12 @@ insert into public.experience_access (user_id, experience, source) values
   ('00000000-0000-0000-0000-000000000032', 'business', 'free_tier'),
   ('00000000-0000-0000-0000-000000000033', 'business', 'subscription');
 
-\echo 'v10-1) Seeded reference data only, no fabricated activity (expect 20|13|18|12|0|0):'
+\echo 'v10-1) Seeded reference data only, no fabricated activity (expect 20|13|23|12|0|0):'
 select (select count(*) from business.industries), (select count(*) from business.categories), (select count(*) from business.features),
        (select count(*) from business.readiness_items), (select count(*) from business.posts), (select count(*) from business.conversations);
 
 set role anon;
-\echo 'v10-2) Guests explore industries and features; no public profiles yet (expect 20|18|0):'
+\echo 'v10-2) Guests explore industries and features; no public profiles yet (expect 20|23|0):'
 select jsonb_array_length(p->'industries'), jsonb_array_length(p->'features'), jsonb_array_length(p->'profiles') from (select business.public_explore() p) x;
 \echo 'v10-3) Guests cannot read the Connection Board (expect permission denied):'
 select count(*) from business.posts;
