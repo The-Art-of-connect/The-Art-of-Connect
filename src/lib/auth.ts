@@ -48,11 +48,26 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
 export const isStaff = (v: Viewer | null) => Boolean(v && v.roles.length > 0);
 export const hasRole = (v: Viewer | null, roles: StaffRole[]) => Boolean(v && v.roles.some((r) => roles.includes(r)));
 
-/** Guard for every Owner Portal page and action. */
+/** Multi-factor status of the current session (Supabase assurance levels). */
+export const getMfaStatus = cache(async () => {
+  const supabase = await createClient();
+  if (!supabase) return { verified: false, enrolled: false };
+  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  return { verified: data?.currentLevel === "aal2", enrolled: data?.nextLevel === "aal2" };
+});
+
+/**
+ * Guard for every Owner Portal page and action. Staff must complete MFA:
+ * without an authenticator they are sent to set one up; with one, they must
+ * enter a code. (The database independently refuses staff permissions to
+ * sessions without MFA.)
+ */
 export async function requireStaff(roles: StaffRole[] = ["owner", "admin", "support", "moderator", "finance"]) {
   const viewer = await getViewer();
   if (!viewer) redirect("/sign-in?next=/admin");
   if (!hasRole(viewer, roles)) redirect("/admin/forbidden");
+  const mfa = await getMfaStatus();
+  if (!mfa.verified) redirect(mfa.enrolled ? "/mfa/verify?next=/admin" : "/mfa/setup");
   return viewer;
 }
 

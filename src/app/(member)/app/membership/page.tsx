@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CancelMembership } from "@/components/CancelMembership";
 import { MemberBilling } from "@/components/MemberBilling";
 import { getViewer } from "@/lib/auth";
 import { getCatalogue } from "@/lib/catalogue";
@@ -42,6 +43,7 @@ export default async function MyMembershipPage() {
         {formatMoney(sub.amount_cents, catalogue.currency)} {sub.billing_interval === "year" ? "per year" : "per month"} · {sub.status}
         {sub.current_period_end ? ` · ${sub.cancel_at_period_end ? "ends" : "renews"} ${new Date(sub.current_period_end).toLocaleDateString("en-US", { dateStyle: "medium" })}` : ""}
       </p>
+      {["active", "trialing", "past_due"].includes(sub.status) && <CancelMembership cancelling={sub.cancel_at_period_end} />}
       <h2 className="mt-14 mb-6 text-lg font-semibold">Add or remove experiences, or change billing</h2>
       <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live} kind="change" />
     </>

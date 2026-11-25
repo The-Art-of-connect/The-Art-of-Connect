@@ -121,3 +121,27 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   }
   return { notice: "Welcome. Please check your inbox to confirm your email, then sign in to complete your membership." };
 }
+
+/** Account recovery: always the same response, so it never reveals whether an account exists. */
+export async function requestPasswordReset(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const email = z.email().safeParse(String(form.get("email") ?? "").trim().toLowerCase());
+  const generic = { notice: "If an account exists for that email, a secure reset link is on its way. It expires shortly." };
+  if (!email.success) return { error: "Please enter a valid email." };
+  if (!(await allow("password-reset", 3, 3600))) return generic;
+  const supabase = await createClient();
+  if (supabase) await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${env.siteUrl}/auth/callback?next=/reset-password` });
+  return generic;
+}
+
+export async function setNewPassword(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const password = String(form.get("password") ?? "");
+  if (password.length < 12) return { error: "Use at least 12 characters." };
+  if (password !== String(form.get("confirm") ?? "")) return { error: "The passwords don’t match." };
+  const supabase = await createClient();
+  if (!supabase) return { error: "Not available." };
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return { error: "This reset link has expired. Please request a new one." };
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: "Your password could not be changed. Please request a new link." };
+  return { notice: "Your password has been changed. You can now sign in." };
+}

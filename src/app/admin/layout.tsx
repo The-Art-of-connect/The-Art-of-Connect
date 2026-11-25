@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Monogram } from "@/components/Emblem";
-import { getViewer, isStaff } from "@/lib/auth";
+import { getMfaStatus, getViewer, isStaff } from "@/lib/auth";
 import { ADMIN_SECTIONS } from "@/lib/admin";
 import { getLaunchState } from "@/lib/launch";
 
@@ -13,6 +13,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const viewer = await getViewer();
   if (!viewer) redirect("/sign-in?next=/admin");
   if (!isStaff(viewer)) redirect("/app");
+  const mfa = await getMfaStatus();
+  if (!mfa.verified) redirect(mfa.enrolled ? "/mfa/verify?next=/admin" : "/mfa/setup");
   const launch = await getLaunchState();
   const sections = ADMIN_SECTIONS.filter((s) => s.roles.some((r) => viewer.roles.includes(r)));
   const groups = [...new Set(sections.map((s) => s.group))];

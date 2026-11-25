@@ -4,6 +4,7 @@ import { serverSecret } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordVerification } from "@/lib/identity";
+import { paymentIntentForInvoice } from "@/lib/billing";
 
 const ALL = ["business", "counseling", "relationships"] as const;
 
@@ -118,7 +119,9 @@ export async function POST(request: NextRequest) {
           status: event.type === "invoice.paid" ? "succeeded" : "failed",
           livemode: event.livemode,
           stripe_invoice_id: inv.id,
+          // Stable per-invoice key so repeated webhook deliveries update one row.
           stripe_payment_intent_id: `inv_${inv.id}`,
+          stripe_payment_ref: event.type === "invoice.paid" ? await paymentIntentForInvoice(stripe, inv.id) : null,
         },
         { onConflict: "stripe_payment_intent_id" },
       );
@@ -133,8 +136,14 @@ export async function POST(request: NextRequest) {
       break;
     }
     case "charge.refunded": {
-      const charge = event.data.object as any;
-      if (charge.invoice) await db.from("payments").update({ status: "refunded" }).eq("stripe_invoice_id", charge.invoice);
+      const charge = event.data.object;
+      const pi = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+      if (pi) {
+        await db
+          .from("payments")
+          .update({ refunded_amount_cents: charge.amount_refunded, status: charge.refunded ? "refunded" : "partially_refunded" })
+          .eq("stripe_payment_ref", pi);
+      }
       break;
     }
   }

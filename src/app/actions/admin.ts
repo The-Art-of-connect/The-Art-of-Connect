@@ -276,3 +276,55 @@ export async function flagAccount(_prev: ActionResult, form: FormData): Promise<
   revalidatePath("/admin/safety");
   return done("Account flagged for review.");
 }
+
+/** Owner updates a Launch Readiness checklist item (status, note, approval). */
+export async function updateChecklistItem(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const parsed = z
+    .object({ key: z.string().regex(/^[a-z0-9:_-]{2,60}$/), status: z.enum(["pending", "in_progress", "done", "blocked", "not_applicable"]), note: z.string().trim().max(1000) })
+    .safeParse({ key: form.get("key"), status: form.get("status"), note: String(form.get("note") ?? "") });
+  if (!parsed.success) return fail("Invalid update.");
+  const approve = form.get("approve") === "on";
+  const supabase = (await createClient())!;
+  const { error, count } = await supabase
+    .from("launch_checklist")
+    .update(
+      {
+        status: parsed.data.status,
+        note: parsed.data.note || null,
+        approved_by: approve ? viewer.id : null,
+        approved_at: approve ? new Date().toISOString() : null,
+      },
+      { count: "exact" },
+    )
+    .eq("key", parsed.data.key);
+  if (error || !count) return fail("Not saved.");
+  await audit("launch.checklist", "launch_checklist", parsed.data.key, { status: parsed.data.status, approved: approve });
+  revalidatePath("/admin/launch");
+  return done("Saved.");
+}
+
+/** Full or partial refund of a recorded payment (owner or finance). */
+export async function refundPayment(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(["owner", "finance"]);
+  const parsed = z.object({ id: z.uuid(), amount: z.string().trim().max(12) }).safeParse({ id: form.get("id"), amount: String(form.get("amount") ?? "") });
+  if (!parsed.success) return fail("Invalid request.");
+  const supabase = (await createClient())!;
+  const { data: p } = await supabase.from("payments").select("amount_cents, refunded_amount_cents, stripe_payment_ref, livemode").eq("id", parsed.data.id).maybeSingle();
+  if (!p) return fail("Payment not found.");
+  if (!p.stripe_payment_ref) return fail("This payment can’t be refunded automatically. Refund it in the Stripe Dashboard.");
+  const remaining = p.amount_cents - p.refunded_amount_cents;
+  const amount = parsed.data.amount ? Math.round(Number(parsed.data.amount.replace(/[$,]/g, "")) * 100) : remaining;
+  if (!Number.isFinite(amount) || amount <= 0 || amount > remaining) return fail(`Enter an amount up to ${(remaining / 100).toFixed(2)}.`);
+  const { getStripe } = await import("@/lib/stripe");
+  const { stripe, reason } = await getStripe();
+  if (!stripe) return fail(reason ?? "Payments are not configured.");
+  try {
+    await stripe.refunds.create({ payment_intent: p.stripe_payment_ref, amount, metadata: { payment_id: parsed.data.id } });
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Stripe could not process the refund.");
+  }
+  await audit("payment.refund", "payments", parsed.data.id, { amount_cents: amount, livemode: p.livemode });
+  revalidatePath("/admin/revenue");
+  return done(`Refund of $${(amount / 100).toFixed(2)} sent to Stripe. The payment updates when Stripe confirms.`);
+}

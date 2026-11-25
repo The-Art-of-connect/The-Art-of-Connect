@@ -52,7 +52,20 @@ Set these in **Netlify → Site configuration → Environment variables** (and i
    4. Sign in at `/sign-in`. The Owner Portal is at `/admin`.
 7. **Turn on multi-factor authentication** for your owner account (Authentication → Multi-Factor). This is strongly recommended.
 
-## 4. Stripe configuration (test mode)
+## 4. Stripe configuration (sandbox / test mode)
+
+**Webhook (required for subscriptions, payments, refunds and identity verification):**
+1. In Stripe (Sandbox), open **Developers → Webhooks → Add endpoint**.
+2. Endpoint URL: `https://www.theartofconnect.com/api/stripe/webhook`
+3. Select these events:
+   - `checkout.session.completed`
+   - `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
+   - `invoice.paid`, `invoice.payment_failed`
+   - `charge.refunded`
+   - `identity.verification_session.verified`, `identity.verification_session.requires_input`, `identity.verification_session.processing`, `identity.verification_session.canceled`
+4. Copy the endpoint's **signing secret** (`whsec_…`) into Netlify as `STRIPE_WEBHOOK_SECRET`, marked as a secret. Then redeploy.
+
+## 4a. Earlier Stripe notes
 
 1. Create a Product and a recurring Price for each package. Enter each `price_…` ID in **Owner Portal → Pricing & packages**.
 2. Add a webhook endpoint at `https://theartofconnect.com/api/stripe/webhook` for these events: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded`.

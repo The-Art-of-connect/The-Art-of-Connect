@@ -152,3 +152,15 @@ v4-21) Finance reads the checklist but cannot change it (expect 18 rows, then 0 
 v4-22) Member reads the checklist (expect 0); records a versioned consent (expect 1):
 0
 1
+v5-1) Owner signed in with password only (aal1) reads the audit log (expect 0):
+0
+v5-2) Owner with password only tries to change a launch setting (expect 0 rows):
+0
+v5-3) Owner with password only reads members (expect only own profile, 1):
+1
+v5-4) Owner after MFA (aal2) reads the audit log (expect more than 0):
+t
+v5-5) Owner after MFA still cannot read private journals or dates of birth (expect 0, 0):
+0|0
+v5-6) Ordinary member without MFA still uses their account normally (expect 1 journal):
+1
