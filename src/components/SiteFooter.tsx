@@ -20,7 +20,7 @@ export function SiteFooter() {
         {[
           { title: "Experiences", items: [["In Business", "/business"], ["In Life", "/life"], ["In Love", "/love"]] },
           { title: "Membership", items: [["Build Your Membership", "/membership#build"], ["Compare memberships", "/membership#compare"], ["Sign in", "/sign-in"]] },
-          { title: "Company", items: [["For professionals", "/professionals"], ["Privacy", "/privacy"], ["Terms", "/terms"]] },
+          { title: "Company", items: [["For professionals", "/professionals"], ["Safety", "/legal/safety-policy"], ["Privacy", "/legal/privacy-policy"], ["Terms", "/legal/terms-of-service"], ["All policies", "/legal"]] },
         ].map((col) => (
           <div key={col.title}>
             <p className="eyebrow mb-4">{col.title}</p>

@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { serverSecret } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordVerification } from "@/lib/identity";
 
 const ALL = ["business", "counseling", "relationships"] as const;
 
@@ -121,6 +122,14 @@ export async function POST(request: NextRequest) {
         },
         { onConflict: "stripe_payment_intent_id" },
       );
+      break;
+    }
+    case "identity.verification_session.verified":
+    case "identity.verification_session.requires_input":
+    case "identity.verification_session.canceled":
+    case "identity.verification_session.processing": {
+      const { data: setting } = await db.from("platform_settings").select("value").eq("key", "minimum_member_age").maybeSingle();
+      await recordVerification(stripe, event.data.object.id, Number(setting?.value ?? 40));
       break;
     }
     case "charge.refunded": {

@@ -10,6 +10,7 @@ export const LAUNCH_KEYS = [
   "business_live",
   "counseling_live",
   "counselor_applications_open",
+  "identity_verification_live",
   "maintenance_mode",
 ] as const;
 export type LaunchKey = (typeof LAUNCH_KEYS)[number];
@@ -23,6 +24,7 @@ const CLOSED: LaunchState = {
   business_live: false,
   counseling_live: false,
   counselor_applications_open: false,
+  identity_verification_live: false,
   maintenance_mode: false,
 };
 

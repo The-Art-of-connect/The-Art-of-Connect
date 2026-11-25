@@ -7,6 +7,7 @@ import { getLaunchState } from "@/lib/launch";
 import { getCatalogue } from "@/lib/catalogue";
 import { ATTR_COOKIE, REF_COOKIE, parseAttribution } from "@/lib/attribution";
 import { env } from "@/lib/env";
+import { allow } from "@/lib/ratelimit";
 
 export type AuthState = { error?: string; notice?: string } | null;
 
@@ -22,6 +23,7 @@ export async function signIn(_prev: AuthState, form: FormData): Promise<AuthStat
   });
   if (!parsed.success) return { error: "Enter your email and password." };
 
+  if (!(await allow("sign-in", 10, 900))) return { error: "Too many attempts. Please wait a few minutes and try again." };
   const supabase = await createClient();
   if (!supabase) return { error: "Sign-in is not available yet." };
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -86,6 +88,7 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
     return { error: `The Art of Connect is exclusively for adults ${minimum_member_age} and older.` };
   }
 
+  if (!(await allow("sign-up", 5, 3600))) return { error: "Too many attempts. Please try again later." };
   const supabase = await createClient();
   if (!supabase) return { error: "Registration is not available yet." };
   const jar = await cookies();

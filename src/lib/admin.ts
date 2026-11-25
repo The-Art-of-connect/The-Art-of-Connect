@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; group: string }[] = [
   { href: "/admin", label: "Overview", roles: ["owner", "admin", "support", "moderator", "finance"], group: "Command" },
+  { href: "/admin/launch", label: "Launch readiness", roles: ["owner", "admin", "finance"], group: "Command" },
   { href: "/admin/analytics", label: "Analytics", roles: ["owner", "admin"], group: "Command" },
   { href: "/admin/members", label: "Members", roles: ["owner", "admin", "support"], group: "People" },
   { href: "/admin/counselors", label: "Professional applications", roles: ["owner", "admin"], group: "People" },
@@ -15,6 +16,7 @@ export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; 
   { href: "/admin/marketing", label: "Marketing & promotions", roles: ["owner", "admin"], group: "Growth" },
   { href: "/admin/support", label: "Customer support", roles: ["owner", "admin", "support"], group: "Care" },
   { href: "/admin/moderation", label: "Content moderation", roles: ["owner", "admin", "moderator"], group: "Care" },
+  { href: "/admin/safety", label: "Trust & safety", roles: ["owner", "admin", "moderator"], group: "Care" },
   { href: "/admin/settings", label: "Launch controls & settings", roles: ["owner"], group: "Platform" },
 ];
 

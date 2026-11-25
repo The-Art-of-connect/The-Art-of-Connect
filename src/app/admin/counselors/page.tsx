@@ -52,7 +52,21 @@ export default async function CounselorsPage() {
               </div>
               <ActionForm action={reviewApplication} className="space-y-2">
                 <input type="hidden" name="id" value={a.id} />
-                <textarea name="notes" defaultValue={a.reviewer_notes ?? ""} placeholder="Verification notes (license lookup, references…)" className="field !min-h-[70px] text-sm" />
+                <fieldset className="grid gap-1.5 rounded-xl border border-line p-3 text-xs sm:grid-cols-2">
+                  <legend className="px-1 font-semibold text-muted">Credential checklist</legend>
+                  {([
+                    ["identity_checked", "Identity confirmed", a.identity_checked],
+                    ["license_verified", "License active with issuing board", a.license_verified],
+                    ["disciplinary_check_clear", "No disciplinary actions", a.disciplinary_check_clear],
+                    ["insurance_confirmed", "Liability insurance confirmed", a.insurance_confirmed],
+                    ["references_checked", "References checked", a.references_checked],
+                  ] as const).map(([name, label, on]) => (
+                    <label key={name} className="flex items-center gap-2"><input type="checkbox" name={name} defaultChecked={Boolean(on)} className="accent-[var(--champagne)]" /> {label}</label>
+                  ))}
+                </fieldset>
+                <input name="lookupUrl" defaultValue={a.license_lookup_url ?? ""} placeholder="License board lookup link (https://…)" className="field !min-h-[40px] text-sm" />
+                <textarea name="notes" defaultValue={a.reviewer_notes ?? ""} placeholder="Verification notes (references, insurance, follow-ups…)" className="field !min-h-[70px] text-sm" />
+                {a.professional_type === "licensed_clinical" && <p className="text-xs text-faint">Licensed clinicians need identity, license verification (with lookup link) and a clear disciplinary check before approval.</p>}
                 <div className="flex flex-wrap gap-2">
                   <button name="decision" value="approved" className="btn btn-gold btn-sm">Approve</button>
                   <button name="decision" value="in_review" className="btn btn-ghost btn-sm">In review</button>

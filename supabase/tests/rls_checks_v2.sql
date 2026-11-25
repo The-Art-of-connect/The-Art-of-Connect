@@ -36,12 +36,12 @@ select count(*) from relationships.profiles;
 
 \echo 'v2-2) Wrong person tries to accept the invitation (expect error):'
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000006';
-select relationships.accept_partner_invitation('secret-token');
+select relationships.accept_partner_invitation('secret-token') is not null;
 \echo 'v2-3) Bad token (expect error):'
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000005';
 select relationships.accept_partner_invitation('wrong-token');
 \echo 'v2-4) Invited partner accepts (expect couple id):'
-select relationships.accept_partner_invitation('secret-token');
+select relationships.accept_partner_invitation('secret-token') is not null;
 \echo 'v2-5) Partner sees couple members (expect 2):'
 select count(*) from relationships.couple_members;
 \echo 'v2-6) Partner reads the other partner private reflections (expect 0):'
