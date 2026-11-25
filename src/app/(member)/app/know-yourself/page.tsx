@@ -26,14 +26,14 @@ export default async function ArtOfKnowingYourself() {
           { src: "/images/library/business/executive-portrait.webp", alt: "A confident woman seated in a stately room" },
         ]}
         eyebrow="The Art of Knowing Yourself" title="Your first connection is" gilded="with yourself."
-        subtitle="Before the career, the relationship, the marriage and the responsibilities, there is you. Discover who you are, what you value and what you want your life to become."
-        cta={{ href: "#who-am-i", label: started ? "Continue My Personal Journey" : "Begin My Personal Journey" }}
-        secondary={{ href: "/app", label: "Explore My Society First" }}
+        subtitle="Beyond the career, the relationship, the marriage and the responsibilities, there is you. Discover who you are, understand what you value, honor your boundaries and create a life that reflects your true self."
+        cta={{ href: "#who-am-i", label: started ? "Continue My Journey of Self-Discovery" : "Begin My Journey of Self-Discovery" }}
+        secondary={{ href: "/app", label: "Explore My Society" }}
       />
 
       {paused && (
         <p className="mt-6 rounded-2xl border border-champagne/50 bg-champagne/10 px-5 py-3 text-sm">
-          Welcome back. You chose to {d.choice === "later" ? "return when you’re ready" : "explore your society first"} — we won’t prompt you elsewhere. Everything here is waiting whenever you are.
+          Welcome back. Your journey of self-discovery is here whenever you are — explore as much or as little as feels right.
         </p>
       )}
 
@@ -59,7 +59,7 @@ export default async function ArtOfKnowingYourself() {
           <div>
             <p className="eyebrow">Your personal discovery program</p>
             <h2 className="display mt-2 text-5xl">Who Am I?</h2>
-            <p className="mt-3 max-w-2xl text-muted">Nine short, private modules. Complete them in any order, at your own pace — one shared profile across Business, Life, Singles and Couples, so you’ll never be asked the same question twice.</p>
+            <p className="mt-3 max-w-2xl text-muted">Nine private reflections to explore in any order, at your own pace. One personal profile travels with you across Business, Life, Singles and Couples — so each question is asked only once.</p>
           </div>
           {started && (
             <div className="w-full max-w-xs">
@@ -132,10 +132,11 @@ export default async function ArtOfKnowingYourself() {
       {!paused && !isInsidePreview(viewer) && (
         <form action={setDiscoveryChoice} className="mt-8 text-center">
           <input type="hidden" name="choice" value="later" /><input type="hidden" name="back" value="/app" />
-          <button className="text-sm text-muted underline underline-offset-4 hover:text-gold">Return When I’m Ready</button>
+          <button className="text-sm text-muted underline underline-offset-4 hover:text-gold">Save for Later</button>
         </form>
       )}
-      <p className="display mt-10 text-center text-2xl italic text-gold-deep">Your discovery. Your pace. Your choice.</p>
+      <p className="display mt-10 text-center text-2xl italic text-gold-deep">Your life. Your identity. Your journey.</p>
+      <p className="mt-2 text-center text-xs tracking-[0.18em] text-muted">Private. Personal. Always your choice.</p>
     </>
   );
 }
