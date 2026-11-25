@@ -45,6 +45,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
         <h1 className="display mt-4 text-4xl">First, choose your membership.</h1>
         <p className="mt-5 text-muted">Select In Business, In Life, In Love — or combine them.</p>
         <Link href="/membership#build" className="btn btn-gold mt-8 w-full">Build Your Membership</Link>
+        <Link href="/join/free" className="btn btn-ghost mt-3 w-full">Or begin free with one society</Link>
       </div>
     );
   }

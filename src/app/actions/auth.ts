@@ -243,11 +243,30 @@ export async function confirmAccountLink(_prev: AuthState, form: FormData): Prom
  * Opens only when the owner has opened registration AND free business
  * accounts, and the required agreements are in effect. 21+ applies.
  */
-export async function signUpBusiness(_prev: AuthState, form: FormData): Promise<AuthState> {
+export async function signUpBusiness(prev: AuthState, form: FormData): Promise<AuthState> {
+  form.set("society", "business");
+  return signUpFree(prev, form);
+}
+
+type FreeSociety = "business" | "singles" | "couples";
+const SOCIETY_WELCOME: Record<FreeSociety, string> = {
+  business: "Welcome to The Professional Society.",
+  singles: "Welcome to The Personal Society.",
+  couples: "Welcome to The Personal Society for couples.",
+};
+
+/**
+ * Free membership: The Art of Self for everyone, plus ONE selected society.
+ * Business 21+ · Singles 30+ · Couples 21+ (both partners; the partner confirms their own age when joining).
+ * No payment details, no Journey and no billable AI. Access is granted here, on the server, only for the chosen society.
+ */
+export async function signUpFree(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const society = String(form.get("society") ?? "") as FreeSociety;
+  if (!["business", "singles", "couples"].includes(society)) return { error: "Please choose one society to begin." };
   const launch = await getLaunchState();
-  // Both switches respect the master launch lock.
-  if (!launch.registrations_open || !launch.free_business_accounts_open) return { error: "Founding business accounts open soon." };
-  if (!(await allInEffect(REGISTRATION_DOCS))) return { error: "Our agreements are being finalized. Founding enrollment opens soon." };
+  // Every switch respects the master launch lock.
+  if (!launch.registrations_open || (society === "business" && !launch.free_business_accounts_open)) return { error: "Free memberships open soon." };
+  if (!(await allInEffect(REGISTRATION_DOCS))) return { error: "Our agreements are being finalized. Enrollment opens soon." };
   const parsed = joinSchema
     .pick({ displayName: true, email: true, password: true, dobYear: true, dobMonth: true, dobDay: true, agree: true })
     .safeParse({
@@ -262,16 +281,26 @@ export async function signUpBusiness(_prev: AuthState, form: FormData): Promise<
   const dob = new Date(Date.UTC(d.dobYear, d.dobMonth - 1, d.dobDay));
   if (dob.getUTCMonth() !== d.dobMonth - 1 || dob.getUTCDate() !== d.dobDay) return { error: "Please enter a valid date of birth." };
   const { minimum_member_age } = await getCatalogue();
-  if ((await ageOn(dob)) < minimum_member_age) return { error: `The Art of Connect is for adults ${minimum_member_age} and older.` };
+  const age = await ageOn(dob);
+  if (age < minimum_member_age) return { error: `The Art of Connect is for adults ${minimum_member_age} and older.` };
+  if (society === "singles" && age < MIN_AGE_SINGLES) {
+    return { error: `The Personal Society singles experience is for adults ${MIN_AGE_SINGLES} and older. You're welcome to begin with The Professional Society or as a couple.` };
+  }
 
   const supabase = await createClient();
   if (!supabase) return { error: "Registration is not available yet." };
+  const next = society === "business" ? "/app/business/onboarding" : "/app/relationships/onboarding";
   const { data: created, error } = await supabase.auth.signUp({
     email: d.email,
     password: d.password,
     options: {
-      emailRedirectTo: `${env.siteUrl}/auth/callback?next=/app/business/onboarding`,
-      data: { display_name: d.displayName, account_type: "member", date_of_birth: dob.toISOString().slice(0, 10), plan: "free_business", accepted_terms_at: new Date().toISOString() },
+      emailRedirectTo: `${env.siteUrl}/auth/callback?next=${next}`,
+      data: {
+        display_name: d.displayName, account_type: "member", date_of_birth: dob.toISOString().slice(0, 10),
+        plan: society === "business" ? "free_business" : "free_personal",
+        selection: { experiences: [society === "business" ? "business" : "relationships"], package: null, love_status: society === "business" ? null : society === "couples" ? "couple" : "single" },
+        accepted_terms_at: new Date().toISOString(),
+      },
     },
   });
   if (error || !created.user) return { error: /adults|date of birth/i.test(error?.message ?? "") ? error!.message : "We couldn’t create your account. Please try again." };
@@ -279,9 +308,10 @@ export async function signUpBusiness(_prev: AuthState, form: FormData): Promise<
   if (admin) {
     const { ipHash, userAgent } = await clientMeta();
     await admin.rpc("record_legal_acceptance_for", { target: created.user.id, docs: REGISTRATION_DOCS, ctx: "registration", statement: acceptanceStatement(REGISTRATION_DOCS), ip_hash: ipHash, user_agent: userAgent });
-    // In Business access with no subscription and no payment details.
-    await admin.from("experience_access").upsert({ user_id: created.user.id, experience: "business", status: "active", source: "free_tier" }, { onConflict: "user_id,experience" });
-    if (form.get("marketing") === "on") await admin.from("consents").insert({ user_id: created.user.id, consent_type: "marketing", version: "2026-12", details: { source: "business_registration" } });
+    // Only the chosen society, with no subscription and no payment details.
+    await admin.from("experience_access").upsert({ user_id: created.user.id, experience: society === "business" ? "business" : "relationships", status: "active", source: "free_tier" }, { onConflict: "user_id,experience" });
+    await admin.from("profiles").update({ primary_society: society }).eq("id", created.user.id);
+    if (form.get("marketing") === "on") await admin.from("consents").insert({ user_id: created.user.id, consent_type: "marketing", version: "2026-12", details: { source: `free_${society}_registration` } });
   }
-  return { notice: "Welcome to The Professional Society. Please check your inbox to confirm your email, then sign in to tell us about your business." };
+  return { notice: `${SOCIETY_WELCOME[society]} Please check your inbox to confirm your email, then sign in. The Art of Self is waiting for you too.` };
 }

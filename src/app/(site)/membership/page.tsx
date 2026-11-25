@@ -37,7 +37,9 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <a href="#build" className="btn btn-gold">Choose Your Experience</a>
             <a href="#compare" className="btn btn-ghost">Compare memberships</a>
+            <a href="/join/free" className="btn btn-ghost">Begin free</a>
           </div>
+          <p className="mt-4 max-w-2xl text-sm text-muted">Begin free with The Art of Self and one society of your choice: The Professional Society (21+), The Personal Society for singles (30+) or for couples (21+). Journey is included with every paid membership.</p>
           {!launch.registrations_open && (
             <p className="mt-8 inline-flex rounded-full border border-line-strong px-4 py-2 text-sm text-gold">Membership enrollment opens soon</p>
           )}

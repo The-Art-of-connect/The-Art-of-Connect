@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useActionState } from "react";
-import { signIn, signUp, signUpBusiness, type AuthState } from "@/app/actions/auth";
+import { signIn, signUp, signUpBusiness, signUpFree, type AuthState } from "@/app/actions/auth";
 import type { Selection } from "@/lib/pricing";
 import { LEGAL_TITLES, REGISTRATION_DOCS } from "@/lib/legal-requirements";
 import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
@@ -23,14 +23,33 @@ export function SignInForm({ next }: { next?: string }) {
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-export function JoinForm({ selection, loveStatus, minimumAge, business = false }: { selection: Selection; loveStatus: "single" | "couple" | null; minimumAge: number; business?: boolean }) {
-  const [state, action, pending] = useActionState<AuthState, FormData>(business ? signUpBusiness : signUp, null);
+const SOCIETIES = [
+  { id: "business", title: "The Professional Society", line: "Business · Adults 21+" },
+  { id: "singles", title: "The Personal Society · Singles", line: "Intentional dating · Adults 30+" },
+  { id: "couples", title: "The Personal Society · Couples", line: "Growing together · Both partners 21+" },
+];
+
+export function JoinForm({ selection, loveStatus, minimumAge, business = false, free = false, society = null }: { selection: Selection; loveStatus: "single" | "couple" | null; minimumAge: number; business?: boolean; free?: boolean; society?: string | null }) {
+  const [state, action, pending] = useActionState<AuthState, FormData>(free ? signUpFree : business ? signUpBusiness : signUp, null);
   const [verified, setVerified] = useTurnstileReady();
   if (state?.notice) return <p className="py-6 text-center text-muted" role="status">{state.notice}</p>;
   const thisYear = new Date().getFullYear();
   const years = Array.from({ length: 90 }, (_, i) => thisYear - minimumAge - i);
   return (
     <form action={action} className="space-y-4">
+      {free && (
+        <fieldset className="space-y-2">
+          <legend className="mb-2 text-sm text-muted">Choose your society <span className="text-faint">(one to begin; The Art of Self is included for everyone)</span></legend>
+          {SOCIETIES.map((x) => (
+            <label key={x.id} className="block cursor-pointer">
+              <input type="radio" name="society" value={x.id} required defaultChecked={society === x.id} className="peer sr-only" />
+              <span className="block rounded-2xl border border-line px-4 py-3 transition peer-checked:border-gold peer-checked:bg-gold/10 peer-focus-visible:ring-2 peer-focus-visible:ring-gold">
+                <span className="block font-semibold">{x.title}</span><span className="block text-xs text-muted">{x.line}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      )}
       {selection.experiences.map((e) => <input key={e} type="hidden" name="experiences" value={e} />)}
       {selection.addons.map((a) => <input key={a} type="hidden" name="addons" value={a} />)}
       <input type="hidden" name="interval" value={selection.interval} />
