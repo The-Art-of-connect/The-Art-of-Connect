@@ -8,6 +8,9 @@ import { LESSONS, MODULES, PILLARS, moduleBySlug } from "@/lib/who-am-i";
 import { saveDiscoveryModule } from "@/app/actions/who-am-i";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { PillarIcon } from "@/components/PillarIcon";
+import { PersonalDiscoveryCard } from "@/components/PersonalDiscoveryCard";
+import { analysisKey, composeReflection, parseJourneyDiscovery } from "@/lib/personal-discovery";
+import { getJourneyStatus } from "@/lib/journey-server";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +26,11 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
   if (!mod) notFound();
   const viewer = (await getViewer())!;
   const supabase = (await createClient())!;
-  const [d, { data: history }] = await Promise.all([
+  const [d, { data: history }, journeyStatus] = await Promise.all([
     getDiscovery(viewer.id),
     supabase.from("discovery_history").select("question_key, answer, choices, recorded_at").eq("user_id", viewer.id)
       .in("question_key", mod.questions.map((q) => q.key)).order("recorded_at", { ascending: true }),
+    getJourneyStatus().catch(() => null),
   ]);
   const firstVersion = (key: string) => (history ?? []).find((h) => h.question_key === key);
   const versions = (key: string) => (history ?? []).filter((h) => h.question_key === key).length;
@@ -35,6 +39,13 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
   const idx = MODULES.findIndex((m) => m.slug === mod.slug);
   const next = MODULES[(idx + 1) % MODULES.length];
   const nextHref = moduleHref(next.slug);
+  const reflection = composeReflection(mod, d.answers);
+  const saved = d.answers[analysisKey(mod.slug)];
+  const journeyReflection = saved?.answer ? parseJourneyDiscovery(saved.answer) : null;
+  const js = journeyStatus;
+  const option = !js || js.access === "none" ? { kind: "none" as const }
+    : js.access === "staff" ? { kind: "staff" as const, enabled: js.enabled }
+    : { kind: "member" as const, enabled: js.enabled, credits: js.allowance ? js.allowance.remaining + js.allowance.purchasedRemaining : 0 };
 
   return (
     <>
@@ -85,6 +96,7 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
           })}
           <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
             <button className="btn btn-gold">Save privately</button>
+            {reflection && <a href="#personal-discovery" className="btn btn-ghost">See my Personal Discovery</a>}
             <Link href={nextHref} className="btn btn-ghost">Next: {next.title}</Link>
           </div>
           <p className="text-xs text-muted">Leave anything blank and come back anytime. Your answers are private and never shared with connections, matches, partners, providers or our team.</p>
@@ -106,6 +118,11 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
           </Link>
         </aside>
       </div>
+      {reflection && (
+        <PersonalDiscoveryCard slug={mod.slug} reflection={reflection} journey={journeyReflection}
+          journeyWritten={journeyReflection && saved ? new Date(saved.updated_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : null}
+          option={option} />
+      )}
     </>
   );
 }
