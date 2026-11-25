@@ -403,3 +403,33 @@ select.field { appearance: none; }
 /* Long-form legal reading: generous line height and measure. */
 .legal-prose { line-height: 1.75; }
 .legal-prose h2 { margin-top: 2.25rem; }
+
+/* ── The Professional Society: living dashboard ─────────────────── */
+@keyframes kenburns { 0% { transform: scale(1.04) translate3d(0, 0, 0); } 100% { transform: scale(1.14) translate3d(-2%, -1.5%, 0); } }
+@keyframes flow { to { stroke-dashoffset: -240; } }
+@keyframes node-pulse { 0%, 100% { opacity: 0.55; r: 3.2; } 50% { opacity: 1; r: 5; } }
+@keyframes shimmer { 0% { transform: translateX(-120%) skewX(-18deg); } 60%, 100% { transform: translateX(220%) skewX(-18deg); } }
+@keyframes tile-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes glow-breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.75; } }
+@keyframes ticker-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.kenburns { animation: kenburns 24s ease-in-out infinite alternate; transform-origin: 60% 40%; }
+.flow-line { stroke-dasharray: 6 18; animation: flow 6s linear infinite; }
+.flow-line.slow { animation-duration: 10s; }
+.node-pulse { animation: node-pulse 3.2s ease-in-out infinite; }
+.shimmer { position: relative; overflow: hidden; isolation: isolate; }
+.shimmer::after {
+  content: ""; position: absolute; inset: 0; width: 40%; z-index: -1;
+  background: linear-gradient(90deg, transparent, rgba(255, 248, 230, 0.55), transparent);
+  animation: shimmer 4.5s ease-in-out infinite;
+}
+.tile-in { animation: tile-in 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both; }
+.lift { transition: transform .35s cubic-bezier(0.2, 0.7, 0.1, 1), box-shadow .35s ease, border-color .35s ease; }
+.lift:hover, .lift:focus-visible { transform: translateY(-4px); border-color: rgba(197, 165, 114, 0.75); box-shadow: 0 18px 40px -18px rgba(116, 63, 77, 0.35), 0 0 0 1px rgba(197, 165, 114, 0.25); }
+.lift:active { transform: translateY(-1px) scale(0.99); }
+.glow-breathe { animation: glow-breathe 6s ease-in-out infinite; }
+.ticker-in { animation: ticker-in 0.8s ease-out both; }
+.progress-fill { transition: width 1.4s cubic-bezier(0.2, 0.7, 0.1, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .kenburns, .flow-line, .node-pulse, .shimmer::after, .tile-in, .glow-breathe, .ticker-in { animation: none !important; }
+  .lift, .progress-fill { transition: none !important; }
+}

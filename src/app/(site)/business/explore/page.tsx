@@ -60,6 +60,22 @@ export default async function ExploreProfessionalSociety() {
         </section>
       </div>
 
+      <div className="band theme-dark">
+        <section className="mx-auto grid max-w-7xl gap-3 px-4 pb-16 sm:grid-cols-3 sm:px-8" aria-label="The Professional Society in pictures">
+          {[
+            { src: "/images/society/leaders.webp", label: "Experience worth sharing" },
+            { src: "/images/society/presenter-budget.webp", label: "Knowledge, exchanged" },
+            { src: "/images/society/boardroom-evening.webp", label: "Partnerships that last" },
+          ].map((p, i) => (
+            <figure key={p.src} className="group relative aspect-[4/3] overflow-hidden rounded-[22px] tile-in" style={{ animationDelay: `${i * 120}ms` }}>
+              <Image src={p.src} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />
+              <figcaption className="display absolute bottom-4 left-5 text-2xl text-ivory">{p.label}</figcaption>
+            </figure>
+          ))}
+        </section>
+      </div>
+
       <div className="band theme-cream">
         <section id="access" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-8 lg:py-24">
           <p className="eyebrow">Explore before you join</p>
