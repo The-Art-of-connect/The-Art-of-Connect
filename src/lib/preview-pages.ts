@@ -51,7 +51,7 @@ export const PREVIEW_GROUPS: { title: string; note: string; pages: [string, stri
     pages: [
       ["/app/counseling", "In Life home", "The In Life experience."],
       ["/app/counseling/journal", "Private journal", "Prompts, moods and entries only the member can read."],
-      ["/app/counseling/professionals", "Therapy & Counseling Center", "Licensed professionals (opens after legal approval)."],
+      ["/app/wellness", "Counseling & Wellness Center", "Open to every member; clinical services open after legal approval."],
     ],
   },
   {

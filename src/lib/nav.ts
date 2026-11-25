@@ -70,11 +70,13 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    key: "counseling", label: "Counseling", href: "/app/counseling", intro: "Personal growth and professional support.",
+    key: "counseling", label: "Counseling", href: "/app/wellness", intro: "Counseling & Wellness Center, open to every member.",
     links: [
-      { href: "/app/counseling", label: "Counseling & growth home", access: "member" },
-      { href: "/app/counseling/professionals", label: "Therapy & Counseling Center", note: "Opening after legal approval", access: "member" },
-      { href: "/app/counseling/journal", label: "My private journal", access: "member" },
+      { href: "/app/wellness", label: "Counseling & Wellness Center", note: "Journey, independent counselors, The Art of Wellness", access: "member" },
+      { href: "/app/wellness/art-of-wellness", label: "The Art of Wellness", note: "In-house counseling · coming soon", access: "member" },
+      { href: "/wellness", label: "Crisis resources", note: "Always available, no account needed" },
+      { href: "/app/counseling", label: "The Art of Becoming", note: "Premium personal development membership", access: "member" },
+      { href: "/app/counseling/journal", label: "My private journal", note: "The Art of Becoming", access: "member" },
       { href: "/professionals", label: "For professionals", note: "Counselors, coaches & mentors" },
       { href: "/professionals/apply", label: "Apply as a professional" },
     ],

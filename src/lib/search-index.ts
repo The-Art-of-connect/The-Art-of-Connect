@@ -12,6 +12,7 @@ const member = (href: string, title: string, section: string, summary: string, k
 
 export const SITE_PAGES: SearchEntry[] = [
   site("/", "Home", "The Art of Connect", "Start here — In Business. In Life. In Love.", "main home page start welcome landing"),
+  site("/wellness", "Crisis resources & wellness", "Counseling", "Help right now: 911, 988 Suicide & Crisis Lifeline, Crisis Text Line. No account needed.", "crisis emergency 988 suicide help hotline wellness counseling safety"),
   site("/membership", "Memberships & pricing", "Memberships", "Choose your experiences and build your membership.", "price prices cost plans packages join subscribe annual monthly bundle couples dual society"),
   site("/membership#build", "Build your membership", "Memberships", "Pick experiences and see your package.", "builder join sign up choose plan"),
   site("/business", "The Professional Society", "In Business", "Professional connections, networking, mentorship and partnerships.", "business networking mentor partners entrepreneurs owners"),
@@ -33,6 +34,7 @@ export const MEMBER_PAGES: SearchEntry[] = [
   member("/app", "Member home", "Your membership", "Your experiences and what’s next.", "home dashboard start"),
   member("/app/know-yourself", "The Art of Knowing Yourself", "Who Am I?", "Before you connect with the world, connect with yourself.", "who am i self discovery know yourself values beliefs purpose identity personal journey"),
   member("/app/know-yourself/portfolio", "My Personal Discovery Portfolio", "The Art of Self", "Your identity, emotional blueprint, patterns, values, growth and action plan, together.", "portfolio analysis overall report personal discovery results summary progress growth compare print download"),
+  member("/app/wellness", "Counseling & Wellness Center", "Counseling", "Journey guided support, independent counselors and The Art of Wellness, open to every member.", "counseling therapy therapist counselor wellness mental health support grief divorce stress help professional"),
   member("/app/journey/discover", "Discovery Sessions with Journey", "Journey", "Adaptive, personal questions across 14 areas of life, with a private summary.", "discovery session adaptive questions journey personal summary analysis childhood dating marriage money leadership"),
   member("/app/know-yourself/identity-self-love", "Identity & Self-Love", "The Art of Self", "Discover who you are beyond roles, responsibilities and expectations.", "identity self love self-love alone solitude giving guilt boundaries communication worth needs"),
   member("/app/know-yourself/emotional-intelligence/lessons", "Emotional Intelligence: Founding Curriculum", "The Art of Self", "Six lessons: reactions, triggers, empathy, delivery, accountability and emotional maturity.", "emotional intelligence lessons triggers reaction empathy delivery tone accountability apology maturity curriculum"),
@@ -68,7 +70,6 @@ export const MEMBER_PAGES: SearchEntry[] = [
   member("/app/relationships/calendar", "Couples calendar", "In Love", "Your shared calendar for date nights and trips.", "calendar couples date night trip schedule"),
   member("/app/counseling", "The Art of Becoming", "In Life", "Personal growth and guidance.", "life growth counseling"),
   member("/app/counseling/journal", "Private journal", "In Life", "Your private journal — only you can read it.", "journal diary private writing"),
-  member("/app/counseling/professionals", "Therapy & Counseling Center", "In Life", "Licensed professionals (coming after legal approval).", "therapy therapist counseling counselor professional"),
 ];
 
 /** Words people type that mean the same thing. */
