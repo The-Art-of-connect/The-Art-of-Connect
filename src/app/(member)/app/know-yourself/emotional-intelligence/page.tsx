@@ -27,6 +27,7 @@ export default async function EIProfile() {
         <Link href="/app/know-yourself" className="text-sm text-burgundy">← The Art of Knowing Yourself</Link>
         <p className="display mt-6 text-3xl italic text-burgundy">The Art of</p>
         <h1 className="display text-5xl sm:text-6xl">Emotional Intelligence</h1>
+        <Link href="/app/know-yourself/emotional-intelligence/lessons" className="mt-4 inline-block text-sm font-semibold text-burgundy">Begin the Founding Curriculum: six lessons →</Link>
         <p className="display mt-2 text-2xl italic text-text/80">My private profile</p>
         <div className="mt-5 h-px w-24 bg-gold" />
         <p className="mt-5 max-w-2xl text-muted">An optional, evolving reflection — never a label or a diagnosis. Update it whenever you notice something new; your earlier words are kept privately so you can see how you’ve grown.</p>

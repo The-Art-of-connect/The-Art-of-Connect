@@ -1,7 +1,9 @@
-import { IDENTITY_SELF_LOVE, type Curriculum } from "@/lib/curricula/identity-self-love";
+import type { Curriculum } from "@/lib/curricula/core";
+import { IDENTITY_SELF_LOVE } from "@/lib/curricula/identity-self-love";
+import { EMOTIONAL_INTELLIGENCE } from "@/lib/curricula/emotional-intelligence";
 
 /** Founding (code) versions of each founder-editable curriculum. */
-export const CURRICULA: Record<string, Curriculum> = { [IDENTITY_SELF_LOVE.section]: IDENTITY_SELF_LOVE };
+export const CURRICULA: Record<string, Curriculum> = { [IDENTITY_SELF_LOVE.section]: IDENTITY_SELF_LOVE, [EMOTIONAL_INTELLIGENCE.section]: EMOTIONAL_INTELLIGENCE };
 
 type Db = { from: (t: string) => any }; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -13,12 +15,21 @@ type Db = { from: (t: string) => any }; // eslint-disable-line @typescript-eslin
 export function mergeCurriculum(base: Curriculum, edited: unknown): Curriculum {
   const e = (edited ?? {}) as Partial<Curriculum>;
   const str = (v: unknown, fallback: string, max = 4000) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : fallback);
+  const examples = (v: unknown, fallback: Curriculum["lessons"][number]["examples"]) => {
+    const xs = Array.isArray(v) ? (v as { who?: unknown; text?: unknown }[]).filter((x) => x && typeof x.who === "string" && typeof x.text === "string" && x.text.trim()) : [];
+    return xs.length ? xs.slice(0, 12).map((x) => ({ who: String(x.who).slice(0, 120), text: String(x.text).slice(0, 2000) })) : fallback;
+  };
   const list = (v: unknown, fallback: string[]) => (Array.isArray(v) && v.every((x) => typeof x === "string") && v.length ? (v as string[]).map((x) => x.slice(0, 2000)).slice(0, 20) : fallback);
   return {
     ...base,
     title: str(e.title, base.title, 120), tagline: str(e.tagline, base.tagline, 300),
     purpose: list(e.purpose, base.purpose), philosophy: str(e.philosophy, base.philosophy), closing: str(e.closing, base.closing),
-    journeyInstructions: str(e.journeyInstructions, base.journeyInstructions, 6000),
+    journeyInstructions: str(e.journeyInstructions, base.journeyInstructions, 8000),
+    analysisTitle: str(e.analysisTitle, base.analysisTitle, 120),
+    analysis: base.analysis.map((a) => { const ea = (e.analysis ?? []).find((x) => x?.key === a.key); return ea ? { key: a.key, title: str(ea.title, a.title, 120), empty: str(ea.empty, a.empty, 600) } : a; }),
+    foundations: base.foundations?.map((f, i) => { const ef = e.foundations?.[i]; return ef ? { ...f, title: str(ef.title, f.title, 120), text: str(ef.text, f.text, 600) } : f; }),
+    scenarios: base.scenarios ? examples(e.scenarios, base.scenarios) : undefined,
+    exercises: base.exercises ? list(e.exercises, base.exercises) : undefined,
     lessons: base.lessons.map((l) => {
       const el = (e.lessons ?? []).find((x) => x?.slug === l.slug);
       if (!el) return l;
@@ -27,9 +38,8 @@ export function mergeCurriculum(base: Curriculum, edited: unknown): Curriculum {
         title: str(el.title, l.title, 160), focus: list(el.focus, l.focus), understanding: list(el.understanding, l.understanding),
         principles: l.principles ? list(el.principles, l.principles) : undefined,
         reflection: str(el.reflection, l.reflection), forward: str(el.forward, l.forward), journeyPrompt: str(el.journeyPrompt, l.journeyPrompt, 600),
-        examples: Array.isArray(el.examples) && el.examples.length
-          ? el.examples.filter((x) => x && typeof x.who === "string" && typeof x.text === "string" && x.text.trim()).slice(0, 10).map((x) => ({ who: x.who.slice(0, 120), text: x.text.slice(0, 2000) }))
-          : l.examples,
+        examples: examples(el.examples, l.examples),
+        exercise: l.exercise ? str(el.exercise, l.exercise) : undefined,
         questions: l.questions.map((q) => {
           const eq = (el.questions ?? []).find((x) => x?.key === q.key);
           if (!eq) return q;

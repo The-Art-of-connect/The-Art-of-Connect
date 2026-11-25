@@ -30,13 +30,13 @@ export function MobileMenu({ state }: { state: NavState }) {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-full border border-line-strong lg:hidden" aria-label="Open menu" aria-expanded={open} aria-controls="mobile-menu">
+      <button type="button" onClick={() => setOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-full border border-line-strong xl:hidden" aria-label="Open menu" aria-expanded={open} aria-controls="mobile-menu">
         <span className="flex w-5 flex-col gap-[5px]" aria-hidden="true"><span className="h-px w-full bg-gold" /><span className="h-px w-3/4 bg-gold" /><span className="h-px w-full bg-gold" /></span>
       </button>
 
       {mounted && createPortal(
         <div id="mobile-menu" role="dialog" aria-modal="true" aria-label="Site menu"
-          className={`theme-dark fixed inset-0 z-50 flex flex-col bg-ink transition-[opacity,visibility] duration-300 lg:hidden ${open ? "visible opacity-100" : "invisible opacity-0"}`}>
+          className={`theme-dark fixed inset-0 z-50 flex flex-col bg-ink transition-[opacity,visibility] duration-300 xl:hidden ${open ? "visible opacity-100" : "invisible opacity-0"}`}>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_80%_0%,rgb(116_63_77/0.35),transparent_70%)]" />
           <div className="relative flex h-16 items-center justify-between px-4 sm:px-8">
             <span className="eyebrow">The Art of Connect</span>

@@ -8,27 +8,31 @@ type JourneyOption =
   | { kind: "staff"; enabled: boolean }
   | { kind: "none" };
 
-const SECTIONS: { key: keyof PersonalDiscovery; title: string }[] = [
+type Block = { title: string; paras: string[] };
+const TITLES: { key: keyof PersonalDiscovery; title: string }[] = [
   { key: "discovered", title: "What You Discovered About Yourself" },
   { key: "qualities", title: "Your Personal Strengths" },
   { key: "growth", title: "Areas for Personal Development" },
   { key: "forward", title: "Moving Forward" },
 ];
+/** Converts a Who Am I? reflection into display blocks. */
+export const discoveryBlocks = (pd: PersonalDiscovery): Block[] => TITLES.map((t) => ({ title: t.title, paras: pd[t.key] }));
 
-/** "Your Personal Discovery": the end-of-chapter reflection, self-guided or written with Journey. Private to the member. */
-export function PersonalDiscoveryCard({ slug, reflection, journey, journeyWritten, option, action = createJourneyDiscovery, field = "module", consent = "this chapter\u2019s answers", title = "Your Personal Discovery", selfLine = "Composed from your own answers, with no AI and no credits. Update your answers anytime and your reflection grows with you." }: {
+/** The end-of-section written analysis, self-guided or written with Journey. Private to the member. */
+export function PersonalDiscoveryCard({ slug, sections, fromJourney, journeyWritten, option, action = createJourneyDiscovery, field = "module", consent = "this chapter\u2019s answers", title = "Your Personal Discovery", closing = DISCOVERY_CLOSING, selfLine = "Composed from your own answers, with no AI and no credits. Update your answers anytime and your reflection grows with you." }: {
   slug: string;
+  sections: Block[];
+  fromJourney: boolean;
   action?: (p: import("@/app/actions/admin").ActionResult, f: FormData) => Promise<import("@/app/actions/admin").ActionResult>;
   field?: string;
   consent?: string;
   title?: string;
+  closing?: string;
   selfLine?: string;
-  reflection: PersonalDiscovery;
-  journey: PersonalDiscovery | null;
   journeyWritten: string | null;
   option: JourneyOption;
 }) {
-  const shown = journey ?? reflection;
+  const journey = fromJourney;
   return (
     <section id="personal-discovery" aria-labelledby="pd-title" className="tile-in mt-10 scroll-mt-24">
       <div className="theme-ivory mx-auto max-w-3xl rounded-[28px] border border-champagne bg-ivory px-6 py-10 shadow-xl sm:px-12">
@@ -40,14 +44,14 @@ export function PersonalDiscoveryCard({ slug, reflection, journey, journeyWritte
           Private to you
         </p>
         <div className="mx-auto mt-6 h-px w-full bg-champagne" />
-        {SECTIONS.map((s) => (
-          <div key={s.key} className="mt-7">
+        {sections.map((s) => (
+          <div key={s.title} className="mt-7">
             <h3 className="display text-2xl text-burgundy">{s.title}</h3>
-            {shown[s.key].map((p, i) => <p key={i} className="mt-3 leading-relaxed text-text">{p}</p>)}
+            {s.paras.map((p, i) => <p key={i} className="mt-3 leading-relaxed text-text">{p}</p>)}
           </div>
         ))}
         <div className="mx-auto mt-8 h-px w-full bg-champagne" />
-        <p className="display mt-6 text-center text-xl italic text-burgundy">{DISCOVERY_CLOSING}</p>
+        <p className="display mt-6 text-center text-xl italic text-burgundy">{closing}</p>
         <p className="mt-6 text-center text-xs text-muted">A reflection for your growth, not a diagnosis or a label. Take what resonates and leave the rest.</p>
       </div>
 
