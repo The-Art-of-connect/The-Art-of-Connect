@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Constellation } from "@/components/Constellation";
-import { Monogram, Ornament } from "@/components/Emblem";
+import { Ornament } from "@/components/Emblem";
 import { ExperienceExplorer } from "@/components/ExperienceExplorer";
 import { Reveal } from "@/components/Reveal";
 import { WaitlistForm } from "@/components/WaitlistForm";
@@ -27,9 +26,17 @@ export default async function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <div className="band theme-dark">
+      <div className="band theme-dark relative overflow-hidden">
+        {/* ── Hero artwork: burgundy glow, the AC monogram and lotus ── */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_12%_35%,rgba(120,31,53,0.5),transparent_62%)]" />
+        <div aria-hidden="true" className="hero-art hero-art-mask pointer-events-none absolute inset-y-0 right-0 w-[64%] opacity-80 sm:w-[58%] lg:right-[4%] lg:aspect-[0.62] lg:w-auto lg:opacity-100">
+          <div className="hero-art-float absolute inset-0">
+            <Image src="/brand/hero-art.webp" alt="" fill priority sizes="(min-width: 1024px) 40vw, 64vw" className="object-cover object-[center_55%] lg:object-[center_58%]" />
+          </div>
+          <div className="hero-glow absolute left-[55%] top-[68%] h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(233,196,128,0.55),transparent_70%)] blur-2xl" />
+        </div>
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pb-24 lg:pt-24">
+        <section className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pb-24 lg:pt-24">
           <div>
             <p className="eyebrow rise">In Business. In Life. In Love.</p>
             <p className="rise mt-4 inline-flex rounded-full border border-champagne/50 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] text-gold uppercase">
@@ -50,13 +57,8 @@ export default async function HomePage() {
               <Link href="#experiences" className="btn btn-ghost">Choose Your Experience</Link>
             </div>
           </div>
-          <div className="relative mx-auto w-full max-w-[560px]">
-            <Constellation className="w-full opacity-45" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="absolute h-1/2 w-1/2 rounded-full bg-gold/10 blur-3xl" />
-              <Monogram height={250} priority className="relative h-auto w-[72%] drop-shadow-[0_10px_40px_rgba(201,173,131,0.25)]" />
-            </div>
-          </div>
+          {/* Right column is the artwork behind (desktop). */}
+          <div className="hidden lg:block" />
         </section>
       </div>
 
