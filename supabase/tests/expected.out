@@ -631,3 +631,17 @@ v25-2) A member cannot switch themselves to another society (expect error):
 ERROR:  Not permitted to change these account fields
 v25-3) Even the server cannot store an unknown society (expect error):
 ERROR:  new row for relation "profiles" violates check constraint "profiles_primary_society_check"
+v26-1) A counselor sets their own fee (expect 1):
+1
+v26-2) A counselor cannot make themselves in-house (expect error):
+ERROR:  Only the platform can verify a counselor or change their provider type
+v26-3) Any member, whatever their society, sees listed counselors and their fees (expect t|1):
+true|1
+v26-4) A member cannot change a counselor's fees (expect 0):
+0
+v26-5) Appointment requests stay closed until the owner opens the center (expect error):
+ERROR:  new row violates row-level security policy for table "appointments"
+v26-6) A member saves private support preferences (expect either):
+either
+v26-7) The OWNER cannot read members' support preferences (expect 0):
+0
