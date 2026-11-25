@@ -30,7 +30,11 @@ export function ExperiencePage({
           <p className="rise rise-3 mt-8 max-w-xl text-lg leading-relaxed text-muted">{intro}</p>
           <div className="rise rise-4 mt-10 flex flex-col gap-3 sm:flex-row">
             <Link href={`/membership?experiences=${URL_KEY[experience]}#build`} className="btn btn-gold">Choose {e.name}</Link>
-            <Link href="/membership" className="btn btn-ghost">Explore Memberships</Link>
+            {experience === "business" ? (
+              <Link href="/business/explore" className="btn btn-ghost">Explore The Professional Society</Link>
+            ) : (
+              <Link href="/membership" className="btn btn-ghost">Explore Memberships</Link>
+            )}
           </div>
         </div>
         <div className="rise rise-3 relative aspect-[4/5] overflow-hidden rounded-[32px] border border-line-strong sm:aspect-[4/3] lg:aspect-[4/5]">

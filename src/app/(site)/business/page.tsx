@@ -14,7 +14,7 @@ export default function BusinessPage() {
     <ExperiencePage
       experience="business"
       headline={<>Connect <span className="gilded italic">with purpose.</span></>}
-      intro="Meaningful professional relationships, built on genuine compatibility. Find partners, mentors, collaborators and clients who share your values and complement your strengths."
+      intro="Meaningful professional relationships, built on genuine compatibility. Business owners helping business owners — find partners, mentors and collaborators across cities and states who complement your strengths."
       features={[
         { title: "Business compatibility", body: "Introductions shaped by your goals, stage, values and working style — so every conversation starts with real alignment." },
         { title: "Professional networking", body: "A curated community of founders, leaders and professionals, without the noise of an open directory." },
