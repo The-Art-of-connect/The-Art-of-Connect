@@ -27,10 +27,25 @@ async function me() {
 }
 
 // ─── Voice preferences ─────────────────────────────────────────────
-export async function saveVoicePrefs(style: string, transcripts: boolean): Promise<void> {
+export async function saveVoicePrefs(prefs: { style: string; transcripts: boolean; speed?: number; manual?: boolean; retentionDays?: number | null }): Promise<void> {
   const m = await me();
-  if (!m || !["warm", "calm", "confident", "soft", "friendly"].includes(style)) return;
-  await m.supabase.from("journey_voice_preferences").upsert({ user_id: m.viewer.id, voice_style: style, save_transcripts: transcripts, updated_at: new Date().toISOString() });
+  if (!m || !["warm", "calm", "confident", "soft", "friendly", "journey"].includes(prefs.style)) return;
+  const speed = Math.min(1.3, Math.max(0.7, Number(prefs.speed ?? 1)));
+  const retention = prefs.retentionDays === null ? null : Math.min(3650, Math.max(1, Math.round(Number(prefs.retentionDays ?? 90))));
+  await m.supabase.from("journey_voice_preferences").upsert({
+    user_id: m.viewer.id, voice_style: prefs.style === "journey" ? "warm" : prefs.style, save_transcripts: prefs.transcripts,
+    speed, manual_mode: Boolean(prefs.manual), transcript_retention_days: retention, updated_at: new Date().toISOString(),
+  });
+}
+
+/** Erase saved voice transcripts (one conversation or all). */
+export async function deleteVoiceTranscripts(_p: R, f: FormData): Promise<R> {
+  const m = await me();
+  if (!m) return fail("Preview only — nothing is saved.");
+  const id = String(f.get("id") ?? "");
+  const { data, error } = await m.supabase.rpc("journey_delete_voice_transcripts", { p_session: /^[0-9a-f-]{36}$/.test(id) ? id : null });
+  if (error) return fail("Not deleted. Please try again.");
+  return ok(Number(data) ? "Your voice transcripts have been permanently erased." : "There were no saved transcripts to erase.");
 }
 
 // ─── Memory ────────────────────────────────────────────────────────

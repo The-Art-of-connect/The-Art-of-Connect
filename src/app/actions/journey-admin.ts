@@ -281,3 +281,31 @@ export async function rateTestRun(input: { id: string; ratings: Record<string, n
   revalidatePath("/admin/journey/models");
   return ok("Rating saved.");
 }
+
+/** Owner: Journey's default voice, speaking pace and response depth (chosen after private auditions). */
+export async function setVoiceDefaults(p: { voice: string; speed: number; depth: string }): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const { REALTIME_VOICES } = await import("@/lib/journey-voice");
+  if (!(REALTIME_VOICES as readonly string[]).includes(p.voice)) return fail("Unknown voice.");
+  if (!["balanced", "complete", "in_depth"].includes(p.depth)) return fail("Unknown depth.");
+  const speed = Math.round(Math.min(1.3, Math.max(0.7, Number(p.speed))) * 100) / 100;
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("journey_settings").update({ voice_default: p.voice, voice_speed: speed, voice_depth: p.depth, updated_by: viewer.id }).eq("id", true);
+  if (error) return fail("Not saved.");
+  await done("journey.voice.defaults", "settings", { voice: p.voice, speed, depth: p.depth });
+  return ok(`Journey’s default is now ${p.voice} at ${speed.toFixed(2)}× with ${p.depth.replace("_", " ")} responses.`);
+}
+
+/** Owner: how patiently Journey waits before replying, background-noise handling and the transcription model. */
+export async function saveVoiceListening(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const eagerness = String(f.get("eagerness") ?? "low");
+  const noise = String(f.get("noise") ?? "near_field");
+  const transcribe = String(f.get("transcribe") ?? "").trim() || "gpt-4o-mini-transcribe";
+  if (!["low", "medium", "auto"].includes(eagerness) || !["near_field", "far_field", "off"].includes(noise) || !/^[A-Za-z0-9._:-]{2,80}$/.test(transcribe)) return fail("Check the values.");
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("journey_settings").update({ voice_eagerness: eagerness, voice_noise_reduction: noise, voice_transcribe_model: transcribe, updated_by: viewer.id }).eq("id", true);
+  if (error) return fail("Not saved.");
+  await done("journey.voice.listening", "settings", { eagerness, noise, transcribe });
+  return ok("Listening settings saved.");
+}

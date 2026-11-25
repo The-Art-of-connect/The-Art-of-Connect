@@ -562,3 +562,17 @@ v17-10) A member gets no totals (expect t = nothing returned):
 t
 v17-11) Anonymous visitors are refused (expect permission denied):
 ERROR:  permission denied for table journey_checkins
+v18-1) Another member cannot read or erase someone's transcripts (expect 0|0):
+0|0
+v18-2) The OWNER cannot read members' voice transcripts (expect 0):
+0
+v18-3) Members cannot run the retention purge themselves (expect permission denied):
+ERROR:  permission denied for function journey_purge_voice_transcripts
+v18-4) The member sets a 90-day retention, pace and manual mode (expect 0.90|true|90):
+0.90|true|90
+v18-5) Pace outside the safe range is refused (expect error):
+ERROR:  new row for relation "journey_voice_preferences" violates check constraint "journey_voice_preferences_speed_check"
+v18-6) The scheduled purge erases only transcripts past the member's retention (expect t|1):
+t|1
+v18-7) The member erases their remaining transcript (expect t|0):
+t|0

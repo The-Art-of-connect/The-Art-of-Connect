@@ -180,37 +180,7 @@ export async function sendJourneyMessage(input: {
     ? allowanceView(tier.monthlyMessages, Number(usage.period_messages), Number(usage.purchased_remaining), periodEnd)
     : null;
 
-  // Instructions: founder's philosophy and guardrails first, then the owner's published version.
-  const [{ data: published }, { data: knowledge }, { data: examples }] = await Promise.all([
-    input.ownerTest && input.instructionVersion
-      ? db.from("journey_instruction_versions").select("version, body").eq("version", input.instructionVersion).maybeSingle()
-      : db.from("journey_instruction_versions").select("version, body").eq("status", "published").maybeSingle(),
-    db.from("journey_knowledge").select("title, body").eq("status", "approved").in("mode", ["all", input.mode]).order("updated_at", { ascending: false }).limit(20),
-    db.from("journey_examples").select("member_message, ideal_reply").eq("status", "approved").eq("mode", input.mode).order("updated_at", { ascending: false }).limit(5),
-  ]);
-  let knowledgeText = "";
-  for (const k of knowledge ?? []) {
-    const block = `## ${k.title}\n${k.body}\n\n`;
-    if (knowledgeText.length + block.length > 8000) break;
-    knowledgeText += block;
-  }
-  const exampleText = (examples ?? []).map((e) => `Member: ${e.member_message.slice(0, 600)}\nJourney: ${e.ideal_reply.slice(0, 1200)}`).join("\n\n");
-  let memoryText = "";
-  if (cfg.memoryEnabled) {
-    const [{ data: ms }, { data: mem }] = await Promise.all([
-      db.from("journey_memory_settings").select("enabled, approach").eq("user_id", viewer.id).maybeSingle(),
-      db.from("journey_memories").select("kind, content").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
-    ]);
-    if (ms?.approach) memoryText += `The member prefers a ${ms.approach === "blend" ? "blended spiritual, secular and practical" : ms.approach} approach.\n`;
-    if (ms?.enabled && mem?.length) memoryText += mem.map((x) => `- (${x.kind}) ${x.content}`).join("\n");
-  }
-  const ownerText = [
-    published?.body ?? "",
-    memoryText && `# What this member has asked Journey to remember (use naturally; never reveal it to anyone else)\n${memoryText}`,
-    knowledgeText && `# Approved knowledge from The Art of Connect\n${knowledgeText}`,
-    exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
-  ].filter(Boolean).join("\n\n");
-  const instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
+  const { instructions, published } = await assembleInstructions(db, cfg, { userId: viewer.id, mode: input.mode, access, ownerTest: input.ownerTest, instructionVersion: input.instructionVersion });
 
   // Context: only this member's own conversation, trimmed to the owner's limits.
   let history: ChatTurn[] = [];
@@ -340,4 +310,45 @@ async function runSession(db: Db, settings: JourneySettings, userId: string, inp
     return refuse(502, "Journey couldn't reply just now. Please try again.");
   }
   return { ok: true, reply: result.text, conversationId: null, allowance: null };
+}
+
+/**
+ * Journey's instructions, identical for written and live conversations:
+ * the founder's philosophy and guardrails first, then the owner's personality
+ * (published — or, for owner tests, a chosen draft), the member's own memory,
+ * approved knowledge and example conversations.
+ */
+export async function assembleInstructions(db: Db, cfg: NonNullable<Awaited<ReturnType<typeof loadSettings>>>, input: { userId: string; mode: JourneyMode; access: "standard" | "enhanced"; ownerTest?: boolean; instructionVersion?: number | null }) {
+  // Instructions: founder's philosophy and guardrails first, then the owner's published version.
+  const [{ data: published }, { data: knowledge }, { data: examples }] = await Promise.all([
+    input.ownerTest && input.instructionVersion
+      ? db.from("journey_instruction_versions").select("version, body").eq("version", input.instructionVersion).maybeSingle()
+      : db.from("journey_instruction_versions").select("version, body").eq("status", "published").maybeSingle(),
+    db.from("journey_knowledge").select("title, body").eq("status", "approved").in("mode", ["all", input.mode]).order("updated_at", { ascending: false }).limit(20),
+    db.from("journey_examples").select("member_message, ideal_reply").eq("status", "approved").eq("mode", input.mode).order("updated_at", { ascending: false }).limit(5),
+  ]);
+  let knowledgeText = "";
+  for (const k of knowledge ?? []) {
+    const block = `## ${k.title}\n${k.body}\n\n`;
+    if (knowledgeText.length + block.length > 8000) break;
+    knowledgeText += block;
+  }
+  const exampleText = (examples ?? []).map((e) => `Member: ${e.member_message.slice(0, 600)}\nJourney: ${e.ideal_reply.slice(0, 1200)}`).join("\n\n");
+  let memoryText = "";
+  if (cfg.memoryEnabled) {
+    const [{ data: ms }, { data: mem }] = await Promise.all([
+      db.from("journey_memory_settings").select("enabled, approach").eq("user_id", input.userId).maybeSingle(),
+      db.from("journey_memories").select("kind, content").eq("user_id", input.userId).order("created_at", { ascending: false }).limit(30),
+    ]);
+    if (ms?.approach) memoryText += `The member prefers a ${ms.approach === "blend" ? "blended spiritual, secular and practical" : ms.approach} approach.\n`;
+    if (ms?.enabled && mem?.length) memoryText += mem.map((x) => `- (${x.kind}) ${x.content}`).join("\n");
+  }
+  const ownerText = [
+    published?.body ?? "",
+    memoryText && `# What this member has asked Journey to remember (use naturally; never reveal it to anyone else)\n${memoryText}`,
+    knowledgeText && `# Approved knowledge from The Art of Connect\n${knowledgeText}`,
+    exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
+  ].filter(Boolean).join("\n\n");
+  const instructions = buildJourneyInstructions({ mode: input.mode, access: input.access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
+  return { instructions, published };
 }

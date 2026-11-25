@@ -7,7 +7,7 @@ import { JOURNEY_PHILOSOPHY } from "@/lib/journey";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { getLaunchState } from "@/lib/launch";
 import { env } from "@/lib/env";
-import { verifyOpenAI } from "@/app/actions/journey-admin";
+import { saveVoiceListening, verifyOpenAI } from "@/app/actions/journey-admin";
 import { saveCheckinSettings } from "@/app/actions/checkins";
 import { OwnerTest } from "@/components/admin/OwnerTest";
 import { Empty, NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
@@ -281,6 +281,13 @@ export default async function JourneyAdmin() {
             <label className="text-xs text-muted">Auto-Reloads per member per month (max)<input name="reloadMonth" defaultValue={s?.auto_reload_max_per_month ?? 10} className="field mt-1 w-full" /></label>
             <p className="text-xs text-faint sm:col-span-2">These company safeguards apply even when a member chooses no personal Auto-Reload limit. Members under safety review can&rsquo;t be reloaded.</p>
             <button className="btn btn-gold btn-sm sm:col-span-2" disabled={!owner}>Save</button>
+          </ActionForm>
+          <ActionForm action={saveVoiceListening} className="grid gap-3 border-t border-line p-5 sm:grid-cols-3">
+            <p className="text-sm font-semibold sm:col-span-3">Journey Live — listening <span className="block text-xs font-normal text-muted">Default voice {s?.voice_default ?? "marin"} · pace {Number(s?.voice_speed ?? 1).toFixed(2)}× · {String(s?.voice_depth ?? "complete").replace("_", " ")} responses. Audition and change these privately on <a href="/app/journey/voice" className="text-gold underline">Talk to Journey</a>.</span></p>
+            <label className="text-xs text-muted">Patience before replying<select name="eagerness" defaultValue={s?.voice_eagerness ?? "low"} className="field mt-1 w-full"><option value="low">Most patient (recommended)</option><option value="medium">Balanced</option><option value="auto">Automatic</option></select></label>
+            <label className="text-xs text-muted">Background noise<select name="noise" defaultValue={s?.voice_noise_reduction ?? "near_field"} className="field mt-1 w-full"><option value="near_field">Phone or headset</option><option value="far_field">Laptop or speakerphone</option><option value="off">Off</option></select></label>
+            <label className="text-xs text-muted">Transcription model<input name="transcribe" defaultValue={s?.voice_transcribe_model ?? "gpt-4o-mini-transcribe"} className="field mt-1 w-full" /></label>
+            <button className="btn btn-ghost btn-sm sm:col-span-3 sm:justify-self-start" disabled={!owner}>Save listening settings</button>
           </ActionForm>
         </Panel>
         <Panel title="Private Sessions">

@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { startVoice } from "@/lib/journey-voice";
+import { REALTIME_VOICES, startVoice } from "@/lib/journey-voice";
 import { allow } from "@/lib/ratelimit";
 
 export const dynamic = "force-dynamic";
-const Body = z.object({ mode: z.enum(["business", "life", "love", "concierge"]), style: z.enum(["warm", "calm", "confident", "soft", "friendly"]), ownerTest: z.boolean().optional() });
+const Body = z.object({
+  mode: z.enum(["business", "life", "love", "concierge"]),
+  style: z.enum(["warm", "calm", "confident", "soft", "friendly", "journey"]),
+  ownerTest: z.boolean().optional(),
+  conversationId: z.uuid().nullish(),
+  speed: z.number().min(0.7).max(1.3).nullish(),
+  manual: z.boolean().optional(),
+  voice: z.enum(REALTIME_VOICES).nullish(),
+  instructionVersion: z.number().int().positive().nullish(),
+  depth: z.enum(["balanced", "complete", "in_depth"]).nullish(),
+});
 
 /** Mints a short-lived voice key only after membership, minutes and budget checks pass. */
 export async function POST(req: Request) {

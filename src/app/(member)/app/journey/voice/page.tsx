@@ -3,11 +3,14 @@ import { getViewer, hasRole, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getJourneyStatus, membershipFor } from "@/lib/journey-server";
-import { VoiceStudio } from "@/components/JourneyPickers";
+import { JourneyLive } from "@/components/JourneyLive";
 import { LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
-import { saveVoicePrefs } from "@/app/actions/journey-member";
+import { deleteVoiceTranscripts, saveVoicePrefs } from "@/app/actions/journey-member";
+import { setVoiceDefaults } from "@/app/actions/journey-admin";
+import { ActionForm } from "@/components/admin/ActionForm";
 
-export const metadata = { title: "Talk to Journey" };
+export const metadata = { title: "Journey Live" };
+export const dynamic = "force-dynamic";
 
 export default async function TalkToJourney() {
   const viewer = (await getViewer())!;
@@ -15,9 +18,13 @@ export default async function TalkToJourney() {
   const supabase = await createClient();
   const db = createAdminClient();
   const { data: prefs } = supabase && !isInsidePreview(viewer)
-    ? await supabase.from("journey_voice_preferences").select("voice_style, save_transcripts").eq("user_id", viewer.id).maybeSingle()
+    ? await supabase.from("journey_voice_preferences").select("voice_style, save_transcripts, speed, manual_mode, transcript_retention_days").eq("user_id", viewer.id).maybeSingle()
     : { data: null };
-  const { data: s } = db ? await db.from("journey_settings").select("voice_enabled, voice_model, voice_cents_per_minute").maybeSingle() : { data: null };
+  const { data: s } = db ? await db.from("journey_settings").select("voice_enabled, voice_model, voice_cents_per_minute, voice_default, voice_speed, voice_depth").maybeSingle() : { data: null };
+  const { data: convs } = supabase && !isInsidePreview(viewer)
+    ? await supabase.from("journey_conversations").select("id, title, updated_at").eq("user_id", viewer.id).order("updated_at", { ascending: false }).limit(12)
+    : { data: [] };
+
   let minutes: { remaining: number; total: number } | null = null;
   if (db && (status.access === "standard" || status.access === "enhanced")) {
     const m = await membershipFor(db, viewer.id);
@@ -27,27 +34,36 @@ export default async function TalkToJourney() {
   }
   const voiceReady = Boolean(s?.voice_enabled && s.voice_model && s.voice_cents_per_minute != null && status.enabled);
   const owner = hasRole(viewer, ["owner"]);
-  const available = voiceReady && (status.access === "standard" || status.access === "enhanced" || owner);
-  const reason = status.access === "none" ? "Talk to Journey is a benefit of paid memberships." : "Talk to Journey opens soon.";
-  return (
-    <>
-      <p className="eyebrow">Journey</p>
-      <h1 className="display mt-3 text-5xl sm:text-6xl">Talk to Journey</h1>
-      <p className="mt-3 max-w-2xl text-muted">Natural, two-way spoken conversation with the same warmth, memory permissions and philosophy as written Journey. Switch between voice and chat whenever you like.</p>
+  const { data: versions } = owner && supabase ? await supabase.from("journey_instruction_versions").select("version, status").order("version", { ascending: false }).limit(20) : { data: [] };
+  const available = voiceReady && (status.access === "standard      <p className="eyebrow">Journey Live</p>
+      <h1 className="display mt-3 text-5xl sm:text-6xl">Talk with Journey</h1>
+      <p className="mt-3 max-w-2xl text-muted">A real-time, one-on-one conversation that feels like a thoughtful phone call — the same warmth, personality and memory as your written conversations. Speak at your own pace; Journey listens before it responds.</p>
       <div className="mt-10">
-        <VoiceStudio minutes={minutes} available={available} reason={reason} ownerTest={owner && status.access === "staff"}
-          initialStyle={(prefs?.voice_style as "warm") ?? "warm"} initialTranscripts={prefs?.save_transcripts ?? false} onSavePrefs={saveVoicePrefs} />
+        <JourneyLive
+          minutes={minutes} available={available} reason={reason} ownerTest={owner && status.access === "staff"}
+          initial={{ style: (prefs?.voice_style as "warm") ?? "journey", transcripts: prefs?.save_transcripts ?? false, speed: Number(prefs?.speed ?? s?.voice_speed ?? 1), manual: prefs?.manual_mode ?? false, retentionDays: prefs ? (prefs.transcript_retention_days ?? null) : 90 }}
+          conversations={(convs ?? []).map((c) => ({ id: c.id, title: c.title ?? "Conversation", updated_at: c.updated_at }))}
+          versions={(versions ?? []).map((v) => ({ version: v.version, status: v.status }))}
+          defaults={{ voice: s?.voice_default ?? "marin", speed: Number(s?.voice_speed ?? 1), depth: s?.voice_depth ?? "complete" }}
+          onSavePrefs={saveVoicePrefs}
+          onSetDefaults={owner ? setVoiceDefaults : undefined}
+        />
       </div>
       <LuxSection title="Designed around you">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <LuxCard title="Speak naturally" body="Interrupt, pause or change direction anytime — Journey follows the conversation as a thoughtful listener would." />
-          <LuxCard title="Your voice, your choice" body="Choose from approved voices, preview them, and Journey remembers your preference." />
-          <LuxCard title="Always in control" body="Mute, pause or end at any moment. Conversations close automatically after a quiet period or when your minutes are used." />
-          <LuxCard title="Optional transcripts" body="Keep a private written record of what Journey said, or don't — your choice each time." />
+          <LuxCard title="Unhurried listening" body="Journey waits for you to finish your thought. Pauses, hesitation and silence are welcome — and you can interrupt Journey at any moment." />
+          <LuxCard title="One Journey, voice or text" body="The same personality and memory in every conversation. Continue a previous conversation by voice, or pick up a live call in writing." />
+          <LuxCard title="Always in control" body="Mute your microphone, turn the speaker off, pause, adjust the pace or end at any time. Manual mode helps in noisy places." />
+          <LuxCard title="Private by design" body="Audio is never recorded. Transcripts are optional, visible only to you, and you choose how long they’re kept." />
           <LuxCard title="Clear minutes" body="Your remaining voice minutes are always visible. Nothing is ever charged automatically unless you turn on Auto-Reload." />
-          <LuxCard title="AI voice, clearly disclosed" body="Journey's voice is AI-generated. Journey is an AI assistant, not a person or a therapist." />
+          <LuxCard title="AI voice, clearly disclosed" body="Journey is an AI companion with an AI-generated voice — not a person and not a therapist." />
         </div>
       </LuxSection>
+      {!isInsidePreview(viewer) && (
+        <ActionForm action={deleteVoiceTranscripts} className="mt-8 text-center">
+          <button className="text-sm text-muted underline underline-offset-4 hover:text-gold">Erase all my saved voice transcripts</button>
+        </ActionForm>
+      )}
       <p className="mt-10 text-center"><Link href="/app/journey#chat" className="btn btn-ghost">Prefer to write? Chat with Journey</Link></p>
       <SafetyFooter />
     </>
