@@ -120,5 +120,10 @@ export async function submitProfessionalApplication(_prev: ProState, form: FormD
   });
   if (error) return { ok: false, message: "Your application could not be submitted. Please try again." };
   await supabase.from("consents").insert(consentVersions(["professional_agreement", "community_standards", "terms", "privacy"]).map((c) => ({ user_id: viewer.id, ...c })));
+  // Confirmation to the applicant and an alert to the owner — no credentials or license details in either.
+  const { sendEmail, ownerAlertAddress } = await import("@/lib/email");
+  const { templates } = await import("@/lib/email-templates");
+  await sendEmail(viewer.email, templates.professionalApplicationReceived({ name: viewer.displayName }), { category: "professional" }).catch(() => null);
+  await sendEmail(ownerAlertAddress(), templates.ownerAlert({ title: "New professional application", summary: "A professional submitted an application for credential review.", portalPath: "/admin/counselors" }), { category: "owner_alert" }).catch(() => null);
   return { ok: true, message: "Application received. We’ll review your credentials and contact you." };
 }

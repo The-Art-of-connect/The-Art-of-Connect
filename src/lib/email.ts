@@ -24,7 +24,7 @@ export function isAuthorizedTestRecipient(email: string) {
 
 export type SendResult = { ok: boolean; id?: string; skipped?: string; error?: string };
 
-export async function sendEmail(to: string, content: EmailContent, opts: { category: "account" | "membership" | "billing" | "professional" | "owner_alert" | "marketing"; marketingEnabled?: boolean } = { category: "account" }): Promise<SendResult> {
+export async function sendEmail(to: string, content: EmailContent, opts: { category: "account" | "membership" | "billing" | "professional" | "owner_alert" | "marketing"; marketingEnabled?: boolean; idempotencyKey?: string } = { category: "account" }): Promise<SendResult> {
   if (!isEmailConfigured()) return { ok: false, skipped: "Email is not configured yet (RESEND_API_KEY / EMAIL_FROM)." };
   if (opts.category === "marketing" && !opts.marketingEnabled) return { ok: false, skipped: "Marketing email is disabled until launch." };
   if (env.launchLocked && !isAuthorizedTestRecipient(to)) return { ok: false, skipped: "Pre-launch: only authorized test recipients receive email." };
@@ -33,7 +33,12 @@ export async function sendEmail(to: string, content: EmailContent, opts: { categ
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${serverSecret("RESEND_API_KEY")}`, "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${serverSecret("RESEND_API_KEY")}`,
+        "Content-Type": "application/json",
+        // Stripe can deliver a webhook more than once; Resend drops repeats with the same key.
+        ...(opts.idempotencyKey ? { "Idempotency-Key": opts.idempotencyKey.slice(0, 256) } : {}),
+      },
       body: JSON.stringify({
         from: serverConfig.emailFrom,
         to: [to],
