@@ -26,3 +26,4 @@
 20261216000001_journey_checkins.sql	to_regclass('public.journey_checkins') is not null
 20261218000001_love_languages.sql	to_regclass('public.love_language_profiles') is not null
 20261219000001_curriculum_versions.sql	to_regclass('public.curriculum_versions') is not null
+20261220000001_journey_training.sql	to_regclass('public.journey_training_entries') is not null
