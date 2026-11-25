@@ -582,3 +582,17 @@ v19-9) The OWNER cannot read members' love language profiles (expect 0):
 0
 v19-10) Members can read the love languages lesson in the Library (expect 1):
 1
+v21-1) The owner saves two draft versions (expect 2):
+2
+v21-2) A member sees no drafts (expect 0):
+0
+v21-3) A member cannot write a version (expect error):
+ERROR:  new row violates row-level security policy for table "curriculum_versions"
+v21-4) A member cannot publish (expect error):
+ERROR:  Only the owner can publish a curriculum
+
+
+v21-5) Publishing v2 archives v1 and keeps it (expect 1:archived|2:published):
+1:archived|2:published
+v21-6) A member reads only the published version (expect v2):
+v2

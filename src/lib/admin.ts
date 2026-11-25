@@ -22,6 +22,7 @@ export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; 
   { href: "/admin/moderation", label: "Content moderation", roles: ["owner", "executive", "admin", "moderator"], group: "Care" },
   { href: "/admin/safety", label: "Trust & safety", roles: ["owner", "executive", "admin", "moderator"], group: "Care" },
   { href: "/admin/journey", label: "Journey Intelligence Center", roles: ["owner", "executive", "finance"], group: "Platform" },
+  { href: "/admin/curriculum", label: "Curriculum Studio", roles: ["owner", "executive"], group: "Platform" },
   { href: "/admin/reviews", label: "Page reviews & Coming soon", roles: ["owner", "executive"], group: "Platform" },
   { href: "/admin/development", label: "Development tracker", roles: ["owner", "executive"], group: "Platform" },
   { href: "/admin/legal", label: "Legal & Policy Center", roles: ["owner", "executive"], group: "Platform" },

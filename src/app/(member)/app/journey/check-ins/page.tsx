@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SelfBanner } from "@/components/SelfBanner";
 import Link from "next/link";
 import { getViewer, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -49,17 +49,8 @@ export default async function CheckIns() {
 
   return (
     <>
-      <section className="theme-dark relative overflow-hidden rounded-[28px] bg-ink">
-        <div className="absolute inset-0">
-          <Image src="/images/library/life/meditation.webp" alt="" fill priority sizes="100vw" className="kenburns object-cover opacity-60" />
-          <div className="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/80 to-espresso/30" />
-        </div>
-        <div className="relative px-6 py-12 sm:px-12 sm:py-16">
-          <p className="eyebrow rise">Journey · Check-ins</p>
-          <h1 className="display rise rise-2 mt-3 max-w-2xl text-4xl leading-tight sm:text-6xl">Thoughtful care, <span className="gilded italic">on your terms.</span></h1>
-          <p className="rise rise-3 mt-4 max-w-xl text-muted">Morning manifestations, evening reflections and gentle follow-ups on the moments that matter to you. You choose what you receive, when, and how — and you never owe a reply.</p>
-        </div>
-      </section>
+      <SelfBanner section="manifestation" />
+      <p className="mt-5 max-w-2xl text-muted">Morning manifestations, evening reflections and gentle follow-ups on the moments that matter to you. You choose what you receive, when, and how — and you never owe a reply.</p>
 
       {preview && <p className="mt-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Preview — nothing is saved.</p>}
       {settings && !settings.enabled && <p className="mt-6 rounded-2xl border border-champagne/50 bg-champagne/10 px-5 py-3 text-sm">Check-ins are resting for the moment. Your preferences are saved and will resume automatically.</p>}

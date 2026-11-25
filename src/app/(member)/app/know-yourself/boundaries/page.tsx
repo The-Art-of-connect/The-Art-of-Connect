@@ -1,10 +1,10 @@
+import { SelfBanner } from "@/components/SelfBanner";
 import Image from "next/image";
 import { getViewer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AREAS, RESPECT_GUIDE, type Area } from "@/lib/know-yourself";
 import { saveSelfDiscovery } from "@/app/actions/know-yourself";
 import { ActionForm } from "@/components/admin/ActionForm";
-import { LivingHero } from "@/components/business/SocietyHero";
 
 export const metadata = { title: "Boundaries & non-negotiables" };
 export const dynamic = "force-dynamic";
@@ -20,16 +20,7 @@ export default async function KnowYourself() {
 
   return (
     <>
-      <LivingHero
-        slides={[
-          { src: "/images/library/life/journaling.webp", alt: "A woman writing in her journal by a sunlit window" },
-          { src: "/images/library/life/meditation.webp", alt: "Meditating at sunrise above the sea" },
-          { src: "/images/library/life/garden-walk.webp", alt: "A calm walk through a flowering garden" },
-        ]}
-        eyebrow="The Art of Knowing Yourself · Honor Yourself" title="Honor what matters" gilded="most to you."
-        subtitle="Clarify your values, the standards you hold and the graceful words that express them — in your work, your life and your love."
-        cta={{ href: "#self", label: "Begin this reflection" }} secondary={{ href: "/app/know-yourself", label: "Back to The Art of Knowing Yourself" }}
-      />
+      <SelfBanner section="boundaries" actions={[{ href: "#self", label: "Begin this reflection", primary: true }, { href: "/app/know-yourself", label: "Back to The Art of Knowing Yourself" }]} />
 
       <section className="mt-8 grid gap-3 sm:grid-cols-4" aria-label="Your progress">
         {AREAS.map((a, i) => {

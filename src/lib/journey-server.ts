@@ -1,4 +1,5 @@
 import "server-only";
+import { teachingGuidance } from "@/lib/curricula";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -124,6 +125,8 @@ export async function sendJourneyMessage(input: {
   model?: string | null;
   instructionVersion?: number | null;
   comparisonId?: string | null;
+  /** A curriculum reference ("section" or "section/lesson"): Journey follows the founder's teaching instructions for it. */
+  lesson?: string | null;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
   if (!viewer) return refuse(401, "Please sign in to talk with Journey.");
@@ -214,6 +217,7 @@ export async function sendJourneyMessage(input: {
   ].filter(Boolean).join("\n\n");
   let instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
   instructions += `\n\n${JOURNEY_EI_GUIDANCE}`;
+  if (input.lesson) instructions += `\n\n${await teachingGuidance(db, input.lesson)}`;
   if (input.mode === "life" || input.mode === "love") instructions += await loveLanguageContext(db, viewer.id);
 
   // Context: only this member's own conversation, trimmed to the owner's limits.

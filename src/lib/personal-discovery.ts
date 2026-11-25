@@ -135,7 +135,7 @@ export function journeyDiscoveryPrompt(mod: DiscoveryModule, all: Record<string,
     .map((q) => ({ q, a: q.type === "values" ? (all[q.key]?.choices ?? []).join(", ") : clean(all[q.key]?.answer ?? "") }))
     .filter((x) => x.a)
     .map((x) => `Q: ${x.q.prompt}\nA: ${x.a.slice(0, 700)}`);
-  const head = `Personal Discovery: ${mod.title}. Please write my personal discovery for this chapter of Who Am I?, based only on my answers below. Use exactly four short sections with these headings: What You've Discovered About Yourself; Your Beautiful Qualities; Opportunities for Personal Growth; Moving Forward. Speak warmly to me as "you", invite rather than instruct, and offer observations I can accept or set aside. Do not diagnose, label me permanently or judge my suitability for relationships.\n\n`;
+  const head = `Personal Discovery: ${mod.title}. Please write my personal discovery for this chapter of Who Am I?, based only on my answers below. Use exactly four short sections with these headings: What You Discovered About Yourself; Your Personal Strengths; Areas for Personal Development; Moving Forward. Speak warmly to me as "you", invite rather than instruct, and offer observations I can accept or set aside. Do not diagnose, label me permanently or judge my suitability for relationships.\n\n`;
   let body = "";
   for (const l of lines) { if ((head + body + l).length + 2 > maxChars) break; body += l + "\n\n"; }
   return (head + body).trim();
@@ -143,7 +143,7 @@ export function journeyDiscoveryPrompt(mod: DiscoveryModule, all: Record<string,
 
 /** Splits Journey's reply back into the four sections (falls back to one block if the headings are missing). */
 export function parseJourneyDiscovery(reply: string): PersonalDiscovery | null {
-  const heads = [/what you['’]ve discovered/i, /beautiful qualities/i, /opportunities/i, /moving forward/i];
+  const heads = [/what you(['\u2019]ve)? discovered/i, /strengths|beautiful qualities/i, /development|opportunities/i, /moving forward/i];
   const out: PersonalDiscovery = { discovered: [], qualities: [], growth: [], forward: [] };
   const keys = ["discovered", "qualities", "growth", "forward"] as const;
   let cur: (typeof keys)[number] | null = null;
