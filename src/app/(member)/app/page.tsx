@@ -9,6 +9,7 @@ import Image from "next/image";
 import { LivingHero } from "@/components/business/SocietyHero";
 import { DiscoveryInvite } from "@/components/DiscoveryInvite";
 import { Greeting } from "@/components/business/Greeting";
+import { ReferralShare } from "@/components/ReferralShare";
 
 const PHOTO: Record<string, string> = {
   business: "/images/society/roundtable.webp",
@@ -94,8 +95,8 @@ export default async function MemberHome() {
         <section className="glass mt-10 p-7">
           <p className="eyebrow">Refer a friend</p>
           <h2 className="display mt-3 text-3xl">Share The Art of Connect</h2>
-          <p className="mt-2 text-sm text-muted">{catalogue.referral_reward ?? "Invite friends who would value meaningful connection."}</p>
-          <p className="mt-4 break-all rounded-xl border border-line bg-ink-3 px-4 py-3 font-mono text-sm">{referralLink}</p>
+          <p className="mt-2 text-sm text-muted">{catalogue.referral_reward ?? "Know someone who would treasure meaningful connection? Share your personal invitation — by text, email, social media or in person."}</p>
+          <ReferralShare url={referralLink} name={viewer.displayName} />
         </section>
       )}
     </>
