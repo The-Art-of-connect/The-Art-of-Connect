@@ -200,7 +200,13 @@ export async function setNewPassword(_prev: AuthState, form: FormData): Promise<
   const { data } = await supabase.auth.getUser();
   if (!data.user) return { error: "This reset link has expired. Please request a new one." };
   const { error } = await supabase.auth.updateUser({ password });
-  if (error) return { error: "Your password could not be changed. Please request a new link." };
+  if (error) {
+    if (error.code === "same_password") return { error: "That’s already your current password — choose a different one, or sign in with it." };
+    if (error.code === "weak_password") return { error: "Please choose a stronger password: mix words, numbers and symbols, and avoid common passwords." };
+    if (error.code === "session_expired" || error.code === "reauthentication_needed" || error.status === 401)
+      return { error: "This reset link has expired. Please request a new one and use the newest email." };
+    return { error: "Your password could not be changed. Please request a new link and use the newest email." };
+  }
   await logSecurityEvent("password_changed", { userId: data.user.id, email: data.user.email ?? undefined });
   // Team members continue to the Owner Portal, which requires two-step verification first.
   const { data: staff } = await supabase.from("staff_roles").select("role").eq("user_id", data.user.id).limit(1);
