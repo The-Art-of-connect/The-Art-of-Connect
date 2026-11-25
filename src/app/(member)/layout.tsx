@@ -2,12 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Wordmark } from "@/components/Emblem";
 import { getViewer, isStaff } from "@/lib/auth";
+import { AgreementForm } from "@/components/AgreementForm";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const viewer = await getViewer();
   if (!viewer) redirect("/sign-in?next=/app");
+  // New or updated agreements must be accepted before continuing (never for staff).
+  let pending: { slug: string; title: string; version_label: string; reason: string }[] = [];
+  if (!isStaff(viewer)) {
+    const supabase = await createClient();
+    const { data } = (await supabase?.rpc("pending_legal_acceptances")) ?? { data: null };
+    pending = (data as typeof pending | null) ?? [];
+  }
   return (
     <div className="theme-ivory min-h-dvh">
       <header className="theme-dark sticky top-0 z-30 border-b border-line !bg-espresso/95 backdrop-blur-xl">
@@ -16,6 +25,7 @@ export default async function MemberLayout({ children }: { children: React.React
           <div className="flex items-center gap-3">
             <Link href="/app/membership" className="hidden text-sm text-muted hover:text-text sm:inline">My membership</Link>
             <Link href="/app/safety" className="hidden text-sm text-muted hover:text-text sm:inline">Safety</Link>
+            <Link href="/legal" className="hidden text-sm text-muted hover:text-text sm:inline">Legal</Link>
             {isStaff(viewer) && <Link href="/admin" className="btn btn-ghost btn-sm">Owner Portal</Link>}
             <form action="/auth/sign-out" method="post">
               <button className="text-sm text-muted hover:text-text">Sign out</button>
@@ -23,7 +33,18 @@ export default async function MemberLayout({ children }: { children: React.React
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-8">
+        {pending.length ? (
+          <section className="glass mx-auto max-w-2xl p-7 sm:p-9">
+            <p className="eyebrow">Your agreements</p>
+            <h1 className="display mt-3 text-4xl">Please review our updated agreements.</h1>
+            <p className="mt-3 mb-6 text-sm text-muted">We’ve published new or updated terms. Review them and confirm to continue. Questions: info@theartofconnect.com</p>
+            <AgreementForm docs={pending.map((p) => ({ slug: p.slug, title: p.title, version: p.version_label, reason: p.reason }))} />
+          </section>
+        ) : (
+          children
+        )}
+      </main>
     </div>
   );
 }

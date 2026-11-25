@@ -8,6 +8,10 @@ import { EXPERIENCES } from "@/lib/experiences";
 import { getLaunchState } from "@/lib/launch";
 import { normalizeSelection, quote } from "@/lib/pricing";
 import { getStripe } from "@/lib/stripe";
+import { allInEffect } from "@/lib/legal";
+import { acceptanceStatement, autoRenewalStatement, checkoutDocs } from "@/lib/legal-requirements";
+import { clientMeta } from "@/lib/security";
+import { formatMoney } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
 
 const body = z.discriminatedUnion("kind", [
@@ -21,8 +25,9 @@ const body = z.discriminatedUnion("kind", [
       package: z.string().max(40).nullable().optional(),
     }),
     promo: z.string().max(40).optional(),
+    accept: z.literal(true, { message: "Please accept the membership agreements and automatic renewal terms." }),
   }),
-  z.object({ kind: z.literal("professional"), package: z.string().max(40), interval: z.enum(["month", "year"]).default("month") }),
+  z.object({ kind: z.literal("professional"), package: z.string().max(40), interval: z.enum(["month", "year"]).default("month"), accept: z.literal(true) }),
 ]);
 
 /**
@@ -43,7 +48,7 @@ export async function POST(request: NextRequest) {
   if (isLive && !launch.payments_live) return NextResponse.json({ error: "Live payments have not been authorized." }, { status: 403 });
 
   const parsed = body.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues.find((i) => i.path.includes("accept")) ? "Please accept the agreements and automatic renewal terms to continue." : "Invalid request." }, { status: 400 });
 
   // Staff may test with draft prices; everyone else needs published pricing.
   const catalogue = await getCatalogue(staffTest);
@@ -62,6 +67,11 @@ export async function POST(request: NextRequest) {
     const q = quote(catalogue, selection, promo);
     if (!q.priced || !q.pkg || q.recurringTotal == null) return NextResponse.json({ error: "This membership is not available yet." }, { status: 409 });
     const pkg = q.pkg;
+    // Affirmative acceptance of the published agreements and the automatic-renewal terms, recorded before payment.
+    const docs = checkoutDocs(selection.experiences, pkg.love_track === "couple" || (q.couplesMonthly ?? 0) > 0);
+    if (!(await allInEffect(docs))) return NextResponse.json({ error: "Our membership agreements are being finalized. Payments open soon." }, { status: 409 });
+    const accepted = await recordCheckoutAcceptance(docs, autoRenewalStatement({ packageName: pkg.name, amount: formatMoney(q.recurringTotal, catalogue.currency) ?? "", interval: selection.interval }));
+    if (!accepted) return NextResponse.json({ error: "We couldn’t record your acceptance. Please try again." }, { status: 500 });
 
     const names = selection.experiences.map((e) => EXPERIENCES[e].name);
     const extras = [q.couplesMonthly ? catalogue.couples_upgrade.name : null, ...catalogue.addons.filter((a) => selection.addons.includes(a.slug) && a.billing === "monthly").map((a) => a.name)].filter(Boolean);
@@ -107,8 +117,13 @@ export async function POST(request: NextRequest) {
     if (!pkg || pkg.monthly_price_cents == null) return NextResponse.json({ error: "Package unavailable." }, { status: 404 });
     if (!pkg.eligible_types.includes(counselor.professional_type)) return NextResponse.json({ error: "This package isn’t available for your professional type." }, { status: 403 });
     const interval = parsed.data.interval;
+    const proDocs = ["professional-agreement", "subscription-auto-renewal", "refund-policy"];
+    if (!(await allInEffect(proDocs))) return NextResponse.json({ error: "The Professional Provider Agreement is being finalized. Subscriptions open soon." }, { status: 409 });
     const months = Number(catalogue.annual_months_charged ?? 12);
     const amount = interval === "year" ? Math.round(pkg.monthly_price_cents * months) : pkg.monthly_price_cents;
+    if (!(await recordCheckoutAcceptance(proDocs, autoRenewalStatement({ packageName: pkg.name, amount: formatMoney(amount, currency) ?? "", interval })))) {
+      return NextResponse.json({ error: "We couldn’t record your acceptance. Please try again." }, { status: 500 });
+    }
     lineItems = [{ quantity: 1, price_data: { currency, unit_amount: amount, recurring: recurring(interval), product_data: { name: pkg.name, metadata: { role: "membership" } } } }];
     if (pkg.onboarding_fee_cents) lineItems.push({ quantity: 1, price_data: { currency, unit_amount: pkg.onboarding_fee_cents, product_data: { name: `${pkg.name} onboarding` } } });
     metadata = { ...metadata, kind: "professional", tier_slug: pkg.slug, tier_name: pkg.name, experiences: "", interval, couples: "0", addons: "", amount_cents: String(amount), monthly_equivalent_cents: String(interval === "year" ? Math.round(amount / 12) : amount), promo: "" };
@@ -126,4 +141,15 @@ export async function POST(request: NextRequest) {
     cancel_url: `${env.siteUrl}/app/onboarding`,
   });
   return NextResponse.json({ url: session.url });
+}
+
+/** Records acceptance (with the exact wording shown) for the signed-in member. */
+async function recordCheckoutAcceptance(docs: string[], renewal: string) {
+  const supabase = await createClient();
+  if (!supabase) return false;
+  const { ipHash, userAgent } = await clientMeta();
+  const { error } = await supabase.rpc("record_legal_acceptance", {
+    docs, ctx: "checkout", statement: `${renewal} ${acceptanceStatement(docs)}`.slice(0, 1000), ip_hash: ipHash, user_agent: userAgent,
+  });
+  return !error;
 }

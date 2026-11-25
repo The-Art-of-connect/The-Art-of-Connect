@@ -5,7 +5,7 @@ import { env, isSupabaseConfigured, serverConfig, serverSecret } from "@/lib/env
 import { isEmailConfigured } from "@/lib/email";
 import { turnstileStatus } from "@/lib/turnstile";
 import { getLaunchState } from "@/lib/launch";
-import { getLegalDocs, isDraft } from "@/lib/legal";
+import { getPublicLegal } from "@/lib/legal";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { updateChecklistItem } from "@/app/actions/admin";
@@ -76,8 +76,8 @@ export default async function LaunchReadinessPage() {
       }
     }
   }
-  const legal = getLegalDocs();
-  const draftDocs = legal.filter(isDraft).length;
+  const legal = await getPublicLegal();
+  const notInEffect = legal.filter((d) => !d.in_effect).length;
 
   const connections: Check[] = [
     { label: "Supabase database", ok: dbOk, detail: isSupabaseConfigured() ? (dbOk ? "Connected with the publishable key." : "Keys are set, but the database didn’t respond — migrations may not be applied yet.") : "Publishable key / URL not set in Netlify.", action: "NEXT_PUBLIC_SUPABASE_URL · NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" },
@@ -101,7 +101,7 @@ export default async function LaunchReadinessPage() {
 
   const commercial: Check[] = [
     { label: "Pricing", ok: pricing?.is_published ?? false, detail: pricing?.is_published ? "Published." : unpriced ? `Draft — ${unpriced} package price(s) still empty.` : "Draft — ready for your approval.", action: "Pricing & packages" },
-    { label: "Legal documents", ok: draftDocs === 0, detail: draftDocs ? `${draftDocs} of ${legal.length} documents are drafts pending counsel review.` : "All documents finalized." },
+    { label: "Legal & Policy Center", ok: legal.length > 0 && notInEffect === 0, detail: !legal.length ? "Database update pending." : notInEffect ? `${notInEffect} of ${legal.length} documents not yet published (attorney review and owner approval pending).` : "All documents attorney-approved and published.", action: "Legal & Policy Center" },
   ];
 
   const switches: Check[] = [

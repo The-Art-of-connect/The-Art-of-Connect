@@ -10,6 +10,10 @@ import { env } from "@/lib/env";
 import { allow } from "@/lib/ratelimit";
 import { isDisposableEmail, logSecurityEvent } from "@/lib/security";
 import { BOT_CHECK_MESSAGE, verifyTurnstile } from "@/lib/turnstile";
+import { allInEffect } from "@/lib/legal";
+import { REGISTRATION_DOCS, acceptanceStatement } from "@/lib/legal-requirements";
+import { clientMeta } from "@/lib/security";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AuthState = { error?: string; notice?: string } | null;
 
@@ -75,6 +79,8 @@ const joinSchema = z.object({
 export async function signUp(_prev: AuthState, form: FormData): Promise<AuthState> {
   const launch = await getLaunchState();
   if (!launch.registrations_open) return { error: "Membership enrollment opens soon." };
+  // Members accept the published agreements; registration waits until they are in effect.
+  if (!(await allInEffect(REGISTRATION_DOCS))) return { error: "Our membership agreements are being finalized. Enrollment opens soon." };
 
   const parsed = joinSchema.safeParse({
     displayName: form.get("displayName"),
@@ -115,7 +121,7 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   const supabase = await createClient();
   if (!supabase) return { error: "Registration is not available yet." };
   const jar = await cookies();
-  const { error } = await supabase.auth.signUp({
+  const { data: created, error } = await supabase.auth.signUp({
     email: d.email,
     password: d.password,
     options: {
@@ -142,6 +148,19 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   if (error) {
     if (/adults|date of birth/i.test(error.message)) return { error: error.message };
     return { error: "We couldn’t create your account. Please try again." };
+  }
+  // Evidence of acceptance: the exact versions in effect, the wording shown, when, and a hashed source.
+  const admin = createAdminClient();
+  if (admin && created.user) {
+    const { ipHash, userAgent } = await clientMeta();
+    await admin.rpc("record_legal_acceptance_for", {
+      target: created.user.id, docs: REGISTRATION_DOCS, ctx: "registration", statement: acceptanceStatement(REGISTRATION_DOCS),
+      ip_hash: ipHash, user_agent: userAgent,
+    });
+    // Optional marketing consent is separate from the required agreements and never pre-selected.
+    if (form.get("marketing") === "on") {
+      await admin.from("consents").insert({ user_id: created.user.id, consent_type: "marketing", version: "2026-12", details: { source: "registration" } });
+    }
   }
   return { notice: "Welcome. Please check your inbox to confirm your email, then sign in to complete your membership." };
 }

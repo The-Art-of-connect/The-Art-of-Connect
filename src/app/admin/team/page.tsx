@@ -8,8 +8,9 @@ export const dynamic = "force-dynamic";
 
 /** What each delegated permission opens (matches the Owner Portal sections; enforced on the server and by database policies). */
 const ROLES = [
-  { key: "admin", name: "Administrator", can: "Members, professional applications, access & referrals, memberships, marketing, support, moderation, trust & safety, Security Center, analytics. No pricing, payments, team or launch controls." },
-  { key: "finance", name: "Finance", can: "Memberships, pricing & packages, payments & refunds, financial reports, launch readiness." },
+  { key: "executive", name: "Executive management", can: "Business performance (memberships, payments, financial reports — view only), members, professional applications, marketing, support, moderation, trust & safety, launch readiness. Cannot change pricing, issue refunds, publish or launch." },
+  { key: "admin", name: "Administrator", can: "General staff: members, professional applications, access & referrals, marketing (no promotions), support, moderation, trust & safety, Security Center, analytics. No confidential financial information." },
+  { key: "finance", name: "Finance", can: "Prepares pricing changes and promotions, manages authorized financial operations and reports, views the financial audit trail. Cannot publish pricing, issue refunds or launch." },
   { key: "support", name: "Member support", can: "Member lookup and customer support." },
   { key: "moderator", name: "Moderator", can: "Content moderation and trust & safety." },
 ] as const;

@@ -7,7 +7,7 @@ import { Empty, PageHeader, Panel, Stat } from "@/components/admin/ui";
 
 export default async function RevenuePage() {
   const viewer = await requireStaff(rolesFor("/admin/revenue"));
-  const canRefund = hasRole(viewer, ["owner", "finance"]);
+  const canRefund = hasRole(viewer, ["owner"]);
   const supabase = await createClient();
   const { data: payments } = supabase
     ? await supabase

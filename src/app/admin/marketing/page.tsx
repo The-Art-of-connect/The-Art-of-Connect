@@ -1,5 +1,5 @@
-import { requireStaff } from "@/lib/auth";
-import { date, rolesFor } from "@/lib/admin";
+import { hasRole, requireStaff } from "@/lib/auth";
+import { FINANCE_VIEWERS, date, rolesFor } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
 import { createPromotion, togglePromotion } from "@/app/actions/admin";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -8,7 +8,10 @@ import { Empty, PageHeader, Panel } from "@/components/admin/ui";
 const EXP: Record<string, string> = { business: "In Business", counseling: "In Life", relationships: "In Love" };
 
 export default async function MarketingPage() {
-  await requireStaff(rolesFor("/admin/marketing"));
+  const viewer = await requireStaff(rolesFor("/admin/marketing"));
+  // Promotions are discounts (financial): owner & finance manage them, executives view, general staff never see them.
+  const seePromos = hasRole(viewer, FINANCE_VIEWERS);
+  const managePromos = hasRole(viewer, ["owner", "finance"]);
   const supabase = await createClient();
   const [{ data: promos }, { data: waitlist }, { data: tiers }] = supabase
     ? await Promise.all([
@@ -26,7 +29,9 @@ export default async function MarketingPage() {
         announced on the Memberships page. Codes apply only once payments launch.
       </p>
 
-      <Panel title="Create a promotion">
+      {seePromos && (
+      <Panel title={managePromos ? "Create a promotion" : "Promotions (view only)"}>
+        {managePromos && (
         <ActionForm action={createPromotion} className="grid gap-3 p-5 md:grid-cols-4">
           <label className="space-y-1.5"><span className="text-xs font-semibold text-muted">Code</span><input name="code" required placeholder="FOUNDING40" className="field uppercase" /></label>
           <label className="space-y-1.5 md:col-span-3"><span className="text-xs font-semibold text-muted">Description (shown to customers)</span><input name="description" placeholder="Founding member offer — 20% off your first period" className="field" /></label>
@@ -50,6 +55,7 @@ export default async function MarketingPage() {
             <button className="btn btn-gold">Create</button>
           </div>
         </ActionForm>
+        )}
         <table className="data-table">
           <thead><tr><th>Code</th><th>Offer</th><th>Window</th><th>Used</th><th>Status</th><th /></tr></thead>
           <tbody>
@@ -64,7 +70,7 @@ export default async function MarketingPage() {
                   {p.is_public_offer && <span className="chip chip-locked ml-1">Public</span>}
                 </td>
                 <td>
-                  <div className="flex gap-2">
+                  {managePromos && <div className="flex gap-2">
                     <ActionForm action={togglePromotion}>
                       <input type="hidden" name="id" value={p.id} /><input type="hidden" name="field" value="is_active" /><input type="hidden" name="on" value={String(!p.is_active)} />
                       <button className="btn btn-ghost btn-sm">{p.is_active ? "Deactivate" : "Activate"}</button>
@@ -73,7 +79,7 @@ export default async function MarketingPage() {
                       <input type="hidden" name="id" value={p.id} /><input type="hidden" name="field" value="is_public_offer" /><input type="hidden" name="on" value={String(!p.is_public_offer)} />
                       <button className="btn btn-ghost btn-sm">{p.is_public_offer ? "Hide offer" : "Announce"}</button>
                     </ActionForm>
-                  </div>
+                  </div>}
                 </td>
               </tr>
             ))}
@@ -81,6 +87,7 @@ export default async function MarketingPage() {
         </table>
         {!promos?.length && <Empty>No promotions yet.</Empty>}
       </Panel>
+      )}
 
       <div className="mt-6">
         <Panel title={`Notify-me list — enrollment opens soon (${waitlist?.length ?? 0})`}>

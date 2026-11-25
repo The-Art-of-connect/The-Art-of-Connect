@@ -103,7 +103,7 @@ select status from counseling.applications where id = '30000000-0000-0000-0000-0
 update public.launch_checklist set status = 'done', approved_by = auth.uid(), approved_at = now() where key = 'imagery';
 select status from public.launch_checklist where key = 'imagery';
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000007';
-\echo 'v4-21) Finance reads the checklist but cannot change it (expect 25 rows, then 0 updated):'
+\echo 'v4-21) Finance reads the checklist but cannot change it (expect 28 rows, then 0 updated):'
 select count(*) from public.launch_checklist;
 update public.launch_checklist set status = 'done' where key = 'pricing';
 select count(*) from public.launch_checklist where key = 'pricing' and status = 'done';

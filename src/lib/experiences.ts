@@ -6,7 +6,8 @@
  *   relationships → In Love     · Romantic Connections
  */
 export type Experience = "relationships" | "business" | "counseling";
-export type StaffRole = "owner" | "admin" | "support" | "moderator" | "finance";
+/** owner · finance · executive · admin/support/moderator (general staff) · investor (reserved, no access yet) */
+export type StaffRole = "owner" | "admin" | "support" | "moderator" | "finance" | "executive" | "investor";
 
 export type ExperienceInfo = {
   name: string;

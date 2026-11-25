@@ -8,14 +8,14 @@ export function MemberBilling({ catalogue, initial, paymentsOpen, kind }: { cata
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const submit = async (sel: Selection, promo: string | null) => {
+  const submit = async (sel: Selection, promo: string | null, accepted?: boolean) => {
     setBusy(true);
     setMsg(null);
     try {
       const res = await fetch(kind === "checkout" ? "/api/checkout" : "/api/membership/change", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(kind === "checkout" ? { kind: "member", selection: sel, promo: promo ?? undefined } : sel),
+        body: JSON.stringify(kind === "checkout" ? { kind: "member", selection: sel, promo: promo ?? undefined, accept: accepted === true } : sel),
       });
       const data = await res.json();
       if (!res.ok) return setMsg(data.error ?? "Something went wrong.");

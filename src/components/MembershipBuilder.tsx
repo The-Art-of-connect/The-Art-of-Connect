@@ -15,6 +15,7 @@ import {
   type Promotion,
   type Selection,
 } from "@/lib/pricing";
+import { LEGAL_TITLES, autoRenewalStatement, checkoutDocs } from "@/lib/legal-requirements";
 
 type Mode = "enroll" | "preview" | "change" | "checkout";
 
@@ -35,7 +36,7 @@ export function MembershipBuilder({
   initial: Selection;
   enrollmentOpen: boolean;
   mode?: Mode;
-  onChangeSubmit?: (sel: Selection, promo: string | null) => void;
+  onChangeSubmit?: (sel: Selection, promo: string | null, accepted?: boolean) => void;
 }) {
   const [sel, setSel] = useState<Selection>(() => normalizeSelection(catalogue, initial));
   const [loveChosen, setLoveChosen] = useState<boolean>(Boolean(initial.couples) || initial.experiences?.includes("relationships"));
@@ -44,6 +45,7 @@ export function MembershipBuilder({
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
   const [checking, startCheck] = useTransition();
   const [copied, setCopied] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   const q = useMemo(() => quote(catalogue, sel, promo), [catalogue, sel, promo]);
   const money = (c: number | null | undefined) => formatMoney(c, catalogue.currency);
@@ -318,8 +320,23 @@ export function MembershipBuilder({
           {promoMsg && <p className="mt-2 text-xs text-muted" role="status">{promoMsg}</p>}
 
           <div className="mt-7 space-y-3">
+            {mode === "checkout" && ready && q.priced && q.pkg && (
+              <label className="flex items-start gap-3 rounded-2xl border border-line p-4 text-left text-xs text-muted">
+                <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--champagne)]" />
+                <span>
+                  {autoRenewalStatement({ packageName: q.pkg.name, amount: money(q.recurringTotal) ?? "", interval: sel.interval })}{" "}
+                  I have read and agree to the{" "}
+                  {checkoutDocs(sel.experiences, q.pkg.love_track === "couple" || (q.couplesMonthly ?? 0) > 0).map((slug, i, all) => (
+                    <span key={slug}>
+                      <a href={`/legal/${slug}`} target="_blank" rel="noreferrer" className="text-gold underline">{LEGAL_TITLES[slug]}</a>
+                      {i < all.length - 2 ? ", " : i === all.length - 2 ? " and " : "."}
+                    </span>
+                  ))}
+                </span>
+              </label>
+            )}
             {mode === "change" || mode === "checkout" ? (
-              <button type="button" disabled={!ready || !q.priced || !enrollmentOpen} onClick={() => onChangeSubmit?.(sel, promo?.code ?? null)} className="btn btn-gold w-full">
+              <button type="button" disabled={!ready || !q.priced || !enrollmentOpen || (mode === "checkout" && !accepted)} onClick={() => onChangeSubmit?.(sel, promo?.code ?? null, accepted)} className="btn btn-gold w-full">
                 {mode === "change" ? "Update my membership" : "Continue to secure payment"}
               </button>
             ) : mode === "preview" ? null : enrollmentOpen ? (

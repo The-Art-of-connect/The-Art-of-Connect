@@ -133,6 +133,13 @@ begin
 end;
 $$;
 
+-- Who may preview draft prices (widened to executives in a later migration).
+create or replace function public.can_preview_pricing()
+returns boolean language sql stable security definer set search_path = public as $$
+  select public.has_staff_role(array['owner','finance']::public.staff_role[]);
+$$;
+grant execute on function public.can_preview_pricing() to authenticated;
+
 -- ─── Public catalogue ──────────────────────────────────────────────
 create or replace function public.get_public_pricing(preview boolean default false)
 returns jsonb language plpgsql stable security definer set search_path = public as $$
@@ -141,7 +148,7 @@ declare
   show_prices boolean;
 begin
   select * into cfg from public.pricing_config limit 1;
-  show_prices := cfg.is_published or (preview and public.has_staff_role(array['owner','admin','finance']::public.staff_role[]));
+  show_prices := cfg.is_published or (preview and public.can_preview_pricing());
   return jsonb_build_object(
     'published', cfg.is_published,
     'preview', show_prices and not cfg.is_published,

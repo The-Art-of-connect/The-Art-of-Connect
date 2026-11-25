@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signIn, signUp, type AuthState } from "@/app/actions/auth";
 import type { Selection } from "@/lib/pricing";
+import { LEGAL_TITLES, REGISTRATION_DOCS } from "@/lib/legal-requirements";
 import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
 
 export function SignInForm({ next }: { next?: string }) {
@@ -60,8 +61,20 @@ export function JoinForm({ selection, loveStatus, minimumAge }: { selection: Sel
       </fieldset>
 
       <label className="flex items-start gap-3 text-sm text-muted">
-        <input type="checkbox" name="agree" required className="mt-1 h-4 w-4 accent-[var(--champagne)]" />
-        <span>I agree to the <Link href="/legal/terms-of-service" className="text-gold underline">Terms of Service</Link>, <Link href="/legal/membership-agreement" className="text-gold underline">Membership Agreement</Link>, <Link href="/legal/community-standards" className="text-gold underline">Community Standards</Link> and <Link href="/legal/refund-policy" className="text-gold underline">Refund Policy</Link>, and I have read the <Link href="/legal/privacy-policy" className="text-gold underline">Privacy Policy</Link>.</span>
+        <input type="checkbox" name="agree" required className="mt-1 h-4 w-4 shrink-0 accent-[var(--champagne)]" />
+        <span>
+          I have read and agree to the{" "}
+          {REGISTRATION_DOCS.map((slug, i) => (
+            <span key={slug}>
+              <Link href={`/legal/${slug}`} target="_blank" className="text-gold underline">{LEGAL_TITLES[slug]}</Link>
+              {i < REGISTRATION_DOCS.length - 2 ? ", " : i === REGISTRATION_DOCS.length - 2 ? " and " : "."}
+            </span>
+          ))}
+        </span>
+      </label>
+      <label className="flex items-start gap-3 text-sm text-muted">
+        <input type="checkbox" name="marketing" className="mt-1 h-4 w-4 shrink-0 accent-[var(--champagne)]" />
+        <span>Optional: send me occasional news, events and offers from The Art of Connect. You can unsubscribe at any time.</span>
       </label>
       <Turnstile action="sign_up" resetSignal={state} onReady={setVerified} />
       {state?.error && <p className="text-sm text-danger" role="alert">{state.error}</p>}
