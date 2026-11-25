@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getViewer, isStaff } from "@/lib/auth";
+import { getViewer, isInsidePreview, isStaff } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
 import { getCatalogue } from "@/lib/catalogue";
@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 export default async function MemberHome() {
   const viewer = (await getViewer())!;
   const launch = await getLaunchState();
-  const staff = isStaff(viewer);
+  const staff = isStaff(viewer) || isInsidePreview(viewer);
   const supabase = (await createClient())!;
   const [{ data: sub }, catalogue] = await Promise.all([
     supabase.from("subscriptions").select("tier_name").eq("user_id", viewer.id).in("status", ["active", "trialing", "past_due"]).maybeSingle(),
@@ -53,7 +53,7 @@ export default async function MemberHome() {
               </div>
               {open || staff ? (
                 <Link href={`/app/${key}`} className="btn btn-ghost btn-sm mt-6 self-start">
-                  {open ? "Enter" : "Preview as staff"}
+                  {open ? "Enter" : isInsidePreview(viewer) ? "Preview" : "Preview as staff"}
                 </Link>
               ) : null}
             </div>
