@@ -34,7 +34,7 @@ export default async function InLife() {
         Private space. Your journal and reflections are visible only to you, and your In Life activity never appears on your In Love or In Business profiles.
       </p>
 
-      <DiscoveryInvite userId={viewer.id} back="/app/counseling" context="Who are you beyond your titles and responsibilities? Rediscover your values, your patterns and what you want your life to represent." />
+      <DiscoveryInvite userId={viewer.id} back="/app/counseling" />
 
       <section className="mt-12">
         <p className="eyebrow">Your growth</p>

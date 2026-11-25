@@ -139,7 +139,7 @@ export default async function BusinessHome({ searchParams }: { searchParams: Pro
         </Link>
       </div>
 
-      <DiscoveryInvite userId={viewer.id} back="/app/business" context="Before you start, grow or partner in a business — know your values, your strengths and the standards you’ll keep for any client, partner or price." />
+      <DiscoveryInvite userId={viewer.id} back="/app/business" />
 
       <figure className="theme-dark tile-in relative mt-8 overflow-hidden rounded-[24px] bg-ink px-6 py-8 sm:px-10" style={{ animationDelay: "820ms" }}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_80%_at_0%_100%,rgb(116_63_77/0.45),transparent_70%)]" aria-hidden="true" />

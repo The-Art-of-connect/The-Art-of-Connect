@@ -40,7 +40,7 @@ export default async function InLove() {
         secondary={{ href: "/app/know-yourself", label: "The Art of Knowing Yourself" }}
       />
 
-      <DiscoveryInvite userId={viewer.id} back="/app/relationships" context="Before you date, marry or recommit — understand what you need, what you offer, and how to keep your individuality within a partnership." />
+      <DiscoveryInvite userId={viewer.id} back="/app/relationships" />
 
       <section className="mt-12">
         <p className="eyebrow">For singles · 30+</p>

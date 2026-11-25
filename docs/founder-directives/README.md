@@ -12,6 +12,7 @@ changes an earlier one, the later one wins.
 | 03 | [Journey usage and financial restrictions](03-journey-usage-financial-restrictions.md) | **Built in the database and server, switched off.** Allowances, packages (unpublished), caps, atomic reservation (`supabase/migrations/20261207000001_journey.sql`). Member allowance screen: next. |
 | 04 | [OpenAI exclusivity and voice](04-openai-exclusivity-voice.md) | **Not built yet.** Talk to Journey voice, member memory, Journey Plus, Auto-Reload. |
 | 05 | [Journey Intelligence, personal development and private sessions](05-journey-intelligence-development-sessions.md) | **Not built yet.** Knowledge Library, Daily Personal Development, Private Sessions, future Professional Therapy and Counseling Center. |
+| 06 | [Voice, tone and the self-discovery invitation](06-voice-tone-and-self-discovery.md) | **Built.** Refined invitation live in every society; tone guidance applies to all future copy. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

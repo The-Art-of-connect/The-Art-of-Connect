@@ -26,8 +26,8 @@ export default async function KnowYourself() {
           { src: "/images/library/life/meditation.webp", alt: "Meditating at sunrise above the sea" },
           { src: "/images/library/life/garden-walk.webp", alt: "A calm walk through a flowering garden" },
         ]}
-        eyebrow="The Art of Knowing Yourself · Honor yourself" title="What you will do. What you won’t." gilded="And how to say it."
-        subtitle="What you value. What you will do. What you won’t. And how to say it with grace. A private reflection only you can see."
+        eyebrow="The Art of Knowing Yourself · Honor Yourself" title="Honor what matters" gilded="most to you."
+        subtitle="Clarify your values, the standards you hold and the graceful words that express them — in your work, your life and your love."
         cta={{ href: "#self", label: "Begin this reflection" }} secondary={{ href: "/app/know-yourself", label: "Back to The Art of Knowing Yourself" }}
       />
 
