@@ -1,7 +1,8 @@
 import "server-only";
 import { teachingGuidance } from "@/lib/curricula";
 import { formatTraining, selectTraining, type TrainingEntry } from "@/lib/journey-training";
-import { RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
+import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
+import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -129,6 +130,8 @@ export async function sendJourneyMessage(input: {
   comparisonId?: string | null;
   /** A curriculum reference ("section" or "section/lesson"): Journey follows the founder's teaching instructions for it. */
   lesson?: string | null;
+  /** An adaptive Discovery Session (paid). The session decides the conversation; the client cannot choose another. */
+  discovery?: { sessionId: string; summarize?: boolean; skip?: boolean } | null;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
   if (!viewer) return refuse(401, "Please sign in to talk with Journey.");
@@ -230,6 +233,19 @@ export async function sendJourneyMessage(input: {
   const pickedCats = new Set(picked.map((e) => e.category));
   const training = formatTraining(picked, (tcats ?? []).filter((c) => pickedCats.has(c.key)).map((c) => ({ title: c.title, decisions: c.founder_decisions ?? [] })));
   if (training) instructions += `\n\n${training}`;
+
+  // Adaptive Discovery Session: only the member's own ACTIVE session, continuing its own conversation.
+  let discovery: { id: string; category: string; conversation_id: string | null; exchanges: number; skipped: number } | null = null;
+  if (input.discovery) {
+    const { data: ds } = await db.from("journey_discovery_sessions").select("id, category, conversation_id, exchanges, skipped")
+      .eq("id", input.discovery.sessionId).eq("user_id", viewer.id).eq("status", "active").maybeSingle();
+    const dc = ds ? discoveryCategory(ds.category) : null;
+    if (!ds || !dc) return refuse(404, "That discovery session has ended. You can begin a new one anytime.");
+    discovery = ds;
+    input = { ...input, conversationId: ds.conversation_id, comparisonId: null };
+    const { data: tc } = await db.from("journey_training_categories").select("learning_objectives").eq("key", ds.category).maybeSingle();
+    instructions += `\n\n${discoveryInstructions(dc, tc?.learning_objectives ?? [], FOUNDER_PRINCIPLES[ds.category] ?? [], Boolean(input.discovery?.summarize))}`;
+  }
   if (input.mode === "life" || input.mode === "love") instructions += await loveLanguageContext(db, viewer.id);
 
   // Context: only this member's own conversation, trimmed to the owner's limits.
@@ -291,7 +307,7 @@ export async function sendJourneyMessage(input: {
 
   let conversationId = input.conversationId ?? null;
   if (!conversationId && !input.comparisonId) {
-    const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, title: `${input.ownerTest ? "[Owner test] " : ""}${input.message}`.slice(0, 80) }).select("id").single();
+    const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, title: `${input.ownerTest ? "[Owner test] " : ""}${discovery ? `Discovery · ${discoveryCategory(discovery.category)?.title}` : input.message}`.slice(0, 80) }).select("id").single();
     conversationId = c?.id ?? null;
   }
   if (conversationId && !input.comparisonId) {
@@ -299,6 +315,14 @@ export async function sendJourneyMessage(input: {
       { conversation_id: conversationId, user_id: viewer.id, role: "member", content: input.message },
       { conversation_id: conversationId, user_id: viewer.id, role: "journey", content: result.text },
     ]);
+  }
+  if (discovery) {
+    const summarize = Boolean(input.discovery?.summarize);
+    await db.from("journey_discovery_sessions").update({
+      conversation_id: conversationId, exchanges: discovery.exchanges + 1, skipped: discovery.skipped + (input.discovery?.skip ? 1 : 0),
+      ...(summarize ? { status: "completed", completed_at: new Date().toISOString() } : {}),
+    }).eq("id", discovery.id);
+    if (summarize) await db.from("discovery_analyses").insert({ user_id: viewer.id, scope: `category:${discovery.category}`, source: "journey", content: result.text.slice(0, 20000) });
   }
   if (input.ownerTest) return { ok: true, reply: result.text, conversationId, allowance: null, test: { id: testRunId, model: d.model, latencyMs, inputTokens: result.inputTokens, outputTokens: result.outputTokens, costCents: actual, instructionVersion: published?.version ?? null } };
   const after = view && !d.usesPurchased

@@ -607,3 +607,13 @@ v22-4) A member cannot read the library or categories (expect 0|0):
 0|0
 v22-5) A member cannot approve a category (expect error):
 ERROR:  Only the owner can approve training
+v23-1) A member starts a session and saves an analysis (expect 1|1):
+1|1
+v23-2) Only one active session per category (expect error):
+ERROR:  duplicate key value violates unique constraint "journey_discovery_one_active"
+v23-3) A member cannot save an analysis for someone else (expect error):
+ERROR:  new row violates row-level security policy for table "discovery_analyses"
+v23-4) Another member (even a partner) sees nothing (expect 0|0):
+0|0
+v23-5) The OWNER cannot read members' sessions or analyses (expect 0|0):
+0|0

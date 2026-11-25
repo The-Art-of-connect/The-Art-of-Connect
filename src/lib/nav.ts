@@ -60,6 +60,7 @@ export const NAV: NavGroup[] = [
     links: [
       { href: "/app/journey", label: "Talk with Journey", access: "paid" },
       { href: "/app/journey/voice", label: "Journey Live", note: "Voice conversations", access: "paid" },
+      { href: "/app/journey/discover", label: "Discovery Sessions", note: "Adaptive questions, just for you", access: "paid" },
       { href: "/app/journey/daily", label: "My Daily Journey", access: "member" },
       { href: "/app/journey/library", label: "The Journey Library", access: "member" },
       { href: "/app/journey/sessions", label: "Private Sessions", access: "paid" },
