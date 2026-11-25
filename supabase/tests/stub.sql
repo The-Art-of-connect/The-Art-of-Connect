@@ -5,6 +5,9 @@ do $$ begin create role service_role bypassrls; exception when duplicate_object 
 create schema auth; create schema storage;
 create table auth.users (id uuid primary key default gen_random_uuid(), email text, raw_user_meta_data jsonb default '{}');
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true),'')::uuid $$;
+create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid, created_at timestamptz default now(), updated_at timestamptz, refreshed_at timestamp, aal text, user_agent text, ip inet, refresh_token_hmac_key text);
+create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid, status text);
+alter table auth.users add column last_sign_in_at timestamptz;
 create table storage.buckets (id text primary key, name text, public boolean);
 create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text);
 alter table storage.objects enable row level security;
