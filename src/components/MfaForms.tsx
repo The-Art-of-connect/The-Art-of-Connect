@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/browser";
 
+const SETUP_KEY = "aoc_mfa_setup";
+
 /** Enroll an authenticator app (TOTP) — Google Authenticator, 1Password, Authy, etc. */
 export function MfaSetup() {
   const [factor, setFactor] = useState<{ id: string; qr: string; secret: string } | null>(null);
@@ -12,12 +14,24 @@ export function MfaSetup() {
   useEffect(() => {
     (async () => {
       const supabase = createClient();
-      // Remove any half-finished enrollment, then start a fresh one.
       const { data: list } = await supabase.auth.mfa.listFactors();
-      for (const f of list?.all ?? []) if (f.status === "unverified") await supabase.auth.mfa.unenroll({ factorId: f.id });
-      const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: `Authenticator ${new Date().toISOString().slice(0, 10)}` });
+      const pending = (list?.all ?? []).filter((f) => f.status === "unverified");
+      // Coming back from the authenticator app (the phone may reload the page):
+      // keep the same setup code so the entry already added in the app still works.
+      let saved: { id: string; qr: string; secret: string } | null = null;
+      try {
+        saved = JSON.parse(sessionStorage.getItem(SETUP_KEY) ?? "null");
+      } catch {}
+      if (saved && pending.some((f) => f.id === saved!.id)) return setFactor(saved);
+      // Otherwise remove any half-finished enrollment and start a fresh one.
+      for (const f of pending) await supabase.auth.mfa.unenroll({ factorId: f.id });
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: `Authenticator ${Date.now()}` });
       if (error || !data) return setMsg("Could not start setup. Please sign in again.");
-      setFactor({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret });
+      const fresh = { id: data.id, qr: data.totp.qr_code, secret: data.totp.secret };
+      try {
+        sessionStorage.setItem(SETUP_KEY, JSON.stringify(fresh));
+      } catch {}
+      setFactor(fresh);
     })();
   }, []);
 
@@ -28,7 +42,10 @@ export function MfaSetup() {
     const supabase = createClient();
     const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code: code.trim() });
     setBusy(false);
-    if (error) return setMsg("That code didn’t match. Check your authenticator app and try again.");
+    if (error) return setMsg("That code didn’t match. Use the newest 6-digit code for The Art of Connect in your authenticator app and try again.");
+    try {
+      sessionStorage.removeItem(SETUP_KEY);
+    } catch {}
     window.location.href = "/admin";
   };
 
@@ -37,7 +54,7 @@ export function MfaSetup() {
       <ol className="list-decimal space-y-2 pl-5 text-sm text-muted">
         <li>Open an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password or Authy).</li>
         <li>Scan this code, or enter the setup key.</li>
-        <li>Type the 6-digit code it shows.</li>
+        <li>Come back here and type the 6-digit code it shows. It’s fine to switch apps — this setup code stays the same when you return.</li>
       </ol>
       {factor ? (
         <>
