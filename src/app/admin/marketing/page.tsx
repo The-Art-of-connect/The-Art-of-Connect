@@ -14,7 +14,7 @@ export default async function MarketingPage() {
     ? await Promise.all([
         supabase.from("promotions").select("*").order("created_at", { ascending: false }),
         supabase.from("waitlist").select("email, full_name, interests, love_track, desired_tier, desired_interval, couples_upgrade, referral_code, attribution, created_at").order("created_at", { ascending: false }).limit(300),
-        supabase.from("membership_tiers").select("slug, name").order("sort_order"),
+        supabase.from("membership_packages").select("slug, name").order("sort_order"),
       ])
     : [{ data: [] as any[] }, { data: [] as any[] }, { data: [] as any[] }];
 

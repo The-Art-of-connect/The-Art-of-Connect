@@ -6,9 +6,9 @@ reset request.jwt.claim.sub;
 
 \echo 'v3-1) Anonymous reads pricing tables directly (expect permission denied):'
 set role anon;
-select (select count(*) from public.experience_offerings), (select count(*) from public.membership_tiers);
-\echo 'v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 3, null):'
-select jsonb_array_length(p->'experiences'), jsonb_array_length(p->'tiers'), p->'experiences'->0->>'monthly_price_cents' from (select public.get_public_pricing(true) p) x;
+select (select count(*) from public.experience_offerings), (select count(*) from public.membership_packages);
+\echo 'v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 10, null):'
+select jsonb_array_length(p->'experiences'), jsonb_array_length(p->'packages'), p->'packages'->0->>'monthly_price_cents' from (select public.get_public_pricing(true) p) x;
 reset role;
 
 -- finance staff member
@@ -18,22 +18,21 @@ insert into public.staff_roles(user_id, role) values ('00000000-0000-0000-0000-0
 
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000007';
-\echo 'v3-3) Finance sets prices (expect 3 rows updated):'
-update public.experience_offerings set monthly_price_cents = 5000;
-update public.membership_tiers set bundle_discount_percent = case experience_count when 2 then 10 when 3 then 20 else 0 end;
-update public.pricing_config set annual_discount_percent = 15;
-select count(*) from public.experience_offerings where monthly_price_cents = 5000;
+\echo 'v3-3) Finance sets a package price and the annual incentive (expect 1):'
+update public.membership_packages set monthly_price_cents = 2999 where slug = 'professional-society';
+update public.pricing_config set annual_months_charged = 10;
+select count(*) from public.membership_packages where monthly_price_cents = 2999;
 \echo 'v3-4) Finance tries to publish (expect error):'
 update public.pricing_config set is_published = true;
-\echo 'v3-5) Finance preview sees draft prices (expect 5000, preview true):'
-select p->'experiences'->0->>'monthly_price_cents', p->>'preview' from (select public.get_public_pricing(true) p) x;
+\echo 'v3-5) Finance preview sees draft prices (expect 2999, preview true):'
+select p->'packages'->0->>'monthly_price_cents', p->>'preview' from (select public.get_public_pricing(true) p) x;
 
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
 \echo 'v3-6) A member asking for a preview still sees no prices (expect null):'
-select public.get_public_pricing(true)->'experiences'->0->>'monthly_price_cents';
+select public.get_public_pricing(true)->'packages'->0->>'monthly_price_cents';
 \echo 'v3-7) Member tries to change prices (expect 0 rows):'
-update public.experience_offerings set monthly_price_cents = 1;
-select count(*) from public.experience_offerings where monthly_price_cents = 1;
+update public.membership_packages set monthly_price_cents = 1;
+select count(*) from public.membership_packages where monthly_price_cents = 1;
 
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
 \echo 'v3-8) Owner publishes with an unpriced active add-on (expect error):'
@@ -45,8 +44,8 @@ update public.pricing_config set is_published = true;
 select is_published from public.pricing_config;
 reset role;
 set role anon;
-\echo 'v3-10) Public now sees published prices (expect 5000, 15.00):'
-select p->'experiences'->0->>'monthly_price_cents', p->>'annual_discount_percent' from (select public.get_public_pricing() p) x;
+\echo 'v3-10) Public now sees published prices (expect 2999, 10.0):'
+select p->'packages'->0->>'monthly_price_cents', p->>'annual_months_charged' from (select public.get_public_pricing() p) x;
 reset role;
 
 -- Sign-up eligibility (as the auth service would insert users)

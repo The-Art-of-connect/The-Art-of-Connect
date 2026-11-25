@@ -41,7 +41,7 @@ create trigger touch_membership_packages before update on public.membership_pack
 -- Global annual incentive: "12 months for the price of N" (12 = no incentive).
 alter table public.pricing_config
   add column annual_months_charged numeric(4,1) not null default 12 check (annual_months_charged > 0 and annual_months_charged <= 12);
--- Draft value from the owner's proposal: 12 months for the price of 10.
+-- Owner's annual incentive (draft, adjustable): 12 months for the price of 10.
 update public.pricing_config set annual_months_charged = 10;
 
 insert into public.membership_packages (slug, name, tagline, description, category, experiences, love_track, monthly_price_cents, benefits, highlight, sort_order) values
@@ -55,27 +55,27 @@ insert into public.membership_packages (slug, name, tagline, description, catego
    '{"Compatibility & readiness assessments","Intentional matchmaking","Meaningful introductions","One account on all your devices"}', null, 20),
   ('art-of-becoming', 'The Art of Becoming', 'In Life',
    'Self-discovery and personal growth: guided reflection, emotional intelligence and access to qualified counselors and coaches.',
-   'single', '{counseling}', null, null,
+   'single', '{counseling}', null, 2499,
    '{"Guided self-discovery","Emotional intelligence assessments","Private journal","Access to counselors & coaches"}', null, 30),
   ('couples-membership', 'Couples Membership', 'In Love · Couples',
    'Relationship development for couples: shared tools, guided conversations and two secure, private logins.',
-   'single', '{relationships}', 'couple', null,
+   'single', '{relationships}', 'couple', 5999,
    '{"Two secure logins — one for each partner","Shared relationship space","Guided conversations & tools","Each partner keeps a private journal"}', null, 40),
   ('dual-society', 'Dual Society', 'In Business + In Love',
    'Professional and romantic connection together, at a bundled rate.',
    'bundle', '{business,relationships}', null, 5999,
    '{"In Business and In Love","Bundled savings","One account, one subscription","One account on all your devices"}', null, 50),
-  ('business-life', 'In Business + In Life', 'Two experiences',
+  ('business-life', 'Business + Life', 'In Business + In Life',
    'Professional connection and personal growth together, at a bundled rate.',
-   'bundle', '{business,counseling}', null, null,
+   'bundle', '{business,counseling}', null, 4499,
    '{"In Business and In Life","Bundled savings","One account, one subscription"}', null, 60),
-  ('life-love', 'In Life + In Love', 'Two experiences',
+  ('life-love', 'Life + Love', 'In Life + In Love',
    'Personal growth and intentional love together, at a bundled rate.',
-   'bundle', '{counseling,relationships}', null, null,
+   'bundle', '{counseling,relationships}', null, 5499,
    '{"In Life and In Love","Bundled savings","One account, one subscription"}', null, 70),
   ('complete-society', 'Complete Society', 'All three experiences',
    'In Business, In Life and In Love — the complete Art of Connect experience.',
-   'bundle', '{business,counseling,relationships}', null, null,
+   'bundle', '{business,counseling,relationships}', null, 7999,
    '{"In Business, In Life and In Love","Our best bundled rate","One account on all your devices"}', null, 80),
   ('executive-private', 'Executive Private', 'Premium membership',
    'All three experiences with enhanced privacy, advanced compatibility tools and priority support.',
@@ -179,6 +179,12 @@ begin
 end;
 $$;
 grant execute on function public.get_public_pricing(boolean) to anon, authenticated;
+
+-- ─── Retire the old Signature / Premier / Elite structure ───────────
+-- Named packages replace computed tiers and per-experience prices.
+drop table public.membership_tiers;
+alter table public.experience_offerings drop column monthly_price_cents;
+alter table public.pricing_config drop column annual_discount_percent;
 
 -- Promotions now target packages (column name kept for compatibility).
 comment on column public.promotions.applies_to_tiers is 'Membership package slugs the code applies to (empty = all).';
