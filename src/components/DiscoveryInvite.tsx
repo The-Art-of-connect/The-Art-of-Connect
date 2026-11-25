@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getDiscovery } from "@/lib/know-yourself-server";
+import { getDiscovery, nextModuleHref } from "@/lib/know-yourself-server";
 import { setDiscoveryChoice } from "@/app/actions/who-am-i";
 
 /**
@@ -31,7 +31,7 @@ export async function DiscoveryInvite({ userId, back }: { userId: string; back: 
             <p className="mt-2 text-xs text-gold-bright">{d.percent}% of your journey explored</p>
           </div>
         )}
-        <Link href="/app/know-yourself" className="btn btn-gold shimmer mt-8 w-full sm:w-auto sm:px-10">{started ? "Continue My Journey of Self-Discovery" : "Begin My Journey of Self-Discovery"}</Link>
+        <Link href={nextModuleHref(d.answers, d.boundaries)} className="btn btn-gold shimmer mt-8 w-full sm:w-auto sm:px-10">{started ? "Continue My Journey of Self-Discovery" : "Begin My Journey of Self-Discovery"}</Link>
         <div className="mt-5 flex items-center justify-center gap-3 text-sm text-gold-bright">
           <form action={setDiscoveryChoice}><input type="hidden" name="choice" value="later" /><input type="hidden" name="back" value={back} /><button className="underline-offset-4 hover:underline">Save for Later</button></form>
           <span aria-hidden="true" className="text-champagne/60">·</span>

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getViewer, isInsidePreview } from "@/lib/auth";
-import { getDiscovery, moduleProgress } from "@/lib/know-yourself-server";
+import { getDiscovery, moduleProgress, nextModuleHref } from "@/lib/know-yourself-server";
 import { BRAND_MESSAGE, JOURNEY_DEEPER, MODULES, PILLARS } from "@/lib/who-am-i";
 import { setDiscoveryChoice } from "@/app/actions/who-am-i";
 import { LivingHero } from "@/components/business/SocietyHero";
@@ -27,7 +27,7 @@ export default async function ArtOfKnowingYourself() {
         ]}
         eyebrow="The Art of Knowing Yourself" title="Your first connection is" gilded="with yourself."
         subtitle="Beyond the career, the relationship, the marriage and the responsibilities, there is you. Discover who you are, understand what you value, honor your boundaries and create a life that reflects your true self."
-        cta={{ href: "#who-am-i", label: started ? "Continue My Journey of Self-Discovery" : "Begin My Journey of Self-Discovery" }}
+        cta={{ href: nextModuleHref(d.answers, d.boundaries), label: started ? "Continue My Journey of Self-Discovery" : "Begin My Journey of Self-Discovery" }}
         secondary={{ href: "/app", label: "Explore My Society" }}
       />
 

@@ -43,3 +43,9 @@ export const moduleProgress = (slug: string, answers: Record<string, Answer>, bo
   if (slug === "boundaries") return { done: boundaries, total: 4 };
   return { done: m.questions.filter((q) => filled(answers[q.key])).length, total: m.questions.length };
 };
+
+/** Where "Begin/Continue My Journey of Self-Discovery" should go: straight into the first unfinished module. */
+export function nextModuleHref(answers: Record<string, Answer>, boundaries: number) {
+  const next = MODULES.find((m) => { const p = moduleProgress(m.slug, answers, boundaries); return p.done < p.total; }) ?? MODULES[0];
+  return next.slug === "boundaries" ? "/app/know-yourself/boundaries" : `/app/know-yourself/who-am-i/${next.slug}`;
+}
