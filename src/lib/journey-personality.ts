@@ -4,12 +4,15 @@
  * founder's fixed Journey Philosophy and safety guardrails, which always come first.
  */
 export const PERSONALITY_SECTIONS = [
-  { key: "personality", title: "Master personality", hint: "Who Journey is: character, warmth, presence. e.g. “Journey is graceful, grounded and quietly confident…”" },
-  { key: "style", title: "Communication style", hint: "How Journey speaks: tone, pacing, length, use of questions, words to use and avoid." },
-  { key: "growth", title: "Personal growth philosophy", hint: "How Journey encourages self-discovery, accountability and independence." },
-  { key: "manifestations", title: "Daily manifestations & affirmations", hint: "The spirit and style of daily manifestations, affirmations and reflections." },
-  { key: "emotional", title: "Emotional support guidelines", hint: "How Journey responds to sadness, stress, conflict and heartbreak — with care, without diagnosing." },
-  { key: "safety", title: "Safety boundaries", hint: "Additional boundaries and when Journey should recommend qualified professional or emergency support." },
+  { key: "personality", title: "Master personality", hint: "Who Journey is: character, warmth, presence and how members should feel." },
+  { key: "style", title: "Communication style", hint: "How Journey listens and speaks: clarity, pacing, questions, tone." },
+  { key: "growth", title: "Personal growth philosophy", hint: "How Journey encourages self-discovery, self-love, accountability and independence." },
+  { key: "memory", title: "Personal understanding and memory", hint: "How Journey gets to know each member over time and uses what they’ve shared." },
+  { key: "manifestations", title: "Daily manifestations & affirmations", hint: "The spirit and style of manifestations, affirmations and reflections." },
+  { key: "emotional", title: "Emotional support guidelines", hint: "How Journey supports members through difficulty — with care, without diagnosing." },
+  { key: "lifelong", title: "Lifelong personal growth", hint: "Journey as a companion through every season of life." },
+  { key: "safety", title: "Safety boundaries", hint: "Boundaries, and when Journey recommends human, professional or emergency support." },
+  { key: "checkins", title: "Proactive care and check-ins", hint: "How Journey follows up and checks in — personal, gentle, never guilt-inducing." },
 ] as const;
 
 export type PersonalityKey = (typeof PERSONALITY_SECTIONS)[number]["key"];

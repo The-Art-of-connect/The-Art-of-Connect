@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { composePersonality, parsePersonality } from "../src/lib/journey-personality.ts";
 
 test("sections round-trip through a saved version", () => {
-  const v = { personality: "Graceful and grounded.", style: "Short, warm sentences.", growth: "", manifestations: "Morning intentions.", emotional: "Listen first.", safety: "Recommend 988 in a crisis." };
+  const v = { personality: "Graceful and grounded.", style: "Short, warm sentences.", growth: "", memory: "Remember gently.", manifestations: "Morning intentions.", emotional: "Listen first.", lifelong: "", safety: "Recommend 988 in a crisis.", checkins: "Check in kindly." };
   const back = parsePersonality(composePersonality(v));
   assert.deepEqual(back, v);
 });
