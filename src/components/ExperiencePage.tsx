@@ -4,6 +4,7 @@ import { Reveal } from "@/components/Reveal";
 import { EXPERIENCES, type Experience } from "@/lib/experiences";
 
 type Feature = { title: string; body: string };
+const URL_KEY: Record<Experience, string> = { business: "business", counseling: "life", relationships: "love" };
 
 export function ExperiencePage({
   experience,
@@ -24,12 +25,12 @@ export function ExperiencePage({
       <div className="band theme-dark">
       <section className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-20 pt-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pb-28 lg:pt-20">
         <div>
-          <p className="eyebrow rise">{e.subtitle}</p>
+          <p className="eyebrow rise">{e.subtitle} · Exclusively for adults 40+</p>
           <h1 className="display rise rise-2 mt-6 text-5xl sm:text-7xl">{headline}</h1>
           <p className="rise rise-3 mt-8 max-w-xl text-lg leading-relaxed text-muted">{intro}</p>
           <div className="rise rise-4 mt-10 flex flex-col gap-3 sm:flex-row">
-            <Link href="/#invitation" className="btn btn-gold">Request your invitation</Link>
-            <Link href="/membership" className="btn btn-ghost">How membership works</Link>
+            <Link href={`/membership?experiences=${URL_KEY[experience]}#build`} className="btn btn-gold">Choose {e.name}</Link>
+            <Link href="/membership" className="btn btn-ghost">Explore Memberships</Link>
           </div>
         </div>
         <div className="rise rise-3 relative aspect-[4/5] overflow-hidden rounded-[32px] border border-line-strong sm:aspect-[4/3] lg:aspect-[4/5]">

@@ -7,10 +7,15 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://theartofconnect.com"),
-  title: { default: "The Art of Connect — In Business. In Life. In Love.", template: "%s · The Art of Connect" },
+  title: { default: "The Art of Connect — In Business. In Life. In Love. | Adults 40+", template: "%s · The Art of Connect" },
   description:
-    "Meaningful connections begin with understanding who you are. Discover yourself, build intentional relationships, connect with compatible business professionals, and access trusted guidance — all within one extraordinary ecosystem.",
-  openGraph: { siteName: "The Art of Connect", type: "website", images: [{ url: "/og.jpg", width: 1200, height: 630 }] },
+    "Life after 40. Connection with intention. A premium membership for adults 40 and older seeking meaningful personal, professional and romantic connections.",
+  applicationName: "The Art of Connect",
+  keywords: ["adults over 40", "meaningful connections", "intentional dating over 40", "professional networking", "personal growth", "relationship coaching", "life after 40"],
+  alternates: { canonical: "/" },
+  twitter: { card: "summary_large_image", images: ["/og/home.jpg"] },
+  robots: { index: true, follow: true },
+  openGraph: { siteName: "The Art of Connect", type: "website", locale: "en_US", images: [{ url: "/og/home.jpg", width: 1200, height: 630, alt: "The Art of Connect — Life after 40. Connection with intention." }] },
   icons: { icon: "/icon-512.png", apple: "/apple-icon.png" },
 };
 

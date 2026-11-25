@@ -1,10 +1,58 @@
 # Platform status
 
-_Last updated with the In Business · In Life · In Love restructure._
+_Last updated with the membership enrollment and 40+ launch release._
 
 The platform is **pre-launch**:
 - Public registration, live payments, all three experiences and professional applications are **off**.
 - Turning any of them on needs both `LAUNCH_LOCK=false` in Netlify **and** the owner's typed authorization in Owner Portal → Launch controls.
+
+## Membership enrollment (this release)
+
+**Positioning**
+- Exclusively for adults 40+.
+- "Life after 40. Connection with intention."
+- No invitation-only language anywhere on the public site.
+
+**Build Your Membership** (`/membership`)
+- Choose any experiences. The tier follows automatically: Signature (1), Premier (2) or Elite (3).
+- Monthly or annual billing.
+- A relationship status question that appears only when In Love is chosen, plus the couples upgrade.
+- Add-ons and promo codes.
+- A live summary: each experience's value, bundle savings, monthly or annual total, annual savings and amount due today.
+- A comparison of the three tiers, and shareable links (`?experiences=business,life,love&billing=annual`).
+
+**Pricing is fully owner-configured**
+- Owner Portal → Pricing & packages controls names, descriptions, prices, bundle and annual discounts, setup fees, the couples upgrade, add-ons, professional packages, onboarding fees, benefits and eligibility notes.
+- **No prices are in the code, and none are set yet.** Prices stay hidden until the owner types PUBLISH, and the database enforces this.
+
+**Enrollment flow, once launched**
+1. Build membership
+2. Register, with date of birth checked against the owner-set minimum age
+3. Confirm email
+4. Onboarding: agreements recorded as consents
+5. Stripe Checkout: one unified subscription, priced on the server
+
+No invitation or owner approval is needed.
+
+**Members can**
+- add or remove experiences;
+- upgrade or downgrade;
+- switch between monthly and annual billing (Stripe prorates).
+
+The couples upgrade gives the partner In Love access through their own secure login.
+
+**Marketing**
+- A branded share image for each page.
+- Per-page search engine titles and descriptions, canonical URLs, sitemap, robots rules and structured company data.
+- First-party campaign tracking (UTM tags) and referral links.
+- Owner-managed promo codes and public launch offers.
+- Aggregate campaign analytics. No third-party trackers.
+
+**Until launch:** "Membership enrollment opens soon", with an optional notify-me list that records the membership each person built.
+
+**Not yet verified against live services:**
+- **Stripe checkout and plan changes** are built but untested until Stripe test keys are added.
+- **The age check** is based on the date of birth people enter. Government-ID age verification would need an identity provider (e.g. Stripe Identity or Persona).
 
 ## Works today (no configuration needed)
 
@@ -60,11 +108,11 @@ These are designed in the database and shown as "In development" cards in the me
 
 ## Business decisions needed from you
 
-1. **Membership structure and pricing.** This covers members, couples and professionals, plus any setup fees. Nothing is priced or promised on the site until you approve.
+1. **Pricing.** Enter it in Owner Portal → Pricing & packages, then publish. That covers each experience's monthly price, bundle discounts, the annual discount, setup fees, the couples upgrade, add-ons, professional packages and onboarding fees.
 2. **Legal documents.** Privacy Policy, Terms, a Professional Agreement and a consent language review, prepared by counsel.
 3. **Clinical scope.** Whether licensed clinicians will keep any client records on the platform. If so, HIPAA requirements and BAAs must be established first. The site makes no HIPAA claims.
 4. **Credential verification process.** Which license lookups and checks you require before approving a professional.
-5. **Imagery.** The site uses the three photos you supplied. Confirm you hold the rights to use them commercially, and send any additional photos you'd like used.
+5. **Imagery.** The In Business and In Love photos appear to show adults under 40. Please supply licensed photography of diverse adults 40+, and confirm commercial rights for all photos.
 6. **Legal name on the logo.** The company is The Art of Connect, LLC, but the logo artwork reads "The Art of Connection, LLC".
 
 ## Not claimed

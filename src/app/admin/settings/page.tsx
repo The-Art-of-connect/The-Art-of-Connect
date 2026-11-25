@@ -4,6 +4,7 @@ import { env } from "@/lib/env";
 import { getLaunchSettings } from "@/lib/launch";
 import { createClient } from "@/lib/supabase/server";
 import { addToAllowlist, setLaunchSetting } from "@/app/actions/admin";
+import { saveEligibility } from "@/app/actions/pricing";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { Empty, PageHeader, Panel } from "@/components/admin/ui";
 
@@ -20,6 +21,9 @@ const LABELS: Record<string, string> = {
 export default async function SettingsPage() {
   await requireStaff(rolesFor("/admin/settings"));
   const settings = await getLaunchSettings();
+  const sb = await createClient();
+  const { data: ages } = sb ? await sb.from("platform_settings").select("key, value").in("key", ["minimum_member_age", "minimum_professional_age"]) : { data: [] };
+  const age = (k: string, d: number) => Number((ages ?? []).find((a) => a.key === k)?.value ?? d);
   const supabase = await createClient();
   const { data: allowlist } = supabase ? await supabase.from("signup_allowlist").select("email, note, created_at").order("created_at", { ascending: false }) : { data: [] };
 
@@ -64,7 +68,24 @@ export default async function SettingsPage() {
       </Panel>
 
       <div className="mt-6">
-        <Panel title="Invitation allowlist — may create accounts before public launch">
+        <Panel title="Eligibility — minimum ages">
+          <ActionForm action={saveEligibility} className="grid gap-4 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <label className="space-y-1.5">
+              <span className="text-xs font-semibold text-muted">Consumer members (In Business, In Life, In Love)</span>
+              <input name="memberAge" type="number" min={18} max={99} defaultValue={age("minimum_member_age", 40)} className="field" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-xs font-semibold text-muted">Professional applicants</span>
+              <input name="professionalAge" type="number" min={18} max={99} defaultValue={age("minimum_professional_age", 21)} className="field" />
+            </label>
+            <button className="btn btn-gold">Save ages</button>
+          </ActionForm>
+          <p className="px-5 pb-5 text-xs text-muted">Enforced by the database at registration using each person’s date of birth. Dates of birth are private to the member and are not visible in this portal.</p>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Early-access allowlist — staff and testers who may create accounts before launch">
           <ActionForm action={addToAllowlist} className="flex flex-col gap-2 border-b border-line p-5 sm:flex-row">
             <input name="email" type="email" required placeholder="email@domain.com" className="field" />
             <input name="note" placeholder="Note (e.g. founding member)" className="field" />

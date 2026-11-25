@@ -1,10 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Reveal } from "@/components/Reveal";
+import { getCatalogue } from "@/lib/catalogue";
+import { formatMoney } from "@/lib/pricing";
 
-export const metadata: Metadata = { title: "For Professionals", description: "Counselors, coaches and mentors: apply to join The Art of Connect." };
+export const dynamic = "force-dynamic";
 
-export default function ProfessionalsPage() {
+export const metadata: Metadata = {
+  title: "For Professionals",
+  description: "Counselors, coaches and mentors: apply to serve adults 40+ on The Art of Connect.",
+  alternates: { canonical: "/professionals" },
+  openGraph: { images: [{ url: "/og/professionals.jpg", width: 1200, height: 630 }] },
+};
+
+const TYPE_LABEL: Record<string, string> = { licensed_clinical: "Licensed clinicians", coach: "Coaches", mentor: "Mentors", other_nonclinical: "Other professionals" };
+
+export default async function ProfessionalsPage() {
+  const catalogue = await getCatalogue();
+  const money = (c: number | null | undefined) => formatMoney(c, catalogue.currency);
   return (
     <>
     <div className="band theme-burgundy">
@@ -75,9 +88,33 @@ export default function ProfessionalsPage() {
         ))}
       </ol>
       <p className="mt-12 max-w-3xl text-sm text-muted">
-        Professionals on The Art of Connect are independent practitioners. Professional membership pricing will be shared
-        with approved applicants.
+        Professionals on The Art of Connect are independent practitioners. Professional applicants have their own
+        eligibility and credential requirements, separate from consumer memberships.
       </p>
+    </div>
+    </div>
+    <div className="band theme-ivory">
+    <div className="mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:py-28">
+      <p className="eyebrow">Professional memberships</p>
+      <h2 className="display mt-4 text-4xl sm:text-5xl">Packages for approved professionals</h2>
+      <div className="mt-10 grid gap-5 lg:grid-cols-2">
+        {catalogue.professional_packages.map((p) => (
+          <article key={p.slug} className="glass flex flex-col p-8">
+            <h3 className="display text-3xl">{p.name}</h3>
+            <p className="mt-2 text-muted">{p.description}</p>
+            <p className="mt-5 font-semibold text-gold">
+              {catalogue.published && p.monthly_price_cents != null ? `${money(p.monthly_price_cents)} / month` : "Pricing shared at launch"}
+              {catalogue.published && p.onboarding_fee_cents ? <span className="ml-2 text-sm font-normal text-muted">+ {money(p.onboarding_fee_cents)} onboarding</span> : null}
+            </p>
+            <ul className="mt-6 flex-1 space-y-3 text-sm">
+              {p.benefits.map((b) => <li key={b} className="flex gap-3"><span className="mt-2 h-px w-4 shrink-0 bg-champagne" aria-hidden="true" />{b}</li>)}
+            </ul>
+            <p className="mt-6 text-xs text-muted">For: {p.eligible_types.map((t) => TYPE_LABEL[t] ?? t).join(", ")}{p.eligibility ? ` · ${p.eligibility}` : ""}</p>
+          </article>
+        ))}
+        {!catalogue.professional_packages.length && <p className="text-muted">Professional packages will be announced soon.</p>}
+      </div>
+      <Link href="/professionals/apply" className="btn btn-gold mt-10">Begin your application</Link>
     </div>
     </div>
     </>

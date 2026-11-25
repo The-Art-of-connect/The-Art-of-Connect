@@ -8,7 +8,7 @@ export default async function MembershipsPage() {
   const supabase = await createClient();
   const [{ data: subs }, active, trialing, pastDue, canceled] = await Promise.all([
     supabase
-      ? supabase.from("subscriptions").select("id, status, current_period_end, cancel_at_period_end, created_at, profiles(email), membership_plans(name)").order("created_at", { ascending: false }).limit(100)
+      ? supabase.from("subscriptions").select("id, status, current_period_end, cancel_at_period_end, created_at, profiles(email), tier_name, experiences, billing_interval, amount_cents, couples_upgrade, kind").order("created_at", { ascending: false }).limit(100)
       : Promise.resolve({ data: [] as any[] }),
     countRows("subscriptions", (q) => q.eq("status", "active")),
     countRows("subscriptions", (q) => q.eq("status", "trialing")),
@@ -32,7 +32,7 @@ export default async function MembershipsPage() {
             {(subs ?? []).map((s: any) => (
               <tr key={s.id}>
                 <td className="text-text">{s.profiles?.email ?? "—"}</td>
-                <td>{s.membership_plans?.name ?? "—"}</td>
+                <td><p className="text-text">{s.tier_name ?? "—"}</p><p className="text-xs text-faint">{s.kind === "professional" ? "Professional" : (s.experiences ?? []).map((e: string) => ({ business: "In Business", counseling: "In Life", relationships: "In Love" } as Record<string, string>)[e]).join(" · ")}{s.couples_upgrade ? " · Couples" : ""} · {s.billing_interval === "year" ? "Annual" : "Monthly"}</p></td>
                 <td><span className="chip">{s.status}{s.cancel_at_period_end ? " · ending" : ""}</span></td>
                 <td>{date(s.current_period_end)}</td>
                 <td>{date(s.created_at)}</td>

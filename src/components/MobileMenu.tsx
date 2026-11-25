@@ -53,7 +53,7 @@ export function MobileMenu() {
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_80%_0%,rgb(116_63_77/0.35),transparent_70%)]" />
         <div className="relative flex h-16 items-center justify-between px-4 sm:h-20 sm:px-8">
-          <span className="eyebrow">In Business. In Life. In Love.</span>
+          <span className="eyebrow">Exclusively for adults 40+</span>
           <button
             ref={closeRef}
             type="button"
@@ -76,7 +76,7 @@ export function MobileMenu() {
             ))}
           </ul>
           <div className="mt-8 grid gap-3">
-            <Link href="/#invitation" className="btn btn-gold w-full" onClick={() => setOpen(false)}>Request your invitation</Link>
+            <Link href="/membership#build" className="btn btn-gold w-full" onClick={() => setOpen(false)}>Build Your Membership</Link>
             <Link href="/sign-in" className="btn btn-ghost w-full" onClick={() => setOpen(false)}>Member sign in</Link>
           </div>
           <a href="mailto:info@theartofconnect.com" className="mt-8 block text-center text-sm text-gold">info@theartofconnect.com</a>

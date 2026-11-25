@@ -11,6 +11,9 @@ export type Viewer = {
   displayName: string | null;
   roles: StaffRole[];
   experiences: Experience[];
+  accountType: "member" | "professional" | "staff";
+  ageEligible: boolean;
+  referralCode: string | null;
 };
 
 /** The signed-in user with their staff roles and experience grants, or null. */
@@ -21,7 +24,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   if (!auth.user) return null;
 
   const [{ data: profile }, { data: roles }, { data: access }] = await Promise.all([
-    supabase.from("profiles").select("display_name, status").eq("id", auth.user.id).maybeSingle(),
+    supabase.from("profiles").select("display_name, status, account_type, age_eligible, referral_code").eq("id", auth.user.id).maybeSingle(),
     supabase.from("staff_roles").select("role").eq("user_id", auth.user.id),
     supabase.from("experience_access").select("experience, status, expires_at").eq("user_id", auth.user.id),
   ]);
@@ -32,6 +35,9 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     id: auth.user.id,
     email: auth.user.email ?? "",
     displayName: profile?.display_name ?? null,
+    accountType: (profile?.account_type as Viewer["accountType"]) ?? "member",
+    ageEligible: Boolean(profile?.age_eligible),
+    referralCode: profile?.referral_code ?? null,
     roles: (roles ?? []).map((r) => r.role as StaffRole),
     experiences: (access ?? [])
       .filter((a) => a.status === "active" && (!a.expires_at || new Date(a.expires_at).getTime() > now))
