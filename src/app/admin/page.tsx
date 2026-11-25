@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { requireStaff } from "@/lib/auth";
-import { countRows, money } from "@/lib/admin";
+import { hasRole, requireStaff } from "@/lib/auth";
+import { FINANCE_VIEWERS, countRows, money } from "@/lib/admin";
 import { getLaunchState } from "@/lib/launch";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -16,6 +16,8 @@ async function monthlyRecurring() {
 export default async function AdminOverview() {
   const viewer = await requireStaff();
   const launch = await getLaunchState();
+  // General staff never see confidential financial figures.
+  const finance = hasRole(viewer, FINANCE_VIEWERS);
   const [members, active, waitlist, applications, tickets, reports, mrr, failed, canceled] = await Promise.all([
     countRows("profiles"),
     countRows("subscriptions", (q) => q.eq("status", "active")),
@@ -41,16 +43,18 @@ export default async function AdminOverview() {
     <>
       {!isSupabaseConfigured() && <NotConnected />}
       <PageHeader eyebrow="Command" title={`Good day${viewer.displayName ? ", " + viewer.displayName : ""}.`} />
+      {finance && (
+        <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <Stat label="Active memberships" value={active} accent="var(--success)" />
+          <Stat label="Monthly recurring" value={money(mrr)} accent="var(--gold-bright)" />
+          <Stat label="Annual recurring" value={money(mrr * 12)} hint="Monthly recurring × 12" />
+          <Stat label="Failed payments" value={failed} accent="var(--danger)" />
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Members" value={members} />
-        <Stat label="Active memberships" value={active} accent="var(--success)" />
-        <Stat label="Monthly recurring" value={money(mrr)} accent="var(--gold-bright)" />
-        <Stat label="Annual recurring" value={money(mrr * 12)} hint="Monthly recurring × 12" />
-      </div>
-      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Notify-me list" value={waitlist} />
-        <Stat label="Failed payments" value={failed} accent="var(--danger)" />
-        <Stat label="Cancellations" value={canceled} />
+        {finance && <Stat label="Cancellations" value={canceled} />}
         <Stat label="Pending professional applications" value={applications} />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr]">

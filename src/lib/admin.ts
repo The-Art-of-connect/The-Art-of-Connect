@@ -3,24 +3,28 @@ import type { StaffRole } from "@/lib/experiences";
 import { createClient } from "@/lib/supabase/server";
 
 export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; group: string }[] = [
-  { href: "/admin", label: "Overview", roles: ["owner", "admin", "support", "moderator", "finance"], group: "Command" },
-  { href: "/admin/launch", label: "Launch readiness", roles: ["owner", "admin", "finance"], group: "Command" },
-  { href: "/admin/analytics", label: "Analytics", roles: ["owner", "admin"], group: "Command" },
-  { href: "/admin/members", label: "Members", roles: ["owner", "admin", "support"], group: "People" },
-  { href: "/admin/counselors", label: "Professional applications", roles: ["owner", "admin"], group: "People" },
-  { href: "/admin/access", label: "Access & referrals", roles: ["owner", "admin"], group: "People" },
-  { href: "/admin/memberships", label: "Memberships", roles: ["owner", "admin", "finance"], group: "Revenue" },
+  { href: "/admin", label: "Overview", roles: ["owner", "executive", "finance", "admin", "support", "moderator"], group: "Command" },
+  { href: "/admin/launch", label: "Launch readiness", roles: ["owner", "executive", "finance"], group: "Command" },
+  { href: "/admin/analytics", label: "Analytics", roles: ["owner", "executive", "admin"], group: "Command" },
+  { href: "/admin/members", label: "Members", roles: ["owner", "executive", "admin", "support"], group: "People" },
+  { href: "/admin/counselors", label: "Professional applications", roles: ["owner", "executive", "admin"], group: "People" },
+  { href: "/admin/access", label: "Access & referrals", roles: ["owner", "executive", "admin"], group: "People" },
+  { href: "/admin/memberships", label: "Memberships", roles: ["owner", "executive", "finance"], group: "Revenue" },
   { href: "/admin/pricing", label: "Pricing & packages", roles: ["owner", "finance"], group: "Revenue" },
-  { href: "/admin/revenue", label: "Payments", roles: ["owner", "finance"], group: "Revenue" },
-  { href: "/admin/reports", label: "Financial reports", roles: ["owner", "finance"], group: "Revenue" },
-  { href: "/admin/marketing", label: "Marketing & promotions", roles: ["owner", "admin"], group: "Growth" },
-  { href: "/admin/support", label: "Customer support", roles: ["owner", "admin", "support"], group: "Care" },
-  { href: "/admin/moderation", label: "Content moderation", roles: ["owner", "admin", "moderator"], group: "Care" },
-  { href: "/admin/safety", label: "Trust & safety", roles: ["owner", "admin", "moderator"], group: "Care" },
+  { href: "/admin/revenue", label: "Payments", roles: ["owner", "executive", "finance"], group: "Revenue" },
+  { href: "/admin/reports", label: "Financial reports", roles: ["owner", "executive", "finance"], group: "Revenue" },
+  { href: "/admin/audit", label: "Financial audit trail", roles: ["owner", "finance"], group: "Revenue" },
+  { href: "/admin/marketing", label: "Marketing & promotions", roles: ["owner", "executive", "finance", "admin"], group: "Growth" },
+  { href: "/admin/support", label: "Customer support", roles: ["owner", "executive", "admin", "support"], group: "Care" },
+  { href: "/admin/moderation", label: "Content moderation", roles: ["owner", "executive", "admin", "moderator"], group: "Care" },
+  { href: "/admin/safety", label: "Trust & safety", roles: ["owner", "executive", "admin", "moderator"], group: "Care" },
   { href: "/admin/security", label: "Security Center", roles: ["owner", "admin"], group: "Platform" },
   { href: "/admin/team", label: "Team & permissions", roles: ["owner"], group: "Platform" },
   { href: "/admin/settings", label: "Launch controls & settings", roles: ["owner"], group: "Platform" },
 ];
+
+/** Roles that may see confidential financial information (revenue, payments, subscriptions, promotions). */
+export const FINANCE_VIEWERS: StaffRole[] = ["owner", "finance", "executive"];
 
 export const rolesFor = (href: string) => ADMIN_SECTIONS.find((s) => s.href === href)!.roles;
 

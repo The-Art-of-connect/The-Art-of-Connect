@@ -168,7 +168,7 @@ export async function resolveReport(_prev: ActionResult, form: FormData): Promis
 }
 
 export async function createPromotion(_prev: ActionResult, form: FormData): Promise<ActionResult> {
-  await requireStaff(rolesFor("/admin/marketing"));
+  await requireStaff(["owner", "finance"]);
   const parsed = z
     .object({
       code: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{3,24}$/, "Codes use 3–24 letters, numbers or dashes."),
@@ -213,7 +213,7 @@ export async function createPromotion(_prev: ActionResult, form: FormData): Prom
 }
 
 export async function togglePromotion(_prev: ActionResult, form: FormData): Promise<ActionResult> {
-  await requireStaff(rolesFor("/admin/marketing"));
+  await requireStaff(["owner", "finance"]);
   const parsed = z.object({ id: z.uuid(), field: z.enum(["is_active", "is_public_offer"]), on: z.boolean() }).safeParse({ id: form.get("id"), field: form.get("field"), on: form.get("on") === "true" });
   if (!parsed.success) return fail("Invalid request.");
   const supabase = (await createClient())!;
@@ -317,7 +317,8 @@ export async function updateChecklistItem(_prev: ActionResult, form: FormData): 
 
 /** Full or partial refund of a recorded payment (owner or finance). */
 export async function refundPayment(_prev: ActionResult, form: FormData): Promise<ActionResult> {
-  await requireStaff(["owner", "finance"]);
+  // Refunds are an owner decision.
+  await requireStaff(["owner"]);
   const parsed = z.object({ id: z.uuid(), amount: z.string().trim().max(12) }).safeParse({ id: form.get("id"), amount: String(form.get("amount") ?? "") });
   if (!parsed.success) return fail("Invalid request.");
   const supabase = (await createClient())!;
@@ -383,7 +384,7 @@ export async function revokeMemberSessions(_prev: ActionResult, form: FormData):
 }
 
 // ─── Team & delegated permissions (owner only) ─────────────────────
-const DELEGABLE = ["admin", "finance", "support", "moderator"] as const;
+const DELEGABLE = ["executive", "finance", "admin", "support", "moderator"] as const;
 
 /** Invites a team member with specific permissions. They set a password and must enroll MFA. */
 export async function inviteTeamMember(_prev: ActionResult, form: FormData): Promise<ActionResult> {

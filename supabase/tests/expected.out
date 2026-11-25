@@ -208,3 +208,28 @@ v7-9) Exclusive membership must include all three experiences (expect error):
 ERROR:  new row for relation "membership_packages" violates check constraint "membership_packages_check1"
 v7-10) Annual incentive outside 1–12 months is rejected (expect error):
 ERROR:  new row for relation "pricing_config" violates check constraint "pricing_config_annual_months_charged_check"
+v8-1) Executive views payments and promotions (expect 1, 1):
+1|1
+v8-2) Executive tries to change a package price and a promotion (expect 0, 0):
+0|0
+v8-3) Executive previews draft prices but cannot read the audit trail (expect true, 0):
+t|0
+v8-4) Executive tries to open public enrollment (expect 0 rows changed):
+0
+v8-5) General staff (admin) sees no payments, subscriptions or promotions (expect 0, 0, 0):
+0|0|0
+v8-6) General staff cannot preview draft prices (expect false):
+f
+v8-7) Finance prepares a price change; it is logged with who, previous and new value (expect finance@example.com|finance|5999|6499):
+finance@example.com|finance|5999|6499
+v8-8) Finance cannot change launch switches (expect 0):
+0
+v8-9) A member cannot read the financial audit trail (expect 0):
+0
+v8-10) System (webhook) changes are logged as system (expect system|succeeded|refunded):
+system|succeeded|refunded
+v8-11) The audit trail cannot be altered or deleted, even by the database superuser (expect error, error):
+ERROR:  The financial audit trail cannot be changed or deleted
+ERROR:  The financial audit trail cannot be changed or deleted
+v8-12) Team permission changes are logged (expect INSERT):
+INSERT
