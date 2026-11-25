@@ -146,8 +146,8 @@ v4-19) Approve after identity, license lookup and disciplinary check (expect app
 approved
 v4-20) Owner updates the launch checklist (expect done):
 done
-v4-21) Finance reads the checklist but cannot change it (expect 25 rows, then 0 updated):
-25
+v4-21) Finance reads the checklist but cannot change it (expect 28 rows, then 0 updated):
+28
 0
 v4-22) Member reads the checklist (expect 0); records a versioned consent (expect 1):
 0
@@ -233,3 +233,48 @@ ERROR:  The financial audit trail cannot be changed or deleted
 ERROR:  The financial audit trail cannot be changed or deleted
 v8-12) Team permission changes are logged (expect INSERT):
 INSERT
+v9-1) Seeded: 19 documents, all drafts, 15 requirements, 30 decisions (expect 19|19|0|15|30):
+19|19|0|15|30
+v9-2) Public sees titles but no draft text, nothing in effect (expect 19|0|t):
+19|0|t
+v9-3) Anonymous reads draft versions directly (expect permission denied):
+ERROR:  permission denied for table legal_document_versions
+v9-4) A member cannot read drafts or the compliance checklist (expect 0|0):
+0|0
+v9-5) A member cannot accept a document that is not in effect (expect error):
+ERROR:  The terms-of-service is not yet in effect and cannot be accepted
+v9-6) Executive edits a draft and sends it for review (expect 1):
+1
+v9-7) Executive tries to approve or publish (expect error):
+ERROR:  Only the owner can approve, schedule or publish legal documents
+v9-8) Executive tries to record attorney approval (expect error):
+ERROR:  Only the owner can record attorney approval
+v9-9) Owner tries to publish without a recorded attorney approval (expect error):
+ERROR:  Record the attorney's approval before scheduling or publishing
+v9-10) Owner records attorney approval, approves and publishes (expect published|t):
+published|t
+v9-11) Published text cannot be edited (expect error):
+ERROR:  Approved, scheduled, published and archived versions cannot be edited — create a new draft
+v9-12) Scheduling needs a future time (expect error):
+ERROR:  Choose a future date and time to schedule publication
+v9-13) Public now sees the published Terms in full (expect t|t):
+t|t
+v9-14) Member accepts the Terms; evidence holds version and text fingerprint (expect 1|t|t):
+1
+1|t|t
+v9-15) Member cannot insert or alter acceptance records directly (expect error, 0):
+ERROR:  permission denied for table legal_acceptances
+ERROR:  permission denied for table legal_acceptances
+0
+v9-16) Pending acceptances exclude what was accepted (expect 0 for terms):
+0
+v9-17) Owner publishes a new version requiring re-acceptance; the old one is archived (expect archived|published):
+archived|published
+v9-18) Member is asked to accept the updated Terms (expect updated):
+updated
+v9-19) Acceptance evidence survives and cannot be deleted, even by the superuser (expect error, 1):
+ERROR:  Acceptance records cannot be changed or deleted
+1
+v9-20) Legal audit trail records the publication and cannot be changed (expect t, error):
+t
+ERROR:  The legal audit trail cannot be changed or deleted
