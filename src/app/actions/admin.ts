@@ -17,7 +17,7 @@ const fail = (message: string): ActionResult => ({ ok: false, message });
 const done = (message: string): ActionResult => ({ ok: true, message });
 
 /** Switches that open the platform to the public need a typed confirmation. */
-const CRITICAL = new Set(["registrations_open", "payments_live", "counseling_live", "relationships_live", "business_live", "counselor_applications_open", "identity_verification_live"]);
+const CRITICAL = new Set(["registrations_open", "payments_live", "counseling_live", "relationships_live", "business_live", "counselor_applications_open", "identity_verification_live", "free_business_accounts_open"]);
 
 export async function setLaunchSetting(_prev: ActionResult, form: FormData): Promise<ActionResult> {
   await requireStaff(rolesFor("/admin/settings"));

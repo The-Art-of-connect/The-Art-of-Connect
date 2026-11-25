@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useActionState } from "react";
-import { signIn, signUp, type AuthState } from "@/app/actions/auth";
+import { signIn, signUp, signUpBusiness, type AuthState } from "@/app/actions/auth";
 import type { Selection } from "@/lib/pricing";
 import { LEGAL_TITLES, REGISTRATION_DOCS } from "@/lib/legal-requirements";
 import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
@@ -23,8 +23,8 @@ export function SignInForm({ next }: { next?: string }) {
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-export function JoinForm({ selection, loveStatus, minimumAge }: { selection: Selection; loveStatus: "single" | "couple" | null; minimumAge: number }) {
-  const [state, action, pending] = useActionState<AuthState, FormData>(signUp, null);
+export function JoinForm({ selection, loveStatus, minimumAge, business = false }: { selection: Selection; loveStatus: "single" | "couple" | null; minimumAge: number; business?: boolean }) {
+  const [state, action, pending] = useActionState<AuthState, FormData>(business ? signUpBusiness : signUp, null);
   const [verified, setVerified] = useTurnstileReady();
   if (state?.notice) return <p className="py-6 text-center text-muted" role="status">{state.notice}</p>;
   const thisYear = new Date().getFullYear();
@@ -78,7 +78,7 @@ export function JoinForm({ selection, loveStatus, minimumAge }: { selection: Sel
       </label>
       <Turnstile action="sign_up" resetSignal={state} onReady={setVerified} />
       {state?.error && <p className="text-sm text-danger" role="alert">{state.error}</p>}
-      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Creating your account…" : verified ? "Become a Member" : "Verifying…"}</button>
+      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Creating your account…" : verified ? (business ? "Create my free business account" : "Become a Member") : "Verifying…"}</button>
     </form>
   );
 }

@@ -14,6 +14,7 @@ export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; 
   { href: "/admin/revenue", label: "Payments", roles: ["owner", "executive", "finance"], group: "Revenue" },
   { href: "/admin/reports", label: "Financial reports", roles: ["owner", "executive", "finance"], group: "Revenue" },
   { href: "/admin/audit", label: "Financial audit trail", roles: ["owner", "finance"], group: "Revenue" },
+  { href: "/admin/business", label: "Founding Community & Business Growth", roles: ["owner", "executive", "moderator"], group: "Growth" },
   { href: "/admin/marketing", label: "Marketing & promotions", roles: ["owner", "executive", "finance", "admin"], group: "Growth" },
   { href: "/admin/support", label: "Customer support", roles: ["owner", "executive", "admin", "support"], group: "Care" },
   { href: "/admin/moderation", label: "Content moderation", roles: ["owner", "executive", "admin", "moderator"], group: "Care" },
