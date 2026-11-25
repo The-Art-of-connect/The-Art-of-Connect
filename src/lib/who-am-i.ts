@@ -74,6 +74,11 @@ export const MODULES: DiscoveryModule[] = [
     ],
   },
   {
+    slug: "love-languages", title: "How I give and receive love", pillar: "understand", image: "/images/library/love/cooking-together.webp", minutes: 4,
+    intro: "Discover how you most feel loved, how you naturally show love, and what helps you feel truly connected.",
+    questions: [],
+  },
+  {
     slug: "boundaries", title: "Boundaries & non-negotiables", pillar: "honor", image: "/images/library/business/advisory-lounge.webp", minutes: 8,
     intro: "What you will do, what you won’t, and how to say it with respect — for yourself, at work, in life and in love.",
     questions: [],

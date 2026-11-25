@@ -4,6 +4,7 @@ import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResponse, isOpenAIConfigured, type ChatTurn } from "@/lib/openai";
 import { maybeAutoReload } from "@/lib/journey-commerce";
+import { JOURNEY_LOVE_LANGUAGE_GUIDANCE, LOVE_LANGUAGES, isLanguage } from "@/lib/love-languages";
 import {
   buildJourneyInstructions, journeyAccessFor, modeAllowed, ownerTestAccess,
   type JourneyCapability, type JourneyMode, type PaidMembership,
@@ -210,7 +211,8 @@ export async function sendJourneyMessage(input: {
     knowledgeText && `# Approved knowledge from The Art of Connect\n${knowledgeText}`,
     exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
   ].filter(Boolean).join("\n\n");
-  const instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
+  let instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
+  if (input.mode === "life" || input.mode === "love") instructions += await loveLanguageContext(db, viewer.id);
 
   // Context: only this member's own conversation, trimmed to the owner's limits.
   let history: ChatTurn[] = [];
@@ -340,4 +342,17 @@ async function runSession(db: Db, settings: JourneySettings, userId: string, inp
     return refuse(502, "Journey couldn't reply just now. Please try again.");
   }
   return { ok: true, reply: result.text, conversationId: null, allowance: null };
+}
+
+/** Love-language guidance for Life and Love conversations, plus the member's own profile when they allow Journey to use it. */
+export async function loveLanguageContext(db: Db, userId: string) {
+  let out = `\n\n${JOURNEY_LOVE_LANGUAGE_GUIDANCE}`;
+  const { data: ll } = await db.from("love_language_profiles").select("receive_rank, express_rank, feel_connected, feel_unappreciated, use_in_journey").eq("user_id", userId).maybeSingle();
+  if (ll?.use_in_journey && (ll.receive_rank?.length || ll.express_rank?.length)) {
+    const names = (r: string[] | null) => (r ?? []).filter(isLanguage).map((k) => LOVE_LANGUAGES[k].name).join(", ");
+    out += `\n\n# This member's Love Language Profile (their own words; preferences, not a label — never reveal to anyone else)\nReceives love most through: ${names(ll.receive_rank)}\nNaturally expresses love through: ${names(ll.express_rank)}`;
+    if (ll.feel_connected) out += `\nFeels connected when: ${String(ll.feel_connected).slice(0, 600)}`;
+    if (ll.feel_unappreciated) out += `\nFeels unappreciated when: ${String(ll.feel_unappreciated).slice(0, 600)}`;
+  }
+  return out;
 }

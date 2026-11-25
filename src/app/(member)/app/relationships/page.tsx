@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 const SINGLES = [
   { title: "Your Personal Society journey", body: "Four short stages — welcome, understanding you, readiness and compatibility. Save and continue anytime.", href: "/app/relationships/onboarding", image: "/images/library/love/candlelit-dinner.webp" },
   { title: "Relationship readiness", body: "Your private discovery report: strengths, growth areas and educational next steps.", href: "/app/readiness", image: "/images/library/life/journaling.webp" },
+  { title: "Your Love Language Profile", body: "How you prefer to receive love, how you express it — optional to share with mutual matches.", href: "/app/relationships/love-languages", image: "/images/library/love/laughing-dinner.webp" },
   { title: "Personality & compatibility", body: "Assessments of values, attachment, communication and life vision.", image: "/images/library/love/mature-dinner.webp" },
   { title: "Intentional matchmaking", body: "Curated introductions with the reasons you may be well suited. Singles 30+ only.", image: "/images/library/love/laughing-dinner.webp" },
   { title: "The Exclusive Connection", body: "When you both choose to focus on each other — mutual, private and respectful.", href: "/app/relationships/exclusive", image: "/images/library/love/sunset-wedding.webp" },
@@ -15,6 +16,7 @@ const SINGLES = [
 ];
 const COUPLES = [
   { title: "Just us — our calendar", body: "Date nights, trips and plans together, with each partner’s schedule kept private.", href: "/app/relationships/calendar", image: "/images/library/love/sunset-dinner.webp" },
+  { title: "Our love languages", body: "See how you each feel loved, where your needs differ, and small ways to love each other well.", href: "/app/relationships/love-languages", image: "/images/library/love/sunlit-anniversary.webp" },
   { title: "Shared relationship space", body: "Goals, guided conversations and connection activities you share together.", image: "/images/library/love/cooking-together.webp" },
   { title: "Private reflections", body: "Your individual reflections — never shared with your partner unless you choose.", image: "/images/library/love/sunlit-anniversary.webp" },
   { title: "Invite your partner", body: "A secure invitation. Your shared space opens only when your partner accepts.", image: "/images/library/love/first-dance.webp", position: "50% 60%" },

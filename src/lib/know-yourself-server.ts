@@ -15,37 +15,47 @@ export async function reflectionsWritten(userId: string) {
 
 const filled = (a?: Answer) => Boolean(a && ((a.answer && a.answer.trim()) || (a.choices && a.choices.length)));
 
+/** Modules with their own dedicated pages (progress measured there). */
+export type Special = { boundaries: number; "love-languages": number };
+const SPECIAL_TOTAL: Record<keyof Special, number> = { boundaries: 4, "love-languages": 1 };
+export const moduleHref = (slug: string) =>
+  slug === "boundaries" ? "/app/know-yourself/boundaries" : slug === "love-languages" ? "/app/know-yourself/love-languages" : `/app/know-yourself/who-am-i/${slug}`;
+
 /** The member's own discovery profile. Row security guarantees only they can read it. */
 export async function getDiscovery(userId: string) {
   const supabase = await createClient();
-  const empty = { answers: {} as Record<string, Answer>, choice: null as DiscoveryChoice, boundaries: 0, modulesDone: 0, modulesStarted: 0, totalModules: MODULES.length, percent: 0 };
+  const special: Special = { boundaries: 0, "love-languages": 0 };
+  const empty = { answers: {} as Record<string, Answer>, choice: null as DiscoveryChoice, special, modulesDone: 0, modulesStarted: 0, totalModules: MODULES.length, percent: 0 };
   if (!supabase) return empty;
-  const [{ data: rows }, { data: pref }, boundaries] = await Promise.all([
+  const [{ data: rows }, { data: pref }, boundaries, { data: love }] = await Promise.all([
     supabase.from("discovery_answers").select("question_key, answer, choices, updated_at").eq("user_id", userId),
     supabase.from("discovery_preference").select("choice").eq("user_id", userId).maybeSingle(),
     reflectionsWritten(userId),
+    supabase.from("love_language_profiles").select("receive_rank").eq("user_id", userId).maybeSingle(),
   ]);
+  special.boundaries = boundaries;
+  special["love-languages"] = love?.receive_rank?.length ? 1 : 0;
   const answers = Object.fromEntries(((rows ?? []) as Answer[]).map((r) => [r.question_key, r]));
   let modulesDone = 0, modulesStarted = 0;
   for (const m of MODULES) {
-    const n = m.slug === "boundaries" ? boundaries : m.questions.filter((q) => filled(answers[q.key])).length;
-    const total = m.slug === "boundaries" ? 4 : m.questions.length;
-    if (n >= total) modulesDone++;
-    else if (n > 0) modulesStarted++;
+    const p = moduleProgress(m.slug, answers, special);
+    if (p.done >= p.total) modulesDone++;
+    else if (p.done > 0) modulesStarted++;
   }
-  const answered = QUESTION_KEYS.filter((k) => filled(answers[k])).length + boundaries;
-  const percent = Math.round((100 * answered) / (QUESTION_KEYS.length + 4));
-  return { answers, choice: (pref?.choice as DiscoveryChoice) ?? null, boundaries, modulesDone, modulesStarted, totalModules: MODULES.length, percent };
+  const specialDone = special.boundaries + special["love-languages"];
+  const answered = QUESTION_KEYS.filter((k) => filled(answers[k])).length + specialDone;
+  const percent = Math.round((100 * answered) / (QUESTION_KEYS.length + SPECIAL_TOTAL.boundaries + SPECIAL_TOTAL["love-languages"]));
+  return { answers, choice: (pref?.choice as DiscoveryChoice) ?? null, special, modulesDone, modulesStarted, totalModules: MODULES.length, percent };
 }
 
-export const moduleProgress = (slug: string, answers: Record<string, Answer>, boundaries: number) => {
+export const moduleProgress = (slug: string, answers: Record<string, Answer>, special: Special) => {
+  if (slug in SPECIAL_TOTAL) return { done: special[slug as keyof Special], total: SPECIAL_TOTAL[slug as keyof Special] };
   const m = MODULES.find((x) => x.slug === slug)!;
-  if (slug === "boundaries") return { done: boundaries, total: 4 };
   return { done: m.questions.filter((q) => filled(answers[q.key])).length, total: m.questions.length };
 };
 
 /** Where "Begin/Continue My Journey of Self-Discovery" should go: straight into the first unfinished module. */
-export function nextModuleHref(answers: Record<string, Answer>, boundaries: number) {
-  const next = MODULES.find((m) => { const p = moduleProgress(m.slug, answers, boundaries); return p.done < p.total; }) ?? MODULES[0];
-  return next.slug === "boundaries" ? "/app/know-yourself/boundaries" : `/app/know-yourself/who-am-i/${next.slug}`;
+export function nextModuleHref(answers: Record<string, Answer>, special: Special) {
+  const next = MODULES.find((m) => { const p = moduleProgress(m.slug, answers, special); return p.done < p.total; }) ?? MODULES[0];
+  return moduleHref(next.slug);
 }

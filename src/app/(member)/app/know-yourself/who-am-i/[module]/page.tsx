@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getViewer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getDiscovery } from "@/lib/know-yourself-server";
+import { getDiscovery, moduleHref } from "@/lib/know-yourself-server";
 import { LESSONS, MODULES, PILLARS, moduleBySlug } from "@/lib/who-am-i";
 import { saveDiscoveryModule } from "@/app/actions/who-am-i";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ module: s
 
 export default async function DiscoveryModulePage({ params }: { params: Promise<{ module: string }> }) {
   const slug = (await params).module;
-  if (slug === "boundaries") redirect("/app/know-yourself/boundaries");
+  if (slug === "boundaries" || slug === "love-languages") redirect(moduleHref(slug));
   const mod = moduleBySlug(slug);
   if (!mod) notFound();
   const viewer = (await getViewer())!;
@@ -34,7 +34,7 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
   const lesson = LESSONS.find((l) => l.pillar === mod.pillar);
   const idx = MODULES.findIndex((m) => m.slug === mod.slug);
   const next = MODULES[(idx + 1) % MODULES.length];
-  const nextHref = next.slug === "boundaries" ? "/app/know-yourself/boundaries" : `/app/know-yourself/who-am-i/${next.slug}`;
+  const nextHref = moduleHref(next.slug);
 
   return (
     <>

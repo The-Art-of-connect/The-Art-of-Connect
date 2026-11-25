@@ -69,11 +69,11 @@ select (select count(*) > 20 from public.dev_tracker), (select count(*) from pub
 \echo 'v14-12) Draft library content stays hidden from members; approved content appears (expect 0 then 1):'
 insert into public.journey_knowledge (mode, title, body, status, kind, art) values ('all', 'Draft boundaries module', 'draft', 'draft', 'module', 'boundaries');
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000063';
-select count(*) from public.journey_library;
+select count(*) from public.journey_library where title = 'Draft boundaries module';
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
 update public.journey_knowledge set status = 'approved' where title = 'Draft boundaries module';
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000063';
-select count(*) from public.journey_library;
+select count(*) from public.journey_library where title = 'Draft boundaries module';
 
 reset role;
 reset request.jwt.claim.sub;

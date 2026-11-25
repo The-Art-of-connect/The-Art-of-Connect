@@ -7,6 +7,8 @@ export const PREVIEW_GROUPS: { title: string; note: string; pages: [string, stri
       ["/app", "Member home", "Welcome, experiences included, referral link."],
       ["/app/know-yourself", "The Art of Knowing Yourself", "Who Am I? — the optional, private self-discovery program."],
       ["/app/know-yourself/who-am-i/beyond-my-titles", "Who Am I? · a module", "One of nine private discovery modules, with growth history."],
+      ["/app/know-yourself/love-languages", "Love Language Profile", "Discovery, rankings, connection notes and sharing choices."],
+      ["/app/relationships/love-languages", "Love languages together", "Couples and mutual matches — shared only by choice."],
       ["/app/know-yourself/boundaries", "Boundaries & non-negotiables", "What I will do, won’t do, and how to say it respectfully."],
       ["/app/know-yourself/learn", "Self-discovery lessons", "Static educational lessons — no AI."],
       ["/app/know-yourself/growth", "My growth plan", "Goals and how answers have changed over time."],
