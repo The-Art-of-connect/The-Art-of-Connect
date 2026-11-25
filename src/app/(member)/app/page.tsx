@@ -14,6 +14,7 @@ import { DashboardHub } from "@/components/DashboardHub";
 import { getNavState } from "@/lib/nav-state";
 import { getDiscovery, nextModuleHref } from "@/lib/know-yourself-server";
 
+const SOCIETY_NAME: Record<string, string> = { business: "The Professional Society", relationships: "The Personal Society", counseling: "The Art of Becoming" };
 const PHOTO: Record<string, string> = {
   business: "/images/society/roundtable.webp",
   counseling: "/images/library/life/meditation.webp",
@@ -31,6 +32,10 @@ export default async function MemberHome() {
     getNavState(),
     getDiscovery(viewer.id),
   ]);
+  // Only the experiences this member actually has (staff in their own view see everything for review).
+  const mine = staff ? EXPERIENCE_ORDER : EXPERIENCE_ORDER.filter((k) => viewer.experiences.includes(k));
+  const others = EXPERIENCE_ORDER.filter((k) => !mine.includes(k));
+  const subName = (k: string) => (k === "relationships" && viewer.society === "singles" ? "Singles" : k === "relationships" && viewer.society === "couples" ? "Couples" : null);
   const referralLink = viewer.referralCode ? `${env.siteUrl}/membership?ref=${viewer.referralCode}` : null;
 
   return (
@@ -65,38 +70,68 @@ export default async function MemberHome() {
           {sub.tier_name} · <Link href="/app/membership" className="text-gold underline">Manage membership</Link>
         </p>
       )}
-      <DashboardHub state={nav} discovery={{ percent: discovery.percent, modulesDone: discovery.modulesDone, totalModules: discovery.totalModules, nextHref: nextModuleHref(discovery.answers, discovery.special) }} />
+      <DashboardHub state={nav} experiences={staff ? [...EXPERIENCE_ORDER] : viewer.experiences} discovery={{ percent: discovery.percent, modulesDone: discovery.modulesDone, totalModules: discovery.totalModules, nextHref: nextModuleHref(discovery.answers, discovery.special) }} />
       <DiscoveryInvite userId={viewer.id} back="/app" />
-      <div className="mt-10 grid gap-5 md:grid-cols-3">
-        {EXPERIENCE_ORDER.map((key) => {
-          const e = EXPERIENCES[key];
-          const live = launch[`${key}_live` as const];
-          const granted = viewer.experiences.includes(key);
-          const open = live && granted;
-          const status = open ? "Active" : !live ? "Opening soon" : "Not in your membership";
-          return (
-            <div key={key} className="glass lift tile-in group flex min-h-64 flex-col justify-between overflow-hidden !p-0">
-              <div className="relative aspect-[16/10] overflow-hidden">
-                <Image src={PHOTO[key]} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition-transform duration-[1200ms] group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-espresso/50 to-transparent" />
-              </div>
-              <div className="flex flex-1 flex-col justify-between p-7">
-              <div>
-                <span className={`chip ${open ? "chip-live" : "chip-locked"}`}>{status}</span>
-                <h2 className="display mt-5 text-3xl" style={{ color: e.accent }}>{e.name}</h2>
-                <p className="mt-1 text-xs tracking-wide text-faint uppercase">{e.subtitle}</p>
-                <p className="mt-3 text-sm text-muted">{e.caption}</p>
-              </div>
-              {open || staff ? (
-                <Link href={`/app/${key}`} className="btn btn-ghost btn-sm mt-6 self-start">
-                  {open ? "Enter" : isInsidePreview(viewer) ? "Preview" : "Preview as staff"}
-                </Link>
-              ) : null}
-              </div>
+      <section aria-labelledby="mine" className="mt-12">
+        <p className="eyebrow">Your memberships</p>
+        <h2 id="mine" className="display mt-2 text-3xl sm:text-4xl">Your experiences</h2>
+        <div className="mt-6 grid gap-5 md:grid-cols-3">
+          <div className="glass lift tile-in group flex min-h-64 flex-col justify-between overflow-hidden !p-0">
+            <div className="relative aspect-[16/10] overflow-hidden">
+              <Image src="/images/self/identity-self-love.webp" alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover object-right transition-transform duration-[1200ms] group-hover:scale-110" />
             </div>
-          );
-        })}
-      </div>
+            <div className="flex flex-1 flex-col justify-between p-7">
+              <div>
+                <span className="chip chip-live">Included for every member</span>
+                <h3 className="display mt-5 text-3xl text-burgundy">The Art of Self</h3>
+                <p className="mt-1 text-xs tracking-wide text-faint uppercase">Self-discovery · Self-love · Reflection</p>
+                <p className="mt-3 text-sm text-muted">Know yourself, emotional intelligence, love languages and your Personal Discovery Portfolio.</p>
+              </div>
+              <Link href="/app/know-yourself" className="btn btn-ghost btn-sm mt-6 self-start">Enter</Link>
+            </div>
+          </div>
+          {mine.map((key) => {
+            const e = EXPERIENCES[key];
+            const live = launch[`${key}_live` as const];
+            const open = live && viewer.experiences.includes(key);
+            return (
+              <div key={key} className="glass lift tile-in group flex min-h-64 flex-col justify-between overflow-hidden !p-0">
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <Image src={PHOTO[key]} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition-transform duration-[1200ms] group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-espresso/50 to-transparent" />
+                </div>
+                <div className="flex flex-1 flex-col justify-between p-7">
+                  <div>
+                    <span className={`chip ${open ? "chip-live" : "chip-locked"}`}>{open ? (subName(key) ?? "Active") : live ? "Staff preview" : "Opening soon"}</span>
+                    <h3 className="display mt-5 text-3xl" style={{ color: e.accent }}>{SOCIETY_NAME[key]}</h3>
+                    <p className="mt-1 text-xs tracking-wide text-faint uppercase">{e.name} · {e.subtitle}</p>
+                    <p className="mt-3 text-sm text-muted">{e.caption}</p>
+                  </div>
+                  {(open || staff) && <Link href={`/app/${key}`} className="btn btn-ghost btn-sm mt-6 self-start">{open ? "Enter" : "Preview as staff"}</Link>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {others.length > 0 && (
+        <section aria-labelledby="explore" className="mt-14 rounded-[28px] border border-champagne/60 bg-ivory/70 p-6 sm:p-9">
+          <p className="eyebrow">Explore Memberships</p>
+          <h2 id="explore" className="display mt-2 text-3xl">Discover more of The Art of Connect</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted">These experiences aren&rsquo;t part of your membership yet. Explore them whenever you&rsquo;re curious, and add them if they feel right for you.</p>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {others.map((key) => (
+              <Link key={key} href={EXPERIENCES[key].href} className="group flex items-center gap-4 rounded-2xl border border-champagne/60 bg-ivory p-4 transition hover:border-gold">
+                <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl"><Image src={PHOTO[key]} alt="" fill sizes="64px" className="object-cover" /></span>
+                <span><span className="display block text-xl" style={{ color: EXPERIENCES[key].accent }}>{SOCIETY_NAME[key]}</span><span className="block text-xs text-muted">{EXPERIENCES[key].caption} Explore →</span></span>
+              </Link>
+            ))}
+          </div>
+          <Link href="/membership#build" className="btn btn-gold btn-sm mt-6">Explore memberships</Link>
+        </section>
+      )}
+
       {referralLink && (
         <section className="glass mt-10 p-7">
           <p className="eyebrow">Refer a friend</p>

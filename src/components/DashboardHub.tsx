@@ -8,15 +8,19 @@ const SPACE_ICON: Record<string, string> = { self: "self", relationships: "conne
 const QUICK = [
   { href: "/app/know-yourself", label: "Who Am I?" },
   { href: "/emotional-intelligence", label: "Emotional Intelligence" },
-  { href: "/app/relationships/calendar", label: "Couples calendar" },
+  { href: "/app/relationships/calendar", label: "Couples calendar", exp: "relationships" },
   { href: "/app/journey/check-ins", label: "Daily manifestations" },
-  { href: "/app/business", label: "Business dashboard" },
+  { href: "/app/business", label: "Business dashboard", exp: "business" },
 ];
 
 type Discovery = { percent: number; modulesDone: number; totalModules: number; nextHref: string };
 
 /** The member's home base: search, pick up where you left off, and every space one tap away. */
-export function DashboardHub({ state, discovery }: { state: NavState; discovery: Discovery }) {
+const GROUP_EXPERIENCE: Record<string, string> = { relationships: "relationships", professional: "business", counseling: "counseling" };
+
+export function DashboardHub({ state, discovery, experiences }: { state: NavState; discovery: Discovery; experiences: string[] }) {
+  // The Art of Self and Journey are for everyone; society spaces only for members who have them.
+  const groups = NAV.filter((g) => g.key !== "home" && (!GROUP_EXPERIENCE[g.key] || experiences.includes(GROUP_EXPERIENCE[g.key])));
   const ring = 2 * Math.PI * 34;
   const started = discovery.percent > 0;
   return (
@@ -34,7 +38,7 @@ export function DashboardHub({ state, discovery }: { state: NavState; discovery:
             <button className="btn btn-gold btn-sm shrink-0">Search</button>
           </form>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-            {QUICK.map((q) => (
+            {QUICK.filter((q: { exp?: string }) => !q.exp || experiences.includes(q.exp)).map((q) => (
               <Link key={q.href} href={q.href} className="shrink-0 rounded-full border border-champagne/30 px-4 py-1.5 text-xs text-ivory/85 transition hover:border-champagne hover:bg-white/10">{q.label}</Link>
             ))}
           </div>
@@ -79,7 +83,7 @@ export function DashboardHub({ state, discovery }: { state: NavState; discovery:
       <div>
         <p className="eyebrow">Your spaces</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {NAV.filter((g) => g.key !== "home").map((g, i) => (
+          {groups.map((g, i) => (
             <div key={g.key} className={`glass tile-in flex flex-col p-6`} style={{ animationDelay: `${i * 70}ms` }}>
               <Link href={linkFor({ href: g.href, label: g.label, access: g.href.startsWith("/app") ? "member" : undefined }, state)} className="group flex items-start gap-4">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-burgundy text-ivory transition group-hover:scale-105"><NavIcon name={SPACE_ICON[g.key]} className="h-6 w-6" /></span>
