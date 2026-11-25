@@ -5,10 +5,10 @@ import { CRISIS } from "@/lib/wellness";
 export const metadata = { title: "The Art of Wellness" };
 
 const SERVICES = [
-  { title: "Individual Counseling", body: "Personal support, emotional wellness and life transitions.", image: "/images/library/life/meditation.webp", format: "Virtual or in-person" },
-  { title: "Marriage & Couples Counseling", body: "Communication, relationship concerns and rebuilding connection.", image: "/images/library/love/candlelit-dinner.webp", format: "Virtual or in-person" },
-  { title: "Family Counseling", body: "Understanding, communication and healing within families.", image: "/images/library/love/cooking-together.webp", format: "Virtual or in-person" },
-  { title: "Grief & Loss Support", body: "Compassionate care through loss and the changes it brings.", image: "/images/library/life/garden-walk.webp", format: "Virtual or in-person" },
+  { title: "Individual Counseling", body: "Personal support, emotional wellness and life transitions.", image: "/images/wellness/individual.webp", format: "Virtual or in-person" },
+  { title: "Marriage & Couples Counseling", body: "Communication, relationship concerns and rebuilding connection.", image: "/images/wellness/couples.webp", format: "Virtual or in-person" },
+  { title: "Family Counseling", body: "Understanding, communication and healing within families.", image: "/images/wellness/family.webp", format: "Virtual or in-person" },
+  { title: "Grief & Loss Support", body: "Compassionate care through loss and the changes it brings.", image: "/images/wellness/grief.webp", format: "Virtual or in-person" },
   { title: "Divorce & Life Transitions", body: "Support through endings, new beginnings and change.", image: "/images/library/life/journaling.webp", format: "Virtual or in-person" },
   { title: "Specialized Counseling", body: "Qualified professionals for specific personal and emotional concerns.", image: "/images/library/business/advisory-lounge.webp", format: "By specialty and availability" },
 ];
@@ -27,7 +27,7 @@ export default function ArtOfWellness() {
         <div className="mx-auto mt-6 h-px w-full bg-gold/40" />
         {SERVICES.map((s) => (
           <section key={s.title} className="flex gap-5 border-b border-gold/25 py-6 last:border-0">
-            <span className="relative h-28 w-24 shrink-0 overflow-hidden rounded-2xl sm:h-32 sm:w-28"><Image src={s.image} alt="" fill sizes="112px" className="object-cover" /></span>
+            <span className="relative h-28 w-24 shrink-0 overflow-hidden rounded-2xl sm:h-32 sm:w-28"><Image src={s.image} alt="" fill sizes="112px" className="object-cover object-center" /></span>
             <div>
               <h2 className="display text-2xl text-gold-bright">{s.title}</h2>
               <p className="mt-1 text-sm text-ivory/85">{s.body}</p>
@@ -38,6 +38,7 @@ export default function ArtOfWellness() {
         <div className="mx-auto mt-4 h-px w-full bg-gold/40" />
         <p className="display mt-6 text-center text-2xl text-gold-bright">Understanding. Support. Growth.</p>
         <p className="mx-auto mt-4 max-w-xl text-center text-xs text-ivory/60">Licensed professionals affiliated with The Art of Connect will offer virtual and in-person appointments. Each professional sets their own fees, shown before you book. Opens once all legal, licensing and privacy requirements are complete. Separate from Journey, which offers nonclinical guided support only.</p>
+        <p className="mt-4 text-center text-[0.65rem] text-ivory/45">Illustrative imagery; not actual counselors or clients.</p>
       </article>
       <section className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-danger/30 bg-danger/5 p-6">
         <h2 className="display text-2xl">If you need help right now</h2>
