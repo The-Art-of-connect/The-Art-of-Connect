@@ -1,0 +1,59 @@
+/** Every member page the owner can preview and review, grouped as members experience them. */
+export const PREVIEW_GROUPS: { title: string; note: string; pages: [string, string, string][] }[] = [
+  {
+    title: "Every member",
+    note: "What every member sees after signing in.",
+    pages: [
+      ["/app", "Member home", "Welcome, experiences included, referral link."],
+      ["/app/onboarding", "Complete your membership", "Membership builder and checkout."],
+      ["/app/membership", "My membership", "Plan, billing, invoices, change or cancel."],
+      ["/app/verify", "Verify your identity", "Identity verification."],
+      ["/app/safety", "Safety & privacy", "Blocking, reporting and privacy controls."],
+    ],
+  },
+  {
+    title: "Journey · AI connection concierge",
+    note: "Paid members only. Powered by OpenAI. Switched off until you authorize it.",
+    pages: [
+      ["/app/journey", "Journey home & chat", "Chat, allowance meter and the four Journey experiences."],
+      ["/app/journey/voice", "Talk to Journey", "Voice conversations, voice choice and minutes."],
+      ["/app/journey/daily", "My Daily Journey", "Manifestations, affirmations, journaling and reflections."],
+      ["/app/journey/library", "The Journey Library", "The ten Arts."],
+      ["/app/journey/sessions", "Private Sessions", "15, 30, 45 and 60-minute guided sessions."],
+      ["/app/journey/memory", "What Journey remembers", "Member-controlled personal memory."],
+      ["/app/journey/plus", "Journey Plus", "Message packages, voice minutes and Auto-Reload."],
+    ],
+  },
+  {
+    title: "The Personal Society · In Love",
+    note: "Singles 30+ and couples.",
+    pages: [
+      ["/app/relationships", "In Love home", "The singles and couples experience."],
+      ["/app/relationships/onboarding", "Personal Society onboarding", "The four short stages with progress and save."],
+      ["/app/relationships/onboarding/readiness", "Readiness questions", "Emotional & Relationship Readiness, question by question."],
+      ["/app/readiness", "Readiness Profile", "Your private discovery report."],
+      ["/app/relationships/exclusive", "The Exclusive Connection", "Mutual exclusivity, step by step."],
+      ["/app/relationships/calendar", "Just us — couples calendar", "Shared plans, private schedules, Google/Apple/Outlook."],
+    ],
+  },
+  {
+    title: "The Art of Becoming · In Life",
+    note: "Personal growth, journaling and professional support.",
+    pages: [
+      ["/app/counseling", "In Life home", "The In Life experience."],
+      ["/app/counseling/journal", "Private journal", "Prompts, moods and entries only the member can read."],
+      ["/app/counseling/professionals", "Therapy & Counseling Center", "Licensed professionals (opens after legal approval)."],
+    ],
+  },
+  {
+    title: "The Professional Society · In Business",
+    note: "Business dashboard, Connection Board, inbox and The Knowledge Exchange.",
+    pages: [
+      ["/app/business", "Business dashboard", "Pathway, goals, readiness checklist and features."],
+      ["/app/business/onboarding", "Let’s Talk About Your Business", "How can we help · How can your business help others."],
+      ["/app/business/board", "Business Connection Board", "Browse posts by city, state and need."],
+      ["/app/business/inbox", "Private inbox", "Connection requests and private conversations."],
+      ["/app/business/learn", "The Knowledge Exchange", "Upcoming webinars and complimentary allowance."],
+    ],
+  },
+];

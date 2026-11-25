@@ -174,7 +174,7 @@ export function canPerform(action: JourneyAction, confirmation: { confirmed: boo
 }
 
 // ─── Instructions ───────────────────────────────────────────────────
-export const MAX_OWNER_INSTRUCTIONS = 20_000;
+export const MAX_OWNER_INSTRUCTIONS = 32_000;
 
 export function buildJourneyInstructions(input: {
   mode: JourneyMode;

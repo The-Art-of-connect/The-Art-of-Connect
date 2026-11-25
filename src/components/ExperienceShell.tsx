@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { EXPERIENCES, type Experience } from "@/lib/experiences";
 
 export function ExperienceShell({ experience, preview, children }: { experience: Experience; preview: boolean; children: React.ReactNode }) {
@@ -17,12 +18,14 @@ export function ExperienceShell({ experience, preview, children }: { experience:
   );
 }
 
-export function ModuleCard({ title, body, status = "In development" }: { title: string; body: string; status?: string }) {
-  return (
-    <section className="glass p-7">
-      <span className="chip">{status}</span>
+export function ModuleCard({ title, body, status = "In development", href }: { title: string; body: string; status?: string; href?: string }) {
+  const card = (
+    <section className={`glass h-full p-7 ${href ? "transition hover:-translate-y-0.5 hover:border-gold/60" : ""}`}>
+      <span className={`chip ${href ? "chip-live" : ""}`}>{href ? "Open" : status}</span>
       <h2 className="mt-4 text-xl font-semibold">{title}</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
+      {href && <p className="mt-4 text-sm font-semibold text-gold-deep">Explore →</p>}
     </section>
   );
+  return href ? <Link href={href} className="block">{card}</Link> : card;
 }
