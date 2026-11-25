@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Wordmark } from "@/components/Emblem";
-import { getViewer, isStaff } from "@/lib/auth";
+import { getViewer, isInsidePreview, isStaff } from "@/lib/auth";
 import { AgreementForm } from "@/components/AgreementForm";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,7 +12,8 @@ export default async function MemberLayout({ children }: { children: React.React
   if (!viewer) redirect("/sign-in?next=/app");
   // New or updated agreements must be accepted before continuing (never for staff).
   let pending: { slug: string; title: string; version_label: string; reason: string }[] = [];
-  if (!isStaff(viewer)) {
+  const preview = isInsidePreview(viewer);
+  if (!isStaff(viewer) && !preview) {
     const supabase = await createClient();
     const { data } = (await supabase?.rpc("pending_legal_acceptances")) ?? { data: null };
     pending = (data as typeof pending | null) ?? [];
@@ -27,12 +28,22 @@ export default async function MemberLayout({ children }: { children: React.React
             <Link href="/app/safety" className="hidden text-sm text-muted hover:text-text sm:inline">Safety</Link>
             <Link href="/legal" className="hidden text-sm text-muted hover:text-text sm:inline">Legal</Link>
             {isStaff(viewer) && <Link href="/admin" className="btn btn-ghost btn-sm">Owner Portal</Link>}
-            <form action="/auth/sign-out" method="post">
-              <button className="text-sm text-muted hover:text-text">Sign out</button>
-            </form>
+            {preview ? (
+              <a href="/inside-preview" className="btn btn-ghost btn-sm">All preview pages</a>
+            ) : (
+              <form action="/auth/sign-out" method="post">
+                <button className="text-sm text-muted hover:text-text">Sign out</button>
+              </form>
+            )}
           </div>
         </div>
       </header>
+      {preview && (
+        <div className="border-b border-gold/30 bg-gold/10 px-4 py-2.5 text-center text-xs text-gold sm:text-sm">
+          Owner review preview — you’re seeing the member area as an empty new member. Nothing can be saved.{" "}
+          <a href="/inside-preview/enter?exit=1" className="font-semibold underline">End preview</a>
+        </div>
+      )}
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-8">
         {pending.length ? (
           <section className="glass mx-auto max-w-2xl p-7 sm:p-9">
