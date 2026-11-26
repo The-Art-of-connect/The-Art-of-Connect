@@ -23,6 +23,9 @@ changes an earlier one, the later one wins.
 | 17 | [The Art of Becoming Daily Sanctuary](17-daily-sanctuary.md) | **Built.** My Daily Sanctuary, library, scenarios, Vision Board, reminders, Curriculum Studio. Starter content awaits founder approval. |
 | 18 | [Discover What's Possible](18-discover-whats-possible.md) | **Built.** Preference-based invitations, Inside Connect previews, conversion analytics. |
 | 19 | [The Becoming Circle — Founder Master Directive](19-becoming-circle-master-directive.md) | **Phase One built.** Written open discussions every four hours, moderation, Safety Shield, previews, Who Am I Becoming?. Phases 2–5 on the tracker; live audio awaits infrastructure approval. |
+| 20 | [Paid membership enhancement, Executive Private & Elite Concierge](20-paid-membership-enhancement.md) | **Audit complete; Phase One built.** Feature directory, What's New, paid home, central membership levels. Phases 2–5 on the tracker. |
+| 21 | [Executive & Elite Signature Services](21-executive-elite-signature-services.md) | **Recorded.** Planned within directive 20's Executive and Elite phases; news source and concierge staffing need approval. |
+| 22 | [Business & Tax Education Center](22-business-tax-education-center.md) | **Recorded.** Extends the Business Intelligence Center; uses an owner-approved, dated source library. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
