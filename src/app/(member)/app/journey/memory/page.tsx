@@ -1,4 +1,4 @@
-import { getViewer, isInsidePreview } from "@/lib/auth";
+import { isInsidePreview, requirePaidAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LuxHero, LuxSection, Notice, SafetyFooter } from "@/components/Lux";
 import { MemberForm } from "@/components/MemberForm";
@@ -11,7 +11,7 @@ const KINDS: [string, string][] = [
 ];
 
 export default async function Memory() {
-  const viewer = (await getViewer())!;
+  const { viewer } = await requirePaidAccess("journey");
   const supabase = await createClient();
   const live = supabase && !isInsidePreview(viewer);
   const [{ data: settings }, { data: memories }] = live

@@ -24,6 +24,7 @@ export default async function OnboardingPage() {
     getLaunchState(),
   ]);
   if (sub) redirect("/app/membership");
+  const { data: trialOpen } = isInsidePreview(viewer) ? { data: true } : await supabase.rpc("trial_available", { p: viewer.id });
 
   const saved = (auth.user?.user_metadata?.selection ?? {}) as Partial<Selection>;
   const initial: Selection = {
@@ -39,7 +40,8 @@ export default async function OnboardingPage() {
   return (
     <>
       <p className="eyebrow">Welcome, {viewer.displayName ?? "member"}</p>
-      <h1 className="display mt-4 text-5xl">Complete your membership.</h1>
+      <h1 className="display mt-4 text-5xl">Choose your membership.</h1>
+      <p className="mt-3 max-w-2xl text-muted">{trialOpen ? "Start with a 15-day free trial or join today. " : ""}The Art of Becoming stays free either way, and we encourage you to keep discovering yourself as you go.</p>
       <ol className="mt-10 space-y-12">
         <li className="glass p-7 sm:p-9">
           <p className="flex items-baseline gap-3"><span className="display text-3xl text-gold">01</span><span className="text-lg font-semibold">Your agreements</span></p>
@@ -52,8 +54,8 @@ export default async function OnboardingPage() {
           </div>
         </li>
         <li className={agreed ? "" : "pointer-events-none opacity-50"} aria-disabled={!agreed}>
-          <p className="mb-6 flex items-baseline gap-3"><span className="display text-3xl text-gold">02</span><span className="text-lg font-semibold">Review your membership and pay securely</span></p>
-          <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live && agreed} kind="checkout" eliteInvited={eliteInvited} />
+          <p className="mb-6 flex items-baseline gap-3"><span className="display text-3xl text-gold">02</span><span className="text-lg font-semibold">{trialOpen ? "Review your membership and start your trial securely" : "Review your membership and pay securely"}</span></p>
+          <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live && agreed} kind="checkout" eliteInvited={eliteInvited} trialAvailable={Boolean(trialOpen)} />
         </li>
       </ol>
     </>

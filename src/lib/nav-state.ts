@@ -9,7 +9,8 @@ export async function getNavState(): Promise<NavState> {
   const viewer = await getViewer().catch(() => null);
   if (!viewer || isInsidePreview(viewer)) return { signedIn: Boolean(viewer), staff: false, paid: false, credits: null, name: viewer?.displayName ?? null, experiences: viewer?.experiences ?? [] };
   const status = await getJourneyStatus().catch(() => null);
-  const paid = status?.access === "standard" || status?.access === "enhanced";
-  const credits = paid && status?.allowance ? status.allowance.remaining + status.allowance.purchasedRemaining : null;
+  // Membership access v2: paid = a paid membership or active trial (society access), or Journey access.
+  const paid = status?.access === "standard" || status?.access === "enhanced" || viewer.experiences.includes("business") || viewer.experiences.includes("relationships");
+  const credits = (status?.access === "standard" || status?.access === "enhanced") && status?.allowance ? status.allowance.remaining + status.allowance.purchasedRemaining : null;
   return { signedIn: true, staff: isStaff(viewer), paid, credits, name: viewer.displayName, experiences: isStaff(viewer) ? ["business", "counseling", "relationships"] : viewer.experiences };
 }

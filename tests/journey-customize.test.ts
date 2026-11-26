@@ -37,9 +37,11 @@ test("style never overrides Journey's philosophy, follows the member's language,
   assert.equal(paceSpeed("slower"), 0.9);
 });
 
-test("every paid plan reaches lessons and live voice through an experience it includes", () => {
+test("every paid plan reaches lessons and live voice; In Life (The Art of Becoming) is included with every paid plan", () => {
   const businessOnly = { kind: "member", status: "active", amountCents: 2900, experiences: ["business"], packageSlug: "professional-society" } as never;
-  assert.equal(effectiveMode("life", "standard", businessOnly), "business");
+  assert.equal(effectiveMode("life", "standard", businessOnly), "life");
+  assert.equal(effectiveMode("business", "standard", businessOnly), "business");
+  assert.equal(effectiveMode("love", "standard", businessOnly), "life");
   const loveOnly = { kind: "member", status: "active", amountCents: 2900, experiences: ["relationships"], packageSlug: "personal-society" } as never;
   assert.ok(effectiveMode("life", "standard", loveOnly) !== null);
   assert.equal(effectiveMode("life", "none", null), null);

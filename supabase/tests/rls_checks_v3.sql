@@ -7,7 +7,7 @@ reset request.jwt.claim.sub;
 \echo 'v3-1) Anonymous reads pricing tables directly (expect permission denied):'
 set role anon;
 select (select count(*) from public.experience_offerings), (select count(*) from public.membership_packages);
-\echo 'v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 10, null):'
+\echo 'v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 6 active packages, null):'
 select jsonb_array_length(p->'experiences'), jsonb_array_length(p->'packages'), p->'packages'->0->>'monthly_price_cents' from (select public.get_public_pricing(true) p) x;
 reset role;
 

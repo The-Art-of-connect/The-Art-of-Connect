@@ -1,4 +1,4 @@
-import { getViewer, isInsidePreview } from "@/lib/auth";
+import { isInsidePreview, requirePaidAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ConnectTabs } from "@/components/social/ConnectTabs";
 
@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 /** The social ecosystem: feed, circles, the Connect Calendar, people, messages and profile. */
 export default async function ConnectLayout({ children }: { children: React.ReactNode }) {
-  const viewer = (await getViewer())!;
+  // Membership access v2: the social ecosystem needs a paid membership or an active 15-day trial.
+  const { viewer } = await requirePaidAccess("connect");
   let unread = 0, requests = 0;
   if (!isInsidePreview(viewer) && !viewer.viewAs) {
     const db = (await createClient())!;

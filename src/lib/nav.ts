@@ -1,7 +1,8 @@
 /**
  * The site's navigation: six primary categories with dropdowns.
  * Every link points to an existing page — reorganizing never duplicates pages.
- * `access`: "public" (anyone), "member" (signed in), "paid" (Journey — included with paid memberships, within the monthly allowance).
+ * `access` (membership access v2): "public" (anyone), "member" (any free account: The Art of Becoming, including The Art of
+ * Self, safety and counseling access), "paid" (a paid membership or active 15-day trial: social, societies, Journey).
  */
 export type NavAccess = "public" | "member" | "paid";
 export type NavLink = { href: string; label: string; note?: string; access?: NavAccess };
@@ -12,7 +13,7 @@ export const NAV: NavGroup[] = [
     key: "home", label: "Home", href: "/", intro: "Welcome to The Art of Connect.",
     links: [
       { href: "/", label: "Welcome" },
-      { href: "/membership", label: "Memberships", note: "One account, every experience" },
+      { href: "/membership", label: "Memberships", note: "Free account · 15-day trial · memberships" },
       { href: "/elite", label: "Elite Concierge Society", note: "Apply · qualification required" },
       { href: "/app", label: "My dashboard", access: "member" },
     ],
@@ -31,31 +32,31 @@ export const NAV: NavGroup[] = [
       { href: "/app/know-yourself/who-am-i/what-my-life-represents", label: "Purpose & Personal Alignment", access: "member" },
       { href: "/app/journey/check-ins", label: "Manifestation & Intentional Living", note: "Daily manifestations & reflections", access: "member" },
       { href: "/app/know-yourself/learn", label: "Lessons", access: "member" },
-      { href: "/life", label: "The Art of Becoming", note: "In Life" },
+      { href: "/life", label: "The Art of Becoming", note: "In Life · free with every account" },
     ],
   },
   {
     key: "relationships", label: "Relationships", href: "/love", intro: "Intentional connection for singles and couples.",
     links: [
       { href: "/love", label: "The Personal Society", note: "In Love" },
-      { href: "/app/relationships", label: "Singles & couples home", access: "member" },
-      { href: "/app/relationships/onboarding", label: "My Personal Society journey", access: "member" },
-      { href: "/app/readiness", label: "Relationship readiness", access: "member" },
-      { href: "/app/relationships/love-languages", label: "Love languages together", access: "member" },
-      { href: "/app/relationships/calendar", label: "Couples calendar", access: "member" },
-      { href: "/app/relationships/exclusive", label: "The Exclusive Connection", access: "member" },
+      { href: "/app/relationships", label: "Singles & couples home", access: "paid" },
+      { href: "/app/relationships/onboarding", label: "My Personal Society journey", access: "paid" },
+      { href: "/app/readiness", label: "Relationship readiness", access: "paid" },
+      { href: "/app/relationships/love-languages", label: "Love languages together", access: "paid" },
+      { href: "/app/relationships/calendar", label: "Couples calendar", access: "paid" },
+      { href: "/app/relationships/exclusive", label: "The Exclusive Connection", access: "paid" },
     ],
   },
   {
     key: "connect", label: "Connect", href: "/app/connect", intro: "Your world. Your connections. Find your people and experience life together.",
     links: [
-      { href: "/app/connect", label: "The Connection Feed", note: "Your world. Your connections.", access: "member" },
-      { href: "/app/connect/circles", label: "Find Your Circle", note: "Open, lifestyle and Elite circles", access: "member" },
-      { href: "/app/connect/events", label: "The Connect Calendar", note: "Events members share", access: "member" },
-      { href: "/app/connect/people", label: "Find People Like Me", note: "Friends, peers, mentors, travel companions", access: "member" },
-      { href: "/app/connect/messages", label: "Messages", access: "member" },
-      { href: "/app/connect/profile", label: "My profile & photographs", access: "member" },
-      { href: "/app/connect/preferences", label: "My connection preferences", access: "member" },
+      { href: "/app/connect", label: "The Connection Feed", note: "Your world. Your connections.", access: "paid" },
+      { href: "/app/connect/circles", label: "Find Your Circle", note: "Open, lifestyle and Elite circles", access: "paid" },
+      { href: "/app/connect/events", label: "The Connect Calendar", note: "Events members share", access: "paid" },
+      { href: "/app/connect/people", label: "Find People Like Me", note: "Friends, peers, mentors, travel companions", access: "paid" },
+      { href: "/app/connect/messages", label: "Messages", access: "paid" },
+      { href: "/app/connect/profile", label: "My profile & photographs", access: "paid" },
+      { href: "/app/connect/preferences", label: "My connection preferences", access: "paid" },
     ],
   },
   {
@@ -64,13 +65,13 @@ export const NAV: NavGroup[] = [
       { href: "/business", label: "The Professional Society" },
       { href: "/business/explore", label: "Explore before you join" },
       { href: "/webinars", label: "The Knowledge Exchange", note: "Live business webinars" },
-      { href: "/app/business", label: "My business dashboard", access: "member" },
-      { href: "/app/business/board", label: "Business Connection Board", access: "member" },
-      { href: "/app/business/inbox", label: "Private business inbox", access: "member" },
+      { href: "/app/business", label: "My business dashboard", access: "paid" },
+      { href: "/app/business/board", label: "Business Connection Board", access: "paid" },
+      { href: "/app/business/inbox", label: "Private business inbox", access: "paid" },
     ],
   },
   {
-    key: "journey", label: "Journey", href: "/app/journey", intro: "Your personal AI companion — a paid membership benefit.",
+    key: "journey", label: "Journey", href: "/app/journey", intro: "Your personal AI companion: part of every paid membership and trial.",
     links: [
       { href: "/app/journey", label: "Talk with Journey", access: "paid" },
       { href: "/app/journey/voice", label: "Journey Live", note: "Voice conversations", access: "paid" },
@@ -79,16 +80,16 @@ export const NAV: NavGroup[] = [
       { href: "/app/journey/daily", label: "My Daily Journey", access: "member" },
       { href: "/app/journey/library", label: "The Journey Library", access: "member" },
       { href: "/app/journey/sessions", label: "Private Sessions", access: "paid" },
-      { href: "/app/journey/memory", label: "What Journey remembers", access: "member" },
+      { href: "/app/journey/memory", label: "What Journey remembers", access: "paid" },
     ],
   },
   {
-    key: "counseling", label: "Counseling", href: "/app/wellness", intro: "Counseling & Wellness Center, open to every member.",
+    key: "counseling", label: "Counseling", href: "/app/wellness", intro: "Counseling & Wellness Center, free with every account.",
     links: [
       { href: "/app/wellness", label: "Counseling & Wellness Center", note: "Journey, independent counselors, The Art of Wellness", access: "member" },
       { href: "/app/wellness/art-of-wellness", label: "The Art of Wellness", note: "In-house counseling · coming soon", access: "member" },
       { href: "/wellness", label: "Crisis resources", note: "Always available, no account needed" },
-      { href: "/app/counseling", label: "The Art of Becoming", note: "Premium personal development membership", access: "member" },
+      { href: "/app/counseling", label: "The Art of Becoming", note: "Free with every account", access: "member" },
       { href: "/app/counseling/journal", label: "My private journal", note: "The Art of Becoming", access: "member" },
       { href: "/professionals", label: "For professionals", note: "Counselors, coaches & mentors" },
       { href: "/professionals/apply", label: "Apply as a professional" },

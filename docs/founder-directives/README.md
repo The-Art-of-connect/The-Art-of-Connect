@@ -17,6 +17,9 @@ changes an earlier one, the later one wins.
 | 08 | [Couples Connection Community](08-couples-connection-community.md) | **Designed, not built.** In the [Social Ecosystem Master Blueprint](../social-ecosystem/master-blueprint.md), Development Tracker and QA Center. |
 | 09 | [The Connect Calendar](09-connect-calendar.md) | **Designed, not built.** Same blueprint; reuses webinars, registrations, reminders and couples calendars. |
 | 10 | [Find Your Circle & Connection Intelligence Engine](10-find-your-circle.md) | **Designed, not built.** Same blueprint; recommends, never restricts. |
+| 14 | [Revised membership access structure](14-membership-access-structure.md) | **Built.** Supersedes earlier free-access decisions: only The Art of Becoming is free; everything interactive needs a paid membership or the 15-day trial. |
+| 15 | [The Art of Becoming first, never forced](15-becoming-first-never-forced.md) | **Built (entry choices).** Free self-discovery, 15-day trial or membership now, in any order. |
+| 16 | [The Art of Becoming as the foundation of the Connection Intelligence Engine](16-becoming-foundation-of-connection-intelligence.md) | **Next phase.** Private Connection Readiness, recommendations only with enough discovery. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

@@ -7,6 +7,10 @@ insert into auth.users(id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-00000000a001', 'soc-a@example.com', '{"date_of_birth":"1985-01-01"}'),
   ('00000000-0000-0000-0000-00000000a002', 'soc-b@example.com', '{"date_of_birth":"1986-01-01"}'),
   ('00000000-0000-0000-0000-00000000a003', 'soc-c@example.com', '{"date_of_birth":"1987-01-01"}');
+-- Membership access v2: the social ecosystem needs a paid membership or trial.
+insert into public.experience_access (user_id, experience, status, source) values
+  ('00000000-0000-0000-0000-00000000a001', 'business', 'active', 'subscription'), ('00000000-0000-0000-0000-00000000a002', 'business', 'active', 'subscription'), ('00000000-0000-0000-0000-00000000a003', 'business', 'active', 'subscription')
+  on conflict (user_id, experience) do update set status = 'active', source = 'subscription';
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000a001';
 insert into public.social_profiles (user_id, headline, city, show_location, interests, seeking, discoverable) values ('00000000-0000-0000-0000-00000000a001', 'Founder', 'Atlanta', false, array['travel','business'], array['friendship','travel'], true);

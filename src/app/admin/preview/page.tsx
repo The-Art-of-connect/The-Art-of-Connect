@@ -76,7 +76,7 @@ export default async function MemberPreview() {
       pages: [
         { href: "/sign-in", title: "Sign in", what: "Opens in a new tab so you stay signed in here." },
         { href: "/join", title: "Join", what: "Registration (closed while LAUNCH_LOCK is on)." },
-        { href: "/join/business", title: "Free business account", what: "Founding member sign-up (closed until you open it)." },
+        { href: "/join/business", title: "Professional Society sign-up", what: "Account creation, then 15-day trial or membership at checkout (closed until you open registration)." },
         { href: "/forgot-password", title: "Forgot password", what: "Password reset." },
       ],
     },

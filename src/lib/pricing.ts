@@ -114,7 +114,9 @@ const sameSet = (a: Experience[], b: Experience[]) => a.length === b.length && a
 /** Keeps only valid, de-duplicated experiences in display order, and valid add-ons. */
 export function normalizeSelection(cat: PricingCatalogue, sel: Selection): Selection {
   const exclusive = sel.package ? cat.packages.find((p) => p.slug === sel.package && p.category === "exclusive") ?? null : null;
-  const experiences = exclusive ? [...ORDER] : ORDER.filter((x) => sel.experiences?.includes(x));
+  // Membership access v2: The Art of Becoming (counseling) is free and included with every account, so it is never a
+  // paid selection on its own; exclusive memberships still list all three experiences.
+  const experiences = exclusive ? [...ORDER] : ORDER.filter((x) => x !== "counseling" && sel.experiences?.includes(x));
   const addonSlugs = new Set(
     cat.addons.filter((a) => a.audience === "member" && (!a.requires_experience || experiences.includes(a.requires_experience))).map((a) => a.slug),
   );

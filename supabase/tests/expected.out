@@ -63,8 +63,8 @@ v2-15) Coach application without license (expect ok, 1):
 1
 v3-1) Anonymous reads pricing tables directly (expect permission denied):
 ERROR:  permission denied for table experience_offerings
-v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 10, null):
-3|10|
+v3-2) Public catalogue before publishing: names yes, prices hidden (expect 3, 6 active packages, null):
+3|6|
 v3-3) Finance sets a package price and the annual incentive (expect 1):
 1
 v3-4) Finance tries to publish (expect error):
@@ -286,8 +286,8 @@ v10-2) Guests explore industries and features; no public profiles yet (expect 20
 20|23|0
 v10-3) Guests cannot read the Connection Board (expect permission denied):
 ERROR:  permission denied for table posts
-v10-4) Free member tier and feature access (expect free|t|f):
-free|t|f
+v10-4) Membership access v2: business access is always a paid membership or trial (expect premium|t|f):
+premium|t|f
 v10-5) Profile without consent is not public; with consent it is, and consent time is recorded (expect 0|1|t):
 0
 1|t
@@ -327,8 +327,7 @@ blocked
 ERROR:  This conversation is closed
 v11-1) Seeded topics; no webinars are invented (expect 11|0):
 11|0
-v11-2) A free member cannot host (expect error):
-ERROR:  Hosting is available to Professional Society members
+v11-2) Membership access v2: every business member is paid, so hosting is allowed (expect no error):
 v11-3) A member creates and submits several webinars at the same time (expect 3):
 3
 v11-4) The host cannot approve their own webinar (expect error):
@@ -351,8 +350,8 @@ t
 t
 t
 3
-v11-12) A fourth webinar requires membership; re-joining an attended one still works (expect error, t):
-ERROR:  You have used your complimentary webinars. Professional Society membership includes unlimited eligible webinars.
+v11-12) Paid members have no complimentary-webinar limit; re-joining still works (expect join details, t):
+{"join_url": "https://zoom.us/j/123456789", "passcode": "secret", "provider": "zoom"}
 t
 v11-13) Feedback is allowed; hosts see counts, not attendee identities (expect 4|0):
 4|0
@@ -360,8 +359,8 @@ v11-14) Editing an approved webinar sends it back for review (expect submitted):
 submitted
 v11-15) The host cannot feature or price a webinar (expect error):
 ERROR:  Only the owner can feature or price webinars
-v11-16) Executives see program metrics (expect 6|1):
-6|1
+v11-16) Executives see program metrics (expect 7|1):
+7|1
 v12-1) Journey starts switched off with paid usage unauthorized and no budgets (expect f|f|||f):
 f|f|||f
 v12-2) Allowances are seeded, one per membership; only Elite (all-inclusive) has unlimited text (expect 10|150|250|450|1):
@@ -653,9 +652,9 @@ v27-3) A member still cannot change their society directly (expect error):
 ERROR:  Not permitted to change these account fields
 v27-4) A 25-year-old cannot move into singles (expect error):
 ERROR:  The Personal Society singles experience is for members 30 and older.
-v27-5) A 25-year-old business member can move to Couples; free business access is released (expect couples|0|1):
+v27-5) A 25-year-old business member can move to Couples; paid access is kept and no free society access is granted (expect couples|1|0):
 couples
-couples|0|1
+couples|1|0
 v27-6) Each change is logged (expect 1):
 1
 v29-1) A feature cannot be marked operational unless built, tested, merged and deployed (expect error):
@@ -885,3 +884,27 @@ paused
 v40-9) After the attempt limit, the report goes to the owner instead of retrying (expect attempt_limit, then needs_owner):
 attempt_limit
 needs_owner
+v41-1) Free accounts have The Art of Becoming but no paid membership; a subscriber has both (expect f|t):
+false|true
+v41-2) A retired free-tier grant never opens a society (expect f):
+f
+v41-3) A free account cannot create a social profile (expect error):
+ERROR:  new row violates row-level security policy "paid membership or trial" for table "social_profiles"
+v41-4) A free account cannot post (expect error):
+ERROR:  new row violates row-level security policy for table "social_posts"
+v41-5) A free account sees no posts, members or messages (expect 0|0|0):
+0|0|0
+v41-6) Circle descriptions stay readable to free accounts (expect t):
+t
+v41-7) A paying member can take part (expect 1):
+1
+v41-8) A member cannot reserve a trial directly (expect error):
+ERROR:  permission denied for function trial_reserve
+v41-9) One trial per member; Elite is never a trial (expect true|true|true: a pending reservation may be replaced):
+true|true|true
+v41-10) After a trial starts, another cannot be reserved (expect false|professional-society):
+false|professional-society
+v41-11) Bundles that included Becoming are retired (expect 0):
+0
+v41-12) Journey allows members on an active trial (expect t):
+t

@@ -48,7 +48,10 @@ export function acceptanceStatement(slugs: string[]) {
 }
 
 /** Automatic-renewal disclosure shown and recorded at checkout. */
-export function autoRenewalStatement(opts: { packageName: string; amount: string; interval: "month" | "year" }) {
+export function autoRenewalStatement(opts: { packageName: string; amount: string; interval: "month" | "year"; trialDays?: number; firstCharge?: string }) {
   const period = opts.interval === "year" ? "year" : "month";
+  if (opts.trialDays) {
+    return `I understand my ${opts.packageName} begins with a ${opts.trialDays}-day free trial. A valid card is required. Unless I cancel before ${opts.firstCharge ?? `the end of the trial`}, ${opts.amount} (plus any applicable tax) will be charged to my card on ${opts.firstCharge ?? "the day the trial ends"} and every ${period} after that until I cancel. I can cancel online at any time in My membership, and I will not be charged if I cancel during the trial. Only one trial is available per member.`;
+  }
   return `I understand my ${opts.packageName} renews automatically every ${period} at ${opts.amount} (plus any applicable tax) until I cancel, and that I can cancel online at any time in My membership.`;
 }

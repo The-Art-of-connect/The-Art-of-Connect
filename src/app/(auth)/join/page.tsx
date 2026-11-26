@@ -45,10 +45,12 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
     return (
       <div className="text-center">
         <p className="eyebrow">Become a member</p>
-        <h1 className="display mt-4 text-4xl">First, choose your membership.</h1>
-        <p className="mt-5 text-muted">Select In Business, In Life, In Love — or combine them.</p>
-        <Link href="/membership#build" className="btn btn-gold mt-8 w-full">Build Your Membership</Link>
-        <Link href="/join/free" className="btn btn-ghost mt-3 w-full">Or begin free with one society</Link>
+        <h1 className="display mt-4 text-4xl">Begin your way.</h1>
+        <p className="mt-5 text-muted">There’s no required order. We encourage everyone to discover themselves, and you can do that before or after you join.</p>
+        <Link href="/join/free" className="btn btn-ghost mt-8 w-full">Begin free self-discovery</Link>
+        <Link href="/membership#build" className="btn btn-gold mt-3 w-full">Start a 15-day trial</Link>
+        <Link href="/membership#build" className="btn btn-ghost mt-3 w-full">Choose a membership now</Link>
+        <p className="mt-5 text-xs text-faint">The Art of Becoming is always free. Trials need a valid card; cancel before day 16 and you won’t be charged. One trial per member; Elite Concierge is by qualification.</p>
       </div>
     );
   }

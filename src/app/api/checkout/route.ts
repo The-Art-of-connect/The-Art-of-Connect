@@ -7,6 +7,7 @@ import { env } from "@/lib/env";
 import { EXPERIENCES } from "@/lib/experiences";
 import { getLaunchState } from "@/lib/launch";
 import { normalizeSelection, quote } from "@/lib/pricing";
+import { TRIAL_DAYS, firstChargeDate, formatChargeDate, trialEligiblePackage } from "@/lib/trial";
 import { getStripe } from "@/lib/stripe";
 import { allInEffect } from "@/lib/legal";
 import { acceptanceStatement, autoRenewalStatement, checkoutDocs } from "@/lib/legal-requirements";
@@ -61,6 +62,8 @@ export async function POST(request: NextRequest) {
   let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
   let metadata: Record<string, string> = { user_id: viewer.id, ...(launch.testSession ? { owner_test: "1" } : {}) };
   let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
+  // 15-day trial: once per member, every paid membership except Elite. A card is always collected.
+  let trial = false;
 
   if (parsed.data.kind === "member") {
     if (viewer.accountType === "member" && !viewer.ageEligible) return NextResponse.json({ error: "Age eligibility has not been confirmed for this account." }, { status: 403 });
@@ -75,11 +78,16 @@ export async function POST(request: NextRequest) {
       const { data: allowed } = admin ? await admin.rpc("elite_checkout_allowed", { p_user: viewer.id }) : { data: false };
       if (!allowed) return NextResponse.json({ error: "Elite Concierge unlocks once your qualification is verified. Apply or continue your Elite application." }, { status: 403 });
     }
+    const admin = createAdminClient();
+    // One-time charges (an onboarding fee or one-time add-ons) would be billed immediately, so they aren't combined with a trial.
+    const oneTime = Boolean(q.onboardingFee) || catalogue.addons.some((x) => !pkg.all_access && selection.addons.includes(x.slug) && x.billing === "one_time" && x.price_cents);
+    trial = !oneTime && trialEligiblePackage(pkg.slug) && Boolean(admin && (await admin.rpc("trial_available", { p: viewer.id })).data);
     // Affirmative acceptance of the published agreements and the automatic-renewal terms, recorded before payment.
     const docs = checkoutDocs(selection.experiences, pkg.love_track === "couple" || (q.couplesMonthly ?? 0) > 0);
     if (!launch.testSession && !(await allInEffect(docs))) return NextResponse.json({ error: "Our membership agreements are being finalized. Payments open soon." }, { status: 409 });
     // Test accounts accept draft agreements that aren't in effect yet, so there is nothing legal to record.
-    const accepted = launch.testSession ? true : await recordCheckoutAcceptance(docs, autoRenewalStatement({ packageName: pkg.name, amount: formatMoney(q.recurringTotal, catalogue.currency) ?? "", interval: selection.interval }));
+    const renewal = autoRenewalStatement({ packageName: pkg.name, amount: formatMoney(q.recurringTotal, catalogue.currency) ?? "", interval: selection.interval, ...(trial ? { trialDays: TRIAL_DAYS, firstCharge: formatChargeDate(firstChargeDate()) } : {}) });
+    const accepted = launch.testSession ? true : await recordCheckoutAcceptance(docs, renewal);
     if (!accepted) return NextResponse.json({ error: "We couldn’t record your acceptance. Please try again." }, { status: 500 });
 
     const names = selection.experiences.map((e) => EXPERIENCES[e].name);
@@ -117,6 +125,7 @@ export async function POST(request: NextRequest) {
       amount_cents: String(q.recurringTotal),
       monthly_equivalent_cents: String(selection.interval === "year" ? Math.round(q.annualTotal! / 12) : q.monthlyTotal!),
       promo: promo?.code ?? "",
+      trial: trial ? "1" : "0",
     };
   } else {
     // Professional packages: only approved professionals may subscribe.
@@ -146,10 +155,25 @@ export async function POST(request: NextRequest) {
     customer_email: viewer.email,
     client_reference_id: viewer.id,
     metadata,
-    subscription_data: { metadata },
+    subscription_data: {
+      metadata,
+      // The trial: nothing is charged for 15 days; if no card is on file when it ends, the membership simply ends.
+      ...(trial ? { trial_period_days: TRIAL_DAYS, trial_settings: { end_behavior: { missing_payment_method: "cancel" as const } } } : {}),
+    },
+    // A valid card is required for every membership, including trials.
+    payment_method_collection: "always",
+    ...(trial ? { custom_text: { submit: { message: `Free for ${TRIAL_DAYS} days. You won’t be charged if you cancel before ${formatChargeDate(firstChargeDate())}. Cancel anytime in My membership.` } } } : {}),
     success_url: `${env.siteUrl}/app?welcome=1`,
-    cancel_url: `${env.siteUrl}/app/onboarding`,
+    cancel_url: `${env.siteUrl}/app/membership`,
   });
+  if (trial) {
+    const admin = createAdminClient();
+    const { data: reserved } = admin ? await admin.rpc("trial_reserve", { p: viewer.id, p_package: metadata.tier_slug, p_session: session.id }) : { data: false };
+    if (!reserved) {
+      await stripe.checkout.sessions.expire(session.id).catch(() => null);
+      return NextResponse.json({ error: "Your trial has already been used. Please choose a membership to continue." }, { status: 409 });
+    }
+  }
   return NextResponse.json({ url: session.url });
 }
 

@@ -15,7 +15,7 @@ export default function LifePage() {
     <ExperiencePage
       experience="counseling"
       headline={<>Discover <span className="gilded italic">yourself.</span></>}
-      intro="The foundation of every meaningful connection is understanding who you are. In Life is your private space for reflection, growth and trusted guidance."
+      intro="The foundation of every meaningful connection is understanding who you are. The Art of Becoming is free with every account: your private space for reflection, growth and trusted guidance."
       features={[
         { title: "Self-discovery", body: "Guided reflections that help you explore your identity, your values and what you truly want." },
         { title: "Personal development", body: "Personal goals and growth pathways that evolve with you, with progress you can see." },

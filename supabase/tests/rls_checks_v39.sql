@@ -11,6 +11,7 @@ select string_agg(minutes || ':' || price_cents, ',' order by minutes) from publ
 \echo 'v39-4) Members cannot change usage pricing (expect error):'
 insert into public.test_signups (email) values ('elite-u@example.com');
 insert into auth.users(id, email, raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000e9', 'elite-u@example.com', '{"date_of_birth":"1975-01-01"}');
+insert into public.experience_access (user_id, experience, status, source) values ('00000000-0000-0000-0000-0000000000e9', 'business', 'active', 'subscription') on conflict (user_id, experience) do update set status = 'active', source = 'subscription';
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000e9';
 select public.journey_reprice_at_cost();

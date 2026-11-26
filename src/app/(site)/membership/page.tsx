@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { trialEligiblePackage } from "@/lib/trial";
 import { MembershipBuilder } from "@/components/MembershipBuilder";
 import { Reveal } from "@/components/Reveal";
 import { getCatalogue, getPublicOffers } from "@/lib/catalogue";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Build Your Membership",
   description:
-    "Choose In Business, In Life, In Love — or combine them at a bundled rate. One account, one subscription, every device. Members 21+ · Personal Society singles 30+.",
+    "The Art of Becoming is free with every account. Join The Professional Society, The Personal Society or both, or try one free for 15 days. Members 21+ · Personal Society singles 30+.",
   alternates: { canonical: "/membership" },
   openGraph: { title: "Build Your Membership · The Art of Connect", images: [{ url: "/og/membership.jpg", width: 1200, height: 630 }] },
 };
@@ -31,15 +32,15 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             Build your <span className="gilded italic">membership.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            Choose one experience, or combine two or all three at a bundled rate. One account, one subscription — on your
-            phone, tablet and computer, with no extra device fees.
+            Begin free with The Art of Becoming, then join The Professional Society, The Personal Society or both, or try one
+            free for 15 days. One account on your phone, tablet and computer, with no extra device fees.
           </p>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <a href="#build" className="btn btn-gold">Choose Your Experience</a>
             <a href="#compare" className="btn btn-ghost">Compare memberships</a>
-            <a href="/join/free" className="btn btn-ghost">Begin free</a>
+            <a href="/join/free" className="btn btn-ghost">Begin free self-discovery</a>
           </div>
-          <p className="mt-4 max-w-2xl text-sm text-muted">Begin free with The Art of Self and one society of your choice: The Professional Society (21+), The Personal Society for singles (30+) or for couples (21+). Journey is included with every paid membership.</p>
+          <p className="mt-4 max-w-2xl text-sm text-muted">The Art of Becoming is free with every account: The Art of Self, personal discovery, identity, self-love, emotional intelligence, boundaries, love languages, private journaling and your Discovery Portfolio. Communities, events, connections, the societies and personalized Journey are part of every paid membership. New members can try any membership except Elite free for 15 days (card required; cancel before the trial ends and you won’t be charged). There’s no required order: discover yourself first, or join today.</p>
           {!launch.registrations_open && (
             <p className="mt-8 inline-flex rounded-full border border-line-strong px-4 py-2 text-sm text-gold">Membership enrollment opens soon</p>
           )}
@@ -78,7 +79,24 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             return (
               <div key={group} className="mt-14">
                 <h3 className="eyebrow">{group === "single" ? "Single experiences" : group === "bundle" ? "Bundled memberships" : "Exclusive memberships"}</h3>
-                <div className={`mt-6 grid gap-5 ${list.length > 2 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-2"}`}>
+                <div className={`mt-6 grid gap-5 ${list.length + (group === "single" ? 1 : 0) > 2 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-2"}`}>
+                  {group === "single" && (
+                    <Reveal>
+                      <article className="glass flex h-full flex-col border-2 border-champagne/70 p-7" data-testid="becoming-free">
+                        <span className="mb-4 self-start rounded-full bg-champagne px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-espresso">Free</span>
+                        <p className="eyebrow !text-[0.62rem]">In Life · Included with every account</p>
+                        <h4 className="display mt-2 text-3xl">The Art of Becoming</h4>
+                        <p className="mt-2 text-sm text-muted">Our complimentary foundation. Understand yourself first, at your own pace, before or after you join.</p>
+                        <p className="mt-5 font-semibold text-gold">Free</p>
+                        <ul className="mt-5 flex-1 space-y-2.5 text-sm">
+                          {["The Art of Self and self-guided lessons", "Identity, self-love and emotional intelligence", "Boundaries and love languages", "Private journal and Discovery Portfolio", "Safety resources and access to professional counseling"].map((b) => (
+                            <li key={b} className="flex gap-3"><span className="mt-2 h-px w-4 shrink-0 bg-champagne" aria-hidden="true" />{b}</li>
+                          ))}
+                        </ul>
+                        <a href="/join/free" className="btn btn-gold mt-7">Begin free</a>
+                      </article>
+                    </Reveal>
+                  )}
                   {list.map((p, i) => {
                     const href = `/membership?${selectionToQuery({ experiences: p.experiences, interval: "month", couples: p.love_track === "couple", addons: [], package: p.category === "exclusive" ? p.slug : null })}#build`;
                     return (
@@ -97,6 +115,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
                             ))}
                           </ul>
                           {showPrices && p.onboarding_fee_cents ? <p className="mt-5 text-xs text-muted">One-time onboarding {money(p.onboarding_fee_cents)}</p> : null}
+                          {trialEligiblePackage(p.slug) && !p.onboarding_fee_cents && <p className="mt-5 text-xs text-gold">Try free for 15 days · card required · cancel anytime</p>}
                           <a href={href} className={`btn mt-7 ${group === "exclusive" ? "btn-gold" : "btn-ghost"}`}>Choose {p.name}</a>
                         </article>
                       </Reveal>
@@ -119,12 +138,18 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
                   </tr>
                 </thead>
                 <tbody>
+                  <tr>
+                    <td className="text-text">Free account<span className="block text-xs text-muted">The Art of Becoming</span></td>
+                    {catalogue.experiences.map((e) => <td key={e.experience}>{e.experience === "counseling" ? "✓ Free" : "—"}</td>)}
+                    <td>Free</td>
+                    <td>Free</td>
+                  </tr>
                   {catalogue.packages.map((p) => {
                     const yearly = p.monthly_price_cents == null ? null : p.annual_price_cents ?? Math.round(p.monthly_price_cents * Number(p.annual_months_charged ?? catalogue.annual_months_charged ?? 12));
                     return (
                       <tr key={p.slug}>
                         <td className="text-text">{p.name}{p.love_track ? <span className="block text-xs text-muted">{p.love_track === "couple" ? "Couples" : "Singles"}</span> : null}</td>
-                        {catalogue.experiences.map((e) => <td key={e.experience}>{p.experiences.includes(e.experience) ? "✓" : "—"}</td>)}
+                        {catalogue.experiences.map((e) => <td key={e.experience}>{e.experience === "counseling" ? "✓ Free" : p.experiences.includes(e.experience) ? "✓" : "—"}</td>)}
                         <td>{showPrices ? money(p.monthly_price_cents) ?? "—" : "At launch"}</td>
                         <td>{showPrices ? money(yearly) ?? "—" : "At launch"}</td>
                       </tr>

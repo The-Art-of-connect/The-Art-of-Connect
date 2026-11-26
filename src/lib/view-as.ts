@@ -11,11 +11,11 @@ export type Persona = { label: string; experiences: Experience[]; packageSlug: s
 export const VIEW_AS_COOKIE = "aoc_view_as";
 
 export const PERSONAS: Record<string, Persona> = {
-  "free-business": { label: "Free Business member", experiences: ["business"], packageSlug: null, society: "business" },
-  "free-singles": { label: "Free Singles member", experiences: ["relationships"], packageSlug: null, society: "singles" },
-  "free-couples": { label: "Free Couples member", experiences: ["relationships"], packageSlug: null, society: "couples" },
-  "paid-individual": { label: "Individual paid member (The Personal Society)", experiences: ["relationships"], packageSlug: "personal-society", society: "singles" },
-  "paid-bundle": { label: "Bundled paid member (Complete Society)", experiences: ["business", "counseling", "relationships"], packageSlug: "complete-society", society: null },
+  // Membership access v2: a free account is The Art of Becoming only (with The Art of Self).
+  free: { label: "Free account (The Art of Becoming)", experiences: ["counseling"], packageSlug: null, society: null },
+  "paid-individual": { label: "Individual paid member (The Personal Society)", experiences: ["counseling", "relationships"], packageSlug: "personal-society", society: "singles" },
+  "paid-business": { label: "Individual paid member (The Professional Society)", experiences: ["business", "counseling"], packageSlug: "professional-society", society: "business" },
+  "paid-bundle": { label: "Bundled paid member (Business + Love)", experiences: ["business", "counseling", "relationships"], packageSlug: "dual-society", society: null },
   "executive-private": { label: "Executive Private member", experiences: ["business", "counseling", "relationships"], packageSlug: "executive-private", society: null },
   "elite-concierge": { label: "Elite Concierge member", experiences: ["business", "counseling", "relationships"], packageSlug: "elite-concierge", society: null },
 };

@@ -134,6 +134,8 @@ export function journeyAccessFor(
 export function modeAllowed(mode: JourneyMode, access: JourneyAccess, membership: PaidMembership | null | undefined): boolean {
   if (access === "none" || !membership) return false;
   if (mode === "concierge") return access === "enhanced";
+  // Membership access v2: The Art of Becoming (In Life) is included with every account, so every paid member may use it.
+  if (mode === "life") return true;
   return membership.experiences.includes(MODE_EXPERIENCE[mode]);
 }
 

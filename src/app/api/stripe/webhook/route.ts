@@ -75,7 +75,9 @@ export async function POST(request: NextRequest) {
     const periodEnd = (sub as any).current_period_end ?? item?.current_period_end;
     const experiences = (m.experiences ?? "").split(",").filter((e): e is (typeof ALL)[number] => (ALL as readonly string[]).includes(e));
     const status = sub.status === "unpaid" || sub.status === "incomplete_expired" ? "canceled" : sub.status;
-    const entitled = ["active", "trialing", "past_due"].includes(sub.status);
+    // Membership access v2: paid access while active or on an active trial. A failed payment (past due / unpaid) pauses
+    // paid features until the account is current; The Art of Becoming is free and never paused.
+    const entitled = ["active", "trialing"].includes(sub.status);
     const couples = m.couples === "1";
 
     await db.from("subscriptions").upsert(
@@ -98,11 +100,23 @@ export async function POST(request: NextRequest) {
         stripe_membership_item_id: item?.id ?? null,
         current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
         cancel_at_period_end: sub.cancel_at_period_end,
+        trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
       },
       { onConflict: "stripe_subscription_id" },
     );
 
     if (m.kind === "professional") return;
+
+    // The one-per-member trial record.
+    if (sub.trial_end) {
+      const trialStatus = sub.status === "trialing" ? (sub.cancel_at_period_end ? "cancelled" : "active")
+        : sub.status === "active" ? "converted" : "ended";
+      await db.from("membership_trials").upsert({
+        user_id: userId, package_slug: m.tier_slug ?? "unknown", status: trialStatus, stripe_subscription_id: sub.id,
+        started_at: sub.trial_start ? new Date(sub.trial_start * 1000).toISOString() : null,
+        ends_at: new Date(sub.trial_end * 1000).toISOString(), updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    }
 
     // Grant exactly the experiences in the membership; remove any dropped
     // ones that came from a subscription (owner grants are left alone).
@@ -135,7 +149,10 @@ export async function POST(request: NextRequest) {
       await syncSubscription(s);
       const m = s.metadata ?? {};
       if (m.kind === "professional") break;
-      if (event.type === "customer.subscription.created" && ["active", "trialing"].includes(s.status)) {
+      if (event.type === "customer.subscription.created" && s.status === "trialing" && s.trial_end) {
+        const amount = s.items.data[0]?.price?.unit_amount ?? Number(m.amount_cents) ?? 0;
+        await notify(m.user_id, (name) => templates.trialStarted({ name, tierName: m.tier_name || "membership", amount, currency: s.currency, interval: m.interval === "year" ? "year" : "month", firstCharge: day(s.trial_end) ?? "the end of your trial" }), "membership");
+      } else if (event.type === "customer.subscription.created" && s.status === "active") {
         const amount = s.items.data[0]?.price?.unit_amount ?? Number(m.amount_cents) ?? 0;
         await notify(
           m.user_id,
@@ -157,6 +174,22 @@ export async function POST(request: NextRequest) {
         const end = scheduledCancel ? day((s as any).current_period_end ?? s.items.data[0]?.current_period_end) : null;
         await notify(m.user_id, (name) => templates.membershipCanceled({ name, endDate: end }), "membership");
       }
+      break;
+    }
+    case "customer.subscription.trial_will_end": {
+      // Stripe sends this three days before a trial ends: remind the member of the charge date, amount and how to cancel.
+      const s = event.data.object;
+      const m = s.metadata ?? {};
+      if (m.kind !== "professional" && !s.cancel_at_period_end && s.trial_end) {
+        const amount = s.items.data[0]?.price?.unit_amount ?? Number(m.amount_cents) ?? 0;
+        await notify(m.user_id, (name) => templates.trialEnding({ name, tierName: m.tier_name || "membership", amount, currency: s.currency, interval: m.interval === "year" ? "year" : "month", firstCharge: day(s.trial_end) ?? "soon" }), "membership");
+      }
+      break;
+    }
+    case "checkout.session.expired": {
+      // An abandoned checkout releases its trial reservation.
+      const cs = event.data.object;
+      if (cs.metadata?.trial === "1") await db.from("membership_trials").delete().eq("checkout_session", cs.id).eq("status", "pending");
       break;
     }
     case "checkout.session.completed": {

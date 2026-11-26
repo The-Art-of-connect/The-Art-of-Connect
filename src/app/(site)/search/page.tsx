@@ -9,7 +9,7 @@ import { entriesFor } from "@/lib/search-scope";
 export const metadata: Metadata = { title: "Search", robots: { index: false, follow: true } };
 export const dynamic = "force-dynamic";
 
-const SUGGESTIONS = ["Memberships & pricing", "Webinars", "Free business account", "Cancel membership", "Privacy", "Sign in"];
+const SUGGESTIONS = ["Memberships & pricing", "Webinars", "15-day free trial", "Cancel membership", "Privacy", "Sign in"];
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const q = ((await searchParams).q ?? "").slice(0, 100);

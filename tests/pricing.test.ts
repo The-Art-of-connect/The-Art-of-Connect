@@ -20,11 +20,8 @@ const cat = (over: Partial<PricingCatalogue> = {}): PricingCatalogue => ({
   packages: [
     pkg({ slug: "professional-society", category: "single", experiences: ["business"], monthly_price_cents: 2999 }),
     pkg({ slug: "personal-society", category: "single", experiences: ["relationships"], love_track: "single", monthly_price_cents: 3999 }),
-    pkg({ slug: "art-of-becoming", category: "single", experiences: ["counseling"], monthly_price_cents: 2499 }), // test value
     pkg({ slug: "couples-membership", category: "single", experiences: ["relationships"], love_track: "couple", monthly_price_cents: 5999 }), // test value
-    pkg({ slug: "dual-society", category: "bundle", experiences: ["business", "relationships"], monthly_price_cents: 5999 }),
-    pkg({ slug: "life-love", category: "bundle", experiences: ["counseling", "relationships"], monthly_price_cents: 5499 }), // test value
-    pkg({ slug: "complete-society", category: "bundle", experiences: ["business", "counseling", "relationships"], monthly_price_cents: 7999, onboarding_fee_cents: 2500 }), // test value
+    pkg({ slug: "dual-society", category: "bundle", experiences: ["business", "relationships"], monthly_price_cents: 5999, onboarding_fee_cents: 2500 }), // fee: test value
     pkg({ slug: "executive-private", category: "exclusive", experiences: ["business", "counseling", "relationships"], monthly_price_cents: 9999 }),
     pkg({ slug: "elite-concierge", category: "exclusive", experiences: ["business", "counseling", "relationships"], monthly_price_cents: 24999, annual_price_cents: 249990 }),
   ],
@@ -66,11 +63,12 @@ test("a couple on a bundle without a couples version adds the couples upgrade", 
   assert.equal(q.monthlyTotal, 5999 + 2000);
 });
 
-test("a combination with no package (Business + Life here) is not offered", () => {
-  const q = quote(cat(), sel(["business", "counseling"]));
-  assert.equal(q.pkg, null);
-  assert.equal(q.priced, false);
-  assert.equal(q.monthlyTotal, null);
+test("membership access v2: The Art of Becoming is free, so choosing it never changes the paid membership", () => {
+  assert.equal(quote(cat(), sel(["business", "counseling"])).pkg?.slug, "professional-society");
+  assert.equal(quote(cat(), sel(["business", "counseling", "relationships"])).pkg?.slug, "dual-society");
+  const onlyFree = quote(cat(), sel(["counseling"]));
+  assert.equal(onlyFree.pkg, null);
+  assert.equal(onlyFree.priced, false);
 });
 
 test("annual billing: 12 months for the price of 10", () => {
@@ -96,11 +94,11 @@ test("exclusive memberships: Executive Private $99.99 and Elite Concierge $249.9
 });
 
 test("onboarding fee and one-time add-ons are due today; monthly add-ons recur", () => {
-  const q = quote(cat(), sel(["business", "counseling", "relationships"], { addons: ["concierge", "portrait"] }));
-  assert.equal(q.pkg?.slug, "complete-society");
-  assert.equal(q.monthlyTotal, 7999 + 1000);
+  const q = quote(cat(), sel(["business", "relationships"], { addons: ["concierge", "portrait"] }));
+  assert.equal(q.pkg?.slug, "dual-society");
+  assert.equal(q.monthlyTotal, 5999 + 1000);
   assert.equal(q.oneTimeTotal, 2500 + 9900);
-  assert.equal(q.dueToday, 7999 + 1000 + 2500 + 9900);
+  assert.equal(q.dueToday, 5999 + 1000 + 2500 + 9900);
 });
 
 test("promotions apply to the first period, optionally only to chosen packages", () => {
