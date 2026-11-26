@@ -18,6 +18,8 @@ export async function POST(req: Request) {
   if (!verifyCron(req, "checkins")) return NextResponse.json({ ok: false }, { status: 401 });
   const db = createAdminClient();
   if (!db) return NextResponse.json({ ok: false, reason: "no database" }, { status: 503 });
+  // Elite retention: erase financial summaries whose review window has passed.
+  await db.rpc("elite_purge_financials");
   const { data: settings } = await db.from("journey_checkin_settings").select("*").maybeSingle();
   if (!settings?.enabled || !settings.email_enabled) return NextResponse.json({ ok: true, sent: 0, reason: "email check-ins off" });
 

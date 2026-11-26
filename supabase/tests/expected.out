@@ -719,3 +719,24 @@ v33-12) ...and cannot read the evidence (expect 0):
 0
 v33-13) A founder invitation to a non-member attaches when they join with that email (expect founder|qualification_approved):
 founder|qualification_approved
+v34-1) A member sees their own linked account status (expect Test Bank|match|collected):
+Test Bank|match|collected
+v34-2) ...but never the amounts, even their own (expect permission error):
+ERROR:  permission denied for table elite_financial_accounts
+v34-3) A member cannot read the owner financial report (expect error):
+ERROR:  Not permitted
+v34-4) A member cannot write financial results (expect permission error):
+ERROR:  permission denied for table elite_financial_accounts
+v34-5) A member cannot mark their fee paid (expect permission error):
+ERROR:  permission denied for table elite_verification_payments
+v34-6) Another member sees none of it (expect 0|0|0):
+0|0|0
+v34-7) Verification revenue is owner-only (expect error):
+ERROR:  Not permitted
+v34-8) Anonymous visitors see nothing (expect permission error):
+ERROR:  permission denied for table elite_financial_accounts
+v34-9) Retention purge erases amounts after the review window (expect 1, then purged|t):
+1
+purged|t
+v34-10) Production bank verification is off by default (expect f|f):
+f|f

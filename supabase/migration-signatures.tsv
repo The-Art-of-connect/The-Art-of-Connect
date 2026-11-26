@@ -44,3 +44,5 @@
 20270104000001_owner_test_session.sql	to_regclass('public.test_signups') is not null
 20270105000001_elite_concierge.sql	to_regclass('public.elite_candidates') is not null
 20270105000002_elite_tracker_qa.sql	exists (select 1 from public.qa_features where key = 'elite-founder')
+20270106000001_elite_stripe_verification.sql	to_regclass('public.elite_financial_accounts') is not null
+20270106000002_elite_stripe_tracker_qa.sql	exists (select 1 from public.qa_features where key = 'elite-stripe-review')

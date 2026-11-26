@@ -3,8 +3,11 @@ import { getViewer, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { EliteBadge } from "@/components/EliteBadge";
-import { eliteAcceptInvitation, eliteAppeal, eliteScreen, eliteSubmitEvidence } from "@/app/actions/elite";
-import { ELITE_QUALIFICATIONS, ELITE_STATUS_LABEL, ELITE_TAGLINE, EVIDENCE_KINDS, usd, type Thresholds } from "@/lib/elite";
+import { eliteAcceptInvitation, eliteAppeal, eliteDisconnectBank, eliteScreen, eliteStartExpedited, eliteSubmitEvidence } from "@/app/actions/elite";
+import { ELITE_QUALIFICATIONS, ELITE_STATUS_LABEL, ELITE_TAGLINE, EVIDENCE_KINDS, OWNERSHIP_LABEL, VERIFICATION_METHODS, usd, type Thresholds } from "@/lib/elite";
+import { FC_CONSENT_TEXT, FC_CONSENT_VERSION, verificationGate } from "@/lib/elite-verification";
+import { VerifyButton } from "@/components/VerifyButton";
+import { EliteBankConnect } from "@/components/EliteBankConnect";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My Elite eligibility" };
@@ -13,7 +16,8 @@ type Eval = { candidate: boolean; pathway: string | null; status: string | null;
   months: number; min_months: number; answers: number; min_answers: number; progression: boolean; fee: boolean; expedited_available: boolean; invitation_expires_at: string | null };
 
 /** Private: a member's own Elite eligibility. No ranking, no pressure, nothing charged here. */
-export default async function EliteEligibility() {
+export default async function EliteEligibility({ searchParams }: { searchParams: Promise<{ fee?: string }> }) {
+  const { fee: feeReturn } = await searchParams;
   const viewer = (await getViewer())!;
   const supabase = (await createClient())!;
   const preview = isInsidePreview(viewer) || Boolean(viewer.viewAs);
@@ -23,12 +27,18 @@ export default async function EliteEligibility() {
     preview ? Promise.resolve({ data: null }) : supabase.from("elite_candidates").select("id, status, pathway, qualification, invitation_expires_at").eq("user_id", viewer.id).maybeSingle(),
   ]);
   const e = ev as Eval | null;
-  const [{ data: evidence }, { data: appeals }] = c
+  const [{ data: evidence }, { data: appeals }, { data: banks }] = c
     ? await Promise.all([
         supabase.from("elite_evidence").select("id, kind, status, reviewer_note, created_at").eq("candidate_id", c.id).order("created_at", { ascending: false }),
         supabase.from("elite_appeals").select("id, status, response, created_at").eq("candidate_id", c.id).order("created_at", { ascending: false }),
+        supabase.from("elite_financial_accounts").select("id, institution_name, last4, livemode, ownership_result, data_status, disconnected_at").eq("candidate_id", c.id).order("created_at", { ascending: false }),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
+  const [idGate, fcGate, feeGate] = preview || !c
+    ? [null, null, null]
+    : await Promise.all([verificationGate("identity", viewer.id), verificationGate("financial", viewer.id), verificationGate("fee", viewer.id)]);
+  const sandbox = (g: typeof idGate) => Boolean(g?.stripe && !g.live);
+  const method = c?.qualification ? VERIFICATION_METHODS[c.qualification] : null;
   const t = (s?.thresholds ?? {}) as Thresholds;
   const status = c?.status ?? "not_started";
   const canSubmit = c && ["preliminary", "verification_pending", "info_required", "manual_review", "owner_verified", "automated_verified", "qualification_approved"].includes(status);
@@ -102,18 +112,58 @@ export default async function EliteEligibility() {
               {check(e.qualification, "Qualification verified", "Your chosen pathway, verified from your documents or an approved method.")}
               {check(e.age && e.standing, "Membership in good standing")}
               {e.pathway === "earned" && check(e.progression, "Membership milestones", `${e.months} of ${e.min_months} months of membership · ${e.answers} of ${e.min_answers} personal discoveries${s?.progression_approved ? "" : " (milestones being finalized)"}`)}
-              {e.pathway === "expedited" && check(e.fee, "Expedited verification", s?.expedited_fee_active ? `One-time ${usd((s.expedited_fee_cents ?? 0) / 100)}, offered only after preliminary screening. It purchases faster verification, never admission.` : "Not yet available: the expedited verification service is awaiting final approval.")}
+              {e.pathway === "expedited" && check(e.fee, "Expedited verification", s?.expedited_fee_active ? `One-time ${usd((s.expedited_fee_cents ?? 0) / 100)}, offered only after preliminary screening. It purchases faster verification, never admission.` : sandbox(feeGate) ? `Sandbox test: ${usd((s?.expedited_fee_cents ?? 0) / 100)} with Stripe test cards only. The fee isn't active for members until our founder approves it.` : "Not yet available: the expedited verification service is awaiting final approval.")}
               {check(["invitation_issued", "invitation_accepted", "membership_activated"].includes(status), "Invitation issued")}
             </ul>
           ) : <p className="mt-3 text-sm text-muted">Answer the preliminary questions to see your progress.</p>}
-          {e && !e.identity && <p className="mt-4 text-xs text-muted">Identity verification can be completed in <Link href="/app/verify" className="text-gold underline">Identity verification</Link> when available, or by submitting your identity below for private review.</p>}
+          {feeReturn === "paid" && <p className="mt-4 text-sm text-success">Thank you. Your expedited verification payment was received; your review is now prioritized.</p>}
+          {e?.pathway === "expedited" && e.expedited_available && !e.fee && feeGate?.stripe && (
+            <ActionForm action={eliteStartExpedited} className="mt-4 rounded-xl border border-[#e8892b]/50 p-4 text-sm">
+              <p>Expedited verification purchases a faster, private review. It never guarantees or purchases admission{sandbox(feeGate) ? ". Sandbox test: use a Stripe test card; nothing real is charged" : ""}.</p>
+              <button className="btn btn-gold btn-sm mt-3">Continue to secure checkout</button>
+            </ActionForm>
+          )}
         </section>
       </div>
 
       {canSubmit && (
         <section className="glass mt-6 p-6">
           <h2 className="display text-2xl">3 · Private verification</h2>
-          <p className="mt-1 text-sm text-muted">Share only what&rsquo;s needed. Documents are stored privately, visible only to our founder, and deleted after review where possible. We keep verification results rather than complete financial records.</p>
+          <p className="mt-1 text-sm text-muted">Share only what&rsquo;s needed. Verification runs through Stripe wherever possible; anything Stripe can&rsquo;t conclusively verify is reviewed personally by our founder from private documents. We keep verification results rather than complete financial records.</p>
+          {(sandbox(idGate) || sandbox(fcGate)) && <p className="mt-3 rounded-xl border border-gold/40 bg-gold/10 p-3 text-xs text-gold">Stripe Sandbox: use fictional test information only. Nothing here is a real verification or a real charge.</p>}
+          {method && (
+            <div className="mt-4 grid gap-2 rounded-xl border border-line p-4 text-xs sm:grid-cols-3">
+              <p><span className="block font-semibold text-sm">Through Stripe</span>{method.stripe}</p>
+              <p><span className="block font-semibold text-sm">Your documents</span>{method.documents}</p>
+              <p><span className="block font-semibold text-sm">Our standard</span>{method.never}</p>
+            </div>
+          )}
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <div className="rounded-xl border border-line p-4">
+              <p className="font-semibold">Identity · Stripe Identity</p>
+              <p className="mt-1 text-xs text-muted">Photograph your government-issued ID and take a live selfie on Stripe&rsquo;s secure page. We receive only whether you&rsquo;re verified and meet the age requirement.</p>
+              <div className="mt-3">{e?.identity ? <p className="text-sm text-success">✓ Identity verified</p> : <VerifyButton enabled={Boolean(idGate?.stripe)} label="Verify my identity with Stripe" />}</div>
+              {!e?.identity && <p className="mt-2 text-xs text-faint">Prefer not to use a selfie? Choose &ldquo;Government-issued identity&rdquo; under Supporting documents for private review instead.</p>}
+            </div>
+            <div className="rounded-xl border border-line p-4">
+              <p className="font-semibold">Bank verification · Stripe Financial Connections <span className="font-normal text-faint">(optional, supporting)</span></p>
+              <p className="mt-1 mb-3 text-xs text-muted">Confirms you own the account and summarizes balances and deposits for a private review. It supports, but never by itself proves, income or net worth.</p>
+              <EliteBankConnect consentText={FC_CONSENT_TEXT} version={FC_CONSENT_VERSION} enabled={Boolean(fcGate?.stripe)} note={fcGate?.stripe ? undefined : "Bank verification isn't available yet. You can submit documents below."} />
+              {(banks ?? []).length > 0 && (
+                <ul className="mt-4 divide-y divide-line text-xs">
+                  {(banks ?? []).map((b) => (
+                    <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                      <span>{b.institution_name ?? "Bank"}{b.last4 ? ` ••${b.last4}` : ""}{b.livemode ? "" : " · Sandbox"}<span className="block text-faint">{OWNERSHIP_LABEL[b.ownership_result]} · {b.data_status === "purged" ? "summaries erased" : b.data_status === "pending" ? "collecting" : "received for review"}</span></span>
+                      {b.data_status !== "purged" && (
+                        <ActionForm action={eliteDisconnectBank}><input type="hidden" name="id" value={b.id} /><button className="btn btn-ghost btn-sm">Disconnect &amp; erase</button></ActionForm>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+          <p className="mt-6 font-semibold">Supporting documents</p>
           <ActionForm action={eliteSubmitEvidence} className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="text-sm">What this verifies<select name="kind" className="field mt-1 w-full" required>{EVIDENCE_KINDS.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}</select></label>
             <label className="text-sm">Document (PDF or image, up to 10 MB)<input type="file" name="file" accept="application/pdf,image/png,image/jpeg,image/webp" className="mt-2 block w-full text-sm" /></label>

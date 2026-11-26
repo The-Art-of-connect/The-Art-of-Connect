@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { PageHeader, Stat } from "@/components/admin/ui";
 import { EliteBadge } from "@/components/EliteBadge";
-import { eliteBadge, eliteDecide, eliteDecideAppeal, eliteFounderInvite, eliteReviewEvidence, eliteSaveSettings } from "@/app/actions/elite";
-import { ELITE_QUALIFICATIONS, ELITE_STATUS_LABEL, EVIDENCE_KINDS, usd, type Thresholds } from "@/lib/elite";
+import Link from "next/link";
+import { eliteBadge, eliteDecide, eliteDecideAppeal, eliteFinancialAction, eliteFounderInvite, eliteReviewEvidence, eliteSaveSettings } from "@/app/actions/elite";
+import { ELITE_QUALIFICATIONS, ELITE_STATUS_LABEL, EVIDENCE_KINDS, OWNERSHIP_LABEL, VERIFICATION_METHODS, usd, type Thresholds } from "@/lib/elite";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Elite Management Center" };
@@ -29,12 +30,19 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
   const list = (candidates ?? []) as unknown as { id: string; user_id: string | null; invitee_email: string | null; invitee_name: string | null; pathway: string; qualification: string | null; status: string; fee_waived: boolean; fee_paid_at: string | null; invitation_expires_at: string | null; created_at: string; profiles: { display_name: string; email: string; is_test: boolean } | null }[];
   const shown = filter ? list.filter((c) => c.status === filter) : list;
   const ids = shown.map((c) => c.id);
-  const [{ data: evidence }, { data: notes }] = ids.length
+  const userIds = shown.map((c) => c.user_id).filter(Boolean) as string[];
+  const [{ data: evidence }, { data: notes }, { data: fin }, { data: idv }, { data: fees }] = ids.length
     ? await Promise.all([
         supabase.from("elite_evidence").select("id, candidate_id, kind, storage_path, description, status, reviewer_note, created_at").in("candidate_id", ids).order("created_at", { ascending: false }),
         supabase.from("elite_owner_notes").select("candidate_id, note, created_at").in("candidate_id", ids).order("created_at", { ascending: false }),
+        supabase.rpc("elite_owner_financials", { p_candidates: ids }),
+        userIds.length ? supabase.from("identity_verifications").select("user_id, status, age_meets_minimum, created_at").in("user_id", userIds).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+        supabase.from("elite_verification_payments").select("candidate_id, amount_cents, status, livemode, paid_at").in("candidate_id", ids),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
+  type Fin = { id: string; candidate_id: string; institution_name: string | null; last4: string | null; livemode: boolean; ownership_result: string; balance_cents: number | null; balance_currency: string | null; balance_as_of: string | null; deposits_12m_cents: number | null; deposits_12m_count: number | null; months_covered: number | null; data_status: string; delete_after: string | null };
+  const finRows = (fin ?? []) as Fin[];
+  const money = (cents: number | null) => (cents == null ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100));
   const paths = (evidence ?? []).map((e) => e.storage_path).filter(Boolean) as string[];
   const urls = paths.length ? (await supabase.storage.from("elite-evidence").createSignedUrls(paths, 600)).data ?? [] : [];
   const t = (s?.thresholds ?? {}) as Thresholds;
@@ -44,6 +52,7 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
   return (
     <>
       <PageHeader eyebrow="Owner Portal" title="Elite Management Center" />
+      <p className="-mt-6 mb-6 text-sm"><Link href="/admin/elite/verification" className="text-gold underline">Stripe verification: use-case review, activation steps, costs and controls →</Link></p>
       <p className="-mt-4 mb-6 max-w-3xl text-sm text-muted">Elite Concierge is by invitation only. Everything here is confidential: financial details and verification documents are visible only to you. All decisions are recorded in the audit history. Founder discretion never overrides identity verification, age requirements or safety protections.</p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -117,6 +126,33 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
                   <div className="grid gap-5 border-t border-line p-5 lg:grid-cols-2">
                     <div className="space-y-3 text-sm">
                       <p className="text-xs text-muted">{c.profiles?.email ?? c.invitee_email} · since {new Date(c.created_at).toLocaleDateString("en-US")} · fee {c.fee_waived ? "waived" : c.fee_paid_at ? "paid" : "not paid"}{c.invitation_expires_at ? ` · invitation until ${new Date(c.invitation_expires_at).toLocaleDateString("en-US")}` : ""}</p>
+                      {(() => {
+                        const iv = (idv ?? []).find((v) => v.user_id === c.user_id);
+                        const fp = (fees ?? []).filter((p) => p.candidate_id === c.id && p.paid_at);
+                        const m = c.qualification ? VERIFICATION_METHODS[c.qualification] : null;
+                        return (
+                          <div className="space-y-1 rounded-xl border border-line p-3 text-xs">
+                            <p><span className="font-semibold">Stripe Identity:</span> {iv ? `${iv.status}${iv.age_meets_minimum === false ? " · below minimum age" : ""}` : "not started"}</p>
+                            {fp.map((p, i) => <p key={i}><span className="font-semibold">Expedited fee:</span> {money(p.amount_cents)} {p.status}{p.livemode ? "" : " (Sandbox)"}</p>)}
+                            {m && <p className="text-faint">Required for this pathway: {m.documents} {m.never}</p>}
+                          </div>
+                        );
+                      })()}
+                      {finRows.filter((a) => a.candidate_id === c.id).map((a) => (
+                        <div key={a.id} className="space-y-1 rounded-xl border border-gold/40 p-3 text-xs">
+                          <p className="flex flex-wrap justify-between gap-2 font-semibold"><span>{a.institution_name ?? "Bank"}{a.last4 ? ` ••${a.last4}` : ""}</span><span className="text-gold">{a.livemode ? "Live" : "Sandbox"} · {a.data_status}</span></p>
+                          <p>Ownership: {OWNERSHIP_LABEL[a.ownership_result]}</p>
+                          <p>Current balance on this account: {money(a.balance_cents)}{a.balance_as_of ? ` (as of ${new Date(a.balance_as_of).toLocaleDateString("en-US")})` : ""} <span className="text-faint">· not net worth</span></p>
+                          <p>Deposits, last 12 months: {money(a.deposits_12m_cents)}{a.deposits_12m_count != null ? ` across ${a.deposits_12m_count} deposits, ${a.months_covered ?? 0} months of history` : ""} <span className="text-faint">· not verified income (may include transfers, reimbursements or business funds)</span></p>
+                          {a.delete_after && <p className="text-faint">Summaries erased automatically after {new Date(a.delete_after).toLocaleDateString("en-US")}.</p>}
+                          {a.data_status !== "purged" && (
+                            <ActionForm action={eliteFinancialAction} className="flex gap-2 pt-1"><input type="hidden" name="id" value={a.id} />
+                              <button name="op" value="refresh" className="btn btn-ghost btn-sm">Refresh from Stripe</button>
+                              <button name="op" value="purge" className="btn btn-ghost btn-sm">Erase now</button>
+                            </ActionForm>
+                          )}
+                        </div>
+                      ))}
                       <p className="eyebrow">Verification evidence</p>
                       {ev.length === 0 ? <p className="text-xs text-muted">None submitted.</p> : ev.map((e) => {
                         const url = e.storage_path ? urls.find((u) => u.path === e.storage_path)?.signedUrl : null;
@@ -186,7 +222,7 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
           </div>
         )}
       </section>
-      <p className="mt-10 text-xs text-faint">Proposed thresholds and the expedited fee stay inactive until you approve them. Automated third-party verification isn&rsquo;t connected: any paid verification service needs your approval first, so verification is owner-reviewed today. Revenue for Elite memberships and verification will be reported separately once payments are live.</p>
+      <p className="mt-10 text-xs text-faint">Proposed thresholds and the expedited fee stay inactive until you approve them. Stripe is the only verification provider: Stripe Identity and Financial Connections run in Sandbox for testing, and production use follows your switches on the Stripe verification page. Financial results are supporting evidence only; every qualification decision is yours. Revenue for Elite memberships and verification will be reported separately once payments are live.</p>
     </>
   );
 }
