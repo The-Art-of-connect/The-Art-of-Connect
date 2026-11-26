@@ -12,6 +12,7 @@ import { verifyOpenAI } from "@/app/actions/journey-admin";
 import { saveCheckinSettings } from "@/app/actions/checkins";
 import { OwnerTest } from "@/components/admin/OwnerTest";
 import { JourneyLiveTest } from "@/components/admin/JourneyLiveTest";
+import { VOICE_MODELS } from "@/lib/journey-voice-models";
 import { Empty, NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
 import {
   publishInstructions, saveExample, saveInstructions, saveJourneyLimits, saveKnowledge, saveModel, savePackage, saveSessionProduct, saveTierLimit, saveVoiceSettings, setJourneySwitch, activateJourney, pauseJourney,
@@ -59,6 +60,7 @@ export default async function JourneyAdmin() {
   ]);
   const ct = (ckTotals ?? {}) as Record<string, number>;
   const { data: lastCheck } = await supabase.from("audit_log").select("action, created_at, details").like("action", "journey.openai.%").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: voiceTests } = await supabase.from("journey_voice_sessions").select("id, started_at, model, seconds_used, cost_cents, provider_cost_cents").eq("is_owner_test", true).order("started_at", { ascending: false }).limit(15);
   const testCap = s?.owner_test_monthly_limit_cents != null ? Number(s.owner_test_monthly_limit_cents) : null;
   const approvedModel = (models ?? []).find((m) => m.id === s?.default_model && m.enabled && m.input_cents_per_million != null);
   const readiness: [string, boolean, string][] = [
@@ -126,8 +128,11 @@ export default async function JourneyAdmin() {
                   <input name="confirm" autoComplete="off" className="field mt-1 w-full" placeholder="AUTHORIZE" /></label>
               )}
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="text-xs text-muted">Voice model<input name="voiceModel" defaultValue={s?.voice_model ?? "gpt-realtime-mini"} className="field mt-1 w-full" /></label>
-                <label className="text-xs text-muted">Voice cost per minute ($, for budgeting)<input name="voiceRate" defaultValue={s?.voice_cents_per_minute != null ? dollars(s.voice_cents_per_minute) : "0.10"} className="field mt-1 w-full" /></label>
+                <label className="text-xs text-muted">Production voice model (what members will use)
+                  <select name="voiceModel" defaultValue={s?.voice_model ?? "gpt-live-1.1"} className="field mt-1 w-full">
+                    {VOICE_MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}{m.deprecated ? " (deprecated)" : ""}</option>)}
+                  </select></label>
+                <label className="text-xs text-muted">Voice cost per minute ($, for budgeting; GPT-Live is always $0.05)<input name="voiceRate" defaultValue={s?.voice_cents_per_minute != null ? dollars(s.voice_cents_per_minute) : "0.10"} className="field mt-1 w-full" /></label>
               </div>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="voice" defaultChecked={Boolean(s?.voice_enabled) || !s?.voice_model} /> Enable live voice</label>
               <button className="btn btn-gold w-full" disabled={!owner}>{s?.enabled && s?.paid_usage_authorized ? "Save settings" : "Activate Journey for private testing"}</button>
@@ -142,7 +147,24 @@ export default async function JourneyAdmin() {
             <p className="px-6 pt-5 text-sm font-semibold">2 · Test Journey now</p>
             <JourneyLiveTest ready={Boolean(s?.enabled && s?.paid_usage_authorized && s?.owner_testing_enabled)}
               voiceReady={Boolean(s?.enabled && s?.paid_usage_authorized && s?.voice_enabled && s?.voice_model && s?.voice_cents_per_minute != null)}
-              voiceReason="Turn on “Enable live voice” in step 1 and press Save settings." />
+              voiceReason="Turn on “Enable live voice” in step 1 and press Save settings." productionModel={s?.voice_model ?? null} />
+            {(voiceTests ?? []).length > 0 && (
+              <div className="border-t border-line px-6 py-4">
+                <p className="text-sm font-semibold">Your voice tests</p>
+                <table className="mt-2 w-full text-left text-xs">
+                  <thead><tr className="text-muted"><th className="py-1">When</th><th>Model</th><th>Length</th><th>Actual expense (OpenAI usage)</th><th>Budgeted</th></tr></thead>
+                  <tbody>{(voiceTests ?? []).map((v) => (
+                    <tr key={v.id} className="border-t border-line">
+                      <td className="py-1">{new Date(v.started_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
+                      <td>{VOICE_MODELS.find((m) => m.id === v.model)?.label ?? v.model ?? "GPT-Realtime mini"}</td>
+                      <td>{Math.floor(Number(v.seconds_used ?? 0) / 60)}:{String(Number(v.seconds_used ?? 0) % 60).padStart(2, "0")}</td>
+                      <td>{v.provider_cost_cents != null ? `$${(Number(v.provider_cost_cents) / 100).toFixed(4)}` : "not reported"}</td>
+                      <td>{v.cost_cents != null ? `$${(Number(v.cost_cents) / 100).toFixed(4)}` : "—"}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
             <p className="border-t border-line px-6 pt-4 text-sm"><a href="/admin/journey/quality" className="btn btn-gold btn-sm">Run quality tests: nine real conversations →</a></p>
             <p className="px-6 py-4 text-xs text-muted">Also try Journey across the website: <a href="/app/know-yourself/who-am-i/beyond-my-titles" className="text-gold underline">a lesson</a>, <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a>, <a href="/app/journey/customize" className="text-gold underline">avatar &amp; voice</a>, or any paid membership through <strong>View as</strong>. All use this same private budget.</p>
           </div>

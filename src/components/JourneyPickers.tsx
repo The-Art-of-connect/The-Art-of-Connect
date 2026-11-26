@@ -1,4 +1,5 @@
 "use client";
+import { addRealtimeUsage, EMPTY_USAGE, type RealtimeUsage } from "@/lib/journey-voice-models";
 import { useRef, useState } from "react";
 
 /** A row of elegant single-choice pills (saved preferences arrive with member memory). */
@@ -29,7 +30,11 @@ const VOICES: { id: "warm" | "calm" | "confident" | "soft" | "friendly"; name: s
 
 type Status = "idle" | "connecting" | "live" | "paused" | "ended";
 
-export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, onEnded, lesson = null, discovery = null, mode = "life", voiceSummary = null, avatarImage = null }: {
+export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, onEnded, lesson = null, discovery = null, mode = "life", voiceSummary = null, avatarImage = null, voiceModel = null, onUsage }: {
+  /** Owner Voice Studio: compare a specific voice model. Members always use the production model. */
+  voiceModel?: string | null;
+  /** Owner Voice Studio: the model and the usage OpenAI reported, when a conversation ends. */
+  onUsage?: (u: { model: string; usage: Record<string, number> | null; seconds: number }) => void;
   /** The member's chosen Journey portrait (fictional), shown in the listening circle. */
   avatarImage?: string | null;
   /** When set, the member's saved Customize Your Journey choice is shown instead of the legacy style picker. */
@@ -56,7 +61,10 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
   const [note, setNote] = useState<string | null>(null);
   const [left, setLeft] = useState<number | null>(null);
   const [lines, setLines] = useState<string[]>([]);
-  const ref = useRef<{ pc?: RTCPeerConnection; stream?: MediaStream; audio?: HTMLAudioElement; id?: string; tick?: number; idle?: number; idleLimit: number; idleLast?: number; lines: string[] }>({ idleLimit: 120, lines: [] });
+  const ref = useRef<{
+    pc?: RTCPeerConnection; dc?: RTCDataChannel; stream?: MediaStream; audio?: HTMLAudioElement; id?: string; tick?: number; idle?: number; idleLimit: number; idleLast?: number;
+    lines: string[]; family?: "live" | "realtime"; model?: string; speaker?: "Member" | "Journey"; usage: RealtimeUsage; liveSeconds?: number; closed?: () => void;
+  }>({ idleLimit: 120, lines: [], usage: EMPTY_USAGE });
 
   function previewVoice(line: string) {
     setPreview(line);
@@ -68,22 +76,38 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
     } catch { /* preview text still shows */ }
   }
 
+  /** Adds transcript text, continuing the speaker's current line (GPT-Live sends fragments; Realtime sends whole turns). */
+  function say(who: "Member" | "Journey", text: string, fragment: boolean) {
+    const r = ref.current;
+    if (fragment && r.speaker === who && r.lines.length) r.lines[r.lines.length - 1] += text;
+    else r.lines.push(`${who}: ${fragment ? text.trimStart() : text}`);
+    r.speaker = who; r.idleLast = Date.now();
+    setLines([...r.lines]);
+  }
+
   async function end(reasonText?: string) {
     const r = ref.current;
     window.clearInterval(r.tick); window.clearInterval(r.idle);
+    // GPT-Live: ask OpenAI to finalize, and wait briefly for the final usage before hanging up.
+    if (r.family === "live" && r.dc?.readyState === "open") {
+      await new Promise<void>((resolve) => { r.closed = resolve; try { r.dc!.send(JSON.stringify({ type: "session.close" })); } catch { resolve(); } window.setTimeout(resolve, 6000); });
+    }
     r.pc?.close(); r.stream?.getTracks().forEach((t) => t.stop());
-    if (r.audio) r.audio.srcObject = null;
+    if (r.audio) { r.audio.srcObject = null; r.audio.remove(); }
     setStatus("ended"); setLeft(null);
     if (r.id) {
       const id = r.id; r.id = undefined;
       if (onEnded && r.lines.length) onEnded(r.lines.join("\n"));
-      const res = await fetch("/api/journey/voice/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ voiceSessionId: id, transcript: r.lines.join("\n"), saveTranscript: transcript }) }).then((x) => x.json()).catch(() => null);
+      const providerUsage: Record<string, number> | null = r.family === "live" ? (r.liveSeconds != null ? { seconds: r.liveSeconds } : null) : { ...r.usage };
+      const res = await fetch("/api/journey/voice/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ voiceSessionId: id, transcript: r.lines.join("\n"), saveTranscript: transcript, providerUsage }) }).then((x) => x.json()).catch(() => null);
+      onUsage?.({ model: r.model ?? "", usage: providerUsage, seconds: Number(res?.seconds ?? 0) });
       setNote(`${reasonText ? reasonText + " " : ""}Conversation ended${res?.seconds ? ` · ${Math.max(1, Math.round(res.seconds / 60))} minute${res.seconds >= 90 ? "s" : ""} used` : ""}.`);
     }
   }
 
   async function start() {
-    setNote(null); setLines([]); ref.current.lines = [];
+    setNote(null); setLines([]);
+    Object.assign(ref.current, { lines: [], usage: EMPTY_USAGE, liveSeconds: undefined, speaker: undefined, family: undefined });
     if (onSavePrefs) onSavePrefs(voice, transcript).catch(() => null);
     setStatus("connecting");
     let stream: MediaStream;
@@ -93,41 +117,63 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
     } catch {
       setStatus("idle"); setNote("Journey needs permission to use your microphone. You can allow it in your browser settings, or chat in writing instead."); return;
     }
-    const r = await fetch("/api/journey/voice/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, style: voice, ownerTest, lesson, discovery }) }).then((x) => x.json()).catch(() => null);
-    if (!r?.ok) { stream.getTracks().forEach((t) => t.stop()); setStatus("idle"); setNote(r?.message ?? "Talk to Journey isn't available right now."); return; }
     const pc = new RTCPeerConnection();
-    const audio = new Audio(); audio.autoplay = true;
-    pc.ontrack = (e) => { audio.srcObject = e.streams[0]; };
-    stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+    // A single audio element, attached to the page: iPhone Safari plays WebRTC audio reliably only from an in-page, inline element.
+    const audio = document.createElement("audio");
+    audio.autoplay = true; audio.setAttribute("playsinline", ""); audio.hidden = true;
+    document.body.appendChild(audio);
+    pc.ontrack = (e) => { if (audio.srcObject !== e.streams[0]) { audio.srcObject = e.streams[0]; audio.play().catch(() => setNote("Tap anywhere if you can't hear Journey.")); } };
+    stream.getAudioTracks().forEach((t) => pc.addTrack(t, stream));
     const dc = pc.createDataChannel("oai-events");
-    // Journey greets once, deliberately, when the line opens (instead of reacting to the first sound she hears).
-    dc.onopen = () => { try { dc.send(JSON.stringify({ type: "response.create" })); } catch { /* the member can simply start speaking */ } };
-    const bump = () => { ref.current.idleLast = Date.now(); };
+    Object.assign(ref.current, { pc, dc, stream, audio, idleLast: Date.now() });
     dc.onmessage = (m) => {
       try {
         const ev = JSON.parse(m.data);
-        if (typeof ev.type === "string" && (ev.type.startsWith("input_audio_buffer.speech") || ev.type.startsWith("response."))) bump();
-        if (ev.type === "conversation.item.input_audio_transcription.completed" && ev.transcript) {
-          ref.current.lines.push(`Member: ${ev.transcript}`); setLines([...ref.current.lines]);
-        }
-        if (ev.type === "response.output_audio_transcript.done" && ev.transcript) {
-          ref.current.lines.push(`Journey: ${ev.transcript}`); setLines([...ref.current.lines]);
-        }
+        const r = ref.current;
+        if (typeof ev.type !== "string") return;
+        // GPT-Live events
+        if (ev.type === "session.input_transcript.delta" && ev.delta) say("Member", ev.delta, true);
+        else if (ev.type === "session.output_transcript.delta" && ev.delta) say("Journey", ev.delta, true);
+        else if ((ev.type === "session.usage.updated" || ev.type === "session.closed") && ev.usage?.seconds != null) r.liveSeconds = Number(ev.usage.seconds);
+        if (ev.type === "session.closed") r.closed?.();
+        // Realtime events
+        if (ev.type.startsWith("input_audio_buffer.speech") || ev.type.startsWith("response.")) r.idleLast = Date.now();
+        if (ev.type === "conversation.item.input_audio_transcription.completed" && ev.transcript) say("Member", ev.transcript, false);
+        if (ev.type === "response.output_audio_transcript.done" && ev.transcript) say("Journey", ev.transcript, false);
+        if (ev.type === "response.done" && ev.response?.usage) r.usage = addRealtimeUsage(r.usage, ev.response.usage);
       } catch { /* ignore */ }
     };
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    const sdp = await fetch("https://api.openai.com/v1/realtime/calls", { method: "POST", body: offer.sdp, headers: { Authorization: `Bearer ${r.clientSecret}`, "Content-Type": "application/sdp" } }).then((x) => (x.ok ? x.text() : null)).catch(() => null);
-    Object.assign(ref.current, { pc, stream, audio, id: r.voiceSessionId, idleLimit: r.inactivitySeconds, idleLast: Date.now() });
-    if (!sdp) { await end("Journey couldn't connect."); return; }
-    await pc.setRemoteDescription({ type: "answer", sdp });
+    // GPT-Live exchanges a complete offer on the server, so wait for network candidates (up to 4 seconds).
+    if (pc.iceGatheringState !== "complete") {
+      await new Promise<void>((resolve) => {
+        const done = () => { if (pc.iceGatheringState === "complete") { pc.removeEventListener("icegatheringstatechange", done); resolve(); } };
+        pc.addEventListener("icegatheringstatechange", done);
+        window.setTimeout(resolve, 4000);
+      });
+    }
+    const localSdp = pc.localDescription?.sdp ?? offer.sdp;
+    const r = await fetch("/api/journey/voice/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, style: voice, ownerTest, lesson, discovery, model: voiceModel, sdp: localSdp }) }).then((x) => x.json()).catch(() => null);
+    if (!r?.ok) { pc.close(); stream.getTracks().forEach((t) => t.stop()); audio.remove(); setStatus("idle"); setNote(r?.message ?? "Talk to Journey isn't available right now."); return; }
+    Object.assign(ref.current, { id: r.voiceSessionId, idleLimit: r.inactivitySeconds, family: r.family, model: r.model });
+    let answer: string | null = null;
+    if (r.family === "live") {
+      answer = r.answerSdp;
+    } else {
+      // Realtime: Journey greets once, deliberately, when the line opens.
+      dc.onopen = () => { try { dc.send(JSON.stringify({ type: "response.create" })); } catch { /* the member can simply start speaking */ } };
+      answer = await fetch("https://api.openai.com/v1/realtime/calls", { method: "POST", body: localSdp, headers: { Authorization: `Bearer ${r.clientSecret}`, "Content-Type": "application/sdp" } }).then((x) => (x.ok ? x.text() : null)).catch(() => null);
+    }
+    if (!answer) { await end("Journey couldn't connect."); return; }
+    await pc.setRemoteDescription({ type: "answer", sdp: answer });
     setStatus("live"); setMuted(false);
     const stopAt = Date.now() + r.allowedSeconds * 1000;
     setLeft(r.allowedSeconds);
     ref.current.tick = window.setInterval(() => {
-      const s = Math.max(0, Math.round((stopAt - Date.now()) / 1000));
-      setLeft(s);
-      if (s <= 0) end("Your available voice minutes for this conversation were reached.");
+      const left = Math.max(0, Math.round((stopAt - Date.now()) / 1000));
+      setLeft(left);
+      if (left <= 0) end("Your available voice minutes for this conversation were reached.");
     }, 1000);
     ref.current.idle = window.setInterval(() => {
       if (Date.now() - (ref.current.idleLast ?? Date.now()) > ref.current.idleLimit * 1000) end("Ended after a quiet period to save your minutes.");
