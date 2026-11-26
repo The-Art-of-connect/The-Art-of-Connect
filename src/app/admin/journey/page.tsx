@@ -129,7 +129,7 @@ export default async function JourneyAdmin() {
                 <label className="text-xs text-muted">Voice model<input name="voiceModel" defaultValue={s?.voice_model ?? "gpt-realtime-mini"} className="field mt-1 w-full" /></label>
                 <label className="text-xs text-muted">Voice cost per minute ($, for budgeting)<input name="voiceRate" defaultValue={s?.voice_cents_per_minute != null ? dollars(s.voice_cents_per_minute) : "0.10"} className="field mt-1 w-full" /></label>
               </div>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="voice" defaultChecked={s?.voice_enabled ?? true} /> Enable live voice</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="voice" defaultChecked={Boolean(s?.voice_enabled) || !s?.voice_model} /> Enable live voice</label>
               <button className="btn btn-gold w-full" disabled={!owner}>{s?.enabled && s?.paid_usage_authorized ? "Save settings" : "Activate Journey for private testing"}</button>
             </ActionForm>
             <div className="flex flex-wrap items-center gap-3">
