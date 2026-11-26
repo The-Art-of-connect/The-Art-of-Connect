@@ -6,6 +6,8 @@ import { audit } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ActionResult } from "@/app/actions/admin";
+import { collectAccountData, disconnectAccount, startExpeditedPayment } from "@/lib/elite-verification";
+import { redirect } from "next/navigation";
 
 const ok = (message: string): ActionResult => ({ ok: true, message });
 const fail = (message: string): ActionResult => ({ ok: false, message });
@@ -81,6 +83,29 @@ export async function eliteAppeal(_p: ActionResult, f: FormData): Promise<Action
   if (error) return fail("Please try again.");
   revalidatePath("/app/elite/eligibility");
   return ok("Your request is with our founder for a personal review.");
+}
+
+/** Withdraw bank-data consent: disconnects at Stripe and erases the stored summaries. */
+export async function eliteDisconnectBank(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const m = await member(); if (!m) return fail("Please sign in first.");
+  const okd = await disconnectAccount(String(f.get("id") ?? ""), m.viewer.id);
+  revalidatePath("/app/elite/eligibility");
+  return okd ? ok("Disconnected. The financial summaries from this account were erased.") : fail("Not found.");
+}
+
+/** Expedited verification fee: only after preliminary screening, and only once the owner has approved the fee (or in Sandbox testing). */
+export async function eliteStartExpedited(_p: ActionResult, _f: FormData): Promise<ActionResult> {
+  const m = await member(); if (!m) return fail("Please sign in first.");
+  let url: string | undefined;
+  try {
+    const r = await startExpeditedPayment({ userId: m.viewer.id, email: m.viewer.email });
+    if (!r.ok) return fail(r.message);
+    url = r.url;
+  } catch {
+    return fail("Checkout couldn't start. Nothing was charged.");
+  }
+  if (url) redirect(url);
+  return fail("Checkout couldn't start. Nothing was charged.");
 }
 
 // ─── Owner ────────────────────────────────────────────────────────
@@ -218,4 +243,38 @@ export async function eliteDecideAppeal(_p: ActionResult, f: FormData): Promise<
   await audit("elite.appeal", "elite_appeals", id, { status });
   revalidatePath("/admin/elite");
   return ok(`Appeal ${status}.`);
+}
+
+/** Re-reads Stripe's latest results for one linked account, or erases its financial summaries. */
+export async function eliteFinancialAction(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const o = await owner(); if (!o) return NO;
+  const id = String(f.get("id") ?? "");
+  const admin = createAdminClient(); if (!admin) return fail("Not available.");
+  const { data: a } = await admin.from("elite_financial_accounts").select("id, stripe_account_id").eq("id", id).maybeSingle();
+  if (!a) return fail("Not found.");
+  if (f.get("op") === "purge") {
+    await disconnectAccount(a.id, null);
+    await audit("elite.financial_purge", "elite_financial_accounts", a.id, {});
+    revalidatePath("/admin/elite");
+    return ok("Disconnected and financial summaries erased.");
+  }
+  try { await collectAccountData(a.stripe_account_id); } catch { return fail("Stripe didn't respond. Try again shortly."); }
+  await audit("elite.financial_refresh", "elite_financial_accounts", a.id, {});
+  revalidatePath("/admin/elite");
+  return ok("Refreshed from Stripe.");
+}
+
+/** Production Financial Connections: on only after Stripe approves our Authorized Purpose, with typed approval. */
+export async function eliteSaveStripeVerification(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const o = await owner(); if (!o) return NO;
+  const purpose = f.get("purpose_approved") === "on";
+  const live = f.get("fc_live") === "on";
+  if (live && !purpose) return fail("Production bank verification needs Stripe's approval of our Authorized Purpose first.");
+  const { data: cur } = await o.db.from("elite_settings").select("financial_connections_live").maybeSingle();
+  if (live && !cur?.financial_connections_live && String(f.get("confirm") ?? "").trim().toUpperCase() !== "APPROVE") return fail("Type APPROVE to turn on production bank verification (Stripe bills each use).");
+  const { error } = await o.db.from("elite_settings").update({ financial_purpose_approved: purpose, financial_connections_live: live, updated_at: new Date().toISOString(), updated_by: o.viewer.id }).eq("id", true);
+  if (error) return fail("Not saved.");
+  await audit("elite.stripe_verification", "elite_settings", "settings", { purpose_approved: purpose, financial_connections_live: live });
+  revalidatePath("/admin/elite/verification");
+  return ok(live ? "Production bank verification is on." : "Saved. Production bank verification is off; Sandbox testing remains available.");
 }
