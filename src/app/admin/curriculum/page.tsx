@@ -22,6 +22,12 @@ export default async function CurriculumStudio() {
           <Link href="/admin/curriculum/sanctuary" className="btn btn-gold btn-sm">Open</Link>
         </div>
       </Panel>
+      <Panel title="Business & Tax source library">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <p className="text-sm text-muted">Primary IRS, SBA and state sources for the Business &amp; Tax Education Center, labeled by tax year and jurisdiction. Journey teaches only from sources you approve.</p>
+          <Link href="/admin/curriculum/sources" className="btn btn-gold btn-sm">Open</Link>
+        </div>
+      </Panel>
       <Panel title="Curricula">
         <ul className="divide-y divide-line">
           {Object.values(CURRICULA).map((c) => {

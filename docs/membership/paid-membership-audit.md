@@ -13,11 +13,9 @@ working in Sandbox; nothing here is owner-approved unless the founder says so._
 | Executive Private | The Executive Private package | Journey Concierge mode only. **Gap:** no other distinct Executive features yet |
 | Elite Concierge | Qualification, verification and owner approval, then the Elite package (verified badge) | Elite pages, Elite circles, all-inclusive Journey rules |
 
-**Decision needed (not blocking):** directives 19 and 20 refer to "Two Societies" and "Complete Society (all three)". Since
-The Art of Becoming became free and the bundles that included it were retired, the paid structure has two societies.
-Peace has mapped **one paid society = One Society** and **both paid societies = Complete Society** (all three, counting the
-free Art of Becoming). There is no separate "Two Societies" level unless the founder wants one. This mapping is in
-`src/lib/membership-level.ts` and can be changed in one place.
+**Decision (confirmed by the founder, November 26, 2026):** "Complete Society" means **both paid societies — In Business
+(The Professional Society) and In Love (The Personal Society)** — with The Art of Becoming remaining complimentary. One paid
+society is "One Society". This is implemented in `src/lib/membership-level.ts`.
 
 ## 2. What exists today
 
