@@ -6,6 +6,7 @@ import { getJourneyStatus, membershipFor } from "@/lib/journey-server";
 import { VoiceStudio } from "@/components/JourneyPickers";
 import { GuidedVoice } from "@/components/JourneyGuide";
 import { resolveGuide } from "@/lib/journey-guide-server";
+import { journeyClosedReason } from "@/lib/journey-guide-access";
 import { LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
 import { saveVoicePrefs } from "@/app/actions/journey-member";
 import { CURRICULA } from "@/lib/curricula";
@@ -42,7 +43,7 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
   const voiceReady = Boolean(s?.voice_enabled && s.voice_model && s.voice_cents_per_minute != null && status.enabled);
   const owner = hasRole(viewer, ["owner"]);
   const available = voiceReady && (status.access === "standard" || status.access === "enhanced" || owner);
-  const reason = status.access === "none" ? "Talk to Journey is a benefit of paid memberships." : "Talk to Journey opens soon.";
+  const reason = await journeyClosedReason({ voice: true });
   return (
     <>
       <p className="eyebrow">Journey</p>

@@ -664,3 +664,7 @@ v29-2) A feature cannot be owner-approved before the owner has tested it (expect
 ERROR:  new row for relation "dev_tracker" violates check constraint "dev_tracker_approval_needs_test"
 v29-3) Recording owner testing stamps the date (expect t):
 t
+v30-1) An owner voice test larger than the testing budget is refused (expect refused:test_budget):
+refused:test_budget
+v30-2) A member voice session is not limited by the owner testing budget (expect a session id, not refused):
+t
