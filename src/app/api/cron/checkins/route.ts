@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyCron } from "@/lib/cron";
-import { assistSweep } from "@/lib/assist";
+import { assistSweep, budgetAlerts, healthCheck, monthlyReport } from "@/lib/assist";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
 import { templates } from "@/lib/email-templates";
@@ -23,6 +23,10 @@ export async function POST(req: Request) {
   await db.rpc("elite_purge_financials");
   // Assistance Center: restart anything not yet picked up and tell members about resolved reports.
   try { await assistSweep(); } catch { /* best-effort */ }
+  // Technical Administrator: proactive health monitoring (hourly), budget alerts (75% / 90%), monthly report.
+  try { await healthCheck(); } catch { /* best-effort */ }
+  try { await budgetAlerts(); } catch { /* best-effort */ }
+  try { await monthlyReport(); } catch { /* best-effort */ }
   // Connect Calendar: optional reminders, about a day before events members chose to be reminded of.
   try {
     const soon = new Date(Date.now() + 26 * 3600_000).toISOString();

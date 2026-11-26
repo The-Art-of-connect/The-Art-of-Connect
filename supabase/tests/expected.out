@@ -885,3 +885,12 @@ paused
 v40-9) After the attempt limit, the report goes to the owner instead of retrying (expect attempt_limit, then needs_owner):
 attempt_limit
 needs_owner
+v40-10) Monitoring files one report per problem; repeats are counted, never duplicated (expect 1|3):
+t
+
+
+1|3
+v40-11) The budget is a hard limit: once spent, nothing more is claimed (expect budget):
+budget
+v40-12) Members cannot file monitoring reports (expect error):
+ERROR:  permission denied for function assist_monitor_report

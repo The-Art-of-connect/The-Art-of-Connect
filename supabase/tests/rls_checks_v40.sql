@@ -36,3 +36,17 @@ update public.assist_settings set repairs_paused = false;
 update public.site_issues set claimed_at = null, attempts = 2, status = 'failed' where description like 'I can%';
 select public.assist_claim(id, 'run-4') from public.site_issues where description like 'I can%';
 select status from public.site_issues where description like 'I can%';
+\echo 'v40-10) Monitoring files one report per problem; repeats are counted, never duplicated (expect 1|3):'
+select public.assist_monitor_report('health:test', '/api/health', 'Health check failed', true) is not null;
+select public.assist_monitor_report('health:test', '/api/health', 'Health check failed', true);
+select public.assist_monitor_report('health:test', '/api/health', 'Health check failed', true);
+select count(*) || '|' || max(occurrences) from public.site_issues where fingerprint = 'health:test';
+\echo 'v40-11) The budget is a hard limit: once spent, nothing more is claimed (expect budget):'
+insert into public.site_issue_events (actor, action, ai_cost_cents) values ('peace', 'run_finished', 5000);
+select public.assist_claim(id, 'run-budget') from public.site_issues where fingerprint = 'health:test';
+\echo 'v40-12) Members cannot file monitoring reports (expect error):'
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000a002';
+select public.assist_monitor_report('x', '/', 'fake', true);
+reset role;
+reset request.jwt.claim.sub;
