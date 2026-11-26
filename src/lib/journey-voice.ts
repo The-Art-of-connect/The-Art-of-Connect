@@ -3,10 +3,10 @@ import { guideInstructions } from "@/lib/journey-guide";
 import { isLiveModel, providerCostCents, voiceModelById } from "@/lib/journey-voice-models";
 import { loadGuideAnswers, resolveGuide } from "@/lib/journey-guide-server";
 import { personaIsPaid } from "@/lib/view-as";
-import { cleanPrefs, DEFAULT_PREFS, paceSpeed } from "@/lib/journey-customize";
+import { cleanPrefs, DEFAULT_PREFS, paceSpeed, voiceById } from "@/lib/journey-customize";
 import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
 import { FOUNDER_PRINCIPLES } from "@/lib/journey-training-seed";
-import { getMfaStatus, getViewer } from "@/lib/auth";
+import { getMfaStatus, getViewer, hasRole } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { serverSecret } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -32,7 +32,7 @@ export type VoiceStyle = keyof typeof VOICE_STYLES;
 
 export type VoiceStart =
   | { ok: true; family: "realtime"; clientSecret: string; voiceSessionId: string; allowedSeconds: number; inactivitySeconds: number; model: string }
-  | { ok: true; family: "live"; answerSdp: string; liveSessionId: string; voiceSessionId: string; allowedSeconds: number; inactivitySeconds: number; model: string }
+  | { ok: true; family: "live"; answerSdp: string; liveSessionId: string; voiceSessionId: string; allowedSeconds: number; inactivitySeconds: number; model: string; sample?: string }
   | { ok: false; message: string };
 
 /** GPT-Live accepts up to 16,384 tokens of instructions; keep a safe margin (about 4 characters per token). */
@@ -44,6 +44,8 @@ export async function startVoice(input: {
   model?: string | null;
   /** GPT-Live: the browser's WebRTC offer, exchanged here for OpenAI's answer (the API key never leaves the server). */
   sdp?: string | null;
+  /** Owner only: record a short GPT-Live sample of this voice for members' free previews. */
+  previewVoice?: string | null;
 }): Promise<VoiceStart> {
   const viewer = await getViewer();
   if (!viewer) return { ok: false, message: "Please sign in to talk with Journey." };
@@ -84,7 +86,10 @@ export async function startVoice(input: {
     if (allowed < 30) return { ok: false, message: "You've used this period's voice minutes. You can still chat with Journey in writing, and your minutes reset on your next billing date." };
   }
 
-  const model = input.ownerTest && input.model && voiceModelById(input.model) ? input.model : cfg.voice.model;
+  const previewVoice = input.ownerTest && input.previewVoice && voiceById(input.previewVoice) && hasRole(viewer, ["owner"]) && !viewer.viewAs ? voiceById(input.previewVoice)! : null;
+  if (input.previewVoice && !previewVoice) return { ok: false, message: "Only the owner can record voice previews." };
+  if (previewVoice) allowed = Math.min(allowed, 45);
+  const model = previewVoice ? "gpt-live-1.1" : input.ownerTest && input.model && voiceModelById(input.model) ? input.model : cfg.voice.model;
   const catalog = voiceModelById(model);
   const live = isLiveModel(model);
   if (live && !input.sdp) return { ok: false, message: "Please refresh the page and try again." };
@@ -103,6 +108,21 @@ export async function startVoice(input: {
     return { ok: false, message: (input.ownerTest && typeof started === "string" && why[started]) || (started === "refused:in_progress" ? why[started] : "Talk to Journey is resting right now. Please try again later.") };
   }
   await db.from("journey_voice_sessions").update({ model, cents_per_minute: rate }).eq("id", started);
+
+  if (previewVoice) {
+    const sample = PREVIEW_SAMPLES[previewVoice.language] ?? PREVIEW_SAMPLES.en;
+    const res = await fetch("https://api.openai.com/v1/live/sessions", {
+      method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ session: { model, instructions: `You are Journey, the AI companion of The Art of Connect, recording a short voice sample. Speak warmly and naturally. When asked, read the sample text exactly, then stop and stay silent. Do not generate <|SpawnThinking|>; do not delegate.`, audio: { output: { voice: previewVoice.id } }, delegation: { type: "client" } }, transport: { type: "webrtc", sdp: input.sdp } }),
+      signal: AbortSignal.timeout(20_000),
+    }).catch(() => null);
+    const json = res ? await res.json().catch(() => null) : null;
+    if (!res?.ok || !json?.transport?.sdp || !json?.session?.id) {
+      await db.rpc("journey_voice_end", { p_id: started, p_user: viewer.id, p_transcript: "" });
+      return { ok: false, message: `${previewVoice.name}: ${json?.error?.message ? String(json.error.message).slice(0, 200) : "OpenAI didn't accept this voice."}` };
+    }
+    return { ok: true, family: "live", answerSdp: String(json.transport.sdp), liveSessionId: String(json.session.id), voiceSessionId: started, allowedSeconds: allowed, inactivitySeconds: cfg.voice.inactivitySeconds, model, sample } as VoiceStart;
+  }
 
   // The same foundation as written conversations: Blueprint, philosophy, founder principles, knowledge, member context.
   const foundation = await composeFoundation(db, cfg, { userId: viewer.id, mode: input.mode, access, ownerTest: Boolean(input.ownerTest), lesson: input.lesson ?? null, spoken: true });
@@ -157,7 +177,8 @@ Greet the member once, warmly and briefly, when the conversation begins.`.slice(
     body: JSON.stringify({
       expires_after: { anchor: "created_at", seconds: 60 },
       session: { type: "realtime", model, instructions, audio: {
-        output: { voice: prefs.voice, speed: paceSpeed(prefs.pace) },
+        // GPT-Live's additional voices aren't available on Realtime models: use the core voice of the same presentation.
+        output: { voice: voiceById(prefs.voice)?.liveOnly ? (prefs.presentation === "masculine" ? "cedar" : "marin") : prefs.voice, speed: paceSpeed(prefs.pace) },
         input: {
           // The member's words are transcribed so the private transcript (when they choose to keep one) and lesson answers include both sides.
           transcription: { model: "gpt-4o-mini-transcribe" },
@@ -193,3 +214,15 @@ async function hashId(id: string) {
   const { createHash } = await import("node:crypto");
   return createHash("sha256").update(`aoc-journey:${id}`).digest("hex").slice(0, 32);
 }
+
+/** What each GPT-Live voice says in its preview, in the language it was made for (gender-neutral wording). */
+const PREVIEW_SAMPLES: Record<string, string> = {
+  en: "Hello, I'm Journey, your AI companion at The Art of Connect. I'm here to listen, to understand, and to help you grow, at your own pace.",
+  es: "Hola, soy Journey, la inteligencia artificial de The Art of Connect. Estoy aquí para escucharte, comprenderte y ayudarte a crecer, a tu propio ritmo.",
+  pt: "Olá, eu sou Journey, a inteligência artificial da The Art of Connect. Estou aqui para ouvir, compreender e ajudar você a crescer, no seu próprio ritmo.",
+  fr: "Bonjour, je suis Journey, l'intelligence artificielle de The Art of Connect. Je suis là pour vous écouter, vous comprendre et vous aider à grandir, à votre rythme.",
+  de: "Hallo, ich bin Journey, die künstliche Intelligenz von The Art of Connect. Ich bin hier, um zuzuhören, zu verstehen und Ihnen zu helfen, in Ihrem eigenen Tempo zu wachsen.",
+  hi: "नमस्ते, मैं Journey हूँ, The Art of Connect की AI साथी। मैं यहाँ सुनने, समझने और आपकी अपनी गति से आगे बढ़ने में मदद करने के लिए हूँ।",
+  ja: "こんにちは、The Art of Connect の AI、Journey です。あなたのペースで、耳を傾け、理解し、成長をお手伝いします。",
+  ko: "안녕하세요, 저는 The Art of Connect의 AI, Journey입니다. 당신의 속도에 맞춰 귀 기울이고, 이해하고, 성장을 도울게요.",
+};

@@ -13,6 +13,8 @@ import { saveCheckinSettings } from "@/app/actions/checkins";
 import { OwnerTest } from "@/components/admin/OwnerTest";
 import { JourneyLiveTest } from "@/components/admin/JourneyLiveTest";
 import { VOICE_MODELS } from "@/lib/journey-voice-models";
+import { JOURNEY_VOICES } from "@/lib/journey-customize";
+import { VoicePreviewRecorder } from "@/components/admin/VoicePreviewRecorder";
 import { Empty, NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
 import {
   publishInstructions, saveExample, saveInstructions, saveJourneyLimits, saveKnowledge, saveModel, savePackage, saveSessionProduct, saveTierLimit, saveVoiceSettings, setJourneySwitch, activateJourney, pauseJourney,
@@ -60,6 +62,7 @@ export default async function JourneyAdmin() {
   ]);
   const ct = (ckTotals ?? {}) as Record<string, number>;
   const { data: lastCheck } = await supabase.from("audit_log").select("action, created_at, details").like("action", "journey.openai.%").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: previewRows } = await supabase.from("journey_voice_previews").select("voice");
   const { data: voiceTests } = await supabase.from("journey_voice_sessions").select("id, started_at, model, seconds_used, cost_cents, provider_cost_cents").eq("is_owner_test", true).order("started_at", { ascending: false }).limit(15);
   const testCap = s?.owner_test_monthly_limit_cents != null ? Number(s.owner_test_monthly_limit_cents) : null;
   const approvedModel = (models ?? []).find((m) => m.id === s?.default_model && m.enabled && m.input_cents_per_million != null);
@@ -165,6 +168,11 @@ export default async function JourneyAdmin() {
                 </table>
               </div>
             )}
+            <details className="border-t border-line">
+              <summary className="cursor-pointer px-6 py-4 text-sm font-semibold">Voice previews for members ({(previewRows ?? []).length} of {JOURNEY_VOICES.length} ready)</summary>
+              <VoicePreviewRecorder existing={(previewRows ?? []).map((r) => r.voice)} />
+              <p className="px-5 pb-4 text-xs text-muted">OpenAI&rsquo;s nine core voices use the &ldquo;Create voice previews&rdquo; button below (text-to-speech, a fraction of a cent each).</p>
+            </details>
             <p className="border-t border-line px-6 pt-4 text-sm"><a href="/admin/journey/quality" className="btn btn-gold btn-sm">Run quality tests: nine real conversations →</a></p>
             <p className="px-6 py-4 text-xs text-muted">Also try Journey across the website: <a href="/app/know-yourself/who-am-i/beyond-my-titles" className="text-gold underline">a lesson</a>, <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a>, <a href="/app/journey/customize" className="text-gold underline">avatar &amp; voice</a>, or any paid membership through <strong>View as</strong>. All use this same private budget.</p>
           </div>
