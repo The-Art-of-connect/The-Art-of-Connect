@@ -26,7 +26,7 @@ export const env = {
 
 export const isSupabaseConfigured = () => Boolean(env.supabaseUrl && env.supabaseAnonKey);
 
-export type ServerSecretName = "SUPABASE_SERVICE_ROLE_KEY" | "STRIPE_SECRET_KEY" | "STRIPE_WEBHOOK_SECRET" | "STRIPE_TEST_SECRET_KEY" | "STRIPE_TEST_WEBHOOK_SECRET" | "RESEND_API_KEY" | "OPENAI_API_KEY";
+export type ServerSecretName = "SUPABASE_SERVICE_ROLE_KEY" | "STRIPE_SECRET_KEY" | "STRIPE_WEBHOOK_SECRET" | "STRIPE_TEST_SECRET_KEY" | "STRIPE_TEST_WEBHOOK_SECRET" | "RESEND_API_KEY" | "OPENAI_API_KEY" | "GITHUB_DISPATCH_TOKEN";
 
 export function serverSecret(name: ServerSecretName) {
   if (typeof window !== "undefined") throw new Error(`${name} must never be read in the browser`);

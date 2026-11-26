@@ -1,0 +1,109 @@
+# Peace — on-demand technical assistance.
+# Starts the moment a member submits a report (the website sends a "site-issue" dispatch), whenever the owner
+# approves a suggestion, and from a 15-minute backup sweep on the website. Can also be run by hand.
+# Safeguards: the report is claimed atomically (no duplicate repairs), attempt/daily/budget limits and the owner's
+# pause switch are enforced by the database, every change is tested before it is merged, the live site is checked
+# after deployment and the change is reverted automatically if the check fails.
+# Needs repository secrets: ANTHROPIC_API_KEY (Claude API, billed per use) and SUPABASE_DB_URL.
+name: Peace assistance
+
+on:
+  repository_dispatch:
+    types: [site-issue]
+  workflow_dispatch:
+    inputs:
+      issue_id:
+        description: "Assistance Center report id"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: peace-assist-${{ github.event.client_payload.issue_id || inputs.issue_id }}
+  cancel-in-progress: false
+
+jobs:
+  assist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ISSUE_ID: ${{ github.event.client_payload.issue_id || inputs.issue_id }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Validate the report id
+        run: |
+          [[ "$ISSUE_ID" =~ ^[0-9a-f-]{36}$ ]] || { echo "Invalid report id"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Database client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client >/dev/null
+      - name: Claim the report (prevents duplicate repairs; honors pause, attempt, daily and budget limits)
+        id: claim
+        run: |
+          result=$(python3 -I scripts/peace/db.py "select public.assist_claim('$ISSUE_ID', 'github-run-${{ github.run_id }}') as r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['r'] if isinstance(d,list) and d else 'error')")
+          echo "Claim: $result"
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        if: steps.claim.outputs.result == 'claimed'
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.claim.outputs.result == 'claimed'
+        run: npm ci
+      - name: Peace investigates and repairs
+        id: peace
+        if: steps.claim.outputs.result == 'claimed'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: "--max-turns 80"
+          prompt: |
+            You are Peace, the founder's development assistant for The Art of Connect. You are running inside GitHub Actions
+            for ONE Assistance Center report: ${{ env.ISSUE_ID }}. The report is already claimed for you.
+            Follow docs/peace/assistance-runbook.md exactly (section "Each report"). Use `python3 -I scripts/peace/db.py "<sql>"`
+            for the database. Run tests with: npm run typecheck && npm test && npm run build, and the database security
+            checks with `supabase/tests/run.sh` (Postgres is available locally). Use `gh` for pull requests; merge only after
+            every test passes. After merging, follow the runbook's post-deployment check and rollback steps.
+            Record every action in site_issue_events (actor 'peace', run_url '${{ env.RUN_URL }}').
+            Never change payments, pricing, Stripe, launch switches, legal documents, privacy or security rules, age or
+            eligibility rules, Elite verification, or delete data: send those to the founder (status 'needs_owner').
+            Never read members' private content, never put personal data in commits, and never include a model name in
+            commits or pull requests. End commit messages with: Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+      - name: Record AI usage and cost
+        if: always() && steps.claim.outputs.result == 'claimed'
+        run: |
+          f="${{ steps.peace.outputs.execution_file }}"
+          read cost tin tout dur <<<"$(python3 - "$f" <<'PY'
+          import json, sys
+          try:
+              data = json.load(open(sys.argv[1]))
+              last = [m for m in data if isinstance(m, dict) and m.get("type") == "result"][-1]
+              u = last.get("usage", {})
+              print(round(float(last.get("total_cost_usd", 0)) * 100, 2), int(u.get("input_tokens", 0)), int(u.get("output_tokens", 0)), int(last.get("duration_ms", 0) / 1000))
+          except Exception:
+              print(0, 0, 0, 0)
+          PY
+          )"
+          python3 -I scripts/peace/db.py "insert into public.site_issue_events (issue_id, actor, action, detail, run_url, ai_cost_cents, input_tokens, output_tokens, duration_seconds) values ('$ISSUE_ID', 'peace', 'run_finished', '${{ job.status }}', '$RUN_URL', $cost, $tin, $tout, $dur)"
+      - name: Mark a failed run for retry or escalation
+        if: failure() && steps.claim.outputs.result == 'claimed'
+        run: |
+          python3 -I scripts/peace/db.py "update public.site_issues set status = 'failed', claimed_at = null where id = '$ISSUE_ID' and status = 'investigating'"

@@ -9,6 +9,7 @@ import { allow } from "@/lib/ratelimit";
 import { ownerAlertAddress, sendEmail } from "@/lib/email";
 import { templates } from "@/lib/email-templates";
 import type { ActionResult } from "@/app/actions/admin";
+import { dispatchIssue, notifyReporter } from "@/lib/assist";
 
 const ok = (message: string): ActionResult => ({ ok: true, message });
 const fail = (message: string): ActionResult => ({ ok: false, message });
@@ -39,8 +40,11 @@ export async function reportIssue(_p: ActionResult, f: FormData): Promise<Action
   const page = s(f, "page_path", 300).replace(/[^\w\-/?=&.%]/g, "") || null;
   const ua = (await headers()).get("user-agent") ?? "";
   const device = `${/iPhone|iPad/.test(ua) ? "iOS" : /Android/.test(ua) ? "Android" : /Mac/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "Other"} · ${/Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : /Firefox\//.test(ua) ? "Firefox" : "Browser"}`;
-  const { error } = await db.from("site_issues").insert({ reporter_id: viewer.id, kind, page_path: page, description, expected: s(f, "expected", 2000) || null, screenshot_path, device });
-  if (error) return fail("Not sent. Please try again.");
+  const { data: created, error } = await db.from("site_issues").insert({ reporter_id: viewer.id, kind, page_path: page, description, expected: s(f, "expected", 2000) || null, screenshot_path, device }).select("id").single();
+  if (error || !created) return fail("Not sent. Please try again.");
+  // Acknowledge at once, and start Peace immediately on problems (suggestions wait for a proposal and approval).
+  await notifyReporter(created.id, "received").catch(() => {});
+  await dispatchIssue(created.id, "submitted").catch(() => {});
   try {
     await sendEmail(ownerAlertAddress(), templates.ownerAlert({
       title: kind === "problem" ? "A member reported a problem" : "A member suggested an idea",
@@ -73,7 +77,34 @@ export async function decideIssue(_p: ActionResult, f: FormData): Promise<Action
   else if (op === "reopen") Object.assign(patch, { status: "new" });
   const { error } = await o.db.from("site_issues").update(patch).eq("id", id);
   if (error) return fail("Not saved.");
+  await o.db.from("site_issue_events").insert({ issue_id: id, actor: "owner", action: op || "note", detail: note });
+  if (op === "approve") await dispatchIssue(id, "approved");
+  if (reply && !["approve", "decline"].includes(op)) await notifyReporter(id, "update");
   await audit(`assist.${op || "note"}`, "site_issues", id, {});
   revalidatePath("/admin/assist");
   return ok(op === "approve" ? "Approved. Peace will build it at the next check." : op === "decline" ? "Declined." : "Saved.");
+}
+
+/** Pause or resume automated repairs, and adjust their safeguards. */
+export async function saveAssistSettings(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const o = await owner(); if (!o || !hasRole(o.viewer, ["owner"])) return fail("Only the owner can do this, with two-step verification.");
+  const n = (k: string, lo: number, hi: number, d: number) => { const v = Number(f.get(k)); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : d; };
+  const row = {
+    repairs_paused: f.get("repairs_paused") === "on", immediate_enabled: f.get("immediate_enabled") === "on",
+    max_attempts: n("max_attempts", 1, 5, 2), daily_run_limit: n("daily_run_limit", 1, 500, 40),
+    monthly_budget_cents: Math.round(n("monthly_budget", 0, 100000, 50) * 100), updated_at: new Date().toISOString(), updated_by: o.viewer.id,
+  };
+  const { error } = await o.db.from("assist_settings").update(row).eq("id", true);
+  if (error) return fail("Not saved.");
+  await audit("assist.settings", "assist_settings", "settings", row);
+  revalidatePath("/admin/assist");
+  return ok(row.repairs_paused ? "Automated repairs are paused." : "Saved. Automated repairs are on.");
+}
+
+/** Start Peace on a report right now. */
+export async function runIssueNow(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const o = await owner(); if (!o) return fail("Only the owner can do this, with two-step verification.");
+  const r = await dispatchIssue(s(f, "id", 40), "owner");
+  revalidatePath("/admin/assist");
+  return r === "dispatched" ? ok("Peace has started on it.") : fail(r === "paused" ? "Repairs are paused." : "Immediate processing isn't set up yet (see Setup).");
 }

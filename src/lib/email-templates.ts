@@ -167,6 +167,20 @@ export const templates = {
       paragraphs: [`You’ve been invited to The Art of Connect Owner Portal with these permissions: ${roles}.`, "Use the secure link below to choose your password. You’ll then set up two-step verification with an authenticator app — it’s required for every team member. The link works once and expires within the hour."],
       action: { label: "Accept invitation", url: link },
     })),
+  assistUpdate: (f: { name?: string | null; stage: "received" | "fixed" | "built" | "update"; kind: "problem" | "suggestion"; note?: string | null }) =>
+    t(f, ({ name, stage, kind, note }) => ({
+      subject: stage === "received" ? (kind === "problem" ? "We received your report" : "Thank you for your suggestion")
+        : stage === "fixed" ? "Your reported problem is fixed" : stage === "built" ? "Your suggestion is now part of The Art of Connect" : "An update on your report",
+      preheader: stage === "received" ? "We're on it." : "An update from The Art of Connect.",
+      heading: stage === "received" ? `Thank you, ${first(name)}.` : stage === "fixed" ? "It's fixed." : stage === "built" ? "Your idea is live." : "An update for you.",
+      paragraphs: [
+        stage === "received"
+          ? (kind === "problem" ? "We've received your report and are looking into it right away. We'll let you know as soon as it's resolved." : "Our founder reviews every suggestion personally. We'll let you know what's decided.")
+          : stage === "fixed" ? "The problem you reported has been resolved. Thank you for helping us make The Art of Connect better." : stage === "built" ? "The suggestion you shared has been added. Thank you for shaping The Art of Connect." : "There's an update on what you sent us.",
+        ...(note ? [note] : []),
+      ],
+      action: { label: "View in Help & suggestions", url: `${SITE}/app/assist` },
+    })),
   ownerAlert: (f: { title: string; summary: string; portalPath: string }) =>
     t(f, ({ title, summary, portalPath }) => ({
       subject: `[Owner alert] ${title}`,
