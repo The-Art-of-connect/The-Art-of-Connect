@@ -182,34 +182,45 @@ export function MembershipBuilder({
               <span className="display text-3xl text-gold">{next()}</span>
               <span className="text-lg font-semibold">Or choose an exclusive membership</span>
             </legend>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 sm:items-start">
               {exclusives.map((p) => {
                 const on = sel.package === p.slug;
                 if (p.slug === "elite-concierge" && !eliteInvited) {
                   return (
-                    <div key={p.slug} className="theme-dark band relative overflow-hidden rounded-[22px] border-2 border-[#c9a96e]/70 p-6 text-center sm:col-span-2">
+                    <div key={p.slug} className="theme-dark band relative overflow-hidden rounded-[22px] border-2 border-[#c9a96e]/70 p-6 text-left">
                       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,rgb(232_112_26/0.14),transparent_70%)]" aria-hidden="true" />
                       <div className="relative">
-                        <div className="flex justify-center"><EliteBadge size={44} interactive={false} /></div>
-                        <p className="eyebrow mt-4">The Art of Connect</p>
-                        <p className="display mt-2 text-4xl text-[#f6e7c8]">{p.name}</p>
-                        <p className="display mt-2 text-lg italic text-[#e8892b]">Distinction. Intention. Influence.</p>
-                        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-ivory/80">{ELITE_INTRO}</p>
-                        <ul className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-2">
-                          {ELITE_EXPERIENCES.map((x) => (
-                            <li key={x.id} className="flex flex-col items-center gap-1.5 text-[#f0c98a]"><EliteExperienceIcon kind={x.icon} /><span className="text-sm font-semibold">{x.title}</span></li>
-                          ))}
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="eyebrow">Elite membership</p>
+                          <EliteBadge size={28} interactive={false} />
+                        </div>
+                        <p className="display mt-2 text-3xl text-[#f6e7c8]">{p.name}</p>
+                        <p className="display mt-1 text-base italic text-[#e8892b]">Distinction. Intention. Influence.</p>
+                        {showPrices && p.monthly_price_cents != null && <p className="mt-1 text-sm text-gold-bright">{money(p.monthly_price_cents)} / month once approved</p>}
+                        <ul className="mt-4 space-y-1.5 text-sm text-ivory/85">
+                          {p.benefits.slice(0, 4).map((b) => <li key={b} className="flex gap-2"><span className="text-[#e8892b]" aria-hidden="true">✓</span>{b}</li>)}
                         </ul>
-                        {p.benefits.length > 0 && (
-                          <div className="mx-auto mt-6 max-w-md text-left">
-                            <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#f0c98a]">Elite Membership — All Access</p>
-                            <ul className="mt-3 space-y-1.5 text-sm text-ivory/80">{p.benefits.map((b) => <li key={b} className="flex gap-2"><span className="text-[#e8892b]" aria-hidden="true">✓</span>{b}</li>)}</ul>
-                          </div>
-                        )}
-                        {showPrices && p.monthly_price_cents != null && <p className="mt-5 text-sm text-gold-bright">{money(p.monthly_price_cents)} / month once approved</p>}
-                        <a href="/join/elite" className="btn btn-gold mt-5 w-full">{ELITE_APPLY_LINE}</a>
-                        <p className="mt-3 text-xs text-ivory/65">{ELITE_APPLY_NOTE} Standard verification is complimentary.</p>
-                        <a href="/elite" className="mt-3 inline-block text-xs font-semibold text-[#f0a35a] underline underline-offset-2">How Elite works →</a>
+                        <details className="group mt-3">
+                          <summary className="cursor-pointer list-none text-xs font-semibold text-[#f0a35a] underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+                            <span className="group-open:hidden">Tap to see everything Elite includes ↓</span>
+                            <span className="hidden group-open:inline">Show less ↑</span>
+                          </summary>
+                          <p className="mt-4 text-sm leading-relaxed text-ivory/80">{ELITE_INTRO}</p>
+                          <ul className="mt-4 grid grid-cols-3 gap-2">
+                            {ELITE_EXPERIENCES.map((x) => (
+                              <li key={x.id} className="flex flex-col items-center gap-1.5 text-[#f0c98a]"><EliteExperienceIcon kind={x.icon} /><span className="text-xs font-semibold">{x.title}</span></li>
+                            ))}
+                          </ul>
+                          {p.benefits.length > 4 && (
+                            <>
+                              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#f0c98a]">Elite Membership — All Access</p>
+                              <ul className="mt-2 space-y-1.5 text-sm text-ivory/80">{p.benefits.slice(4).map((b) => <li key={b} className="flex gap-2"><span className="text-[#e8892b]" aria-hidden="true">✓</span>{b}</li>)}</ul>
+                            </>
+                          )}
+                          <p className="mt-4 text-xs text-ivory/65">{ELITE_APPLY_NOTE} Standard verification is complimentary.</p>
+                          <a href="/elite" className="mt-2 inline-block text-xs font-semibold text-[#f0a35a] underline underline-offset-2">How Elite works →</a>
+                        </details>
+                        <a href="/join/elite" className="btn btn-gold btn-sm mt-4 w-full">{ELITE_APPLY_LINE}</a>
                       </div>
                     </div>
                   );
