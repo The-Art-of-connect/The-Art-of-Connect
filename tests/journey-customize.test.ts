@@ -28,3 +28,12 @@ test("every paid plan reaches lessons and live voice through an experience it in
   assert.ok(effectiveMode("life", "standard", loveOnly) !== null);
   assert.equal(effectiveMode("life", "none", null), null);
 });
+
+test("avatars: orbs plus 15 fictional portraits, neutral labels, ids the database accepts", async () => {
+  const { AVATARS } = await import("../src/lib/journey-customize.ts");
+  assert.equal(AVATARS.filter((a) => a.image).length, 15);
+  for (const a of AVATARS) {
+    assert.match(a.id, /^[a-z-]{2,30}$/);
+    if (a.image) assert.match(a.label, /^Journey portrait \d+$/);
+  }
+});
