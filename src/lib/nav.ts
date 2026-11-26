@@ -47,6 +47,18 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
+    key: "connect", label: "Connect", href: "/app/connect", intro: "Your world. Your connections. Find your people and experience life together.",
+    links: [
+      { href: "/app/connect", label: "The Connection Feed", note: "Your world. Your connections.", access: "member" },
+      { href: "/app/connect/circles", label: "Find Your Circle", note: "Open, lifestyle and Elite circles", access: "member" },
+      { href: "/app/connect/events", label: "The Connect Calendar", note: "Events members share", access: "member" },
+      { href: "/app/connect/people", label: "Find People Like Me", note: "Friends, peers, mentors, travel companions", access: "member" },
+      { href: "/app/connect/messages", label: "Messages", access: "member" },
+      { href: "/app/connect/profile", label: "My profile & photographs", access: "member" },
+      { href: "/app/connect/preferences", label: "My connection preferences", access: "member" },
+    ],
+  },
+  {
     key: "professional", label: "Professional", href: "/business", intro: "The Professional Society — In Business.",
     links: [
       { href: "/business", label: "The Professional Society" },
@@ -101,7 +113,7 @@ export const PROFILE_LINKS: NavLink[] = [
 export const MEMBER_TABS = [
   { href: "/app", label: "Home", icon: "home", match: ["/app"] },
   { href: "/app/know-yourself", label: "Self", icon: "self", match: ["/app/know-yourself", "/emotional-intelligence"] },
-  { href: "/app/relationships", label: "Connect", icon: "connect", match: ["/app/relationships", "/app/readiness", "/app/business"] },
+  { href: "/app/connect", label: "Connect", icon: "connect", match: ["/app/connect", "/app/relationships", "/app/readiness", "/app/business"] },
   { href: "/app/journey", label: "Journey", icon: "journey", match: ["/app/journey"] },
   { href: "#profile", label: "Profile", icon: "profile", match: ["/app/membership", "/app/safety", "/app/verify"] },
 ] as const;

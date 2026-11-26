@@ -20,6 +20,20 @@ export async function POST(req: Request) {
   if (!db) return NextResponse.json({ ok: false, reason: "no database" }, { status: 503 });
   // Elite retention: erase financial summaries whose review window has passed.
   await db.rpc("elite_purge_financials");
+  // Connect Calendar: optional reminders, about a day before events members chose to be reminded of.
+  try {
+    const soon = new Date(Date.now() + 26 * 3600_000).toISOString();
+    const { data: due } = await db.from("social_event_rsvps").select("event_id, user_id, social_events!inner(title, starts_at, status)")
+      .eq("remind", true).is("reminded_at", null).in("status", ["interested", "attending"])
+      .gte("social_events.starts_at", new Date().toISOString()).lte("social_events.starts_at", soon).eq("social_events.status", "active").limit(200);
+    for (const r of (due ?? []) as unknown as { event_id: string; user_id: string; social_events: { title: string } }[]) {
+      const { data: prof } = await db.from("profiles").select("email, status").eq("id", r.user_id).maybeSingle();
+      if (!prof?.email || prof.status !== "active") continue;
+      const link = `${env.siteUrl.replace(/\/$/, "")}/app/connect/events/${r.event_id}`;
+      const sent = await sendEmail(prof.email, templates.journeyCheckin({ subject: "Coming up: an event on your Connect Calendar", topic: r.social_events.title, link }), { category: "membership", idempotencyKey: `event-reminder-${r.event_id}-${r.user_id}` });
+      if (sent.ok) await db.from("social_event_rsvps").update({ reminded_at: new Date().toISOString() }).eq("event_id", r.event_id).eq("user_id", r.user_id);
+    }
+  } catch { /* reminders are best-effort */ }
   const { data: settings } = await db.from("journey_checkin_settings").select("*").maybeSingle();
   if (!settings?.enabled || !settings.email_enabled) return NextResponse.json({ ok: true, sent: 0, reason: "email check-ins off" });
 
