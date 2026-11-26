@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ActionResult } from "@/app/actions/admin";
 import { collectAccountData, disconnectAccount, startExpeditedPayment } from "@/lib/elite-verification";
-import { redirect } from "next/navigation";
+import { ATTESTATIONS, SCREENING } from "@/lib/elite-screening";
 
 const ok = (message: string): ActionResult => ({ ok: true, message });
 const fail = (message: string): ActionResult => ({ ok: false, message });
@@ -24,20 +24,30 @@ async function member() {
 
 // ─── Members ──────────────────────────────────────────────────────
 
-/** Private preliminary screening: no amounts are stored, only the pathway and whether the member says they meet it. */
+/** Private preliminary screening: ranges and categories only. The database decides the result. */
 export async function eliteScreen(_p: ActionResult, f: FormData): Promise<ActionResult> {
-  const m = await member(); if (!m) return fail("Please sign in first.");
+  const m = await member(); if (!m) return fail("Please sign in with your own account first.");
   const qualification = String(f.get("qualification") ?? "");
   const pathway = f.get("pathway") === "expedited" ? "expedited" : "earned";
-  const meets = f.get("meets") === "yes";
   if (!QUALS.includes(qualification)) return fail("Please choose the pathway that best describes you.");
-  const { data, error } = await m.db.rpc("elite_screen", { p_qualification: qualification, p_meets: meets, p_pathway: pathway });
-  if (error) return fail("Please try again.");
-  await m.db.rpc("elite_evaluate");
+  const questions = SCREENING[qualification] ?? [];
+  const answers: Record<string, string | number> = {};
+  for (const q of questions) {
+    const v = f.get(`${qualification}__${q.id}`);
+    if (v == null || v === "") return fail("Please answer every question for your pathway.");
+    answers[q.id] = q.kind === "band" ? Number(v) : String(v);
+  }
+  for (const a of ATTESTATIONS) answers[a.id] = f.get(a.id) === "on" ? "yes" : "no";
+  if (answers.att_truth !== "yes" || answers.att_verify !== "yes") return fail("Please confirm both statements.");
+  const { data, error } = await m.db.rpc("elite_screen_v2", { p_qualification: qualification, p_pathway: pathway, p_answers: answers });
+  if (error) return fail(error.message.includes("ranges") ? "Please choose from the ranges shown." : "Please try again.");
   revalidatePath("/app/elite/eligibility");
-  return data === "preliminary"
-    ? ok("Thank you. Preliminary eligibility is established. Next, share verification so it can be confirmed privately.")
-    : ok("Thank you. Based on your answers, Elite isn't the right fit today. Your membership journey continues, and you're welcome to revisit this anytime.");
+  if (data === "pass") return ok(pathway === "expedited"
+    ? "Preliminary eligibility is established. Next, verify your identity; expedited verification then becomes available."
+    : "Preliminary eligibility is established. Next, share verification so it can be confirmed privately.");
+  if (data === "owner_review") return ok("Thank you. Your answers are with our founder for a personal preliminary review. You'll see the outcome here.");
+  if (data === "not_yet") return ok("Thank you. Based on your answers, Elite isn't the right fit today. Your membership journey continues, and you're welcome to revisit this anytime.");
+  return ok("Saved.");
 }
 
 /** Private verification evidence, stored where only the owner can open it. */
@@ -60,6 +70,8 @@ export async function eliteSubmitEvidence(_p: ActionResult, f: FormData): Promis
   if (!path && !description) return fail("Please upload a document or describe what can be verified.");
   const { error } = await m.db.from("elite_evidence").insert({ candidate_id: c.id, kind, storage_path: path, description });
   if (error) return fail("Not saved. Please try again.");
+  // Documents always need the founder's review; this routes the candidacy to manual review with reasons.
+  await createAdminClient()?.rpc("elite_auto_assess", { p_user: m.viewer.id });
   revalidatePath("/app/elite/eligibility");
   return ok("Received privately. It will be reviewed confidentially. Only verification results are kept wherever possible.");
 }
@@ -85,27 +97,26 @@ export async function eliteAppeal(_p: ActionResult, f: FormData): Promise<Action
   return ok("Your request is with our founder for a personal review.");
 }
 
+/** A member asks for a copy of, or a correction to, their own verification information. */
+export async function eliteDataRequest(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const m = await member(); if (!m) return fail("Please sign in first.");
+  const kind = f.get("kind") === "correction" ? "correction" : "access";
+  const subject = String(f.get("subject") ?? "other");
+  const message = String(f.get("message") ?? "").trim().slice(0, 4000);
+  if (!["identity", "bank", "evidence", "status", "other"].includes(subject)) return fail("Choose what this is about.");
+  if (!message) return fail(kind === "correction" ? "Please describe what's inaccurate and what it should say." : "Please describe what you'd like to receive.");
+  const { error } = await m.db.from("elite_data_requests").insert({ user_id: m.viewer.id, kind, subject, message });
+  if (error) return fail("Please try again.");
+  revalidatePath("/app/elite/eligibility");
+  return ok(kind === "correction" ? "Your correction request is with our founder. You'll see the response here." : "Your request is with our founder. You'll see the response here.");
+}
+
 /** Withdraw bank-data consent: disconnects at Stripe and erases the stored summaries. */
 export async function eliteDisconnectBank(_p: ActionResult, f: FormData): Promise<ActionResult> {
   const m = await member(); if (!m) return fail("Please sign in first.");
   const okd = await disconnectAccount(String(f.get("id") ?? ""), m.viewer.id);
   revalidatePath("/app/elite/eligibility");
   return okd ? ok("Disconnected. The financial summaries from this account were erased.") : fail("Not found.");
-}
-
-/** Expedited verification fee: only after preliminary screening, and only once the owner has approved the fee (or in Sandbox testing). */
-export async function eliteStartExpedited(_p: ActionResult, _f: FormData): Promise<ActionResult> {
-  const m = await member(); if (!m) return fail("Please sign in first.");
-  let url: string | undefined;
-  try {
-    const r = await startExpeditedPayment({ userId: m.viewer.id, email: m.viewer.email });
-    if (!r.ok) return fail(r.message);
-    url = r.url;
-  } catch {
-    return fail("Checkout couldn't start. Nothing was charged.");
-  }
-  if (url) redirect(url);
-  return fail("Checkout couldn't start. Nothing was charged.");
 }
 
 // ─── Owner ────────────────────────────────────────────────────────
@@ -133,11 +144,13 @@ export async function eliteSaveSettings(_p: ActionResult, f: FormData): Promise<
     expedited_fee_cents: Math.round(Number(String(f.get("fee") ?? "").replace(/[$,\s]/g, "")) * 100) || 0,
     expedited_fee_active: feeActive,
     invitation_days: Math.min(365, Math.max(1, num("invitation_days"))), evidence_retention_days: Math.min(3650, Math.max(1, num("retention_days"))),
+    auto_rules: { investable_assets_from_balances: f.get("auto_investable") === "on" },
+    max_data_age_days: Math.min(365, Math.max(1, num("max_data_age") || 30)),
     updated_at: new Date().toISOString(), updated_by: o.viewer.id,
   };
   const { error } = await o.db.from("elite_settings").update(row).eq("id", true);
   if (error) return fail("Not saved. Please check the values.");
-  await audit("elite.settings", "elite_settings", "settings", { thresholds, fee_active: feeActive, fee_cents: row.expedited_fee_cents });
+  await audit("elite.settings", "elite_settings", "settings", { thresholds, fee_active: feeActive, fee_cents: row.expedited_fee_cents, auto_rules: row.auto_rules });
   revalidatePath("/admin/elite");
   return ok("Elite settings saved.");
 }
@@ -184,7 +197,7 @@ export async function eliteReviewEvidence(_p: ActionResult, f: FormData): Promis
   const { data: c } = await o.db.from("elite_candidates").select("user_id, status").eq("id", ev.candidate_id).single();
   if (c && status === "needs_info") await o.db.from("elite_candidates").update({ status: "info_required" }).eq("id", ev.candidate_id);
   else if (c && status === "owner_verified" && ["preliminary", "verification_pending", "info_required", "manual_review", "not_started"].includes(c.status)) await o.db.from("elite_candidates").update({ status: "owner_verified" }).eq("id", ev.candidate_id);
-  if (c?.user_id) await o.db.rpc("elite_evaluate", { p_user: c.user_id });
+  if (c?.user_id) await o.db.rpc("elite_auto_assess", { p_user: c.user_id });
   await audit("elite.evidence_review", "elite_evidence", id, { status });
   revalidatePath("/admin/elite");
   return ok("Saved. Eligibility was re-evaluated.");
@@ -199,7 +212,8 @@ export async function eliteDecide(_p: ActionResult, f: FormData): Promise<Action
   const { data: c } = await o.db.from("elite_candidates").select("id, user_id, status").eq("id", id).maybeSingle();
   if (!c) return fail("Not found.");
   const patch: Record<string, unknown> =
-    action === "approve" ? { status: "qualification_approved" }
+    action === "approve_screening" ? { screening_meets: true, status: c.status === "manual_review" || c.status === "not_started" ? "preliminary" : c.status, review_reasons: [] }
+    : action === "approve" ? { status: "qualification_approved" }
     : action === "manual_review" ? { status: "manual_review" }
     : action === "info" ? { status: "info_required" }
     : action === "waive" ? { fee_waived: true }
@@ -277,4 +291,18 @@ export async function eliteSaveStripeVerification(_p: ActionResult, f: FormData)
   await audit("elite.stripe_verification", "elite_settings", "settings", { purpose_approved: purpose, financial_connections_live: live });
   revalidatePath("/admin/elite/verification");
   return ok(live ? "Production bank verification is on." : "Saved. Production bank verification is off; Sandbox testing remains available.");
+}
+
+/** The owner completes or declines a member's access or correction request. */
+export async function eliteResolveDataRequest(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const o = await owner(); if (!o) return NO;
+  const id = String(f.get("id") ?? "");
+  const status = f.get("status") === "declined" ? "declined" : "completed";
+  const response = String(f.get("response") ?? "").trim().slice(0, 4000);
+  if (!response) return fail("Please write a response to the member.");
+  const { error } = await o.db.from("elite_data_requests").update({ status, response, resolved_at: new Date().toISOString() }).eq("id", id);
+  if (error) return fail("Not saved.");
+  await audit("elite.data_request", "elite_data_requests", id, { status });
+  revalidatePath("/admin/elite");
+  return ok(`Request ${status}.`);
 }

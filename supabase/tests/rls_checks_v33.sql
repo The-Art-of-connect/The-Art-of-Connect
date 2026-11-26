@@ -8,9 +8,9 @@ insert into auth.users(id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-0000000000e2', 'elite-b@example.com', '{"date_of_birth":"1980-01-01"}');
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000e1';
-\echo 'v33-1) A member screens privately for the expedited pathway (expect preliminary):'
-select public.elite_screen('personal_income', true, 'expedited');
-\echo 'v33-2) No amounts are stored, only the pathway and self-reported yes (expect personal_income|t):'
+\echo 'v33-1) A member screens privately for the expedited pathway (expect pass):'
+select public.elite_screen_v2('personal_income', 'expedited', '{"income_recent": 500000, "income_prior": 1000000, "docs": "yes", "att_truth": "yes", "att_verify": "yes"}');
+\echo 'v33-2) Only ranges are stored, and passing unlocks the expedited path (expect personal_income|t):'
 select qualification, screening_meets from public.elite_candidates where user_id = '00000000-0000-0000-0000-0000000000e1';
 \echo 'v33-3) A member cannot approve themselves (expect 0 rows changed):'
 with u as (update public.elite_candidates set status = 'qualification_approved' where user_id = '00000000-0000-0000-0000-0000000000e1' returning 1) select count(*) from u;

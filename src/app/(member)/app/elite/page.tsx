@@ -15,6 +15,8 @@ const TILES: Tile[] = [
   { title: "Enhanced privacy", body: "Control who sees your profile, photographs and activity.", href: "/app/safety", ready: true },
   { title: "Elite Business Connections", body: "High-level networking, strategic partnerships, executive mentorship, expansion, acquisition and succession conversations.", ready: false },
   { title: "Elite Introductions", body: "Personalized professional and relationship introductions, curated with care.", ready: false },
+  { title: "Elite Singles", body: "Meet verified, accomplished Elite singles (30+). Participation is your choice only.", ready: false },
+  { title: "Elite Couples Circle", body: "Connection and shared experiences with fellow Elite couples.", ready: false },
   { title: "Elite Circle", body: "A private community of verified Elite members nationwide.", ready: false },
   { title: "Curated experiences & events", body: "Executive roundtables and exclusive social experiences.", ready: false },
   { title: "Private concierge requests", body: "Personal requests handled with discretion.", ready: false },

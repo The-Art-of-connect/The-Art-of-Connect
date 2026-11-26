@@ -20,17 +20,18 @@ const day = (unix?: number | null) =>
  * payments and subscription-based experience access are written.
  */
 export async function POST(request: NextRequest) {
-  const secret = serverSecret("STRIPE_WEBHOOK_SECRET");
+  const secrets = [serverSecret("STRIPE_WEBHOOK_SECRET"), serverSecret("STRIPE_TEST_WEBHOOK_SECRET")].filter(Boolean);
   const { stripe } = await getStripe();
   const db = createAdminClient();
-  if (!secret || !stripe || !db) return NextResponse.json({ error: "Payments not configured" }, { status: 503 });
+  if (!secrets.length || !stripe || !db) return NextResponse.json({ error: "Payments not configured" }, { status: 503 });
 
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(await request.text(), request.headers.get("stripe-signature") ?? "", secret);
-  } catch {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  let event: Stripe.Event | null = null;
+  const body = await request.text();
+  const sig = request.headers.get("stripe-signature") ?? "";
+  for (const secret of secrets) {
+    try { event = stripe.webhooks.constructEvent(body, sig, secret); break; } catch { /* try the next secret */ }
   }
+  if (!event) return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
 
   const partnersOf = async (userId: string) => {
     const { data: mine } = await db.schema("relationships").from("couple_members").select("couple_id").eq("user_id", userId).maybeSingle();

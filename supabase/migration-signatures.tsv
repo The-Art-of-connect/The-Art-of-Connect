@@ -46,3 +46,7 @@
 20270105000002_elite_tracker_qa.sql	exists (select 1 from public.qa_features where key = 'elite-founder')
 20270106000001_elite_stripe_verification.sql	to_regclass('public.elite_financial_accounts') is not null
 20270106000002_elite_stripe_tracker_qa.sql	exists (select 1 from public.qa_features where key = 'elite-stripe-review')
+20270107000001_elite_auto_and_access.sql	to_regclass('public.elite_data_requests') is not null
+20270107000002_elite_auto_access_qa.sql	exists (select 1 from public.qa_features where key = 'elite-card-layout')
+20270108000001_elite_screening.sql	exists (select 1 from information_schema.columns where table_name = 'elite_candidates' and column_name = 'screening_result')
+20270108000002_elite_retest_qa.sql	exists (select 1 from public.qa_features where key = 'branded-selections')
