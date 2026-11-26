@@ -658,3 +658,9 @@ couples
 couples|0|1
 v27-6) Each change is logged (expect 1):
 1
+v29-1) A feature cannot be marked operational unless built, tested, merged and deployed (expect error):
+ERROR:  new row for relation "dev_tracker" violates check constraint "dev_tracker_operational_needs_deploy"
+v29-2) A feature cannot be owner-approved before the owner has tested it (expect error):
+ERROR:  new row for relation "dev_tracker" violates check constraint "dev_tracker_approval_needs_test"
+v29-3) Recording owner testing stamps the date (expect t):
+t

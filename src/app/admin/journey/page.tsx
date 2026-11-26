@@ -92,6 +92,17 @@ export default async function JourneyAdmin() {
       <PageHeader eyebrow="Owner Portal · Journey" title="Journey Intelligence Center" />
       <p className="-mt-4 mb-8 max-w-3xl text-sm text-muted">AI management, financial controls and member assistance. Journey runs on OpenAI only. Member conversations, journals and assessments are never shown here — only totals.</p>
 
+      <section aria-labelledby="owner-test" className="glass mb-8 p-6">
+        <h2 id="owner-test" className="display text-2xl">Private owner testing · how to begin</h2>
+        <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm">
+          <li>Below, under the switches, turn on <strong>Journey</strong>.</li>
+          <li>Turn on <strong>Billable OpenAI usage authorized</strong> and type AUTHORIZE. This lets OpenAI usage be billed to the company account, within your budgets.</li>
+          <li>Make sure <strong>Owner testing</strong> is on {s?.owner_testing_enabled ? "(it already is)" : ""}. Your monthly owner testing budget is {s?.owner_test_monthly_limit_cents != null ? usd(Number(s.owner_test_monthly_limit_cents)) : "not set"}; spent this month: {usd(testSpent)}.</li>
+          <li>Open <a href="/app/journey" className="text-gold underline">Talk with Journey</a>, any lesson&rsquo;s &ldquo;Chat with Journey&rdquo; button, or <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a>, and test.</li>
+        </ol>
+        <p className="mt-3 text-xs text-muted">Isolation: members can only reach Journey when live payments are on, and live payments stay off. Owner testing requires your owner account and two-step verification, stops automatically at the testing budget, and does not open registration, payments, or any society. Turn Journey off at any time to stop all usage at once. <a href="/admin/journey/review" className="text-gold">Review the Blueprint and all training entries →</a></p>
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="AI expense this month" value={usd(spent)} hint={limit ? `of ${usd(limit)} company budget` : "Company budget not set"} />
         <Stat label="Budget used" value={limit ? `${Math.min(100, Math.round((spent / limit) * 100))}%` : "—"} />
@@ -101,7 +112,7 @@ export default async function JourneyAdmin() {
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <Stat label="Written conversation expense" value={usd(spent)} />
         <Stat label="Voice expense" value={usd(Number(voiceRow?.cost_cents ?? 0))} hint={`${Math.round(Number(voiceRow?.seconds ?? 0) / 60)} minutes · ${voiceRow?.sessions ?? 0} conversations`} />
-        <div className="glass flex flex-col justify-center gap-2 p-5"><a href="/admin/journey/training" className="btn btn-gold btn-sm">Knowledge &amp; Training Library</a><ActionForm action={generateVoicePreviews}><button className="btn btn-ghost btn-sm w-full">Create voice previews (one time, a few cents)</button></ActionForm><a href="/admin/journey/evaluations" className="btn btn-ghost btn-sm">Evaluation scenarios</a><a href="/admin/development" className="btn btn-ghost btn-sm">Development tracker</a></div>
+        <div className="glass flex flex-col justify-center gap-2 p-5"><a href="/admin/journey/review" className="btn btn-gold btn-sm">Consolidated review</a><a href="/admin/journey/training" className="btn btn-ghost btn-sm">Knowledge &amp; Training Library</a><ActionForm action={generateVoicePreviews}><button className="btn btn-ghost btn-sm w-full">Create voice previews (one time, a few cents)</button></ActionForm><a href="/admin/journey/evaluations" className="btn btn-ghost btn-sm">Evaluation scenarios</a><a href="/admin/development" className="btn btn-ghost btn-sm">Development tracker</a></div>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">

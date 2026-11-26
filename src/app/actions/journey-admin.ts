@@ -201,10 +201,13 @@ export async function saveEvalRun(_p: ActionResult, f: FormData): Promise<Action
 export async function saveTrackerItem(_p: ActionResult, f: FormData): Promise<ActionResult> {
   const viewer = await requireStaff(["owner", "executive"]);
   const key = String(f.get("key"));
-  const status = String(f.get("status"));
+  const owner = viewer.roles.includes("owner");
+  const patch: Record<string, unknown> = { next_step: String(f.get("next_step") ?? "").slice(0, 500) || null, updated_by: viewer.id, updated_at: new Date().toISOString() };
+  // Only the owner records owner testing and approval (the database enforces this too).
+  if (owner) { patch.owner_tested = f.get("owner_tested") === "on"; patch.owner_approved = f.get("owner_approved") === "on" && f.get("owner_tested") === "on"; }
   const supabase = (await createClient())!;
-  const { error } = await supabase.from("dev_tracker").update({ status, next_step: String(f.get("next_step") ?? "").slice(0, 500) || null, updated_by: viewer.id, updated_at: new Date().toISOString() }).eq("key", key);
-  if (error) return fail("Not saved.");
+  const { error } = await supabase.from("dev_tracker").update(patch).eq("key", key);
+  if (error) return fail("Not saved. Approval needs owner testing first.");
   revalidatePath("/admin/development");
   return ok("Updated.");
 }
