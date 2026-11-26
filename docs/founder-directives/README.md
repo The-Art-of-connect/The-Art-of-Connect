@@ -29,6 +29,7 @@ changes an earlier one, the later one wins.
 | 23 | [Premium membership implementation & development authorization](23-premium-membership-implementation.md) | **In progress.** Executive Office, Elite Signature Experience, Business Intelligence and Tax Education, Journey cost controls. |
 | 24 | [CONNECT 360 — The Opportunity Intelligence System](24-connect-360.md) | **Recorded.** Phase One (portfolio, offer/seeking, blueprint builder, opportunity database, organization foundation) next. |
 | 25 | [CONNECT 360 Global Opportunity Intelligence](25-connect-360-global-intelligence.md) | **Recorded; costed.** External research uses the existing OpenAI provider; needs a research budget approval before activation. |
+| 26 | [Dual Intelligence Infrastructure](26-dual-intelligence-infrastructure.md) | **Decided: Parallel + Exa behind Journey.** Evaluation and assignment-system foundation in progress; nothing paid activated. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
