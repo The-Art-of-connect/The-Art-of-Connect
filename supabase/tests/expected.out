@@ -865,3 +865,11 @@ v39-10) Support requests from Elite members are prioritized automatically; other
 standard
 v39-11) An Elite member's request is marked priority (expect elite):
 elite
+v40-1) A member reports a problem (expect 1):
+1
+v40-2) A member cannot mark their own report fixed or approved (expect 0 rows changed):
+0
+v40-3) A member cannot pre-fill Peace's notes (expect error):
+ERROR:  new row violates row-level security policy for table "site_issues"
+v40-4) Other members cannot see someone else's report (expect 0):
+0
