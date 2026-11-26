@@ -18,7 +18,7 @@ export function SelfCollection() {
           const card = (
             <>
               <div className="relative aspect-[16/9] overflow-hidden">
-                <Image src={s.banner} alt={`${s.title}: ${s.tagline}`} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-[1200ms] group-hover:scale-105" />
+                <Image src={s.banner} alt={`${s.title}: ${s.tagline}`} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
               </div>
               <div className="flex items-center justify-between gap-3 px-5 py-4">
                 <span className="text-sm font-semibold text-burgundy">{s.href ? "Explore" : s.note}</span>
