@@ -1,4 +1,5 @@
 import { getJourneyStatus } from "@/lib/journey-server";
+import { journeyClosedReason } from "@/lib/journey-guide-access";
 import { getViewer, hasRole } from "@/lib/auth";
 import { JourneyChat } from "@/components/JourneyChat";
 import { GoldRule, LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
@@ -31,9 +32,7 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
   const viewer = await getViewer();
   const ownerTest = status.access === "staff" && hasRole(viewer, ["owner"]);
   const available = status.enabled && (status.access === "standard" || status.access === "enhanced" || ownerTest);
-  const reason = status.access === "none"
-    ? "Journey is a benefit of paid memberships."
-    : "Journey opens soon. We'll let you know the moment your conversations can begin.";
+  const reason = await journeyClosedReason();
   return (
     <>
       <JourneyOrbHero />

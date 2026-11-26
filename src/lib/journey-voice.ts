@@ -77,7 +77,14 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
   const reserve = Math.round(((cfg.voice.centsPerMinute * allowed) / 60) * 10_000) / 10_000;
   const { data: started } = await db.rpc("journey_voice_start", { p_user: viewer.id, p_holder: holder, p_package: pkg, p_allowed_seconds: allowed, p_owner_test: Boolean(input.ownerTest), p_reserve: reserve });
   if (typeof started !== "string" || started.startsWith("refused:")) {
-    return { ok: false, message: started === "refused:in_progress" ? "You already have a voice conversation open." : "Talk to Journey is resting right now. Please try again later." };
+    const why: Record<string, string> = {
+      "refused:in_progress": "You already have a voice conversation open.",
+      "refused:test_budget": "Owner testing budget reached for this month. Raise it under Company budgets to keep testing.",
+      "refused:test_budget_unset": "Owner testing budget isn't set. Set it under Company budgets.",
+      "refused:company_budget": "This month's company AI budget has been reached.",
+      "refused:company_budget_unset": "The company AI budget isn't set yet.",
+    };
+    return { ok: false, message: (input.ownerTest && typeof started === "string" && why[started]) || (started === "refused:in_progress" ? why[started] : "Talk to Journey is resting right now. Please try again later.") };
   }
 
   let topic = `\n\n# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`;

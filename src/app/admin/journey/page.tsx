@@ -93,14 +93,38 @@ export default async function JourneyAdmin() {
       <p className="-mt-4 mb-8 max-w-3xl text-sm text-muted">AI management, financial controls and member assistance. Journey runs on OpenAI only. Member conversations, journals and assessments are never shown here — only totals.</p>
 
       <section aria-labelledby="owner-test" className="glass mb-8 p-6">
-        <h2 id="owner-test" className="display text-2xl">Private owner testing · how to begin</h2>
-        <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm">
-          <li>Below, under the switches, turn on <strong>Journey</strong>.</li>
-          <li>Turn on <strong>Billable OpenAI usage authorized</strong> and type AUTHORIZE. This lets OpenAI usage be billed to the company account, within your budgets.</li>
-          <li>Make sure <strong>Owner testing</strong> is on {s?.owner_testing_enabled ? "(it already is)" : ""}. Your monthly owner testing budget is {s?.owner_test_monthly_limit_cents != null ? usd(Number(s.owner_test_monthly_limit_cents)) : "not set"}; spent this month: {usd(testSpent)}.</li>
-          <li>Open <a href="/app/journey" className="text-gold underline">Talk with Journey</a>, any lesson&rsquo;s &ldquo;Chat with Journey&rdquo; button, or <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a>, and test.</li>
+        <h2 id="owner-test" className="display text-2xl">Private owner testing · your checklist</h2>
+        <p className="mt-1 text-sm text-muted">Each step shows ✓ once it&rsquo;s done. Members stay blocked throughout: Journey only opens to them when live payments are turned on, and live payments, registration and public launch are separate switches that stay off.</p>
+        <ol className="mt-4 space-y-2 text-sm">
+          {([
+            [isOpenAIConfigured(), "OpenAI key is visible to the website", "If not, add OPENAI_API_KEY in Netlify (Site configuration → Environment variables) and redeploy."],
+            [lastCheck?.action === "journey.openai.connected", "Press “Verify connection” (in the readiness panel below)", "Confirms OpenAI answers. Costs a fraction of a cent."],
+            [testCap != null, `Owner testing budget: ${testCap != null ? usd(testCap) : "not set"} per month (spent ${usd(testSpent)})`, "Testing stops automatically when it's used. The company budget is also capped."],
+            [Boolean(s?.owner_testing_enabled), "Switch on “Owner testing”", "Already on."],
+            [Boolean(s?.enabled), "Switch on “Journey”", "The master switch. Turning it off stops all AI use instantly."],
+            [Boolean(s?.paid_usage_authorized), "Switch on “Billable OpenAI usage authorized” (type AUTHORIZE)", "Allows OpenAI charges within your budgets. It does not open Journey to members."],
+            [Boolean(s?.voice_model && s?.voice_cents_per_minute != null), "Voice: save a voice model and cost per minute under “Voice and Auto-Reload safeguards”", "Suggested for testing: gpt-realtime-mini at $0.10 per minute (a cautious estimate used for budgeting)."],
+            [Boolean(s?.voice_enabled), "Switch on “Talk to Journey (voice)”", "Needed only for live voice."],
+          ] as [boolean, string, string][]).map(([done, title, hint]) => (
+            <li key={title} className="flex gap-3">
+              <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${done ? "bg-burgundy text-ivory" : "border border-champagne text-faint"}`}>{done ? "✓" : ""}</span>
+              <span><span className={done ? "text-muted line-through decoration-champagne" : "font-semibold"}>{title}</span><span className="block text-xs text-faint">{hint}</span></span>
+            </li>
+          ))}
         </ol>
-        <p className="mt-3 text-xs text-muted">Isolation: members can only reach Journey when live payments are on, and live payments stay off. Owner testing requires your owner account and two-step verification, stops automatically at the testing budget, and does not open registration, payments, or any society. Turn Journey off at any time to stop all usage at once. <a href="/admin/journey/review" className="text-gold">Review the Blueprint and all training entries →</a></p>
+        <div className="mt-5 rounded-2xl bg-champagne/15 p-4 text-sm">
+          <p className="font-semibold">Then test on the website (signed in with two-step verification):</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>Written conversations: <a href="/app/journey" className="text-gold underline">Talk with Journey</a></li>
+            <li>Live voice: <a href="/app/journey/voice" className="text-gold underline">Talk to Journey</a></li>
+            <li>Adaptive questioning: <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a></li>
+            <li>Educational modules: any lesson, e.g. <a href="/app/know-yourself/who-am-i/beyond-my-titles" className="text-gold underline">Beyond my titles</a> → Chat With Journey or Talk to Journey</li>
+            <li>Personalized analyses: the Personal Discovery card at the end of a lesson, or your <a href="/app/know-yourself/portfolio" className="text-gold underline">Portfolio</a></li>
+            <li>Avatar and voice: <a href="/app/journey/customize" className="text-gold underline">Customize Your Journey</a></li>
+            <li>As a paid member: choose a paid membership in the gold <strong>View as</strong> bar at the top of member pages. Pages members see as &ldquo;Coming soon&rdquo; open for you with a note, and every message uses your private testing budget.</li>
+          </ul>
+        </div>
+        <p className="mt-3 text-xs text-muted"><a href="/admin/journey/review" className="text-gold">Review the Blueprint and all training entries →</a></p>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -284,8 +308,8 @@ export default async function JourneyAdmin() {
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Panel title="Voice and Auto-Reload safeguards">
           <ActionForm action={saveVoiceSettings} className="grid gap-3 p-5 sm:grid-cols-2">
-            <label className="text-xs text-muted sm:col-span-2">OpenAI realtime voice model<input name="voiceModel" defaultValue={s?.voice_model ?? ""} className="field mt-1 w-full" placeholder="e.g. gpt-realtime" /></label>
-            <label className="text-xs text-muted">Voice cost ($ per minute, for budgeting)<input name="voiceRate" defaultValue={dollars(s?.voice_cents_per_minute ?? null)} className="field mt-1 w-full" placeholder="0.10" /></label>
+            <label className="text-xs text-muted sm:col-span-2">OpenAI realtime voice model<input name="voiceModel" defaultValue={s?.voice_model ?? "gpt-realtime-mini"} className="field mt-1 w-full" placeholder="e.g. gpt-realtime" /></label>
+            <label className="text-xs text-muted">Voice cost ($ per minute, for budgeting)<input name="voiceRate" defaultValue={s?.voice_cents_per_minute != null ? dollars(s.voice_cents_per_minute) : "0.10"} className="field mt-1 w-full" placeholder="0.10" /></label>
             <label className="text-xs text-muted">End after silence (seconds)<input name="inactivity" defaultValue={s?.voice_inactivity_seconds ?? 120} className="field mt-1 w-full" /></label>
             <label className="text-xs text-muted">Longest voice conversation (minutes)<input name="maxMinutes" defaultValue={s?.voice_max_session_minutes ?? 30} className="field mt-1 w-full" /></label>
             <span />

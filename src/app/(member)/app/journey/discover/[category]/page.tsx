@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { journeyClosedReason } from "@/lib/journey-guide-access";
 import { notFound } from "next/navigation";
 import { getViewer, hasRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +29,7 @@ export default async function DiscoverySession({ params }: { params: Promise<{ c
     : { data: [] };
   const history = (msgs ?? []).map((m) => ({ role: (m.role === "journey" ? "journey" : "member") as "journey" | "member", text: m.content }));
   const available = status.enabled && paid;
+  const closedReason = await journeyClosedReason();
   const date = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   return (
@@ -41,7 +43,7 @@ export default async function DiscoverySession({ params }: { params: Promise<{ c
         {session ? (
           <DiscoveryChat sessionId={session.id} mode={discoveryMode(c.key)} opening={OPENING(c.title)} history={history}
             allowance={status.allowance} available={available} ownerTest={ownerTest}
-            reason={!paid ? "Adaptive discovery with Journey is included with paid memberships." : "Journey opens soon. Your session is saved and ready."}
+            reason={!paid ? "Adaptive discovery with Journey is included with paid memberships." : closedReason}
             endForm={<ActionForm action={endDiscovery}><input type="hidden" name="id" value={session.id} /><button className="text-xs text-muted underline">End this session without a summary</button></ActionForm>} />
         ) : paid ? (
           <form action={startDiscovery} className="glass flex flex-wrap items-center justify-between gap-4 p-6">
