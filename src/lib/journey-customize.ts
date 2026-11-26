@@ -107,17 +107,20 @@ export const PACES = [
  * Portraits are fictional and never represent a real person; labels are neutral by design.
  * `age` is the portrait's apparent age range only, so members can filter by it.
  */
-export type AvatarAge = "30s" | "40s" | "50s+";
+export type AvatarAge = "20s" | "30s" | "40s" | "50s+";
 export type Avatar = { id: string; label: string; from?: string; to?: string; image?: string; age?: AvatarAge; presentation?: Presentation };
-const LETTERS = "abcdefghijklmno";
-const PORTRAIT_AGE: AvatarAge[] = ["40s", "50s+", "30s", "40s", "50s+", "50s+", "30s", "30s", "40s", "50s+", "40s", "30s", "40s", "50s+", "30s"];
-const PORTRAIT_PRESENTATION: Presentation[] = ["feminine", "masculine", "masculine", "feminine", "masculine", "feminine", "feminine", "masculine", "feminine", "masculine", "feminine", "feminine", "masculine", "feminine", "masculine"];
-export const AVATAR_AGES: { id: AvatarAge; label: string }[] = [{ id: "30s", label: "30s" }, { id: "40s", label: "40s" }, { id: "50s+", label: "50s and beyond" }];
+const LETTERS = "abcdefghijklmnopqrstuvwxyz";
+/** portrait-a … portrait-z, then portrait-za, portrait-zb … (ids the database accepts: letters and hyphens). */
+const portraitId = (i: number) => `portrait-${i < 26 ? LETTERS[i] : `z${LETTERS[i - 26]}`}`;
+const PORTRAIT_AGE: AvatarAge[] = ["40s", "50s+", "30s", "40s", "50s+", "50s+", "30s", "30s", "40s", "50s+", "40s", "30s", "40s", "50s+", "30s", ...Array<AvatarAge>(14).fill("20s")];
+const PORTRAIT_PRESENTATION: Presentation[] = ["feminine", "masculine", "masculine", "feminine", "masculine", "feminine", "feminine", "masculine", "feminine", "masculine", "feminine", "feminine", "masculine", "feminine", "masculine",
+  "feminine", "masculine", "feminine", "masculine", "feminine", "masculine", "feminine", "feminine", "masculine", "feminine", "masculine", "feminine", "masculine", "feminine"];
+export const AVATAR_AGES: { id: AvatarAge; label: string }[] = [{ id: "20s", label: "20s" }, { id: "30s", label: "30s" }, { id: "40s", label: "40s" }, { id: "50s+", label: "50s and beyond" }];
 export const AVATARS: Avatar[] = [
   { id: "champagne", label: "Champagne orb", from: "#f3dfb6", to: "#b08a4e" },
   { id: "rose", label: "Rose orb", from: "#f0c9cf", to: "#7a2e3e" },
   { id: "midnight", label: "Midnight orb", from: "#c9b8a0", to: "#2b1d16" },
-  ...Array.from({ length: 15 }, (_, i) => ({ id: `portrait-${LETTERS[i]}`, label: `Journey portrait ${i + 1}`, image: `/images/avatars/portrait-${i + 1}.webp`, age: PORTRAIT_AGE[i], presentation: PORTRAIT_PRESENTATION[i] })),
+  ...Array.from({ length: PORTRAIT_AGE.length }, (_, i) => ({ id: portraitId(i), label: `Journey portrait ${i + 1}`, image: `/images/avatars/portrait-${i + 1}.webp`, age: PORTRAIT_AGE[i], presentation: PORTRAIT_PRESENTATION[i] })),
 ];
 export const avatarById = (id: string | null | undefined) => AVATARS.find((a) => a.id === id) ?? AVATARS[0];
 

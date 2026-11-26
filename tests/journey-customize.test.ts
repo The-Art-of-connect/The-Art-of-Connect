@@ -45,8 +45,10 @@ test("every paid plan reaches lessons and live voice through an experience it in
   assert.equal(effectiveMode("life", "none", null), null);
 });
 
-test("avatars: orbs plus 15 fictional portraits with neutral labels and an apparent age range", () => {
-  assert.equal(AVATARS.filter((a) => a.image).length, 15);
+test("avatars: orbs plus 29 fictional portraits with neutral labels, an apparent age range and unique ids", () => {
+  assert.equal(AVATARS.filter((a) => a.image).length, 29);
+  assert.equal(new Set(AVATARS.map((a) => a.id)).size, AVATARS.length);
+  assert.equal(AVATARS.filter((a) => a.age === "20s").length, 14);
   for (const a of AVATARS) {
     assert.match(a.id, /^[a-z-]{2,30}$/);
     if (a.image) { assert.match(a.label, /^Journey portrait \d+$/); assert.ok(a.age); }
