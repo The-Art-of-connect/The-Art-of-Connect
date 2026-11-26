@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Assistance Center" };
 
 const STATUS: Record<string, string> = {
-  new: "New", investigating: "Peace is investigating", fixed: "Fixed by Peace", needs_owner: "Needs your decision", cannot_reproduce: "Couldn't reproduce",
+  new: "New", investigating: "Peace is investigating", fixed: "Fixed by Peace", needs_owner: "Needs your decision", cannot_reproduce: "Couldn't reproduce", duplicate: "Duplicate", failed: "Repair failed: will retry or escalate", rolled_back: "Rolled back: needs your review",
   proposed: "Proposal ready: your approval needed", approved: "Approved: Peace will build", declined: "Declined", built: "Built by Peace", closed: "Closed",
 };
 const TABS = [["action", "Needs you"], ["open", "Open"], ["done", "Done"], ["all", "All"]] as const;
@@ -33,7 +33,7 @@ export default async function AssistanceCenter({ searchParams }: { searchParams:
   const configured = dispatchConfigured();
   const all = (data ?? []) as unknown as { id: string; kind: string; priority: string; attempts: number; acknowledged_at: string | null; member_notified_at: string | null; page_path: string | null; description: string; expected: string | null; screenshot_path: string | null; device: string | null; status: string; peace_notes: string | null; pr_url: string | null; owner_note: string | null; member_reply: string | null; created_at: string; profiles: { display_name: string | null; email: string } | null }[];
   const needsYou = (i: (typeof all)[number]) => ["proposed", "needs_owner"].includes(i.status);
-  const done = (i: (typeof all)[number]) => ["fixed", "built", "declined", "closed", "cannot_reproduce"].includes(i.status);
+  const done = (i: (typeof all)[number]) => ["fixed", "built", "declined", "closed", "cannot_reproduce", "duplicate"].includes(i.status);
   const shown = all.filter((i) => tab === "all" || (tab === "action" ? needsYou(i) : tab === "done" ? done(i) : !done(i)));
   const shots = shown.map((i) => i.screenshot_path).filter(Boolean) as string[];
   const urls = shots.length ? (await db.storage.from("site-issues").createSignedUrls(shots, 1800)).data ?? [] : [];

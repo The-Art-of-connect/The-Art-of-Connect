@@ -6,7 +6,7 @@ import { reportIssue } from "@/app/actions/assist";
 export const metadata = { title: "Help & suggestions" };
 
 const STATUS: Record<string, string> = {
-  new: "Received", investigating: "Being looked into", fixed: "Fixed", needs_owner: "With our founder", cannot_reproduce: "We couldn't reproduce it",
+  new: "Received", investigating: "Being looked into", fixed: "Fixed", needs_owner: "With our founder", cannot_reproduce: "We couldn't reproduce it", duplicate: "Already being handled", failed: "Still being looked into", rolled_back: "With our founder",
   proposed: "With our founder", approved: "Approved, in progress", declined: "Not planned for now", built: "Added to the platform", closed: "Closed",
 };
 
