@@ -203,6 +203,25 @@ export const templates = {
       ],
       action: { label: "View in Help & suggestions", url: `${SITE}/app/assist` },
     })),
+  sanctuaryReminder: (f: { name?: string | null; types: string[] }) =>
+    t(f, ({ name, types }) => ({
+      subject: "Your Sanctuary is ready when you are",
+      preheader: "A quiet moment for yourself, whenever it suits you.",
+      heading: `Hello, ${first(name)}.`,
+      paragraphs: [
+        `Your Daily Sanctuary is ready${types.length ? `: ${types.join(", ")}` : ""}. Take a few minutes for yourself today, or whenever it suits you. There's nothing to catch up on.`,
+        "You chose to receive these reminders. Change or turn them off anytime in Reminders & privacy.",
+      ],
+      action: { label: "Open My Daily Sanctuary", url: `${SITE}/app/sanctuary` },
+    })),
+  futureLetter: (f: { name?: string | null; written: string }) =>
+    t(f, ({ name, written }) => ({
+      subject: "A letter from your past self has arrived",
+      preheader: `Written on ${written}.`,
+      heading: `${first(name)}, your letter is here.`,
+      paragraphs: [`On ${written}, you wrote a letter to the person you were becoming. It's waiting for you, privately, in My Daily Sanctuary.`],
+      action: { label: "Read my letter", url: `${SITE}/app/sanctuary/week` },
+    })),
   ownerAlert: (f: { title: string; summary: string; portalPath: string }) =>
     t(f, ({ title, summary, portalPath }) => ({
       subject: `[Owner alert] ${title}`,

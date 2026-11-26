@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyCron } from "@/lib/cron";
 import { assistSweep } from "@/lib/assist";
+import { sanctuaryCron } from "@/lib/sanctuary-cron";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
 import { templates } from "@/lib/email-templates";
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
   await db.rpc("elite_purge_financials");
   // Assistance Center: restart anything not yet picked up and tell members about resolved reports.
   try { await assistSweep(); } catch { /* best-effort */ }
+  // My Daily Sanctuary: optional reminders members chose, and letters to their future selves.
+  try { await sanctuaryCron(); } catch { /* best-effort */ }
   // Connect Calendar: optional reminders, about a day before events members chose to be reminded of.
   try {
     const soon = new Date(Date.now() + 26 * 3600_000).toISOString();

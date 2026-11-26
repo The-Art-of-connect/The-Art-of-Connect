@@ -15,6 +15,12 @@ import { PageHeader, Panel, Stat } from "@/components/admin/ui";
 
 export default async function AnalyticsPage() {
   await requireStaff(rolesFor("/admin/analytics"));
+  // Membership conversions (founder directive 18): counts only; the database returns rows to owner, executive and finance.
+  const convDb = await createClient();
+  const { data: conv } = convDb ? await convDb.rpc("membership_conversions", { p_months: 6 }) : { data: [] };
+  const conversions = (conv ?? []) as { month: string; new_free_accounts: number; trials_started: number; trials_converted: number; trials_cancelled: number; direct_purchases: number }[];
+  const sum = (k: keyof (typeof conversions)[number]) => conversions.reduce((a, r) => a + Number(r[k] ?? 0), 0);
+  const rate = (a: number, b: number) => (b ? `${Math.round((100 * a) / b)}%` : "—");
   const since30 = new Date(Date.now() - 30 * 864e5).toISOString();
   const [members, new30, rel, biz, couns, waitlist, wlRel, wlBiz, wlCouns, wlProviders, wlSingles, wlCouples, relProfiles, bizProfiles, relConn, bizConn] = await Promise.all([
     countRows("profiles"),
@@ -87,6 +93,23 @@ export default async function AnalyticsPage() {
           </Panel>
         ))}
       </div>
+      <Panel title="Membership conversions (last 6 months)">
+        <div className="grid gap-4 p-5 sm:grid-cols-4">
+          <Stat label="New free accounts" value={sum("new_free_accounts")} />
+          <Stat label="Free → trial" value={rate(sum("trials_started"), sum("new_free_accounts"))} hint={`${sum("trials_started")} trials started`} />
+          <Stat label="Trial → paid" value={rate(sum("trials_converted"), sum("trials_converted") + sum("trials_cancelled"))} hint={`${sum("trials_converted")} converted · ${sum("trials_cancelled")} ended`} />
+          <Stat label="Direct purchases" value={sum("direct_purchases")} hint="Joined without a trial" />
+        </div>
+        <div className="overflow-x-auto px-5 pb-5">
+          <table className="data-table min-w-[560px]">
+            <thead><tr><th>Month</th><th>New free accounts</th><th>Trials started</th><th>Converted</th><th>Cancelled or ended</th><th>Direct purchases</th></tr></thead>
+            <tbody>{conversions.map((r) => (
+              <tr key={r.month}><td>{new Date(r.month).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })}</td><td>{r.new_free_accounts}</td><td>{r.trials_started}</td><td>{r.trials_converted}</td><td>{r.trials_cancelled}</td><td>{r.direct_purchases}</td></tr>
+            ))}</tbody>
+          </table>
+          <p className="mt-2 text-xs text-muted">Real counts only. Before the commercial launch these reflect test accounts and Stripe Sandbox activity.</p>
+        </div>
+      </Panel>
       <p className="mt-4 text-xs text-muted">Privacy-conscious analytics: first-party campaign tags and aggregate counts only. No third-party tracking pixels are installed.</p>
     </>
   );

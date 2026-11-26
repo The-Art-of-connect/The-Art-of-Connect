@@ -908,3 +908,29 @@ v41-11) Bundles that included Becoming are retired (expect 0):
 0
 v41-12) Journey allows members on an active trial (expect t):
 t
+v42-1) The starter library is prepared as drafts awaiting founder approval (expect t|0):
+true|0
+v42-2) A free member sees no unpublished content (expect 0):
+0
+v42-3) A member cannot publish content (expect 0 rows changed):
+0
+v42-4) A member keeps private entries (expect 1):
+1
+v42-5) One check-in per day; gratitude may be recorded several times (expect error, then 2):
+ERROR:  duplicate key value violates unique constraint "sanctuary_entries_daily"
+2
+v42-6) A letter's delivery date cannot be changed (expect permission error):
+ERROR:  permission denied for table future_letters
+v42-7) Another member sees none of it (expect 0|0|0):
+0|0|0
+v42-8) A member cannot write into someone else's board (expect error):
+ERROR:  new row violates row-level security policy for table "vision_items"
+v42-9) Photographs must live in the member's own folder (expect error):
+ERROR:  Invalid photograph
+v42-10) Members see only approved Connect previews and cannot add their own (expect 0, then error):
+0
+ERROR:  new row violates row-level security policy for table "connect_previews"
+v42-11) Conversion analytics are for the owner only (expect 0):
+0
+v42-12) Circle sizes are shown only from 10 members up (expect t):
+t

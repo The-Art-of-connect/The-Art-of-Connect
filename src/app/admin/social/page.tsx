@@ -32,7 +32,7 @@ export default async function SocialAdmin() {
   return (
     <>
       <PageHeader eyebrow="Owner Portal" title="Community & Social" />
-      <p className="-mt-4 mb-6 max-w-3xl text-sm text-muted">The Connection Feed, circles, The Connect Calendar and messaging. Activity figures are aggregate only. Ordinary circles are open to every eligible member; only Elite circles require verification. <Link href="/app/connect" className="text-gold underline">Open the member experience →</Link></p>
+      <p className="-mt-4 mb-6 max-w-3xl text-sm text-muted">The Connection Feed, circles, The Connect Calendar and messaging. Activity figures are aggregate only. Ordinary circles are open to every eligible member; only Elite circles require verification. <Link href="/app/connect" className="text-gold underline">Open the member experience →</Link> · <Link href="/admin/social/previews" className="text-gold underline">What’s Happening Inside Connect previews →</Link></p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label="Open safety reports" value={(reports ?? []).length} />
         <Stat label="Member profiles" value={profiles.count ?? 0} />

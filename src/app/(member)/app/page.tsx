@@ -129,6 +129,22 @@ export default async function MemberHome() {
         </div>
       </section>
 
+      {/* The Art of Becoming (founder directives 17 and 18): daily value for every account, and what's possible next. */}
+      <section aria-labelledby="sanctuary" className="mt-14 grid gap-5 md:grid-cols-2">
+        <Link href="/app/sanctuary" className="glass lift group block p-7">
+          <span className="chip chip-live">Free with every account</span>
+          <h2 id="sanctuary" className="display mt-4 text-3xl text-burgundy">My Daily Sanctuary</h2>
+          <p className="mt-2 text-sm text-muted">Today&rsquo;s manifestation, check-in, lesson, scenario, gratitude and evening reflection, plus your weekly reflections, letters to your future self and My Vision Board.</p>
+          <span className="mt-4 inline-block text-sm text-gold">Enter my Sanctuary →</span>
+        </Link>
+        <Link href="/app/discover" className="glass lift group block p-7">
+          <span className="chip">Personalized to you</span>
+          <h2 className="display mt-4 text-3xl">Discover What&rsquo;s Possible</h2>
+          <p className="mt-2 text-sm text-muted">See what&rsquo;s happening inside Connect and the communities, events and learning that match what you&rsquo;ve chosen to share.</p>
+          <span className="mt-4 inline-block text-sm text-gold">Explore →</span>
+        </Link>
+      </section>
+
       {others.length > 0 && !isElite && (
         <section aria-labelledby="explore" className="mt-14 rounded-[28px] border border-champagne/60 bg-ivory/70 p-6 sm:p-9">
           <p className="eyebrow">Explore Memberships</p>
