@@ -41,7 +41,7 @@ export function EliteBadge({ size = 18, interactive = true }: { size?: number; i
       {open && (
         <span id={`${id}-tip`} role="tooltip" className="absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 rounded-2xl border border-[#c9a96e]/60 bg-[#211814] p-4 text-left text-xs font-normal normal-case tracking-normal text-[#f5ecdf] shadow-2xl">
           <span className="flex items-center gap-2 text-sm font-semibold text-[#f0c98a]">{icon} Elite Concierge</span>
-          <span className="mt-2 block">This member belongs to the Elite Concierge Society of The Art of Connect, our highest distinction, by invitation only.</span>
+          <span className="mt-2 block">This member belongs to the Elite Concierge Society of The Art of Connect, our highest distinction, awarded only after qualification and verification.</span>
           <span className="mt-2 block text-[#f5ecdf]/70">Every Elite member has satisfied a verified admission pathway. Their personal, financial and verification details are always kept confidential.</span>
         </span>
       )}

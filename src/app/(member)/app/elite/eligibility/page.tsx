@@ -3,7 +3,7 @@ import { getViewer, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { EliteBadge } from "@/components/EliteBadge";
-import { eliteAcceptInvitation, eliteAppeal, eliteDataRequest, eliteDisconnectBank, eliteSubmitEvidence } from "@/app/actions/elite";
+import { eliteAppeal, eliteDataRequest, eliteDisconnectBank, eliteSubmitEvidence } from "@/app/actions/elite";
 import { ELITE_QUALIFICATIONS, ELITE_STATUS_LABEL, ELITE_TAGLINE, EVIDENCE_KINDS, OWNERSHIP_LABEL, VERIFICATION_METHODS, depositWindow, usd, type Thresholds } from "@/lib/elite";
 import { FC_CONSENT_TEXT, FC_CONSENT_VERSION, syncPendingFee, verificationGate } from "@/lib/elite-verification";
 import { VerifyButton } from "@/components/VerifyButton";
@@ -12,7 +12,7 @@ import { EliteCheckoutButton } from "@/components/EliteCheckoutButton";
 import { EliteScreeningForm } from "@/components/EliteScreeningForm";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "My Elite eligibility" };
+export const metadata = { title: "My Elite application" };
 
 type Eval = { candidate: boolean; pathway: string | null; status: string | null; age: boolean; standing: boolean; identity: boolean; qualification: boolean;
   months: number; min_months: number; answers: number; min_answers: number; progression: boolean; fee: boolean; expedited_available: boolean; invitation_expires_at: string | null };
@@ -66,25 +66,26 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
     <>
       <section className="theme-dark relative overflow-hidden rounded-[28px] px-6 py-10 text-center sm:px-12" style={{ background: "#1b1310" }}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,rgb(232_112_26/0.14),transparent_70%)]" aria-hidden="true" />
-        <p className="relative flex flex-wrap items-center justify-center gap-2 text-xs uppercase tracking-[0.3em] text-[#f0c98a]"><EliteBadge size={16} interactive={false} /><span>Elite Concierge · By Invitation Only</span></p>
-        <h1 className="display relative mt-4 text-4xl text-[#f6e7c8] sm:text-5xl">My Elite eligibility</h1>
+        <p className="relative flex flex-wrap items-center justify-center gap-2 text-xs uppercase tracking-[0.3em] text-[#f0c98a]"><EliteBadge size={16} interactive={false} /><span>Apply for Elite Membership · Qualification and verification required</span></p>
+        <h1 className="display relative mt-4 text-4xl text-[#f6e7c8] sm:text-5xl">My Elite application</h1>
         <p className="display relative mt-2 text-xl italic text-[#e8892b]">{ELITE_TAGLINE}</p>
-        <p className="relative mx-auto mt-4 max-w-xl text-sm text-[#f5ecdf]/75">Private to you. Explore at your own pace: there&rsquo;s no obligation, nothing is charged here, and members are never ranked.</p>
+        <p className="relative mx-auto mt-4 max-w-xl text-sm text-[#f5ecdf]/75">Private to you. Applying is free and standard verification is complimentary. Once you&rsquo;re approved, Elite membership unlocks for purchase.</p>
         <p className="relative mt-4 inline-block rounded-full border border-[#c9a96e]/50 px-4 py-1 text-xs text-[#f0c98a]">Status: {ELITE_STATUS_LABEL[status] ?? status}</p>
       </section>
 
       {preview && <p className="mt-6 rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm text-gold">Preview: sign in as a member (or a test account in an owner testing session) to try eligibility.</p>}
 
       {status === "invitation_issued" && (
-        <ActionForm action={eliteAcceptInvitation} className="mt-8 rounded-[24px] border-2 border-[#e8892b]/60 bg-[#e8892b]/5 p-6 text-center">
-          <p className="display text-3xl">You&rsquo;re invited to the Elite Concierge Society.</p>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-muted">Accepting doesn&rsquo;t charge anything. Afterwards, you may choose Elite Concierge in Membership &amp; billing whenever you&rsquo;re ready.{e?.invitation_expires_at ? ` This invitation is open until ${new Date(e.invitation_expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.` : ""}</p>
-          <button className="btn btn-gold mt-5">Accept my invitation</button>
-        </ActionForm>
+        <div className="mt-8 rounded-[24px] border-2 border-[#e8892b]/60 bg-[#e8892b]/5 p-6 text-center">
+          <div className="flex justify-center"><EliteBadge size={40} interactive={false} /></div>
+          <p className="display mt-3 text-3xl">You&rsquo;re approved. Elite Concierge is unlocked.</p>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted">Choose Elite Concierge in Membership &amp; billing whenever you&rsquo;re ready. Your gold Elite badge is issued when your membership activates. Nothing is charged until you confirm checkout.{e?.invitation_expires_at ? ` Your approval is held until ${new Date(e.invitation_expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.` : ""}</p>
+          <Link href="/app/membership" className="btn btn-gold mt-5">Choose Elite Concierge</Link>
+        </div>
       )}
       {(status === "invitation_accepted") && (
         <div className="mt-8 rounded-[24px] border border-[#e8892b]/50 p-6 text-center">
-          <p className="display text-2xl">Invitation accepted.</p>
+          <p className="display text-2xl">Elite Concierge is unlocked.</p>
           <Link href="/app/membership" className="btn btn-gold mt-4">Choose Elite Concierge in Membership &amp; billing</Link>
         </div>
       )}
@@ -114,8 +115,8 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
               {check(e.qualification, "Qualification verified", "Your chosen pathway, verified from your documents or an approved method.", "#private-verification", "Share verification")}
               {check(e.age && e.standing, "Membership in good standing", undefined, "/app/membership", "View my membership")}
               {e.pathway === "earned" && check(e.progression, "Membership milestones", `${e.months} of ${e.min_months} months of membership · ${e.answers} of ${e.min_answers} personal discoveries${s?.progression_approved ? "" : " (milestones being finalized)"}`)}
-              {e.pathway === "expedited" && check(e.fee, "Expedited verification", s?.expedited_fee_active ? `One-time ${usd((s.expedited_fee_cents ?? 0) / 100)}, offered only after preliminary screening. It purchases faster verification, never admission.` : sandbox(feeGate) ? `Sandbox test: ${usd((s?.expedited_fee_cents ?? 0) / 100)} with Stripe test cards only. The fee isn't active for members until our founder approves it.` : "Not yet available: the expedited verification service is awaiting final approval.")}
-              {check(["invitation_issued", "invitation_accepted", "membership_activated"].includes(status), "Invitation issued", "Issued automatically once every step above is complete.")}
+              {e.pathway === "expedited" && check(e.fee, "Priority verification (optional)", s?.expedited_fee_active ? `One-time ${usd((s.expedited_fee_cents ?? 0) / 100)}, offered only after preliminary screening. It purchases faster verification, never admission.` : sandbox(feeGate) ? `Sandbox test: ${usd((s?.expedited_fee_cents ?? 0) / 100)} with Stripe test cards only. The fee isn't active for members until our founder approves it.` : "Not yet available: the expedited verification service is awaiting final approval.")}
+              {check(["invitation_issued", "invitation_accepted", "membership_activated"].includes(status), "Approved: Elite membership unlocked", "Automatic once every step above is verified.")}
             </ul>
           ) : <p className="mt-3 text-sm text-muted">Answer the preliminary questions to see your progress.</p>}
           {e && <p className="mt-3 text-xs text-faint">These markers check off automatically as each step is completed; they can&rsquo;t be selected by hand.</p>}

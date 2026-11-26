@@ -15,7 +15,7 @@ const THRESHOLD_LABELS: Record<string, string> = {
   personal_income: "Annual personal income", business_revenue: "Annual business revenue (with profitability and verified ownership)",
   net_worth: "Net worth, excluding primary residence", investable_assets: "Investable assets",
 };
-const PATHWAY_LABEL: Record<string, string> = { earned: "Earned", expedited: "Expedited", founder: "Founder" };
+const PATHWAY_LABEL: Record<string, string> = { direct: "Direct application", earned: "Earned", expedited: "Priority (expedited)", founder: "Founder" };
 
 /** Owner only: qualification rules, verification review, founder invitations, badges and appeals. Confidential. */
 export default async function EliteCenter({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
@@ -30,7 +30,9 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
     supabase.from("elite_data_requests").select("id, kind, subject, message, status, response, created_at, profiles:user_id (display_name, email)").order("created_at", { ascending: false }).limit(50),
   ]);
   const list = (candidates ?? []) as unknown as { id: string; user_id: string | null; invitee_email: string | null; invitee_name: string | null; pathway: string; qualification: string | null; status: string; fee_waived: boolean; fee_paid_at: string | null; invitation_expires_at: string | null; created_at: string; review_reasons: string[]; screening: Record<string, string | number>; screening_result: string | null; screening_meets: boolean | null; profiles: { display_name: string; email: string; is_test: boolean } | null }[];
-  const shown = filter ? list.filter((c) => c.status === filter) : list;
+  // Priority (paid expedited) applicants awaiting review come first.
+  const waiting = (c: (typeof list)[number]) => Boolean(c.fee_paid_at) && !["invitation_issued", "invitation_accepted", "membership_activated", "revoked", "expired"].includes(c.status);
+  const shown = (filter ? list.filter((c) => c.status === filter) : list).slice().sort((a, b) => Number(waiting(b)) - Number(waiting(a)));
   const ids = shown.map((c) => c.id);
   const userIds = shown.map((c) => c.user_id).filter(Boolean) as string[];
   const [{ data: evidence }, { data: notes }, { data: fin }, { data: idv }, { data: fees }] = ids.length
@@ -55,13 +57,13 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
     <>
       <PageHeader eyebrow="Owner Portal" title="Elite Management Center" />
       <p className="-mt-6 mb-6 text-sm"><Link href="/admin/elite/verification" className="text-gold underline">Stripe verification: use-case review, activation steps, costs and controls →</Link></p>
-      <p className="-mt-4 mb-6 max-w-3xl text-sm text-muted">Elite Concierge is by invitation only. Everything here is confidential: financial details and verification documents are visible only to you. All decisions are recorded in the audit history. Founder discretion never overrides identity verification, age requirements or safety protections.</p>
+      <p className="-mt-4 mb-6 max-w-3xl text-sm text-muted">Elite Concierge is open to apply, with qualification and verification required. Everything here is confidential: financial details and verification documents are visible only to you. All decisions are recorded in the audit history. Founder discretion never overrides identity verification, age requirements or safety protections.</p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label="Candidates" value={list.length} />
         <Stat label="Awaiting your review" value={count(["preliminary", "verification_pending", "manual_review", "info_required"])} />
-        <Stat label="Invitations issued" value={count(["invitation_issued"])} />
-        <Stat label="Invitations accepted" value={count(["invitation_accepted", "membership_activated"])} />
+        <Stat label="Approved (Elite unlocked)" value={count(["invitation_issued"])} />
+        <Stat label="Activated or accepted" value={count(["invitation_accepted", "membership_activated"])} />
         <Stat label="Active Elite members" value={activeBadges} />
       </div>
 
@@ -130,7 +132,7 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
                 <details key={c.id} className="glass overflow-hidden !p-0">
                   <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
                     <span className="flex items-center gap-2 font-semibold">{c.profiles?.display_name ?? c.invitee_name ?? c.invitee_email}{badge?.status === "active" && <EliteBadge size={16} interactive={false} />}{c.profiles?.is_test && <span className="rounded-full border border-gold/50 px-2 text-[0.6rem] text-gold">TEST</span>}</span>
-                    <span className="flex flex-wrap gap-3 text-xs text-muted"><span>{PATHWAY_LABEL[c.pathway]}</span><span>{ELITE_QUALIFICATIONS.find((q) => q.id === c.qualification)?.label ?? (c.qualification === "founder_selected" ? "Founder-selected" : "—")}</span><span className="text-gold">{ELITE_STATUS_LABEL[c.status]}</span></span>
+                    <span className="flex flex-wrap gap-3 text-xs text-muted"><span>{PATHWAY_LABEL[c.pathway]}</span>{waiting(c) && <span className="rounded-full bg-[#e8892b]/20 px-2 text-[#f0a35a]">Priority</span>}<span>{ELITE_QUALIFICATIONS.find((q) => q.id === c.qualification)?.label ?? (c.qualification === "founder_selected" ? "Founder-selected" : "—")}</span><span className="text-gold">{ELITE_STATUS_LABEL[c.status]}</span></span>
                   </summary>
                   <div className="grid gap-5 border-t border-line p-5 lg:grid-cols-2">
                     <div className="space-y-3 text-sm">

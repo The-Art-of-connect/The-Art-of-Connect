@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { getViewer, hasRole, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { EliteBadge } from "@/components/EliteBadge";
-import { ELITE_TAGLINE } from "@/lib/elite";
+import { ELITE_EXPERIENCES, ELITE_TAGLINE } from "@/lib/elite";
+import { EliteExperienceIcon } from "@/components/EliteIcons";
+import { ActionForm } from "@/components/admin/ActionForm";
+import { eliteSaveExperiences } from "@/app/actions/elite";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Elite Concierge Society" };
@@ -15,8 +18,8 @@ const TILES: Tile[] = [
   { title: "Enhanced privacy", body: "Control who sees your profile, photographs and activity.", href: "/app/safety", ready: true },
   { title: "Elite Business Connections", body: "High-level networking, strategic partnerships, executive mentorship, expansion, acquisition and succession conversations.", ready: false },
   { title: "Elite Introductions", body: "Personalized professional and relationship introductions, curated with care.", ready: false },
-  { title: "Elite Singles", body: "Meet verified, accomplished Elite singles (30+). Participation is your choice only.", ready: false },
-  { title: "Elite Couples Circle", body: "Connection and shared experiences with fellow Elite couples.", ready: false },
+  { title: "Elite In Love", body: "High-end dating and intentional connections between verified Elite singles (30+), by your choice only.", ready: false },
+  { title: "Elite In Life", body: "Friendships, shared interests and exclusive social experiences with like-minded members.", ready: false },
   { title: "Elite Circle", body: "A private community of verified Elite members nationwide.", ready: false },
   { title: "Curated experiences & events", body: "Executive roundtables and exclusive social experiences.", ready: false },
   { title: "Private concierge requests", body: "Personal requests handled with discretion.", ready: false },
@@ -31,6 +34,7 @@ export default async function EliteDashboard() {
   const supabase = (await createClient())!;
   const { data: badge } = isInsidePreview(viewer) ? { data: null } : await supabase.from("elite_badges").select("status, issued_at").eq("user_id", viewer.id).maybeSingle();
   const active = badge?.status === "active";
+  const { data: prefs } = isInsidePreview(viewer) ? { data: null } : await supabase.from("elite_experience_prefs").select("in_business, in_life, in_love, relationship_status").eq("user_id", viewer.id).maybeSingle();
   if (!active && !owner) redirect("/app/elite/eligibility");
   return (
     <div className="theme-dark -mx-4 -mt-10 px-4 pb-16 pt-10 sm:-mx-8 sm:px-8" style={{ background: "linear-gradient(180deg,#1b1310 0%,#241a15 60%,#1b1310 100%)" }}>
@@ -41,6 +45,30 @@ export default async function EliteDashboard() {
         <h1 className="display relative mt-4 flex items-center justify-center gap-3 text-4xl text-[#f6e7c8] sm:text-6xl">Elite Concierge <EliteBadge size={34} /></h1>
         <p className="display relative mt-3 text-2xl italic text-[#e8892b]">{ELITE_TAGLINE}</p>
         <p className="relative mx-auto mt-4 max-w-xl text-sm text-[#f5ecdf]/75">Welcome{viewer.displayName ? `, ${viewer.displayName}` : ""}. Your Elite distinction is active{badge?.issued_at ? ` since ${new Date(badge.issued_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}` : ""}.</p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="display text-center text-3xl text-[#f6e7c8]">Your Elite experiences</h2>
+        <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[#f5ecdf]/70">An elevated connection society. Take part in the experiences you choose; you can change them anytime.</p>
+        <ActionForm action={eliteSaveExperiences} className="mx-auto mt-6 max-w-4xl space-y-5">
+          <div className="grid gap-4 md:grid-cols-3">
+            {ELITE_EXPERIENCES.map((x) => (
+              <label key={x.id} className="flex cursor-pointer flex-col rounded-[24px] border border-[#c9a96e]/40 bg-white/[0.03] p-5 has-[:checked]:border-[#e8892b]">
+                <span className="flex items-center justify-between text-[#f0c98a]"><EliteExperienceIcon kind={x.icon} /><input type="checkbox" name={x.id} defaultChecked={Boolean(prefs?.[x.id as "in_business" | "in_life" | "in_love"])} /></span>
+                <span className="display mt-3 text-2xl text-[#f0c98a]">{x.title}</span>
+                <span className="mt-1 text-xs leading-relaxed text-[#f5ecdf]/75">{x.body}</span>
+                {!x.ready && <span className="mt-3 text-[0.62rem] uppercase tracking-wider text-[#f5ecdf]/50">Connections in preparation</span>}
+              </label>
+            ))}
+          </div>
+          <label className="mx-auto block max-w-sm text-center text-xs text-[#f5ecdf]/70">Relationship status (needed only for In Love)
+            <select name="relationship_status" defaultValue={prefs?.relationship_status ?? ""} className="field mt-1 w-full">
+              <option value="">Prefer not to say</option><option value="single">Single</option><option value="partnered">In a relationship</option><option value="married">Married</option>
+            </select>
+          </label>
+          <p className="text-center text-[0.7rem] text-[#f5ecdf]/55">In Love is for single members 30 and older, and is never turned on automatically. Your choices are private.</p>
+          <div className="text-center"><button className="btn btn-gold btn-sm">Save my experiences</button></div>
+        </ActionForm>
       </section>
 
       <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

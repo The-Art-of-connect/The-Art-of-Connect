@@ -28,7 +28,7 @@ async function member() {
 export async function eliteScreen(_p: ActionResult, f: FormData): Promise<ActionResult> {
   const m = await member(); if (!m) return fail("Please sign in with your own account first.");
   const qualification = String(f.get("qualification") ?? "");
-  const pathway = f.get("pathway") === "expedited" ? "expedited" : "earned";
+  const pathway = f.get("pathway") === "expedited" ? "expedited" : "direct";
   if (!QUALS.includes(qualification)) return fail("Please choose the pathway that best describes you.");
   const questions = SCREENING[qualification] ?? [];
   const answers: Record<string, string | number> = {};
@@ -43,8 +43,8 @@ export async function eliteScreen(_p: ActionResult, f: FormData): Promise<Action
   if (error) return fail(error.message.includes("ranges") ? "Please choose from the ranges shown." : "Please try again.");
   revalidatePath("/app/elite/eligibility");
   if (data === "pass") return ok(pathway === "expedited"
-    ? "Preliminary eligibility is established. Next, verify your identity; expedited verification then becomes available."
-    : "Preliminary eligibility is established. Next, share verification so it can be confirmed privately.");
+    ? "Preliminary eligibility is established. Next, verify your identity; optional priority verification then becomes available."
+    : "Preliminary eligibility is established. Next, verify your identity and share supporting evidence.");
   if (data === "owner_review") return ok("Thank you. Your answers are with our founder for a personal preliminary review. You'll see the outcome here.");
   if (data === "not_yet") return ok("Thank you. Based on your answers, Elite isn't the right fit today. Your membership journey continues, and you're welcome to revisit this anytime.");
   return ok("Saved.");
@@ -305,4 +305,16 @@ export async function eliteResolveDataRequest(_p: ActionResult, f: FormData): Pr
   await audit("elite.data_request", "elite_data_requests", id, { status });
   revalidatePath("/admin/elite");
   return ok(`Request ${status}.`);
+}
+
+/** An Elite member chooses the experiences they take part in. In Love requires single status and age 30+ (enforced by the database). */
+export async function eliteSaveExperiences(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const m = await member(); if (!m) return fail("Please sign in first.");
+  const status = String(f.get("relationship_status") ?? "") || null;
+  if (status && !["single", "partnered", "married", "prefer_not"].includes(status)) return fail("Choose your relationship status.");
+  const row = { user_id: m.viewer.id, in_business: f.get("in_business") === "on", in_life: f.get("in_life") === "on", in_love: f.get("in_love") === "on", relationship_status: status };
+  const { error } = await m.db.from("elite_experience_prefs").upsert(row);
+  if (error) return fail(error.message.includes("Elite In Love") ? error.message : "Not saved. Please try again.");
+  revalidatePath("/app/elite");
+  return ok("Your Elite experiences are saved.");
 }

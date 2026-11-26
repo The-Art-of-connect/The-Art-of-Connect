@@ -17,7 +17,8 @@ import {
 } from "@/lib/pricing";
 import { LEGAL_TITLES, autoRenewalStatement, checkoutDocs } from "@/lib/legal-requirements";
 import { EliteBadge } from "@/components/EliteBadge";
-import { ELITE_BENEFITS } from "@/lib/elite";
+import { ELITE_APPLY_LINE, ELITE_APPLY_NOTE, ELITE_EXPERIENCES, ELITE_INTRO } from "@/lib/elite";
+import { EliteExperienceIcon } from "@/components/EliteIcons";
 
 type Mode = "enroll" | "preview" | "change" | "checkout";
 
@@ -40,7 +41,7 @@ export function MembershipBuilder({
   enrollmentOpen: boolean;
   mode?: Mode;
   onChangeSubmit?: (sel: Selection, promo: string | null, accepted?: boolean) => void;
-  /** Elite Concierge is by invitation only: selectable only by members who accepted an invitation. */
+  /** Elite Concierge: anyone may apply; selectable once the member is approved (qualification and verification). */
   eliteInvited?: boolean;
 }) {
   const [sel, setSel] = useState<Selection>(() => normalizeSelection(catalogue, initial));
@@ -186,26 +187,25 @@ export function MembershipBuilder({
                 const on = sel.package === p.slug;
                 if (p.slug === "elite-concierge" && !eliteInvited) {
                   return (
-                    <a key={p.slug} href="/elite" className="theme-dark band relative block rounded-[22px] border-2 border-[#c9a96e]/70 p-6 text-left transition hover:border-[#e8892b]">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <EliteBadge size={20} interactive={false} />
-                        <span className="rounded-full border border-[#e8892b]/70 px-3 py-1 text-[0.65rem] uppercase tracking-[0.18em] text-[#f0a35a]">By Invitation Only</span>
+                    <div key={p.slug} className="theme-dark band relative overflow-hidden rounded-[22px] border-2 border-[#c9a96e]/70 p-6 text-center sm:col-span-2">
+                      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,rgb(232_112_26/0.14),transparent_70%)]" aria-hidden="true" />
+                      <div className="relative">
+                        <div className="flex justify-center"><EliteBadge size={44} interactive={false} /></div>
+                        <p className="eyebrow mt-4">The Art of Connect</p>
+                        <p className="display mt-2 text-4xl text-[#f6e7c8]">{p.name}</p>
+                        <p className="display mt-2 text-lg italic text-[#e8892b]">Distinction. Intention. Influence.</p>
+                        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-ivory/80">{ELITE_INTRO}</p>
+                        <ul className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-2">
+                          {ELITE_EXPERIENCES.map((x) => (
+                            <li key={x.id} className="flex flex-col items-center gap-1.5 text-[#f0c98a]"><EliteExperienceIcon kind={x.icon} /><span className="text-sm font-semibold">{x.title}</span></li>
+                          ))}
+                        </ul>
+                        {showPrices && p.monthly_price_cents != null && <p className="mt-5 text-sm text-gold-bright">{money(p.monthly_price_cents)} / month once approved</p>}
+                        <a href="/join/elite" className="btn btn-gold mt-5 w-full">{ELITE_APPLY_LINE}</a>
+                        <p className="mt-3 text-xs text-ivory/65">{ELITE_APPLY_NOTE} Standard verification is complimentary.</p>
+                        <a href="/elite" className="mt-3 inline-block text-xs font-semibold text-[#f0a35a] underline underline-offset-2">How Elite works →</a>
                       </div>
-                      <p className="eyebrow mt-4 leading-relaxed">Distinction. Intention. Influence.</p>
-                      <p className="display mt-2 text-3xl text-ivory">{p.name}</p>
-                      {showPrices && p.monthly_price_cents != null && <p className="mt-1 text-gold-bright">{money(p.monthly_price_cents)} / month, for invited members</p>}
-                      <p className="mt-4 text-sm text-ivory/80">Our highest distinction, for verified, accomplished individuals. Admission is by invitation: earned through your membership, through expedited verification for those who qualify, or extended personally by our founder.</p>
-                      <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#f0c98a]">What Elite members receive</p>
-                      <ul className="mt-2 space-y-2 text-sm text-ivory/80">
-                        {ELITE_BENEFITS.map((x) => (
-                          <li key={x.id} className="flex gap-2">
-                            {x.id === "badge" ? <EliteBadge size={16} interactive={false} /> : <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#e8892b]" aria-hidden="true" />}
-                            <span><span className="font-semibold text-ivory">{x.title}</span>{x.ready ? "" : <span className="ml-1 text-[0.65rem] uppercase tracking-wider text-ivory/50">· In preparation</span>}<span className="block text-xs text-ivory/65">{x.body}</span></span>
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="mt-5 text-sm font-semibold text-[#f0a35a]">Explore Elite eligibility →</p>
-                    </a>
+                    </div>
                   );
                 }
                 return (

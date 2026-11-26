@@ -691,7 +691,7 @@ ERROR:  Not permitted to change these account fields
 v32-5) Members cannot read the test sign-up list (expect 0):
 0
 v32-6) Elite Concierge is labeled By Invitation Only (expect By Invitation Only):
-By Invitation Only
+Apply · Qualification Required
 v33-1) A member screens privately for the expedited pathway (expect pass):
 pass
 v33-2) Only ranges are stored, and passing unlocks the expedited path (expect personal_income|t):
@@ -782,3 +782,21 @@ LINE 1: select public.elite_screen('personal_income', true, 'expedit...
                ^
 v36-9) Only ranges are kept, never exact amounts (expect {"docs": "yes", "net_worth": 10000000}):
 {"docs": "yes", "net_worth": 10000000}
+v37-1) A new applicant applies directly, with no other membership (expect pass|direct):
+pass
+direct
+v37-2) Once identity and qualification are verified, Elite unlocks without any fee (expect invitation_issued|f):
+invitation_issued|f
+v37-3) An approved applicant may purchase Elite right away (expect t):
+t
+v37-4) Expedited applicants are never required to pay to be admitted (expect invitation_issued):
+invitation_issued
+v37-5) A single member 30+ may opt into In Love (expect t):
+t
+v37-6) A married member cannot join In Love (expect error):
+ERROR:  Elite In Love is for members who are single.
+v37-7) Members under 30 cannot join In Love, but can join Business and Life (expect error, then t|t):
+ERROR:  Elite In Love is for members 30 and older.
+t|t
+v37-8) Members cannot read others' experience choices (expect 1):
+1

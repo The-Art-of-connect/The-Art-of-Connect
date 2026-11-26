@@ -50,3 +50,5 @@
 20270107000002_elite_auto_access_qa.sql	exists (select 1 from public.qa_features where key = 'elite-card-layout')
 20270108000001_elite_screening.sql	exists (select 1 from information_schema.columns where table_name = 'elite_candidates' and column_name = 'screening_result')
 20270108000002_elite_retest_qa.sql	exists (select 1 from public.qa_features where key = 'branded-selections')
+20270109000001_elite_apply.sql	to_regclass('public.elite_experience_prefs') is not null
+20270109000002_elite_apply_qa.sql	exists (select 1 from public.qa_features where key = 'elite-direct-apply')

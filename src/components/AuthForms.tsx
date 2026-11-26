@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useActionState } from "react";
-import { signIn, signUp, signUpBusiness, signUpFree, type AuthState } from "@/app/actions/auth";
+import { signIn, signUp, signUpBusiness, signUpElite, signUpFree, type AuthState } from "@/app/actions/auth";
 import type { Selection } from "@/lib/pricing";
 import { LEGAL_TITLES, REGISTRATION_DOCS } from "@/lib/legal-requirements";
 import { Turnstile, useTurnstileReady } from "@/components/Turnstile";
@@ -29,8 +29,8 @@ const SOCIETIES = [
   { id: "couples", title: "The Personal Society · Couples", line: "Growing together · Both partners 21+" },
 ];
 
-export function JoinForm({ selection, loveStatus, minimumAge, business = false, free = false, society = null }: { selection: Selection; loveStatus: "single" | "couple" | null; minimumAge: number; business?: boolean; free?: boolean; society?: string | null }) {
-  const [state, action, pending] = useActionState<AuthState, FormData>(free ? signUpFree : business ? signUpBusiness : signUp, null);
+export function JoinForm({ selection, loveStatus, minimumAge, business = false, free = false, elite = false, society = null }: { selection: Selection; loveStatus: "single" | "couple" | null; minimumAge: number; business?: boolean; free?: boolean; elite?: boolean; society?: string | null }) {
+  const [state, action, pending] = useActionState<AuthState, FormData>(elite ? signUpElite : free ? signUpFree : business ? signUpBusiness : signUp, null);
   const [verified, setVerified] = useTurnstileReady();
   if (state?.notice) return <p className="py-6 text-center text-muted" role="status">{state.notice}</p>;
   const thisYear = new Date().getFullYear();
@@ -97,7 +97,7 @@ export function JoinForm({ selection, loveStatus, minimumAge, business = false, 
       </label>
       <Turnstile action="sign_up" resetSignal={state} onReady={setVerified} />
       {state?.error && <p className="text-sm text-danger" role="alert">{state.error}</p>}
-      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Creating your account…" : verified ? (business ? "Create my free business account" : "Become a Member") : "Verifying…"}</button>
+      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Creating your account…" : verified ? (elite ? "Create my account and apply" : business ? "Create my free business account" : "Become a Member") : "Verifying…"}</button>
     </form>
   );
 }
