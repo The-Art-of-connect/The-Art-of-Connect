@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyCron } from "@/lib/cron";
+import { assistSweep } from "@/lib/assist";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
 import { templates } from "@/lib/email-templates";
@@ -20,6 +21,8 @@ export async function POST(req: Request) {
   if (!db) return NextResponse.json({ ok: false, reason: "no database" }, { status: 503 });
   // Elite retention: erase financial summaries whose review window has passed.
   await db.rpc("elite_purge_financials");
+  // Assistance Center: restart anything not yet picked up and tell members about resolved reports.
+  try { await assistSweep(); } catch { /* best-effort */ }
   // Connect Calendar: optional reminders, about a day before events members chose to be reminded of.
   try {
     const soon = new Date(Date.now() + 26 * 3600_000).toISOString();

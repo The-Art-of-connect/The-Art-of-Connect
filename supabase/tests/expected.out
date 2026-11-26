@@ -873,3 +873,15 @@ v40-3) A member cannot pre-fill Peace's notes (expect error):
 ERROR:  new row violates row-level security policy for table "site_issues"
 v40-4) Other members cannot see someone else's report (expect 0):
 0
+v40-5) Critical failures are prioritized automatically (expect critical):
+critical
+v40-6) Members cannot claim reports or read the repair log (expect error, then 0):
+ERROR:  permission denied for function assist_claim
+0
+v40-7) A report can be claimed once; a second repair is refused (expect claimed|in_progress):
+claimed|in_progress
+v40-8) Pausing stops every repair (expect paused):
+paused
+v40-9) After the attempt limit, the report goes to the owner instead of retrying (expect attempt_limit, then needs_owner):
+attempt_limit
+needs_owner
