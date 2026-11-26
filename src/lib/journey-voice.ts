@@ -1,17 +1,16 @@
 import "server-only";
 import { guideInstructions } from "@/lib/journey-guide";
 import { loadGuideAnswers, resolveGuide } from "@/lib/journey-guide-server";
-import { teachingGuidance } from "@/lib/curricula";
 import { personaIsPaid } from "@/lib/view-as";
-import { cleanPrefs, DEFAULT_PREFS, paceSpeed, styleInstructions } from "@/lib/journey-customize";
+import { cleanPrefs, DEFAULT_PREFS, paceSpeed } from "@/lib/journey-customize";
 import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
-import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-seed";
+import { FOUNDER_PRINCIPLES } from "@/lib/journey-training-seed";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { serverSecret } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildJourneyInstructions, effectiveMode, journeyAccessFor, modeAllowed, ownerTestAccess, type JourneyMode } from "@/lib/journey";
-import { loadSettings, membershipFor } from "@/lib/journey-server";
+import { effectiveMode, journeyAccessFor, modeAllowed, ownerTestAccess, type JourneyMode } from "@/lib/journey";
+import { composeFoundation, loadSettings, membershipFor, trainingFor } from "@/lib/journey-server";
 
 /**
  * Talk to Journey — OpenAI Realtime voice over WebRTC.
@@ -87,24 +86,25 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     return { ok: false, message: (input.ownerTest && typeof started === "string" && why[started]) || (started === "refused:in_progress" ? why[started] : "Talk to Journey is resting right now. Please try again later.") };
   }
 
-  let topic = `\n\n# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`;
-  let guided = false;
+  // The same foundation as written conversations: Blueprint, philosophy, founder principles, knowledge, member context.
+  const foundation = await composeFoundation(db, cfg, { userId: viewer.id, mode: input.mode, access, ownerTest: Boolean(input.ownerTest), lesson: input.lesson ?? null, spoken: true });
+  let topic = "";
   if (input.lesson) {
-    topic += `\n\n${await teachingGuidance(db, input.lesson)}\nThis is a live, spoken lesson: teach conversationally, one idea and one question at a time.`;
+    topic += "\n\nThis is a live, spoken lesson: teach conversationally, one idea and one question at a time.";
     // Universal integration: any guided module (questionnaires, reflections, lessons) can be completed by voice.
     const gm = await resolveGuide(db, input.lesson);
-    if (gm) { guided = true; topic += `\n\n${guideInstructions(gm, await loadGuideAnswers(db, viewer.id, gm), true)}`; }
+    if (gm) topic += `\n\n${guideInstructions(gm, await loadGuideAnswers(db, viewer.id, gm), true)}`;
   }
   const dc = input.discovery ? discoveryCategory(input.discovery) : null;
   if (dc) {
     const { data: tc } = await db.from("journey_training_categories").select("learning_objectives").eq("key", dc.key).maybeSingle();
     topic += `\n\n${discoveryInstructions(dc, tc?.learning_objectives ?? [], FOUNDER_PRINCIPLES[dc.key] ?? [], false)}\nThis discovery is spoken aloud: ask one short question at a time and wait.`;
   }
+  // Voice has no typed message to match against, so include the founder training for this lesson or topic area.
+  topic += await trainingFor(db, `${input.lesson ?? ""} ${dc?.key ?? ""} ${input.mode}`, { lesson: input.lesson ?? null, mode: input.mode, ownerTest: Boolean(input.ownerTest), max: 4 });
   const { data: prefRow } = await db.from("journey_voice_preferences").select("presentation, voice, age_style, language, accent, personality, pace, avatar").eq("user_id", viewer.id).maybeSingle();
   const prefs = prefRow ? cleanPrefs({ ...prefRow, age: prefRow.age_style }) : { ...DEFAULT_PREFS, voice: VOICE_STYLES[input.style].voice };
-  topic += `\n\n${styleInstructions(prefs, true)}`;
-  const instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: null, disabledCapabilities: cfg.disabled }) + topic
-    + "\n\n# Voice conversation\nYou are speaking aloud. Begin by briefly saying you are Journey, an AI assistant with an AI-generated voice. Keep replies warm, natural and concise (a few sentences), and pause to let the member speak.";
+  const instructions = foundation.instructions + topic;
   const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "OpenAI-Safety-Identifier": await hashId(viewer.id) },
@@ -112,8 +112,14 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
       expires_after: { anchor: "created_at", seconds: 60 },
       session: { type: "realtime", model: cfg.voice.model, instructions, audio: {
         output: { voice: prefs.voice, speed: paceSpeed(prefs.pace) },
-        // Guided modules only: the member's words are transcribed so they can review the answers Journey documents.
-        ...(guided ? { input: { transcription: { model: "gpt-4o-mini-transcribe" } } } : {}),
+        input: {
+          // The member's words are transcribed so the private transcript (when they choose to keep one) and lesson answers include both sides.
+          transcription: { model: "gpt-4o-mini-transcribe" },
+          // Phones and laptops: filter room noise and speaker echo so Journey doesn't answer background sound or her own voice.
+          noise_reduction: { type: "near_field" },
+          // Wait for the member to finish their thought before replying, instead of reacting to every pause or sound.
+          turn_detection: { type: "semantic_vad", eagerness: "low", create_response: true, interrupt_response: true },
+        },
       }, max_output_tokens: 1200 },
     }),
     signal: AbortSignal.timeout(15_000),

@@ -88,7 +88,8 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
     setStatus("connecting");
     let stream: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Echo cancellation keeps Journey from hearing her own voice through the speaker and answering herself.
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     } catch {
       setStatus("idle"); setNote("Journey needs permission to use your microphone. You can allow it in your browser settings, or chat in writing instead."); return;
     }
@@ -99,6 +100,8 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
     pc.ontrack = (e) => { audio.srcObject = e.streams[0]; };
     stream.getTracks().forEach((t) => pc.addTrack(t, stream));
     const dc = pc.createDataChannel("oai-events");
+    // Journey greets once, deliberately, when the line opens (instead of reacting to the first sound she hears).
+    dc.onopen = () => { try { dc.send(JSON.stringify({ type: "response.create" })); } catch { /* the member can simply start speaking */ } };
     const bump = () => { ref.current.idleLast = Date.now(); };
     dc.onmessage = (m) => {
       try {

@@ -143,7 +143,8 @@ export default async function JourneyAdmin() {
             <JourneyLiveTest ready={Boolean(s?.enabled && s?.paid_usage_authorized && s?.owner_testing_enabled)}
               voiceReady={Boolean(s?.enabled && s?.paid_usage_authorized && s?.voice_enabled && s?.voice_model && s?.voice_cents_per_minute != null)}
               voiceReason="Turn on “Enable live voice” in step 1 and press Save settings." />
-            <p className="border-t border-line px-6 py-4 text-xs text-muted">Also try Journey across the website: <a href="/app/know-yourself/who-am-i/beyond-my-titles" className="text-gold underline">a lesson</a>, <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a>, <a href="/app/journey/customize" className="text-gold underline">avatar &amp; voice</a>, or any paid membership through <strong>View as</strong>. All use this same private budget.</p>
+            <p className="border-t border-line px-6 pt-4 text-sm"><a href="/admin/journey/quality" className="btn btn-gold btn-sm">Run quality tests: nine real conversations →</a></p>
+            <p className="px-6 py-4 text-xs text-muted">Also try Journey across the website: <a href="/app/know-yourself/who-am-i/beyond-my-titles" className="text-gold underline">a lesson</a>, <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a>, <a href="/app/journey/customize" className="text-gold underline">avatar &amp; voice</a>, or any paid membership through <strong>View as</strong>. All use this same private budget.</p>
           </div>
         </div>
       </section>

@@ -217,51 +217,10 @@ export async function sendJourneyMessage(input: {
     : null;
 
   // Instructions: founder's philosophy and guardrails first, then the owner's published version.
-  const [{ data: published }, { data: knowledge }, { data: examples }] = await Promise.all([
-    input.ownerTest && input.instructionVersion
-      ? db.from("journey_instruction_versions").select("version, body").eq("version", input.instructionVersion).maybeSingle()
-      : db.from("journey_instruction_versions").select("version, body").eq("status", "published").maybeSingle(),
-    db.from("journey_knowledge").select("title, body").eq("status", "approved").in("mode", ["all", input.mode]).order("updated_at", { ascending: false }).limit(20),
-    db.from("journey_examples").select("member_message, ideal_reply").eq("status", "approved").eq("mode", input.mode).order("updated_at", { ascending: false }).limit(5),
-  ]);
-  let knowledgeText = "";
-  for (const k of knowledge ?? []) {
-    const block = `## ${k.title}\n${k.body}\n\n`;
-    if (knowledgeText.length + block.length > 8000) break;
-    knowledgeText += block;
-  }
-  const exampleText = (examples ?? []).map((e) => `Member: ${e.member_message.slice(0, 600)}\nJourney: ${e.ideal_reply.slice(0, 1200)}`).join("\n\n");
-  let memoryText = "";
-  if (cfg.memoryEnabled) {
-    const [{ data: ms }, { data: mem }] = await Promise.all([
-      db.from("journey_memory_settings").select("enabled, approach").eq("user_id", viewer.id).maybeSingle(),
-      db.from("journey_memories").select("kind, content").eq("user_id", viewer.id).order("created_at", { ascending: false }).limit(30),
-    ]);
-    if (ms?.approach) memoryText += `The member prefers a ${ms.approach === "blend" ? "blended spiritual, secular and practical" : ms.approach} approach.\n`;
-    if (ms?.enabled && mem?.length) memoryText += mem.map((x) => `- (${x.kind}) ${x.content}`).join("\n");
-  }
-  const ownerText = [
-    published?.body ?? "",
-    memoryText && `# What this member has asked Journey to remember (use naturally; never reveal it to anyone else)\n${memoryText}`,
-    knowledgeText && `# Approved knowledge from The Art of Connect\n${knowledgeText}`,
-    exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
-  ].filter(Boolean).join("\n\n");
-  let instructions = buildJourneyInstructions({ mode: input.mode, access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled });
-  instructions += `\n\n${JOURNEY_EI_GUIDANCE}`;
-  if (input.lesson) instructions += `\n\n${await teachingGuidance(db, input.lesson)}`;
-  const { data: prefRow } = await db.from("journey_voice_preferences").select("presentation, voice, age_style, language, accent, personality, pace, avatar").eq("user_id", viewer.id).maybeSingle();
-  if (prefRow) instructions += `\n\n${styleInstructions(cleanPrefs({ ...prefRow, age: prefRow.age_style }), false)}`;
-  instructions += "\n\n# Professional support\nWhen qualified human support could genuinely help, you may gently offer the Counseling & Wellness Center (Counseling in the member menu), open to every member, as an option they are free to decline. Never present it as a diagnosis or a requirement. If anyone may be in danger, give emergency resources first (911 in the U.S.; call or text 988).";
-  instructions += `\n\n# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`;
-  // Founder-approved training: only APPROVED entries, only the few most relevant to this message.
-  const [{ data: trained }, { data: tcats }] = await Promise.all([
-    db.from("journey_training_entries").select("category, topic, scenario, founder_principles, interpretation, approach, example_response, follow_ups, safety").eq("status", "approved").limit(600),
-    db.from("journey_training_categories").select("key, title, founder_decisions"),
-  ]);
-  const picked = selectTraining((trained ?? []) as TrainingEntry[], input.message, { lesson: input.lesson ?? input.guide?.ref ?? null, mode: input.mode });
-  const pickedCats = new Set(picked.map((e) => e.category));
-  const training = formatTraining(picked, (tcats ?? []).filter((c) => pickedCats.has(c.key)).map((c) => ({ title: c.title, decisions: c.founder_decisions ?? [] })));
-  if (training) instructions += `\n\n${training}`;
+  // One foundation for written and live voice: Blueprint, philosophy, founder principles, knowledge, member context.
+  const foundation = await composeFoundation(db, cfg, { userId: viewer.id, mode: input.mode, access, ownerTest: Boolean(input.ownerTest), instructionVersion: input.instructionVersion ?? null, lesson: input.lesson ?? input.guide?.ref ?? null, spoken: false });
+  const published = foundation.blueprint;
+  let instructions = foundation.instructions;
 
   if (input.portfolio) {
     const pin = await loadPortfolioInput(db, viewer.id);
@@ -276,7 +235,6 @@ export async function sendJourneyMessage(input: {
     const gm = await resolveGuide(db, input.guide.ref);
     if (!gm) return refuse(404, "That lesson wasn't found.");
     const answered = await loadGuideAnswers(db, viewer.id, gm);
-    if (!input.lesson) instructions += `\n\n${await teachingGuidance(db, input.guide.ref)}`;
     instructions += `\n\n${guideInstructions(gm, answered, false, Boolean(input.guide.assist && !input.guide.draft))}`;
     if (input.guide.draft) {
       draftOnly = true;
@@ -300,7 +258,6 @@ export async function sendJourneyMessage(input: {
     const { data: tc } = await db.from("journey_training_categories").select("learning_objectives").eq("key", ds.category).maybeSingle();
     instructions += `\n\n${discoveryInstructions(dc, tc?.learning_objectives ?? [], FOUNDER_PRINCIPLES[ds.category] ?? [], Boolean(input.discovery?.summarize))}`;
   }
-  if (input.mode === "life" || input.mode === "love") instructions += await loveLanguageContext(db, viewer.id);
 
   // Context: only this member's own conversation, trimmed to the owner's limits.
   let history: ChatTurn[] = [];
@@ -310,6 +267,9 @@ export async function sendJourneyMessage(input: {
     const { data: msgs } = await db.from("journey_messages").select("role, content").eq("conversation_id", conv.id).order("created_at", { ascending: true }).limit(200);
     history = trimHistory((msgs ?? []).map((r) => ({ role: r.role === "journey" ? "assistant" : "user", content: r.content }) as ChatTurn), cfg.settings.maxHistoryMessages, cfg.settings.maxHistoryChars);
   }
+  // Founder training most relevant to what the member is talking about now (this message and their recent turns).
+  const recent = [...history].reverse().filter((h) => h.role === "user").slice(0, 3).map((h) => h.content).join(" ");
+  instructions += await trainingFor(db, `${input.message} ${recent}`, { lesson: input.lesson ?? input.guide?.ref ?? null, mode: input.mode, ownerTest: Boolean(input.ownerTest) });
   const promptChars = instructions.length + history.reduce((n, h) => n + h.content.length, 0);
 
   if (input.sessionId && !input.ownerTest) {
@@ -460,4 +420,113 @@ export async function loveLanguageContext(db: Db, userId: string) {
     if (ll.feel_unappreciated) out += `\nFeels unappreciated when: ${String(ll.feel_unappreciated).slice(0, 600)}`;
   }
   return out;
+}
+
+
+// ─── Journey's shared foundation (written and live voice) ─────────────────────────────
+
+/** Who Journey is inside The Art of Connect: identity and the platform she can speak about accurately. */
+export const JOURNEY_IDENTITY = `# Who you are
+You are Journey, the AI intelligence of The Art of Connect, supporting members In Business, In Life and In Love. You are always transparent that you are an AI. You are not a therapist, counselor, attorney or financial advisor, and you never diagnose.
+
+# The Art of Connect, so you can guide members accurately
+- The Art of Self: free self-discovery for every member, including Who Am I?, Identity & Self-Love, Emotional Intelligence, Boundaries, Love Languages and the Personal Discovery Portfolio. Members can complete lessons independently or with you.
+- The Professional Society (In Business, 21+): business networking, the connection board, private inbox and webinars.
+- The Personal Society (In Love): singles (30+) and couples (21+), relationship readiness, couples tools and, later, matchmaking.
+- The Art of Becoming: personal growth and support.
+- The Counseling & Wellness Center: open to every member; Journey offers nonclinical support only; licensed professionals set their own fees.
+- Journey (you): included with every paid membership, in writing and live voice, within the member's monthly allowance; Discovery Sessions and personalized analyses; Private Sessions are separately priced.
+Speak only about what exists. If you're unsure whether a feature is available to this member, say so rather than guessing.`;
+
+/** How Journey converses, in writing and aloud. */
+export const CONVERSATION_CRAFT = `# How you converse
+- Listen first. Respond to what the member actually said, using their words and details, before asking anything new.
+- Build each question on their previous answer. Never ask a question they have already answered.
+- Introduce yourself only once, at the very start of a conversation. Never repeat your introduction, and never repeatedly ask "what would you like help with". If you don't know the topic yet, offer two or three warm, specific starting points from The Art of Connect instead.
+- Keep continuity: remember and refer back to what was said earlier in this conversation.
+- Teach as well as ask: offer a clear, meaningful explanation or perspective when it would help, then one thoughtful follow-up question.
+- Ask one question at a time.
+- Notice emotion gently ("it sounds like that was painful") without assuming feelings the member hasn't expressed, and without labels or diagnoses.
+- Be warm and also honest: invite accountability kindly when it would help the member grow.
+- Mirror the member's style: brief when they are brief, deeper when they open up; plain, natural language, never scripted.
+- If anyone may be in danger, give emergency resources first (911 in the U.S.; call or text 988).`;
+
+const SPOKEN_CRAFT = `# Speaking aloud
+- You are in a live, spoken conversation. Greet the member once, briefly, as Journey (an AI with an AI-generated voice), then let them speak.
+- Keep replies natural and short (two to four sentences), then pause for them.
+- If you didn't clearly hear or understand, say so briefly and ask them to repeat it. Never guess a topic from unclear sound, and never respond to background noise.
+- If the member is silent, wait patiently; don't fill silence by repeating your question.`;
+
+/**
+ * Everything Journey knows before the conversation starts, shared by written and voice sessions.
+ * Members get the PUBLISHED Blueprint only. Owner tests use the version chosen, otherwise the newest draft,
+ * so the owner can privately test drafts before approving them.
+ */
+export async function composeFoundation(db: Db, cfg: NonNullable<Awaited<ReturnType<typeof loadSettings>>>, o: {
+  userId: string; mode: JourneyMode; access: "standard" | "enhanced"; ownerTest: boolean; instructionVersion?: number | null; lesson?: string | null; spoken: boolean;
+}): Promise<{ instructions: string; blueprint: { version: number; body: string; status: string } | null }> {
+  const blueprintQuery = o.ownerTest && o.instructionVersion
+    ? db.from("journey_instruction_versions").select("version, body, status").eq("version", o.instructionVersion).maybeSingle()
+    : o.ownerTest
+      ? db.from("journey_instruction_versions").select("version, body, status").neq("status", "retired").order("version", { ascending: false }).limit(1).maybeSingle()
+      : db.from("journey_instruction_versions").select("version, body, status").eq("status", "published").maybeSingle();
+  const [{ data: blueprint }, { data: knowledge }, { data: examples }, { data: prefRow }] = await Promise.all([
+    blueprintQuery,
+    db.from("journey_knowledge").select("title, body").eq("status", "approved").in("mode", ["all", o.mode]).order("updated_at", { ascending: false }).limit(20),
+    db.from("journey_examples").select("member_message, ideal_reply").eq("status", "approved").eq("mode", o.mode).order("updated_at", { ascending: false }).limit(5),
+    db.from("journey_voice_preferences").select("presentation, voice, age_style, language, accent, personality, pace, avatar").eq("user_id", o.userId).maybeSingle(),
+  ]);
+  let knowledgeText = "";
+  for (const k of knowledge ?? []) {
+    const block = `## ${k.title}\n${k.body}\n\n`;
+    if (knowledgeText.length + block.length > 8000) break;
+    knowledgeText += block;
+  }
+  const exampleText = (examples ?? []).map((e) => `Member: ${e.member_message.slice(0, 600)}\nJourney: ${e.ideal_reply.slice(0, 1200)}`).join("\n\n");
+  let memoryText = "";
+  if (cfg.memoryEnabled) {
+    const [{ data: ms }, { data: mem }] = await Promise.all([
+      db.from("journey_memory_settings").select("enabled, approach").eq("user_id", o.userId).maybeSingle(),
+      db.from("journey_memories").select("kind, content").eq("user_id", o.userId).order("created_at", { ascending: false }).limit(30),
+    ]);
+    if (ms?.approach) memoryText += `The member prefers a ${ms.approach === "blend" ? "blended spiritual, secular and practical" : ms.approach} approach.\n`;
+    if (ms?.enabled && mem?.length) memoryText += mem.map((x) => `- (${x.kind}) ${x.content}`).join("\n");
+  }
+  const blueprintBody = blueprint?.body
+    ? (blueprint.status === "published" ? blueprint.body : `(Owner private test of Blueprint version ${blueprint.version}, not yet published to members.)\n\n${blueprint.body}`)
+    : "";
+  const ownerText = [
+    blueprintBody,
+    memoryText && `# What this member has asked Journey to remember (use naturally; never reveal it to anyone else)\n${memoryText}`,
+    knowledgeText && `# Approved knowledge from The Art of Connect\n${knowledgeText}`,
+    exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
+  ].filter(Boolean).join("\n\n");
+  const principles = Object.entries(FOUNDER_PRINCIPLES).map(([k, list]) => `## ${k.replace(/-/g, " ")}\n${list.map((x) => `- ${x}`).join("\n")}`).join("\n");
+  const parts = [
+    buildJourneyInstructions({ mode: o.mode, access: o.access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled }),
+    JOURNEY_IDENTITY,
+    `# The founder's educational principles, by subject (the founder's own words; teach from these)\n${principles}`,
+    JOURNEY_EI_GUIDANCE,
+    o.lesson ? await teachingGuidance(db, o.lesson) : "",
+    o.mode === "life" || o.mode === "love" ? (await loveLanguageContext(db, o.userId)).trim() : "",
+    prefRow ? styleInstructions(cleanPrefs({ ...prefRow, age: prefRow.age_style }), o.spoken) : "",
+    "# Professional support\nWhen qualified human support could genuinely help, you may gently offer the Counseling & Wellness Center (Counseling in the member menu), open to every member, as an option they are free to decline. Never present it as a diagnosis or a requirement.",
+    CONVERSATION_CRAFT,
+    o.spoken ? SPOKEN_CRAFT : "",
+    `# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`,
+  ];
+  return { instructions: parts.filter(Boolean).join("\n\n"), blueprint: blueprint ?? null };
+}
+
+/** Founder training entries relevant to the topic. Members: approved only. Owner tests also include drafts awaiting review. */
+export async function trainingFor(db: Db, topic: string, o: { lesson?: string | null; mode: JourneyMode; ownerTest: boolean; max?: number }): Promise<string> {
+  const [{ data: trained }, { data: tcats }] = await Promise.all([
+    db.from("journey_training_entries").select("category, topic, scenario, founder_principles, interpretation, approach, example_response, follow_ups, safety")
+      .in("status", o.ownerTest ? ["approved", "pending"] : ["approved"]).is("founder_question", null).limit(600),
+    db.from("journey_training_categories").select("key, title, founder_decisions"),
+  ]);
+  const picked = selectTraining((trained ?? []) as TrainingEntry[], topic, { lesson: o.lesson ?? null, mode: o.mode, max: o.max });
+  const cats = new Set(picked.map((e) => e.category));
+  const text = formatTraining(picked, (tcats ?? []).filter((c) => cats.has(c.key)).map((c) => ({ title: c.title, decisions: c.founder_decisions ?? [] })));
+  return text ? `\n\n${text}` : "";
 }
