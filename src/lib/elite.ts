@@ -1,5 +1,5 @@
 /**
- * Elite Concierge Society: by invitation only. Shared labels and helpers (no server access here).
+ * Elite Concierge Society: apply for Elite Membership; qualification and verification required. Shared labels and helpers (no server access here).
  */
 export const ELITE_TAGLINE = "Distinction. Intention. Influence.";
 
@@ -23,7 +23,7 @@ export const ELITE_STATUS_LABEL: Record<string, string> = {
   owner_verified: "Owner verification successful",
   manual_review: "Manual review required",
   qualification_approved: "Qualification approved",
-  invitation_issued: "Invitation issued",
+  invitation_issued: "Approved: Elite membership unlocked",
   invitation_accepted: "Invitation accepted",
   membership_activated: "Membership activated",
   expired: "Verification expired",
@@ -44,8 +44,8 @@ export const EVIDENCE_KINDS = [
 export type Thresholds = Record<string, { amount: number; approved: boolean }>;
 export const usd = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
-/** Members whose accepted invitation or active membership lets them choose Elite Concierge. */
-export const eliteCanChoose = (status: string | null | undefined) => status === "invitation_accepted" || status === "membership_activated";
+/** Members whose approved candidacy or active membership lets them choose Elite Concierge. */
+export const eliteCanChoose = (status: string | null | undefined) => status === "invitation_issued" || status === "invitation_accepted" || status === "membership_activated";
 
 /**
  * How each requirement is verified. Stripe establishes identity and supporting bank facts; anything Stripe
@@ -98,11 +98,19 @@ export function depositWindow(a: { deposits_cents: number | null; deposits_count
   };
 }
 
-/** What an Elite member receives. `ready: false` items are shown as "In preparation", never as available. */
+export const ELITE_APPLY_LINE = "Apply for Elite Membership";
+export const ELITE_APPLY_NOTE = "Qualification and verification required.";
+export const ELITE_INTRO = "You’ve worked hard to build an extraordinary life. Now connect with individuals who understand your ambition, accomplishments and lifestyle.";
+
+/** Elite is an elevated connection society, not only dating or only networking. `ready: false` is shown as In preparation. */
+export const ELITE_EXPERIENCES = [
+  { id: "in_business", title: "In Business", body: "High-level professional networking, business partnerships, mentorship and executive connections.", icon: "briefcase", ready: false },
+  { id: "in_life", title: "In Life", body: "Meaningful friendships, like-minded people, shared interests, personal development and exclusive social experiences.", icon: "sparkle", ready: false },
+  { id: "in_love", title: "In Love", body: "High-end dating and intentional romantic connections between qualified, verified singles (30+). Always your choice.", icon: "heart", ready: false },
+] as const;
+
+/** What an Elite member receives. */
 export const ELITE_BENEFITS = [
-  { id: "badge", title: "The Elite badge", body: "The gold verified distinction beside your name, issued only after verification.", ready: true },
-  { id: "business", title: "In Business", body: "Connect with Elite business owners, executives and investors: partnerships, mentorship, expansion and succession conversations.", ready: false },
-  { id: "singles", title: "In Love · Singles", body: "Meet verified, accomplished Elite singles (30+), by your choice only.", ready: false },
-  { id: "couples", title: "In Love · Couples", body: "A private circle of Elite couples for connection and shared experiences.", ready: false },
-  { id: "life", title: "In Life", body: "Personal growth alongside distinguished members, with Journey as your private concierge.", ready: false },
+  { id: "badge", title: "The Elite badge", body: "The gold square with the orange check beside your name, issued after verification and membership activation.", ready: true },
+  ...ELITE_EXPERIENCES.map((e) => ({ id: e.id, title: e.title, body: e.body, ready: e.ready })),
 ] as const;

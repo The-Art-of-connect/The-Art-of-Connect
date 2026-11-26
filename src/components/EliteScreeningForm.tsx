@@ -49,8 +49,8 @@ export function EliteScreeningForm({ qualifications, initial, initialPathway, di
 
       <fieldset disabled={disabled || pending}>
         <legend className="text-sm font-semibold">How would you like to proceed?</legend>
-        <label className="mt-2 flex items-center gap-2 text-sm"><input type="radio" name="pathway" value="earned" defaultChecked={initialPathway !== "expedited"} /> Through my membership journey (complimentary)</label>
-        <label className="mt-1 flex items-center gap-2 text-sm"><input type="radio" name="pathway" value="expedited" defaultChecked={initialPathway === "expedited"} /> Expedited verification, if I qualify</label>
+        <label className="mt-2 flex items-start gap-2 text-sm"><input type="radio" name="pathway" value="direct" defaultChecked={initialPathway !== "expedited"} /> <span>Standard verification <span className="block text-xs text-muted">Complimentary. Reviewed in the order received.</span></span></label>
+        <label className="mt-2 flex items-start gap-2 text-sm"><input type="radio" name="pathway" value="expedited" defaultChecked={initialPathway === "expedited"} /> <span>Priority verification <span className="block text-xs text-muted">Optional, for applicants who pass preliminary screening. Faster processing only: never required and never a guarantee of admission.</span></span></label>
       </fieldset>
 
       <fieldset className="space-y-2" disabled={disabled || pending}>

@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     if (pkg.slug === "elite-concierge") {
       const admin = createAdminClient();
       const { data: allowed } = admin ? await admin.rpc("elite_checkout_allowed", { p_user: viewer.id }) : { data: false };
-      if (!allowed) return NextResponse.json({ error: "Elite Concierge is by invitation only. Accept your invitation first, or explore Elite eligibility." }, { status: 403 });
+      if (!allowed) return NextResponse.json({ error: "Elite Concierge unlocks once your qualification is verified. Apply or continue your Elite application." }, { status: 403 });
     }
     // Affirmative acceptance of the published agreements and the automatic-renewal terms, recorded before payment.
     const docs = checkoutDocs(selection.experiences, pkg.love_track === "couple" || (q.couplesMonthly ?? 0) > 0);
