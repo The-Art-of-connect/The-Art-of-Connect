@@ -3,6 +3,8 @@ import { EliteBadge } from "@/components/EliteBadge";
 import { EliteHome } from "@/components/EliteHome";
 import { getViewer, hasPaidAccess, isInsidePreview, isStaff } from "@/lib/auth";
 import { PossibilitiesGrid } from "@/components/PossibilitiesGrid";
+import { PaidHome } from "@/components/PaidHome";
+import { getMembership } from "@/lib/membership-server";
 import { getLaunchState } from "@/lib/launch";
 import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
 import { getCatalogue } from "@/lib/catalogue";
@@ -46,6 +48,7 @@ export default async function MemberHome() {
     supabase.from("elite_badges").select("status, issued_at").eq("user_id", viewer.id).maybeSingle(),
   ]);
   const isElite = badge?.status === "active";
+  const membership = await getMembership(viewer);
   return (
     <>
       {elite?.status === "invitation_issued" && (
@@ -131,6 +134,8 @@ export default async function MemberHome() {
       </section>
 
       {/* Your world of possibilities (founder directive 19): complimentary experiences and greyed-out paid previews. */}
+      {/* Paid members (founder directive 20): their conversations, events, connections, goals and what's new. */}
+      {membership && membership.level !== "free" && !isInsidePreview(viewer) && <PaidHome userId={viewer.id} level={membership.level} />}
       {!isElite && <div className="mt-14"><PossibilitiesGrid paid={hasPaidAccess(viewer)} /></div>}
 
       {/* The Art of Becoming (founder directives 17 and 18): daily value for every account, and what's possible next. */}

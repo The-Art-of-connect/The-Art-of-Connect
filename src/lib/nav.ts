@@ -14,6 +14,7 @@ export const NAV: NavGroup[] = [
     links: [
       { href: "/", label: "Welcome" },
       { href: "/membership", label: "Memberships", note: "Free account · 15-day trial · memberships" },
+      { href: "/what-we-offer", label: "What does this website offer?", note: "Every feature, explained" },
       { href: "/elite", label: "Elite Concierge Society", note: "Apply · qualification required" },
       { href: "/app", label: "My dashboard", access: "member" },
     ],
@@ -107,6 +108,7 @@ export const PROFILE_LINKS: NavLink[] = [
   { href: "/app", label: "My dashboard" },
   { href: "/app/know-yourself/portfolio", label: "My Personal Discovery Portfolio" },
   { href: "/app/membership", label: "Membership & billing" },
+  { href: "/what-we-offer", label: "What my membership includes" },
   { href: "/app/journey/plus", label: "My Journey allowance" },
   { href: "/app/journey/customize", label: "Customize Your Journey" },
   { href: "/app/journey/check-ins", label: "Notifications & check-ins" },

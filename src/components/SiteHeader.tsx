@@ -22,7 +22,7 @@ export async function SiteHeader() {
         <div className="flex items-center gap-2 sm:gap-3">
           <SiteSearch entries={SITE_PAGES} quick={QUICK} />
           <PreviewButton />
-          {state.signedIn ? <Link href="/app" className="btn btn-gold btn-sm hidden sm:inline-flex">My Dashboard</Link> : <Link href="/membership#build" className="btn btn-gold btn-sm hidden sm:inline-flex">Build Your Membership</Link>}
+          {state.signedIn ? <Link href="/app" className="btn btn-gold btn-sm hidden sm:inline-flex xl:hidden 2xl:inline-flex">My Dashboard</Link> : <Link href="/membership#build" className="btn btn-gold btn-sm hidden sm:inline-flex xl:hidden 2xl:inline-flex">Build Your Membership</Link>}
           <ProfileMenu state={state} />
           <MobileMenu state={state} />
         </div>
