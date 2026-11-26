@@ -14,6 +14,9 @@ changes an earlier one, the later one wins.
 | 05 | [Journey Intelligence, personal development and private sessions](05-journey-intelligence-development-sessions.md) | **Not built yet.** Knowledge Library, Daily Personal Development, Private Sessions, future Professional Therapy and Counseling Center. |
 | 06 | [Voice, tone and the self-discovery invitation](06-voice-tone-and-self-discovery.md) | **Built.** Refined invitation live in every society; tone guidance applies to all future copy. |
 | 07 | [Journey Master Blueprint V1.0](07-journey-master-blueprint-v1.md) | **Loaded as draft version 1** in Owner Portal → Journey → Master personality (sections 1–8 and 10; section 9 is enforced by the platform). Not published — awaiting founder approval. Section 10 (check-ins): in progress. |
+| 08 | [Couples Connection Community](08-couples-connection-community.md) | **Designed, not built.** In the [Social Ecosystem Master Blueprint](../social-ecosystem/master-blueprint.md), Development Tracker and QA Center. |
+| 09 | [The Connect Calendar](09-connect-calendar.md) | **Designed, not built.** Same blueprint; reuses webinars, registrations, reminders and couples calendars. |
+| 10 | [Find Your Circle & Connection Intelligence Engine](10-find-your-circle.md) | **Designed, not built.** Same blueprint; recommends, never restricts. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
