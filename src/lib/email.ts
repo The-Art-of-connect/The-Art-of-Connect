@@ -1,4 +1,5 @@
 import "server-only";
+import { isTestAccountEmail } from "@/lib/test-accounts";
 import { env, serverConfig, serverSecret } from "@/lib/env";
 import { renderEmail, type EmailContent } from "@/lib/email-templates";
 
@@ -27,7 +28,7 @@ export type SendResult = { ok: boolean; id?: string; skipped?: string; error?: s
 export async function sendEmail(to: string, content: EmailContent, opts: { category: "account" | "membership" | "billing" | "professional" | "owner_alert" | "marketing"; marketingEnabled?: boolean; idempotencyKey?: string } = { category: "account" }): Promise<SendResult> {
   if (!isEmailConfigured()) return { ok: false, skipped: "Email is not configured yet (RESEND_API_KEY / EMAIL_FROM)." };
   if (opts.category === "marketing" && !opts.marketingEnabled) return { ok: false, skipped: "Marketing email is disabled until launch." };
-  if (env.launchLocked && !isAuthorizedTestRecipient(to)) return { ok: false, skipped: "Pre-launch: only authorized test recipients receive email." };
+  if (env.launchLocked && !isAuthorizedTestRecipient(to) && !(await isTestAccountEmail(to))) return { ok: false, skipped: "Pre-launch: only authorized test recipients and owner test accounts receive email." };
 
   const { html, text } = renderEmail(content);
   try {

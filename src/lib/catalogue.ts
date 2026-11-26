@@ -1,4 +1,6 @@
 import "server-only";
+import { getOwnerTestSession } from "@/lib/owner-test-session";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
@@ -26,9 +28,11 @@ const OFFLINE: PricingCatalogue = {
 };
 
 export const getCatalogue = cache(async (preview = false): Promise<PricingCatalogue> => {
-  const supabase = await createClient();
+  // Owner testing session: show the draft prices being tested, read through the server (never the visitor's own role).
+  const testing = Boolean(await getOwnerTestSession());
+  const supabase = testing ? createAdminClient() : await createClient();
   if (!supabase) return OFFLINE;
-  const { data, error } = await supabase.rpc("get_public_pricing", { preview });
+  const { data, error } = await supabase.rpc("get_public_pricing", { preview: preview || testing });
   if (error || !data) return OFFLINE;
   // Tolerate an older database (before membership packages) without breaking pages.
   const d = data as Partial<PricingCatalogue>;

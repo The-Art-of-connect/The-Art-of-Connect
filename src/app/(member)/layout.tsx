@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLaunchState } from "@/lib/launch";
 import { redirect } from "next/navigation";
 import { Wordmark } from "@/components/Emblem";
 import { getViewer, hasRole, isInsidePreview, isStaff } from "@/lib/auth";
@@ -70,7 +71,7 @@ export default async function MemberLayout({ children }: { children: React.React
             <AgreementForm docs={pending.map((p) => ({ slug: p.slug, title: p.title, version: p.version_label, reason: p.reason }))} />
           </section>
         ) : (
-          <SectionGate status={status} notes={notes} staff={isStaff(viewer) || preview || Boolean(viewer.viewAs)}>{children}</SectionGate>
+          <SectionGate status={status} notes={notes} staff={isStaff(viewer) || preview || Boolean(viewer.viewAs) || Boolean((await getLaunchState()).testSession)}>{children}</SectionGate>
         )}
       </main>
       {reviewer && <OwnerReview status={status} />}
