@@ -800,3 +800,46 @@ ERROR:  Elite In Love is for members 30 and older.
 t|t
 v37-8) Members cannot read others' experience choices (expect 1):
 1
+v38-1) Location stays hidden unless the member chooses to show it (expect Founder|null):
+Founder|null
+v38-2) Connections never carry romance (expect error):
+ERROR:  new row for relation "social_connections" violates check constraint "social_connections_intention_check"
+v38-3) A member cannot accept their own request (expect 0 rows changed):
+0
+v38-4) Messaging requires an accepted connection (expect error):
+ERROR:  You can message your connections only
+v38-5) A connections-only post is hidden from someone not connected (expect 0):
+0
+v38-6) After the member accepts, it becomes visible and messaging opens (expect 1|t):
+1|t
+v38-7) Someone outside the conversation cannot read it (expect 0):
+0
+v38-8) Couples circles are for couples only (expect error):
+ERROR:  new row violates row-level security policy for table "social_circle_members"
+v38-9) Anyone eligible may join an open circle, and circle posts stay inside it (expect 1|0, then 0):
+1|0
+0
+v38-10) A member cannot make themselves a circle host (expect permission error):
+ERROR:  permission denied for table social_circle_members
+v38-11) A blocked member no longer sees the blocker's posts (expect 0):
+0
+v38-12) Event attendance is private unless the member shows it (expect 1, then 0):
+1
+0
+v38-13) Listings that ask for direct payment are flagged automatically (expect 1):
+1
+v38-14) Private photographs stay private (expect 0):
+0
+v38-15) Members cannot create official events (expect error):
+ERROR:  new row violates row-level security policy for table "social_events"
+v38-16) Anonymous visitors see nothing (expect permission error):
+ERROR:  permission denied for table social_posts
+v38-17) Luxury and lifestyle circles are open to every member, regardless of income (expect 1):
+1
+v38-18) Only designated Elite circles require verified Elite membership (expect error):
+ERROR:  new row violates row-level security policy for table "social_circle_members"
+v38-19) Connection preferences are private to the member (expect 1, then 0):
+1
+0
+v38-20) Every non-Elite circle is open to all eligible members: no circle limits ordinary members by income (expect 0):
+0

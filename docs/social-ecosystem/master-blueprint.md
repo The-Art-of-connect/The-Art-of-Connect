@@ -1,13 +1,19 @@
 # The Art of Connect — Social Ecosystem Master Blueprint
 
-_Status: **designed, not built.** Every item below is recorded in the Development Tracker (area "Social Ecosystem") and
+_Status: **phase 1 built and deployed for owner testing** (profiles and photographs, connections, the Connection Feed,
+Find Your Circle with open, specialized and Elite circles, The Connect Calendar, messages, Connection Intelligence v1,
+Community & Social owner center). Couples Connection phase 2, the Couples Travel Exchange and Journey integration are
+next. Every item below is recorded in the Development Tracker (area "Social Ecosystem") and
 has a test plan in the Quality Assurance Center. Nothing is operational until it is built, tested and approved by the
 founder. Commercial launch restrictions apply throughout._
 
 Founder directives, kept word for word:
 [08 Couples Connection Community](../founder-directives/08-couples-connection-community.md) ·
 [09 The Connect Calendar](../founder-directives/09-connect-calendar.md) ·
-[10 Find Your Circle & Connection Intelligence Engine](../founder-directives/10-find-your-circle.md)
+[10 Find Your Circle & Connection Intelligence Engine](../founder-directives/10-find-your-circle.md) ·
+[11 Membership value, connection alignment & Elite](../founder-directives/11-membership-value-alignment-elite.md) ·
+[12 Open, specialized and Elite circles](../founder-directives/12-specialized-circles.md) ·
+[13 Inclusive access](../founder-directives/13-inclusive-access.md)
 
 > In Business. In Life. In Love. Help people discover themselves, find their people, build meaningful connections
 > and experience life together — not simply interact online.
@@ -169,3 +175,28 @@ no individual surveillance), safety reports and community growth.
 4. Free-member scope: which events and circles free members can see, share and join.
 5. Elite couples circle eligibility: both partners Elite, or one partner Elite with the other's consent.
 6. Any future paid ticketing, booking or travel integrations (none will be added without approval).
+
+## 7. Membership value, alignment and inclusive access (directives 11–13)
+
+- **Every membership delivers value**: education, business growth, personal development, friendships, mentorship,
+  events and shared experiences, according to entitlements. Reasons to return come from real value, never from
+  engagement tricks.
+- **Three directions of connection** — members choose what they're available for:
+  *Connect upward* (seeking a mentor), *connect alongside* (compatible peers, friendships, business, travel),
+  *connect through contribution* (offering mentorship). Nobody is ever required to mentor.
+- **Purpose-specific intelligence** (`src/lib/connection-intelligence.ts`): separate logic for business,
+  peers, mentorship (both directions), friendship, social, hobbies, travel, couples friendships (both partners'
+  preferences combined) and exploring. Shared *and* complementary qualities. No universal score: "Naturally aligned"
+  or "Worth meeting" with plain-language reasons, or not shown. Romance stays in The Personal Society.
+- **Elite verification ≠ compatibility.** Elite status, income, financial verification and membership price are
+  never matching inputs. Elite members may choose *Elite-only* connections for selected activities and still take
+  part in the broader community.
+- **Progressive, private assessment**: short sections (how you connect, business, social, travel), answered over
+  time, viewable, editable and deletable, never shown to others. Art of Self and readiness answers will be reused
+  only with consent (next).
+- **Three kinds of circles** in owner-managed categories: *Open*, *Interest & lifestyle* (e.g. Affordable
+  Adventures, Luxury Travel, Cruise Enthusiasts, Aspiring Entrepreneurs, Established Business Owners) and *Verified
+  Elite* (e.g. Elite Business, Elite Travel). Ordinary and luxury-interest circles are open to every member; only Elite
+  circles require verification. Couples and singles circles follow relationship-status and age rules only.
+- **Inclusive, not segregated**: recommendations never become assignments; members explore, join many circles,
+  leave anytime and discover communities outside their preferences.
