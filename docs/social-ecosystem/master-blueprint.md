@@ -200,3 +200,42 @@ no individual surveillance), safety reports and community growth.
   circles require verification. Couples and singles circles follow relationship-status and age rules only.
 - **Inclusive, not segregated**: recommendations never become assignments; members explore, join many circles,
   leave anytime and discover communities outside their preferences.
+
+## 8. Membership access, The Art of Becoming and Discover What's Possible (directives 14–18)
+
+**Access (14, 15).** The Art of Becoming (The Art of Self, self-guided lessons, discovery, journal, Discovery Portfolio,
+My Daily Sanctuary) is free forever. Every interactive social, professional, singles, couples, community, event, messaging,
+member-discovery and personalized Journey experience requires a paid membership or an active 15-day trial. People may begin
+with free self-discovery, a trial or a membership, in any order; self-discovery is encouraged, never required first.
+
+**My Daily Sanctuary (17).** Built in `src/app/(member)/app/sanctuary/*`, `src/lib/sanctuary.ts`,
+`supabase/migrations/20270115000001_daily_sanctuary.sql`.
+
+| Area | What it includes |
+|---|---|
+| Daily | Manifestation, affirmation, intention, emotional check-in, reflection question, life lesson, self-discovery scenario, gratitude, growth challenge, accomplishments, evening reflection |
+| Weekly / monthly | Reflections, deterministic summaries of the member's own entries, goal review, accomplishments, letters to my future self, Discovery Portfolio review |
+| Library | Owner-managed lessons (explanation, example, reflection, activity) on 11 topics, grouped into mini-courses |
+| Vision Board | Private photographs, goals, intentions and accomplishments in 8 categories; own-folder storage; 5 MB, 30 photos, 60 items |
+| Reminders | Optional daily/weekly/monthly email at the member's chosen time and type; off by default; no streaks, guilt or urgency |
+| Owner control | Curriculum Studio → My Daily Sanctuary: prepare, schedule, edit, approve and publish in advance (owner-only approval) |
+
+Free accounts receive approved prewritten content only: no AI. Scenario answers are asked once (revisited only by
+choice) and feed the private Discovery Portfolio and recommendations only with the member's consent. Educational, never
+clinical or definitive.
+
+**Discover What's Possible (18).** Built in `src/app/(member)/app/discover`, on the member dashboard.
+
+- Preference-based invitations (no AI) from the member's chosen interests and, with consent, scenario signals. They appear
+  only once the private **Connection Readiness** indicator (directive 16: information completeness, never worth) reaches
+  40%; until then the member is told which activities would make suggestions more relevant.
+- **What's Happening Inside Connect**: owner-approved previews of genuine events, discussions, circles and webinars (Owner
+  Portal → Community & Social → previews). There are no member names, photographs, profiles or conversations, and no
+  invented counts; circle sizes are shown only from 10 members up.
+- Invitations to the 15-day trial or a membership, without pressure. Elite appears only as information about
+  qualification, never implying eligibility.
+- Owner Analytics Center: free → trial and trial → paid conversions by month (counts only).
+
+**Still to build for directive 16.** Purpose-specific compatibility recommendations between members (withheld until
+readiness is sufficient), conversational discovery with Journey for paid members, and wider reuse of authorized answers
+across onboarding questionnaires.

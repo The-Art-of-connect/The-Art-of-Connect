@@ -62,3 +62,6 @@
 20270113000001_assistance_center.sql	to_regclass('public.site_issues') is not null
 20270113000002_assistance_automation.sql	to_regclass('public.site_issue_events') is not null
 20270114000001_membership_access_v2.sql	exists (select 1 from information_schema.tables where table_name = 'membership_trials')
+20270115000001_daily_sanctuary.sql	exists (select 1 from information_schema.tables where table_name = 'sanctuary_content')
+20270115000002_sanctuary_starter_content.sql	exists (select 1 from public.sanctuary_content where prepared_by = 'peace')
+20270115000003_sanctuary_tracker.sql	exists (select 1 from public.dev_tracker where key = 'daily-sanctuary')

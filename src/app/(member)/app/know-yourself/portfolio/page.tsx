@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { sanctuarySettings } from "@/lib/sanctuary-server";
+import { scenarioInsights, type ScenarioOption } from "@/lib/sanctuary";
 import { getViewer, hasRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getJourneyStatus } from "@/lib/journey-server";
@@ -47,6 +49,15 @@ export default async function Portfolio() {
   const journeyVersion = (versions ?? []).find((v) => v.source === "journey");
   const date = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const hasAny = sections.some((s) => s.lines.length);
+  // My Daily Sanctuary insights appear here only with the member's consent (founder directive 17).
+  const [settings, { data: scen }] = await Promise.all([
+    sanctuarySettings(viewer.id),
+    supabase.from("sanctuary_scenario_answers").select("choice, sanctuary_content(title, options)").eq("user_id", viewer.id),
+  ]);
+  const insights = settings.share_with_portfolio
+    ? scenarioInsights(((scen ?? []) as unknown as { choice: string; sanctuary_content: { title: string | null; options: ScenarioOption[] | null } | null }[])
+        .filter((a) => a.sanctuary_content).map((a) => ({ choice: a.choice, content: a.sanctuary_content! })))
+    : [];
 
   return (
     <>
@@ -172,6 +183,17 @@ export default async function Portfolio() {
           </div>
         </section>
       ) : null}
+      <section className="no-print mx-auto mt-10 max-w-3xl">
+        <p className="eyebrow">From My Daily Sanctuary</p>
+        {settings.share_with_portfolio ? (
+          insights.length ? (
+            <ul className="mt-4 space-y-3">{insights.map((x, i) => <li key={i} className="glass p-5"><p className="text-xs text-gold-deep">{x.title}</p><p className="mt-1 text-sm">{x.insight}</p></li>)}</ul>
+          ) : <p className="mt-3 text-sm text-muted">Answer scenarios in <Link href="/app/sanctuary/discover" className="text-gold underline">Self-discovery</Link> to add insights here.</p>
+        ) : (
+          <p className="mt-3 text-sm text-muted">Your Sanctuary answers stay out of your portfolio until you choose to include them in <Link href="/app/sanctuary/settings" className="text-gold underline">Reminders &amp; privacy</Link>.</p>
+        )}
+        <p className="mt-3 text-xs text-faint">Educational reflections, not clinical assessments or definitive judgments.</p>
+      </section>
     </>
   );
 }

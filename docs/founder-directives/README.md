@@ -19,7 +19,9 @@ changes an earlier one, the later one wins.
 | 10 | [Find Your Circle & Connection Intelligence Engine](10-find-your-circle.md) | **Designed, not built.** Same blueprint; recommends, never restricts. |
 | 14 | [Revised membership access structure](14-membership-access-structure.md) | **Built.** Supersedes earlier free-access decisions: only The Art of Becoming is free; everything interactive needs a paid membership or the 15-day trial. |
 | 15 | [The Art of Becoming first, never forced](15-becoming-first-never-forced.md) | **Built (entry choices).** Free self-discovery, 15-day trial or membership now, in any order. |
-| 16 | [The Art of Becoming as the foundation of the Connection Intelligence Engine](16-becoming-foundation-of-connection-intelligence.md) | **Next phase.** Private Connection Readiness, recommendations only with enough discovery. |
+| 16 | [The Art of Becoming as the foundation of the Connection Intelligence Engine](16-becoming-foundation-of-connection-intelligence.md) | **Partly built.** Private Connection Readiness indicator and readiness-gated invitations; member-to-member compatibility next. |
+| 17 | [The Art of Becoming Daily Sanctuary](17-daily-sanctuary.md) | **Built.** My Daily Sanctuary, library, scenarios, Vision Board, reminders, Curriculum Studio. Starter content awaits founder approval. |
+| 18 | [Discover What's Possible](18-discover-whats-possible.md) | **Built.** Preference-based invitations, Inside Connect previews, conversion analytics. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
