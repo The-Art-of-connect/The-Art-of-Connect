@@ -12,6 +12,7 @@ export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; 
   { href: "/admin/elite", label: "Elite Management Center", roles: ["owner"], group: "People" },
   { href: "/admin/assist", label: "Assistance Center", roles: ["owner", "admin"], group: "People" },
   { href: "/admin/social", label: "Community & Social", roles: ["owner", "admin", "moderator"], group: "People" },
+  { href: "/admin/circle", label: "Global Conversation Control Center", roles: ["owner", "admin", "moderator"], group: "People" },
   { href: "/admin/counselors", label: "Professional applications", roles: ["owner", "executive", "admin"], group: "People" },
   { href: "/admin/access", label: "Access & referrals", roles: ["owner", "executive", "admin"], group: "People" },
   { href: "/admin/memberships", label: "Memberships", roles: ["owner", "executive", "finance"], group: "Revenue" },

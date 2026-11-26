@@ -26,6 +26,8 @@ export async function POST(req: Request) {
   try { await assistSweep(); } catch { /* best-effort */ }
   // My Daily Sanctuary: optional reminders members chose, and letters to their future selves.
   try { await sanctuaryCron(); } catch { /* best-effort */ }
+  // The Becoming Circle: keep the next 48 hours of four-hour slots filled from the owner-approved pool.
+  try { await db.rpc("circle_fill_slots"); } catch { /* best-effort */ }
   // Connect Calendar: optional reminders, about a day before events members chose to be reminded of.
   try {
     const soon = new Date(Date.now() + 26 * 3600_000).toISOString();

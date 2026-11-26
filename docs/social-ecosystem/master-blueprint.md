@@ -239,3 +239,17 @@ clinical or definitive.
 **Still to build for directive 16.** Purpose-specific compatibility recommendations between members (withheld until
 readiness is sufficient), conversational discovery with Journey for paid members, and wider reuse of authorized answers
 across onboarding questionnaires.
+
+## 9. The Becoming Circle and global connections (directive 19)
+
+| Phase | Scope | Status |
+|---|---|---|
+| 1 | Becoming Circle foundation: four-hour featured topics (auto-filled from the approved pool), written perspectives, questions, comments, polls, suggestions, staff and trained member moderators with presence and audit history, reports, emergency pause and close, Safety Shield, greyed-out previews, Who Am I Becoming? and My Future Self, Global Conversation Control Center | **Built** |
+| 2 | Moderated live audio, server-controlled two-minute turns, I'm Finished Speaking, one active microphone, fair queue, Sandbox speaking purchases | Awaiting the founder's approval of real-time infrastructure and costs |
+| 3 | Paid lounges, Create the Conversation, automated topic approval with appeals, scheduling priority (Elite → Executive → three → two → one), The Art of Leading a Conversation, invitations and QR codes, follow and connect from discussions, My Privacy & Safety Center, personalized conversation calendar | Designed |
+| 4 | Private Meeting Suite (open, approval-required, closed) for Executive Private and Elite | Designed |
+| 5 | Global Boardroom: video, screen sharing, agendas, documents, waiting rooms, notes, recurring series, captions and translation | Designed |
+
+The circle is an intentional exception to the paid-only social rule: every active account takes part in the complimentary
+discussion. Reuses: the member dashboard, membership access checks (`has_paid_membership`), Connect's reporting model,
+the 15-minute background job and the Owner Analytics Center.

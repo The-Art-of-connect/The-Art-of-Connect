@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { EliteBadge } from "@/components/EliteBadge";
 import { EliteHome } from "@/components/EliteHome";
-import { getViewer, isInsidePreview, isStaff } from "@/lib/auth";
+import { getViewer, hasPaidAccess, isInsidePreview, isStaff } from "@/lib/auth";
+import { PossibilitiesGrid } from "@/components/PossibilitiesGrid";
 import { getLaunchState } from "@/lib/launch";
 import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
 import { getCatalogue } from "@/lib/catalogue";
@@ -128,6 +129,9 @@ export default async function MemberHome() {
           })}
         </div>
       </section>
+
+      {/* Your world of possibilities (founder directive 19): complimentary experiences and greyed-out paid previews. */}
+      {!isElite && <div className="mt-14"><PossibilitiesGrid paid={hasPaidAccess(viewer)} /></div>}
 
       {/* The Art of Becoming (founder directives 17 and 18): daily value for every account, and what's possible next. */}
       <section aria-labelledby="sanctuary" className="mt-14 grid gap-5 md:grid-cols-2">

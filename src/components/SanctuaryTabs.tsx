@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const TABS = [
-  ["/app/sanctuary", "Today"], ["/app/sanctuary/week", "This week & month"], ["/app/sanctuary/library", "Library"],
+  ["/app/sanctuary", "Today"], ["/app/sanctuary/becoming", "Who I’m Becoming"], ["/app/sanctuary/week", "This week & month"], ["/app/sanctuary/library", "Library"],
   ["/app/sanctuary/discover", "Self-discovery"], ["/app/sanctuary/vision", "My Vision Board"], ["/app/sanctuary/settings", "Reminders & privacy"],
 ] as const;
 
