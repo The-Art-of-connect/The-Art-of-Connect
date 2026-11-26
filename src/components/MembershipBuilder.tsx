@@ -31,12 +31,15 @@ export function MembershipBuilder({
   enrollmentOpen,
   mode = "enroll",
   onChangeSubmit,
+  eliteInvited = false,
 }: {
   catalogue: PricingCatalogue;
   initial: Selection;
   enrollmentOpen: boolean;
   mode?: Mode;
   onChangeSubmit?: (sel: Selection, promo: string | null, accepted?: boolean) => void;
+  /** Elite Concierge is by invitation only: selectable only by members who accepted an invitation. */
+  eliteInvited?: boolean;
 }) {
   const [sel, setSel] = useState<Selection>(() => normalizeSelection(catalogue, initial));
   const [loveChosen, setLoveChosen] = useState<boolean>(Boolean(initial.couples) || initial.experiences?.includes("relationships"));
@@ -179,6 +182,18 @@ export function MembershipBuilder({
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {exclusives.map((p) => {
                 const on = sel.package === p.slug;
+                if (p.slug === "elite-concierge" && !eliteInvited) {
+                  return (
+                    <a key={p.slug} href="/elite" className="theme-dark band relative block rounded-[22px] border-2 border-[#c9a96e]/70 p-6 text-left transition hover:border-[#e8892b]">
+                      <span className="absolute right-4 top-4 rounded-full border border-[#e8892b]/70 px-3 py-1 text-[0.65rem] uppercase tracking-[0.18em] text-[#f0a35a]">By Invitation Only</span>
+                      <p className="eyebrow">Distinction. Intention. Influence.</p>
+                      <p className="display mt-2 text-3xl text-ivory">{p.name}</p>
+                      {showPrices && p.monthly_price_cents != null && <p className="mt-1 text-gold-bright">{money(p.monthly_price_cents)} / month, for invited members</p>}
+                      <p className="mt-4 text-sm text-ivory/80">Our highest distinction, for verified, accomplished individuals. Admission is by invitation: earned through your membership, through expedited verification for those who qualify, or extended personally by our founder.</p>
+                      <p className="mt-4 text-sm font-semibold text-[#f0a35a]">Explore Elite eligibility →</p>
+                    </a>
+                  );
+                }
                 return (
                   <button
                     key={p.slug}

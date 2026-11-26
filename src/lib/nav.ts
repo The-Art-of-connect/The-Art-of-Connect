@@ -13,6 +13,7 @@ export const NAV: NavGroup[] = [
     links: [
       { href: "/", label: "Welcome" },
       { href: "/membership", label: "Memberships", note: "One account, every experience" },
+      { href: "/elite", label: "Elite Concierge Society", note: "By invitation only" },
       { href: "/app", label: "My dashboard", access: "member" },
     ],
   },
