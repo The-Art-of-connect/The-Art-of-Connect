@@ -2,6 +2,10 @@ import Link from "next/link";
 import { requireStaff, getViewer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/admin/ui";
+import { ActionForm } from "@/components/admin/ActionForm";
+import { getOwnerTestSession } from "@/lib/owner-test-session";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { endOwnerTestSession, removeTestAccounts, startOwnerTestSession } from "@/app/actions/owner-test";
 import { featureState, OWNER_STATUS_LABEL, QA_DEPARTMENTS, READINESS, readiness, type QaFeature, type Tracker } from "@/lib/qa";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +24,9 @@ export default async function QaCenter() {
     supabase.from("qa_corrections").select("feature_key, status"),
     supabase.from("qa_owner_state").select("last_feature, last_department, updated_at").eq("user_id", viewer.id).maybeSingle(),
   ]);
+  const session = await getOwnerTestSession();
+  const admin = createAdminClient();
+  const { data: testAccounts } = admin ? await admin.from("profiles").select("id, email, display_name, account_type, created_at").eq("is_test", true).order("created_at", { ascending: false }).limit(100) : { data: null };
   const list = (features ?? []) as QaFeature[];
   const tracker = (k: string | null): Tracker => (trackers ?? []).find((t) => t.key === k) ?? null;
   const open = (k: string) => (corrections ?? []).filter((c) => c.feature_key === k && (c.status === "open" || c.status === "in_progress")).length;
@@ -32,6 +39,46 @@ export default async function QaCenter() {
     <>
       <PageHeader eyebrow="Owner Portal" title="Quality Assurance Center" />
       <p className="-mt-4 mb-6 max-w-3xl text-sm text-muted">Every feature, organized by department, with what to test, step-by-step instructions and the expected result. Your results, screenshots and comments save as you go. Anything that fails becomes a correction task for Peace and returns to you for retesting. Nothing is approved without you. Public registration, payments and clinical services stay closed throughout.</p>
+
+      <section className="mb-8 overflow-hidden rounded-[24px] border border-gold/40">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-6 py-4">
+          <div>
+            <h2 className="display text-2xl text-gold-bright">Owner testing session</h2>
+            <p className="text-xs text-muted">{session ? `Active in this browser until ${session.expires.toLocaleString("en-US", { hour: "numeric", minute: "2-digit", month: "short", day: "numeric" })}.` : "Not active."}</p>
+          </div>
+          {session
+            ? <form action={endOwnerTestSession}><button className="btn btn-ghost btn-sm">End testing session</button></form>
+            : <ActionForm action={startOwnerTestSession}><button className="btn btn-gold btn-sm">Start testing session</button></ActionForm>}
+        </div>
+        <div className="grid gap-6 p-6 lg:grid-cols-2">
+          <div className="space-y-2 text-sm">
+            <p>While a session is active in <strong>this browser only</strong>, the whole developed platform works as if it were launched, so you can test it exactly as a customer would. Everyone else still sees The Art of Connect closed.</p>
+            <ol className="list-decimal space-y-1 pl-5">
+              <li>Start the session, then open the <a href="/" className="text-gold underline">homepage</a>.</li>
+              <li>Sign out, then register as a new member with an email you can receive, for example your own address with a tag: <em>yourname+singles@gmail.com</em> (Gmail delivers these to you). Each becomes a fictional test account.</li>
+              <li>Choose any membership, monthly or annual, and check out with Stripe&rsquo;s test card <strong>4242 4242 4242 4242</strong>, any future date, any CVC and any ZIP. No real money moves.</li>
+              <li>Use the membership, then upgrade, downgrade or cancel from Membership &amp; billing.</li>
+              <li>Record what works and what doesn&rsquo;t in the departments below.</li>
+            </ol>
+            <p className="text-xs text-muted">Payments use Stripe test mode only (live keys are refused). Draft prices are shown. Test accounts keep every age rule, are permanently flagged, and receive emails even before launch. Journey usage by test accounts counts against the company AI budget.</p>
+          </div>
+          <div className="space-y-3 text-sm">
+            <p className="font-semibold">Test accounts ({(testAccounts ?? []).length})</p>
+            {(testAccounts ?? []).length === 0 ? <p className="text-xs text-muted">None yet. Accounts you register during a testing session appear here.</p> : (
+              <ul className="max-h-56 space-y-1 overflow-y-auto text-xs">
+                {(testAccounts ?? []).map((a) => <li key={a.id} className="flex justify-between gap-2 border-b border-line py-1"><span>{a.display_name} · {a.email}</span><span className="text-muted">{a.account_type} · {new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></li>)}
+              </ul>
+            )}
+            {(testAccounts ?? []).length > 0 && (
+              <ActionForm action={removeTestAccounts} className="flex flex-wrap items-center gap-2">
+                <input name="confirm" placeholder="Type REMOVE" className="field w-32 text-xs" autoComplete="off" />
+                <button className="btn btn-ghost btn-sm">Remove all test accounts</button>
+              </ActionForm>
+            )}
+            <p className="text-xs text-faint">Remove all test accounts before launch so they never mix with real members.</p>
+          </div>
+        </div>
+      </section>
 
       <div className="mb-8 grid gap-4 md:grid-cols-2">
         <div className="glass p-5">

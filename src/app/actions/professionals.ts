@@ -107,7 +107,7 @@ export async function submitProfessionalApplication(_prev: ProState, form: FormD
     });
   if (!parsed.success) return { ok: false, message: "Please complete all required fields." };
   if (form.get("agree") !== "on") return { ok: false, message: "Please agree to the Professional Provider Agreement and related policies." };
-  if (!(await allInEffect(PROFESSIONAL_DOCS))) return { ok: false, message: "The Professional Provider Agreement is being finalized. Applications open soon." };
+  if (!(await getLaunchState()).testSession && !(await allInEffect(PROFESSIONAL_DOCS))) return { ok: false, message: "The Professional Provider Agreement is being finalized. Applications open soon." };
   const d = parsed.data;
   if (d.professionalType === "licensed_clinical" && !(d.licenseType && d.licenseNumber && d.licenseState)) {
     return { ok: false, message: "Licensed professionals must provide license type, number and state." };

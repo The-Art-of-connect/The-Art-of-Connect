@@ -680,3 +680,15 @@ v31-5) A member sees none of the test plan or corrections (expect 0|0):
 0|0
 v31-6) A member cannot record results (expect 0 rows changed):
 0
+v32-1) A test account can register while registration is closed, and is flagged (expect t):
+t
+v32-2) Age rules still apply to test accounts (expect error):
+ERROR:  Membership is available to adults 21 and older
+v32-3) Anyone else is still refused while registration is closed (expect error):
+ERROR:  Membership enrollment is not open yet
+v32-4) A member cannot remove their own test flag (expect error):
+ERROR:  Not permitted to change these account fields
+v32-5) Members cannot read the test sign-up list (expect 0):
+0
+v32-6) Elite Concierge is no longer labeled invitation-only (expect Our Most Exclusive Experience):
+Our Most Exclusive Experience

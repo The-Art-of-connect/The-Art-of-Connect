@@ -1,4 +1,6 @@
 "use server";
+import { approveTestSignup } from "@/lib/test-accounts";
+import { getOwnerTestSession } from "@/lib/owner-test-session";
 import { MIN_AGE_SINGLES } from "@/lib/onboarding";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -81,7 +83,7 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   const launch = await getLaunchState();
   if (!launch.registrations_open) return { error: "Membership enrollment opens soon." };
   // Members accept the published agreements; registration waits until they are in effect.
-  if (!(await allInEffect(REGISTRATION_DOCS))) return { error: "Our membership agreements are being finalized. Enrollment opens soon." };
+  if (!launch.testSession && !(await allInEffect(REGISTRATION_DOCS))) return { error: "Our membership agreements are being finalized. Enrollment opens soon." };
 
   const parsed = joinSchema.safeParse({
     displayName: form.get("displayName"),
@@ -101,7 +103,7 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
   const d = parsed.data;
   if (!d.experiences.length && !d.package) return { error: "Choose at least one experience." };
-  if (!(await allow("sign-up", 5, 3600))) {
+  if (!launch.testSession && !(await allow("sign-up", 5, 3600))) {
     await logSecurityEvent("rate_limited", { email: d.email, details: { form: "sign-up" } });
     return { error: "Too many attempts. Please try again later." };
   }
@@ -127,6 +129,8 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   const supabase = await createClient();
   if (!supabase) return { error: "Registration is not available yet." };
   const jar = await cookies();
+  // Owner testing session: this registration becomes a flagged, fictional test account.
+  if (launch.testSession && !(await approveTestSignup(d.email, (await getOwnerTestSession())?.ownerId ?? null))) return { error: "The test account couldn't be prepared. Please try again." };
   const { data: created, error } = await supabase.auth.signUp({
     email: d.email,
     password: d.password,
@@ -266,7 +270,7 @@ export async function signUpFree(_prev: AuthState, form: FormData): Promise<Auth
   const launch = await getLaunchState();
   // Every switch respects the master launch lock.
   if (!launch.registrations_open || (society === "business" && !launch.free_business_accounts_open)) return { error: "Free memberships open soon." };
-  if (!(await allInEffect(REGISTRATION_DOCS))) return { error: "Our agreements are being finalized. Enrollment opens soon." };
+  if (!launch.testSession && !(await allInEffect(REGISTRATION_DOCS))) return { error: "Our agreements are being finalized. Enrollment opens soon." };
   const parsed = joinSchema
     .pick({ displayName: true, email: true, password: true, dobYear: true, dobMonth: true, dobDay: true, agree: true })
     .safeParse({
@@ -275,7 +279,7 @@ export async function signUpFree(_prev: AuthState, form: FormData): Promise<Auth
     });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
   const d = parsed.data;
-  if (!(await allow("sign-up", 5, 3600))) return { error: "Too many attempts. Please try again later." };
+  if (!launch.testSession && !(await allow("sign-up", 5, 3600))) return { error: "Too many attempts. Please try again later." };
   if (!(await verifyTurnstile(form, "sign_up", d.email)).ok) return { error: BOT_CHECK_MESSAGE };
   if (isDisposableEmail(d.email)) return { error: "Please use a permanent email address." };
   const dob = new Date(Date.UTC(d.dobYear, d.dobMonth - 1, d.dobDay));
@@ -290,6 +294,8 @@ export async function signUpFree(_prev: AuthState, form: FormData): Promise<Auth
   const supabase = await createClient();
   if (!supabase) return { error: "Registration is not available yet." };
   const next = society === "business" ? "/app/business/onboarding" : "/app/relationships/onboarding";
+  // Owner testing session: this registration becomes a flagged, fictional test account.
+  if (launch.testSession && !(await approveTestSignup(d.email, (await getOwnerTestSession())?.ownerId ?? null))) return { error: "The test account couldn't be prepared. Please try again." };
   const { data: created, error } = await supabase.auth.signUp({
     email: d.email,
     password: d.password,

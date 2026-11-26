@@ -51,13 +51,14 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues.find((i) => i.path.includes("accept")) ? "Please accept the agreements and automatic renewal terms to continue." : "Invalid request." }, { status: 400 });
 
   // Staff may test with draft prices; everyone else needs published pricing.
-  const catalogue = await getCatalogue(staffTest);
+  // Owner testing sessions see the same draft prices the owner is testing.
+  const catalogue = await getCatalogue(staffTest || Boolean(launch.testSession));
   if (!catalogue.published && !catalogue.preview) return NextResponse.json({ error: "Pricing has not been published yet." }, { status: 409 });
   const currency = catalogue.currency;
   const recurring = (interval: "month" | "year") => ({ interval });
 
   let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
-  let metadata: Record<string, string> = { user_id: viewer.id };
+  let metadata: Record<string, string> = { user_id: viewer.id, ...(launch.testSession ? { owner_test: "1" } : {}) };
   let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
 
   if (parsed.data.kind === "member") {
@@ -69,8 +70,9 @@ export async function POST(request: NextRequest) {
     const pkg = q.pkg;
     // Affirmative acceptance of the published agreements and the automatic-renewal terms, recorded before payment.
     const docs = checkoutDocs(selection.experiences, pkg.love_track === "couple" || (q.couplesMonthly ?? 0) > 0);
-    if (!(await allInEffect(docs))) return NextResponse.json({ error: "Our membership agreements are being finalized. Payments open soon." }, { status: 409 });
-    const accepted = await recordCheckoutAcceptance(docs, autoRenewalStatement({ packageName: pkg.name, amount: formatMoney(q.recurringTotal, catalogue.currency) ?? "", interval: selection.interval }));
+    if (!launch.testSession && !(await allInEffect(docs))) return NextResponse.json({ error: "Our membership agreements are being finalized. Payments open soon." }, { status: 409 });
+    // Test accounts accept draft agreements that aren't in effect yet, so there is nothing legal to record.
+    const accepted = launch.testSession ? true : await recordCheckoutAcceptance(docs, autoRenewalStatement({ packageName: pkg.name, amount: formatMoney(q.recurringTotal, catalogue.currency) ?? "", interval: selection.interval }));
     if (!accepted) return NextResponse.json({ error: "We couldn’t record your acceptance. Please try again." }, { status: 500 });
 
     const names = selection.experiences.map((e) => EXPERIENCES[e].name);
@@ -118,7 +120,7 @@ export async function POST(request: NextRequest) {
     if (!pkg.eligible_types.includes(counselor.professional_type)) return NextResponse.json({ error: "This package isn’t available for your professional type." }, { status: 403 });
     const interval = parsed.data.interval;
     const proDocs = ["professional-agreement", "subscription-auto-renewal", "refund-policy"];
-    if (!(await allInEffect(proDocs))) return NextResponse.json({ error: "The Professional Provider Agreement is being finalized. Subscriptions open soon." }, { status: 409 });
+    if (!launch.testSession && !(await allInEffect(proDocs))) return NextResponse.json({ error: "The Professional Provider Agreement is being finalized. Subscriptions open soon." }, { status: 409 });
     const months = Number(catalogue.annual_months_charged ?? 12);
     const amount = interval === "year" ? Math.round(pkg.monthly_price_cents * months) : pkg.monthly_price_cents;
     if (!(await recordCheckoutAcceptance(proDocs, autoRenewalStatement({ packageName: pkg.name, amount: formatMoney(amount, currency) ?? "", interval })))) {

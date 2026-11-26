@@ -4,6 +4,7 @@ import "@fontsource-variable/cormorant-garamond/wght.css";
 import "@fontsource-variable/cormorant-garamond/wght-italic.css";
 import "@fontsource-variable/manrope/wght.css";
 import "./globals.css";
+import { OwnerTestBanner } from "@/components/OwnerTestBanner";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://theartofconnect.com"),
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <div className="grain" />
+        <OwnerTestBanner />
         {children}
       </body>
     </html>

@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { getOwnerTestSession } from "@/lib/owner-test-session";
 
 export const LAUNCH_KEYS = [
   "registrations_open",
@@ -15,7 +16,7 @@ export const LAUNCH_KEYS = [
   "maintenance_mode",
 ] as const;
 export type LaunchKey = (typeof LAUNCH_KEYS)[number];
-export type LaunchState = Record<LaunchKey, boolean> & { locked: boolean };
+export type LaunchState = Record<LaunchKey, boolean> & { locked: boolean; testSession?: boolean };
 
 const CLOSED: LaunchState = {
   locked: true,
@@ -37,6 +38,13 @@ const CLOSED: LaunchState = {
  * The database enforces the same switches independently (see migrations).
  */
 export const getLaunchState = cache(async (): Promise<LaunchState> => {
+  // Owner testing session (this browser only): the developed platform behaves as if launched for private testing.
+  // Payments stay in Stripe test mode (live keys are refused in getStripe) and new accounts are flagged as test accounts.
+  if (await getOwnerTestSession()) {
+    const open = { ...CLOSED, locked: false, testSession: true } as LaunchState;
+    for (const key of LAUNCH_KEYS) open[key] = key !== "maintenance_mode";
+    return open;
+  }
   const supabase = await createClient();
   if (!supabase) return CLOSED;
   const { data } = await supabase.from("platform_settings").select("key, value");

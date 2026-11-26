@@ -12,7 +12,10 @@ export async function getStripe() {
   const key = serverSecret("STRIPE_SECRET_KEY");
   if (!key) return { stripe: null, reason: "Stripe is not configured" } as const;
   const isLive = key.startsWith("sk_live_") || key.startsWith("rk_live_");
-  if (isLive && !(await getLaunchState()).payments_live) {
+  const launch = await getLaunchState();
+  // Owner testing sessions only ever use Stripe test mode, whatever key is configured.
+  if (isLive && launch.testSession) return { stripe: null, reason: "Owner testing uses Stripe test mode only. Live keys are refused." } as const;
+  if (isLive && !launch.payments_live) {
     return { stripe: null, reason: "Live payments have not been authorized" } as const;
   }
   return { stripe: new Stripe(key), reason: null, isLive } as const;
