@@ -53,7 +53,7 @@ export const eliteCanChoose = (status: string | null | undefined) => status === 
  */
 export const VERIFICATION_METHODS: Record<string, { stripe: string; documents: string; never: string }> = {
   identity: { stripe: "Stripe Identity: government-issued ID, date of birth and a live selfie match.", documents: "Owner review of an ID document only if Stripe can't complete it.", never: "ID documents are never shown to other members." },
-  personal_income: { stripe: "Supporting only: bank ownership and 12-month deposit totals via Stripe Financial Connections.", documents: "Tax return transcript, W-2/1099s, or a CPA or attorney letter, verified by the owner.", never: "Bank deposits are never treated as verified income." },
+  personal_income: { stripe: "Supporting only: bank ownership and deposit totals over the history the bank provides (often about 6 months) via Stripe Financial Connections.", documents: "Tax return transcript, W-2/1099s, or a CPA or attorney letter, verified by the owner.", never: "Bank deposits are never treated as verified income, and partial history is never presented as annual income." },
   business_owner: { stripe: "Supporting only: business bank ownership and deposits via Financial Connections.", documents: "Business registration, ownership records (operating agreement, cap table, K-1) and financial statements, verified by the owner.", never: "Ownership alone, or deposits alone, never qualify." },
   executive: { stripe: "Identity only.", documents: "Employment verification, offer letter or public filings, verified by the owner.", never: "Titles are never accepted without verification." },
   net_worth: { stripe: "Supporting only: balances on linked accounts.", documents: "CPA or attorney net-worth letter, or brokerage and asset statements with liabilities, verified by the owner.", never: "Bank balances are never treated as net worth." },
@@ -85,3 +85,24 @@ export function compareNames(verified: { first?: string | null; last?: string | 
   return best;
 }
 
+
+/** Honest description of a deposit summary: the real window covered, never annualized. */
+export function depositWindow(a: { deposits_cents: number | null; deposits_count: number | null; history_days: number | null; history_start: string | null; history_end: string | null }) {
+  if (a.deposits_cents == null) return null;
+  const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(a.deposits_cents / 100);
+  const d = (s: string | null) => (s ? new Date(`${s}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "?");
+  const days = a.history_days ?? 0;
+  return {
+    text: `${money} in ${a.deposits_count ?? 0} deposits over ${days} days of available history (${d(a.history_start)} – ${d(a.history_end)})`,
+    caveat: days < 365 ? "Partial history only, not annual. Not verified income." : "Not verified income.",
+  };
+}
+
+/** What an Elite member receives. `ready: false` items are shown as "In preparation", never as available. */
+export const ELITE_BENEFITS = [
+  { id: "badge", title: "The Elite badge", body: "The gold verified distinction beside your name, issued only after verification.", ready: true },
+  { id: "business", title: "In Business", body: "Connect with Elite business owners, executives and investors: partnerships, mentorship, expansion and succession conversations.", ready: false },
+  { id: "singles", title: "In Love · Singles", body: "Meet verified, accomplished Elite singles (30+), by your choice only.", ready: false },
+  { id: "couples", title: "In Love · Couples", body: "A private circle of Elite couples for connection and shared experiences.", ready: false },
+  { id: "life", title: "In Life", body: "Personal growth alongside distinguished members, with Journey as your private concierge.", ready: false },
+] as const;

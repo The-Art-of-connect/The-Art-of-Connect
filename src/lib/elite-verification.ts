@@ -21,11 +21,11 @@ import { compareNames } from "@/lib/elite";
  * off until the owner confirms Stripe approved our Authorized Purpose and turns it on.
  */
 
-export const FC_CONSENT_VERSION = "elite-fc-2026-11";
+export const FC_CONSENT_VERSION = "elite-fc-2026-11b";
 export const FC_CONSENT_TEXT =
-  "I authorize The Art of Connect to use Stripe to connect my bank account and receive the account holder name, current balance and up to 12 months of transaction history, " +
+  "I authorize The Art of Connect to use Stripe to connect my bank account and receive the account holder name, current balance and the transaction history your bank makes available (often up to about 6 months), " +
   "solely to support the private review of my Elite Concierge eligibility. Only summaries are kept (never individual transactions), they are visible only to the founder, " +
-  "they are never shared with other members, Journey, matches or business connections, and they are deleted after review. Bank deposits are not treated as verified income, " +
+  "you can review them and request corrections, they are never shared with other members, Journey, matches or business connections, and they are deleted after review. Bank deposits are not treated as verified income, " +
   "and balances are not treated as net worth. I can disconnect at any time.";
 
 type Gate = { stripe: Stripe; live: boolean } | { stripe: null; reason: string };
@@ -60,9 +60,12 @@ export async function verificationGate(kind: "identity" | "financial" | "fee", u
 
 /** The publishable key must belong to the same Stripe mode as the secret key. */
 export function publishableKey(live: boolean) {
-  const pk = (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "").trim();
-  if (!pk) return null;
-  return pk.startsWith(live ? "pk_live_" : "pk_test_") ? pk : null;
+  const prefix = live ? "pk_live_" : "pk_test_";
+  for (const pk of [process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY]) {
+    const v = (pk ?? "").trim();
+    if (v.startsWith(prefix)) return v;
+  }
+  return null;
 }
 
 async function verifiedName(stripe: Stripe, userId: string) {
@@ -175,16 +178,20 @@ export async function collectAccountData(stripeAccountId: string) {
 
   const tx = acct.transaction_refresh?.status;
   if (tx === "succeeded") {
-    const since = Math.floor(Date.now() / 1000) - 365 * 86400;
-    let deposits = 0, count = 0, oldest = Infinity;
-    for await (const t of stripe.financialConnections.transactions.list({ account: stripeAccountId, transacted_at: { gte: since }, limit: 100 })) {
+    // Stripe returns up to ~180 days, depending on the bank. Record the real window; never annualize.
+    let deposits = 0, count = 0, oldest = Infinity, newest = 0;
+    for await (const t of stripe.financialConnections.transactions.list({ account: stripeAccountId, limit: 100 })) {
       if (t.status === "void") continue;
       oldest = Math.min(oldest, t.transacted_at);
+      newest = Math.max(newest, t.transacted_at);
       if (t.amount > 0) { deposits += t.amount; count++; }
     }
-    patch.deposits_12m_cents = deposits;
-    patch.deposits_12m_count = count;
-    patch.months_covered = Number.isFinite(oldest) ? Math.max(0, Math.round((Date.now() / 1000 - oldest) / 2_629_800)) : 0;
+    const day = (u: number) => new Date(u * 1000).toISOString().slice(0, 10);
+    patch.deposits_cents = deposits;
+    patch.deposits_count = count;
+    patch.history_start = Number.isFinite(oldest) ? day(oldest) : null;
+    patch.history_end = newest ? day(newest) : null;
+    patch.history_days = Number.isFinite(oldest) ? Math.max(0, Math.round((newest - oldest) / 86400)) : 0;
   }
 
   const states = [bal, own, tx];
@@ -196,6 +203,8 @@ export async function collectAccountData(stripeAccountId: string) {
     try { await stripe.financialConnections.accounts.disconnect(stripeAccountId); patch.disconnected_at = new Date().toISOString(); } catch { /* retried on next refresh */ }
   }
   if (Object.keys(patch).length) await db.from("elite_financial_accounts").update(patch).eq("id", row.id);
+  // Conclusive evidence proceeds automatically; anything inconclusive goes to the owner with reasons.
+  if (settled) await db.rpc("elite_auto_assess", { p_user: row.user_id });
 }
 
 /** Member withdraws consent (or the owner purges): disconnect at Stripe and erase the amounts. */
@@ -210,7 +219,7 @@ export async function disconnectAccount(accountRowId: string, userId: string | n
   if (stripe && !row.disconnected_at) { try { await stripe.financialConnections.accounts.disconnect(row.stripe_account_id); } catch { /* already disconnected */ } }
   await db.from("elite_financial_accounts").update({
     disconnected_at: row.disconnected_at ?? new Date().toISOString(), balance_cents: null, balance_as_of: null,
-    deposits_12m_cents: null, deposits_12m_count: null, months_covered: null, data_status: "purged",
+    deposits_cents: null, deposits_count: null, history_days: null, history_start: null, history_end: null, data_status: "purged",
   }).eq("id", row.id);
   return true;
 }
@@ -229,6 +238,8 @@ export async function startExpeditedPayment(input: { userId: string; email: stri
     return { ok: false as const, message: "Expedited verification is offered only after preliminary screening." };
   }
   if (c.fee_waived || c.fee_paid_at) return { ok: false as const, message: "Nothing is due." };
+  const { data: idv } = await db.from("identity_verifications").select("id").eq("user_id", input.userId).eq("status", "verified").limit(1);
+  if (!idv?.length) return { ok: false as const, message: "Please verify your identity first. Expedited verification opens right after." };
   const amount = es?.expedited_fee_cents ?? 0;
   if (amount <= 0) return { ok: false as const, message: "Pricing is being finalized." };
   const gate = await verificationGate("fee", input.userId);
@@ -248,6 +259,34 @@ export async function startExpeditedPayment(input: { userId: string; email: stri
   return { ok: true as const, url: session.url ?? undefined, message: "Opening secure checkout…" };
 }
 
+/** Marks a fee paid when Stripe confirms it. Shared by the webhook and the return from Checkout. */
+async function markFeePaid(paymentId: string, paymentIntent: string | null, livemode: boolean) {
+  const db = createAdminClient();
+  if (!db) return;
+  const { data: pay } = await db.from("elite_verification_payments").update({ status: "paid", paid_at: new Date().toISOString(), stripe_payment_intent_id: paymentIntent, livemode })
+    .eq("id", paymentId).eq("status", "pending").select("candidate_id, user_id").maybeSingle();
+  if (!pay) return;
+  await db.from("elite_candidates").update({ fee_paid_at: new Date().toISOString() }).eq("id", pay.candidate_id);
+  await db.from("elite_candidates").update({ status: "verification_pending" }).eq("id", pay.candidate_id).eq("status", "preliminary");
+  await db.rpc("elite_auto_assess", { p_user: pay.user_id });
+}
+
+/** On return from Checkout: ask Stripe directly about this member's pending fee, so the page is current even before the webhook arrives. */
+export async function syncPendingFee(userId: string) {
+  const db = createAdminClient();
+  if (!db) return;
+  const { data: pending } = await db.from("elite_verification_payments").select("id, stripe_checkout_session_id").eq("user_id", userId).eq("status", "pending").not("stripe_checkout_session_id", "is", null).order("created_at", { ascending: false }).limit(3);
+  if (!pending?.length) return;
+  const { stripe } = await getStripe();
+  if (!stripe) return;
+  for (const p of pending) {
+    try {
+      const cs = await stripe.checkout.sessions.retrieve(p.stripe_checkout_session_id!);
+      if (cs.payment_status === "paid") await markFeePaid(p.id, typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id ?? null, cs.livemode);
+    } catch { /* the webhook will reconcile */ }
+  }
+}
+
 /** Elite-specific Stripe events. Returns true when the event was fully handled here. */
 export async function handleEliteStripeEvent(stripe: Stripe, event: Stripe.Event): Promise<boolean> {
   const db = createAdminClient();
@@ -263,14 +302,7 @@ export async function handleEliteStripeEvent(stripe: Stripe, event: Stripe.Event
       const id = cs.metadata?.elite_fee_payment_id;
       if (!id) return false;
       if (cs.payment_status !== "paid") return true;
-      const pi = typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id ?? null;
-      const { data: pay } = await db.from("elite_verification_payments").update({ status: "paid", paid_at: new Date().toISOString(), stripe_payment_intent_id: pi, livemode: event.livemode })
-        .eq("id", id).eq("status", "pending").select("candidate_id, user_id").maybeSingle();
-      if (pay) {
-        await db.from("elite_candidates").update({ fee_paid_at: new Date().toISOString() }).eq("id", pay.candidate_id);
-        await db.from("elite_candidates").update({ status: "verification_pending" }).eq("id", pay.candidate_id).eq("status", "preliminary");
-        await db.rpc("elite_evaluate", { p_user: pay.user_id });
-      }
+      await markFeePaid(id, typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id ?? null, event.livemode);
       return true;
     }
     case "checkout.session.expired": {

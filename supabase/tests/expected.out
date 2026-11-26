@@ -692,9 +692,9 @@ v32-5) Members cannot read the test sign-up list (expect 0):
 0
 v32-6) Elite Concierge is labeled By Invitation Only (expect By Invitation Only):
 By Invitation Only
-v33-1) A member screens privately for the expedited pathway (expect preliminary):
-preliminary
-v33-2) No amounts are stored, only the pathway and self-reported yes (expect personal_income|t):
+v33-1) A member screens privately for the expedited pathway (expect pass):
+pass
+v33-2) Only ranges are stored, and passing unlocks the expedited path (expect personal_income|t):
 personal_income|t
 v33-3) A member cannot approve themselves (expect 0 rows changed):
 0
@@ -740,3 +740,45 @@ v34-9) Retention purge erases amounts after the review window (expect 1, then pu
 purged|t
 v34-10) Production bank verification is off by default (expect f|f):
 f|f
+v35-1) Large deposits never auto-qualify the income pathway: routed to manual review (expect manual_review, then manual_review|t):
+manual_review
+manual_review|t
+v35-2) Investor pathway with the rule NOT approved: still manual review (expect manual_review):
+manual_review
+v35-3) Rule approved and threshold approved: conclusive, invitation issued automatically (expect conclusive, then invitation_issued):
+conclusive
+invitation_issued
+v35-4) A member cannot run the assessment themselves (expect error):
+ERROR:  Not permitted
+v35-5) A member sees their own amounts through My verification information (expect 900000000|120):
+900000000|120
+v35-6) A member files a correction request (expect 1):
+1
+v35-7) A member cannot resolve their own request (expect 0 rows changed):
+0
+v35-8) Another member sees none of it (expect 0|0):
+0|0
+v35-9) A member cannot file a request for someone else (expect error):
+ERROR:  new row violates row-level security policy for table "elite_data_requests"
+v36-1) Choosing Corporate Executive with junior answers does not pass (expect not_yet|f):
+not_yet
+f
+v36-2) A senior executive below the approved income threshold goes to the founder, not to checkout (expect owner_review|f|manual_review):
+owner_review
+f|manual_review
+v36-3) Income below the approved threshold does not pass (expect not_yet):
+not_yet
+v36-4) Without documents, nothing passes (expect not_yet):
+not_yet
+v36-5) Unapproved thresholds go to the founder even when met (expect owner_review):
+owner_review
+v36-6) Made-up amounts are rejected (expect error):
+ERROR:  Please choose from the ranges shown
+v36-7) The statements must be confirmed (expect error):
+ERROR:  Please confirm both statements
+v36-8) The old one-question screening is gone (expect error):
+ERROR:  function public.elite_screen(unknown, boolean, unknown) does not exist
+LINE 1: select public.elite_screen('personal_income', true, 'expedit...
+               ^
+v36-9) Only ranges are kept, never exact amounts (expect {"docs": "yes", "net_worth": 10000000}):
+{"docs": "yes", "net_worth": 10000000}

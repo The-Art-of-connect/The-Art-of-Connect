@@ -3,11 +3,13 @@ import { getViewer, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { EliteBadge } from "@/components/EliteBadge";
-import { eliteAcceptInvitation, eliteAppeal, eliteDisconnectBank, eliteScreen, eliteStartExpedited, eliteSubmitEvidence } from "@/app/actions/elite";
-import { ELITE_QUALIFICATIONS, ELITE_STATUS_LABEL, ELITE_TAGLINE, EVIDENCE_KINDS, OWNERSHIP_LABEL, VERIFICATION_METHODS, usd, type Thresholds } from "@/lib/elite";
-import { FC_CONSENT_TEXT, FC_CONSENT_VERSION, verificationGate } from "@/lib/elite-verification";
+import { eliteAcceptInvitation, eliteAppeal, eliteDataRequest, eliteDisconnectBank, eliteSubmitEvidence } from "@/app/actions/elite";
+import { ELITE_QUALIFICATIONS, ELITE_STATUS_LABEL, ELITE_TAGLINE, EVIDENCE_KINDS, OWNERSHIP_LABEL, VERIFICATION_METHODS, depositWindow, usd, type Thresholds } from "@/lib/elite";
+import { FC_CONSENT_TEXT, FC_CONSENT_VERSION, syncPendingFee, verificationGate } from "@/lib/elite-verification";
 import { VerifyButton } from "@/components/VerifyButton";
 import { EliteBankConnect } from "@/components/EliteBankConnect";
+import { EliteCheckoutButton } from "@/components/EliteCheckoutButton";
+import { EliteScreeningForm } from "@/components/EliteScreeningForm";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My Elite eligibility" };
@@ -20,11 +22,12 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
   const { fee: feeReturn } = await searchParams;
   const viewer = (await getViewer())!;
   const supabase = (await createClient())!;
+  if (feeReturn === "paid" && !isInsidePreview(viewer) && !viewer.viewAs) await syncPendingFee(viewer.id);
   const preview = isInsidePreview(viewer) || Boolean(viewer.viewAs);
   const [{ data: ev }, { data: s }, { data: c }] = await Promise.all([
     preview ? Promise.resolve({ data: null }) : supabase.rpc("elite_evaluate"),
     supabase.from("elite_settings").select("thresholds, min_membership_months, min_discovery_answers, progression_approved, expedited_fee_cents, expedited_fee_active").maybeSingle(),
-    preview ? Promise.resolve({ data: null }) : supabase.from("elite_candidates").select("id, status, pathway, qualification, invitation_expires_at").eq("user_id", viewer.id).maybeSingle(),
+    preview ? Promise.resolve({ data: null }) : supabase.from("elite_candidates").select("id, status, pathway, qualification, invitation_expires_at, screening_result").eq("user_id", viewer.id).maybeSingle(),
   ]);
   const e = ev as Eval | null;
   const [{ data: evidence }, { data: appeals }, { data: banks }] = c
@@ -39,12 +42,24 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
     : await Promise.all([verificationGate("identity", viewer.id), verificationGate("financial", viewer.id), verificationGate("fee", viewer.id)]);
   const sandbox = (g: typeof idGate) => Boolean(g?.stripe && !g.live);
   const method = c?.qualification ? VERIFICATION_METHODS[c.qualification] : null;
+  type Mine = {
+    candidacy: { review_reasons: string[] } | null;
+    identity_verifications: { provider: string; status: string; meets_minimum_age: boolean | null; verified_at: string | null; started_at: string }[];
+    bank_accounts: { id: string; institution: string | null; last4: string | null; sandbox: boolean; ownership_result: string; balance_cents: number | null; balance_as_of: string | null;
+      deposits_cents: number | null; deposits_count: number | null; history_days: number | null; history_start: string | null; history_end: string | null; data_status: string; erase_after: string | null }[];
+    data_requests: { kind: string; subject: string; status: string; response: string | null; created_at: string }[];
+  };
+  const mine = (c && !preview ? (await supabase.rpc("elite_my_verification")).data : null) as Mine | null;
+  const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—");
+  const cash = (cents: number | null) => (cents == null ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100));
   const t = (s?.thresholds ?? {}) as Thresholds;
   const status = c?.status ?? "not_started";
   const canSubmit = c && ["preliminary", "verification_pending", "info_required", "manual_review", "owner_verified", "automated_verified", "qualification_approved"].includes(status);
-  const check = (done: boolean, label: string, hint?: string) => (
-    <li className="flex gap-3"><span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${done ? "bg-[#e8701a] text-white" : "border border-[#c9a96e]/60"}`}>{done ? "✓" : ""}</span>
-      <span><span className={done ? "text-muted" : "font-semibold"}>{label}</span>{hint && <span className="block text-xs text-faint">{hint}</span>}</span></li>
+  // Progress markers fill in automatically. Unfinished steps link to where they're completed.
+  const check = (done: boolean, label: string, hint?: string, href?: string, action?: string) => (
+    <li className="flex gap-3"><span aria-hidden="true" className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${done ? "bg-[#e8701a] text-white" : "border border-dashed border-[#c9a96e]/60"}`}>{done ? "✓" : ""}</span>
+      <span><span className={done ? "text-muted" : "font-semibold"}>{label}</span><span className="sr-only">{done ? " (complete)" : " (not yet complete)"}</span>{hint && <span className="block text-xs text-faint">{hint}</span>}
+        {!done && href && action && <a href={href} className="mt-1 inline-block text-xs font-semibold text-[#c8701a] underline underline-offset-2">{action} →</a>}</span></li>
   );
 
   return (
@@ -78,56 +93,47 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="glass p-6">
           <h2 className="display text-2xl">1 · Private preliminary questions</h2>
-          <p className="mt-1 text-sm text-muted">Choose the one pathway that best describes you. We don&rsquo;t ask for, or keep, amounts here.</p>
-          <ActionForm action={eliteScreen} className="mt-4 space-y-4">
-            <fieldset className="space-y-2">
-              {ELITE_QUALIFICATIONS.map((q) => {
-                const th = q.threshold ? t[q.threshold] : null;
-                return (
-                  <label key={q.id} className="flex cursor-pointer gap-3 rounded-xl border border-line p-3 text-sm has-[:checked]:border-[#e8892b]">
-                    <input type="radio" name="qualification" value={q.id} defaultChecked={c?.qualification === q.id} required className="mt-1" />
-                    <span><span className="font-semibold">{q.label}</span><span className="block text-xs text-muted">{q.detail}{th ? (th.approved ? ` Threshold: ${usd(th.amount)}.` : " Threshold being finalized.") : ""}</span></span>
-                  </label>
-                );
-              })}
-            </fieldset>
-            <fieldset>
-              <legend className="text-sm font-semibold">Do you believe you meet this pathway today?</legend>
-              <div className="mt-2 flex gap-4 text-sm"><label><input type="radio" name="meets" value="yes" required /> Yes</label><label><input type="radio" name="meets" value="no" /> Not yet</label></div>
-            </fieldset>
-            <fieldset>
-              <legend className="text-sm font-semibold">How would you like to proceed?</legend>
-              <label className="mt-2 flex gap-2 text-sm"><input type="radio" name="pathway" value="earned" defaultChecked={c?.pathway !== "expedited"} /> Through my membership journey (complimentary)</label>
-              <label className="mt-1 flex gap-2 text-sm"><input type="radio" name="pathway" value="expedited" defaultChecked={c?.pathway === "expedited"} /> Expedited verification, if I qualify</label>
-            </fieldset>
-            <button className="btn btn-gold btn-sm" disabled={preview || ["invitation_issued", "invitation_accepted", "membership_activated", "revoked"].includes(status)}>Save privately</button>
-          </ActionForm>
+          <p className="mt-1 text-sm text-muted">Choose the pathway that best describes you and answer a few private questions. Preliminary screening isn&rsquo;t admission: everything is verified afterwards.</p>
+          <EliteScreeningForm
+            qualifications={ELITE_QUALIFICATIONS.map((q) => {
+              const th = q.threshold ? t[q.threshold] : null;
+              return { id: q.id, label: q.label, detail: q.detail, thresholdNote: th ? (th.approved ? ` Threshold: ${usd(th.amount)}.` : " Threshold being finalized.") : "" };
+            })}
+            initial={c?.qualification ?? null}
+            initialPathway={c?.pathway ?? null}
+            disabled={preview || ["invitation_issued", "invitation_accepted", "membership_activated", "revoked"].includes(status)}
+          />
+          {c?.screening_result === "owner_review" && <p className="mt-3 rounded-xl border border-[#c9a96e]/50 p-3 text-xs text-muted">Your preliminary answers are with our founder for a personal review.</p>}
         </section>
 
         <section className="glass p-6">
           <h2 className="display text-2xl">2 · Your progress</h2>
           {e ? (
             <ul className="mt-4 space-y-3 text-sm">
-              {check(e.identity, "Identity verified", "Government-issued identity, verified privately.")}
-              {check(e.qualification, "Qualification verified", "Your chosen pathway, verified from your documents or an approved method.")}
-              {check(e.age && e.standing, "Membership in good standing")}
+              {check(e.identity, "Identity verified", "Government-issued identity, verified privately.", "#verify-identity", "Verify my identity")}
+              {check(e.qualification, "Qualification verified", "Your chosen pathway, verified from your documents or an approved method.", "#private-verification", "Share verification")}
+              {check(e.age && e.standing, "Membership in good standing", undefined, "/app/membership", "View my membership")}
               {e.pathway === "earned" && check(e.progression, "Membership milestones", `${e.months} of ${e.min_months} months of membership · ${e.answers} of ${e.min_answers} personal discoveries${s?.progression_approved ? "" : " (milestones being finalized)"}`)}
               {e.pathway === "expedited" && check(e.fee, "Expedited verification", s?.expedited_fee_active ? `One-time ${usd((s.expedited_fee_cents ?? 0) / 100)}, offered only after preliminary screening. It purchases faster verification, never admission.` : sandbox(feeGate) ? `Sandbox test: ${usd((s?.expedited_fee_cents ?? 0) / 100)} with Stripe test cards only. The fee isn't active for members until our founder approves it.` : "Not yet available: the expedited verification service is awaiting final approval.")}
-              {check(["invitation_issued", "invitation_accepted", "membership_activated"].includes(status), "Invitation issued")}
+              {check(["invitation_issued", "invitation_accepted", "membership_activated"].includes(status), "Invitation issued", "Issued automatically once every step above is complete.")}
             </ul>
           ) : <p className="mt-3 text-sm text-muted">Answer the preliminary questions to see your progress.</p>}
-          {feeReturn === "paid" && <p className="mt-4 text-sm text-success">Thank you. Your expedited verification payment was received; your review is now prioritized.</p>}
+          {e && <p className="mt-3 text-xs text-faint">These markers check off automatically as each step is completed; they can&rsquo;t be selected by hand.</p>}
+          {feeReturn === "paid" && (e?.fee
+            ? <p className="mt-4 text-sm text-success">Thank you. Your expedited verification payment is confirmed; your review is now prioritized.</p>
+            : <p className="mt-4 text-sm text-muted">Confirming your payment with Stripe… refresh in a moment.</p>)}
           {e?.pathway === "expedited" && e.expedited_available && !e.fee && feeGate?.stripe && (
-            <ActionForm action={eliteStartExpedited} className="mt-4 rounded-xl border border-[#e8892b]/50 p-4 text-sm">
-              <p>Expedited verification purchases a faster, private review. It never guarantees or purchases admission{sandbox(feeGate) ? ". Sandbox test: use a Stripe test card; nothing real is charged" : ""}.</p>
-              <button className="btn btn-gold btn-sm mt-3">Continue to secure checkout</button>
-            </ActionForm>
+            <div className="mt-4 rounded-xl border border-[#e8892b]/50 p-4 text-sm">
+              <p>Expedited verification purchases a faster, private review. It never guarantees or purchases admission{sandbox(feeGate) ? ". Sandbox test: use card 4242 4242 4242 4242, any future date and any CVC; nothing real is charged" : ""}.</p>
+              {e.identity ? <EliteCheckoutButton /> : <p className="mt-3 text-xs text-muted">Verify your identity first; checkout opens right after. <a href="#verify-identity" className="font-semibold text-[#c8701a] underline">Verify my identity →</a></p>}
+            </div>
           )}
+          {feeReturn === "canceled" && <p className="mt-4 text-sm text-muted">Checkout was canceled. Nothing was charged.</p>}
         </section>
       </div>
 
       {canSubmit && (
-        <section className="glass mt-6 p-6">
+        <section id="private-verification" className="glass mt-6 scroll-mt-24 p-6">
           <h2 className="display text-2xl">3 · Private verification</h2>
           <p className="mt-1 text-sm text-muted">Share only what&rsquo;s needed. Verification runs through Stripe wherever possible; anything Stripe can&rsquo;t conclusively verify is reviewed personally by our founder from private documents. We keep verification results rather than complete financial records.</p>
           {(sandbox(idGate) || sandbox(fcGate)) && <p className="mt-3 rounded-xl border border-gold/40 bg-gold/10 p-3 text-xs text-gold">Stripe Sandbox: use fictional test information only. Nothing here is a real verification or a real charge.</p>}
@@ -139,7 +145,7 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
             </div>
           )}
           <div className="mt-5 grid gap-5 lg:grid-cols-2">
-            <div className="rounded-xl border border-line p-4">
+            <div id="verify-identity" className="scroll-mt-24 rounded-xl border border-line p-4">
               <p className="font-semibold">Identity · Stripe Identity</p>
               <p className="mt-1 text-xs text-muted">Photograph your government-issued ID and take a live selfie on Stripe&rsquo;s secure page. We receive only whether you&rsquo;re verified and meet the age requirement.</p>
               <div className="mt-3">{e?.identity ? <p className="text-sm text-success">✓ Identity verified</p> : <VerifyButton enabled={Boolean(idGate?.stripe)} label="Verify my identity with Stripe" />}</div>
@@ -182,6 +188,53 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
               ))}
             </ul>
           )}
+        </section>
+      )}
+
+      {mine && (
+        <section className="glass mt-6 p-6">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="display text-2xl">My verification information</h2>
+            <a href="/api/elite/my-data" className="btn btn-ghost btn-sm">Download a copy</a>
+          </div>
+          <p className="mt-1 text-sm text-muted">Everything we hold about your Elite verification. Only you and our founder can see it; it is never shown to other members.</p>
+          {(mine.candidacy?.review_reasons ?? []).length > 0 && (
+            <div className="mt-4 rounded-xl border border-line p-3 text-xs"><p className="font-semibold">Why this is with our founder</p><ul className="mt-1 list-disc pl-4 text-muted">{mine.candidacy!.review_reasons.map((x) => <li key={x}>{x}</li>)}</ul></div>
+          )}
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-line p-4 text-sm">
+              <p className="font-semibold">Identity</p>
+              {mine.identity_verifications.length === 0 ? <p className="mt-1 text-xs text-muted">No identity verification yet.</p> : mine.identity_verifications.map((v, i) => (
+                <p key={i} className="mt-1 text-xs text-muted">Stripe Identity · {v.status}{v.meets_minimum_age === false ? " · below minimum age" : v.meets_minimum_age ? " · meets age requirement" : ""} · started {fmtDate(v.started_at)}{v.verified_at ? ` · verified ${fmtDate(v.verified_at)}` : ""}</p>
+              ))}
+              <p className="mt-2 text-[0.7rem] text-faint">Your ID images and date of birth are held by Stripe, not by us.</p>
+            </div>
+            <div className="rounded-xl border border-line p-4 text-sm">
+              <p className="font-semibold">Bank summaries</p>
+              {mine.bank_accounts.length === 0 ? <p className="mt-1 text-xs text-muted">No bank accounts connected.</p> : mine.bank_accounts.map((b) => {
+                const w = depositWindow(b);
+                return (
+                  <div key={b.id} className="mt-2 space-y-0.5 text-xs">
+                    <p className="font-semibold">{b.institution ?? "Bank"}{b.last4 ? ` ••${b.last4}` : ""}{b.sandbox ? " · Sandbox" : ""}</p>
+                    <p className="text-muted">{OWNERSHIP_LABEL[b.ownership_result]}</p>
+                    {b.data_status === "purged" ? <p className="text-muted">Summaries erased.</p> : <>
+                      <p className="text-muted">Balance: {cash(b.balance_cents)}{b.balance_as_of ? ` on ${fmtDate(b.balance_as_of)}` : ""} (not net worth)</p>
+                      {w && <p className="text-muted">Deposits: {w.text}. {w.caveat}</p>}
+                      {b.erase_after && <p className="text-faint">Erased automatically after {fmtDate(b.erase_after)}.</p>}
+                    </>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <ActionForm action={eliteDataRequest} className="mt-5 grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">Request<select name="kind" className="field mt-1 w-full"><option value="correction">Correct something inaccurate</option><option value="access">Access something not shown here</option></select></label>
+            <label className="text-sm">About<select name="subject" className="field mt-1 w-full"><option value="identity">Identity</option><option value="bank">Bank summaries</option><option value="evidence">Documents or reviews</option><option value="status">My status</option><option value="other">Other</option></select></label>
+            <label className="text-sm sm:col-span-2">Details<textarea name="message" rows={2} maxLength={4000} className="field mt-1 w-full" placeholder="What's inaccurate and what it should say, or what you'd like to receive" /></label>
+            <button className="btn btn-ghost btn-sm sm:justify-self-start">Send to our founder</button>
+          </ActionForm>
+          {mine.data_requests.map((r, i) => <p key={i} className="mt-2 text-xs text-muted">{fmtDate(r.created_at)} · {r.kind === "correction" ? "Correction" : "Access"} ({r.subject}) · {r.status === "open" ? "In progress" : r.status}{r.response ? `: ${r.response}` : ""}</p>)}
+          <p className="mt-3 text-[0.7rem] text-faint">You can also replace a document by submitting a corrected one above, or disconnect a bank account to erase its summaries.</p>
         </section>
       )}
 

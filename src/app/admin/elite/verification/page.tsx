@@ -6,9 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { PageHeader } from "@/components/admin/ui";
 import { eliteSaveStripeVerification } from "@/app/actions/elite";
+import { STRIPE_APPROVAL_REQUEST, STRIPE_APPROVAL_REQUEST_VERSION, approvalRequestText } from "@/lib/stripe-approval-request";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Elite verification · Stripe" };
+export const metadata = { title: "Stripe Verification Center" };
 
 /** Researched from Stripe's published docs, terms and pricing on November 26, 2026. Prices are pay-as-you-go list prices. */
 const COSTS = [
@@ -16,7 +17,7 @@ const COSTS = [
   ["Stripe Identity: SSN lookup", "$0.50 per lookup", "Not used. We don't collect Social Security numbers."],
   ["Financial Connections: account ownership", "$1.50 per successful call", "One call per linked account."],
   ["Financial Connections: balances", "$0.10 per successful call", "One call per linked account."],
-  ["Financial Connections: transactions", "$0.30 per account per month", "We take one 12-month snapshot, then disconnect, so expect one month per account."],
+  ["Financial Connections: transactions", "$0.30 per account per month", "We take one snapshot of the history the bank provides (Stripe returns up to about 180 days, not 12 months), then disconnect, so expect one month per account."],
   ["Financial Connections: instant bank verification", "$1.50 per success", "Applies to ACH payment accounts. We don't request payment permission; confirm with Stripe that it isn't billed for our data-only sessions."],
   ["Payments: domestic cards", "2.9% + 30¢ per transaction", "+0.5% manually entered, +1.5% international, +1% currency conversion."],
   ["Billing: subscriptions", "0.7% of Billing volume", "Pay-as-you-go plan, for Elite memberships."],
@@ -39,7 +40,8 @@ const REQUIREMENTS = [
   ]},
   { title: "Stripe Financial Connections", ok: "Requires Stripe approval before live use", items: [
     "At least 14 days before collecting live data, submit our intended purpose (and the consent screen, if we host it) to Stripe for review and approval.",
-    "Proposed purpose: “With the member's express consent, confirm bank account ownership and summarize balances and 12 months of deposits as supporting evidence for a private, founder-reviewed membership distinction. Summaries only; deleted after review; never sold or shared.”",
+    "Our proposed Authorized Purpose is in the approval request below.",
+    "Transaction history: Stripe returns up to about 180 days, depending on the bank. We record the actual dates covered and never present partial history as annual income.",
     "Stripe's terms: never sell or share the data, never use it for marketing, and never use it as or to create a consumer report (FCRA). Keep consent records for at least 24 months.",
     "Stripe markets Financial Connections data for payments, fraud and financial products. A membership-eligibility review is a use Stripe must explicitly approve, so don't enable production until it has.",
     "Needs NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in Netlify for the same mode as the secret key.",
@@ -82,7 +84,7 @@ export default async function EliteVerificationPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Owner Portal · Elite" title="Stripe verification" />
+      <PageHeader eyebrow="Owner Portal · Elite" title="Stripe Verification Center" />
       <p className="-mt-4 mb-6 max-w-3xl text-sm text-muted">Stripe is the only verification provider. No other paid verification service (Plaid, Middesk or any other) is connected, and none will be without your authorization. <Link href="/admin/elite" className="text-gold underline">Back to the Elite Management Center</Link></p>
 
       <section className="glass p-6">
@@ -100,6 +102,20 @@ export default async function EliteVerificationPage() {
             <ul className="mt-3 list-disc space-y-2 pl-4 text-sm text-muted">{r.items.map((i) => <li key={i}>{i}</li>)}</ul>
           </div>
         ))}
+      </section>
+
+      <section className="glass mt-8 p-6" id="approval-request">
+        <h2 className="display text-2xl">Stripe approval request</h2>
+        <p className="mt-1 text-sm text-muted">Version {STRIPE_APPROVAL_REQUEST_VERSION}. Send it to Stripe through Dashboard → Support, or with the Financial Connections purpose submission. Have your attorney review it first. Copy the full text from the box at the end.</p>
+        <div className="mt-5 space-y-5">
+          {STRIPE_APPROVAL_REQUEST.map((sec) => (
+            <div key={sec.heading}>
+              <p className="font-semibold">{sec.heading}</p>
+              <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-muted">{sec.body.map((b) => <li key={b}>{b}</li>)}</ul>
+            </div>
+          ))}
+        </div>
+        <label className="mt-6 block text-xs text-muted">Full text to copy<textarea readOnly rows={10} className="field mt-1 w-full font-mono text-[0.7rem]" defaultValue={approvalRequestText()} /></label>
       </section>
 
       <section className="glass mt-8 p-6">

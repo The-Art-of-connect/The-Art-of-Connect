@@ -43,6 +43,8 @@ export async function recordVerification(stripe: Stripe, sessionId: string, mini
 
   if (status === "verified" && ageOk) {
     await db.from("profiles").update({ identity_verified_at: new Date().toISOString() }).eq("id", userId);
+    // Elite: a verified identity may complete a conclusive candidacy automatically.
+    await db.rpc("elite_auto_assess", { p_user: userId });
   }
   if (status === "verified" && ageOk === false) {
     await db.from("safety_flags").insert({ user_id: userId, reason: "identity_mismatch", details: "Verified identity is below the minimum membership age" });
