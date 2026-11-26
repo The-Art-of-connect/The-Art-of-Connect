@@ -1,4 +1,6 @@
 import "server-only";
+import { guideDraftRequest, guideInstructions, pageContext } from "@/lib/journey-guide";
+import { loadGuideAnswers, resolveGuide } from "@/lib/journey-guide-server";
 import { teachingGuidance } from "@/lib/curricula";
 import { PERSONAS, personaIsPaid } from "@/lib/view-as";
 import { cleanPrefs, styleInstructions } from "@/lib/journey-customize";
@@ -138,6 +140,14 @@ export async function sendJourneyMessage(input: {
   discovery?: { sessionId: string; summarize?: boolean; skip?: boolean } | null;
   /** The member asked Journey to write their Personal Discovery Portfolio (their own data only, loaded here on the server). */
   portfolio?: boolean;
+  /**
+   * Universal integration: Journey guides a whole lesson or questionnaire ("who-am-i/beyond-my-titles", "boundaries/self", ...).
+   * `draft` asks Journey to document the member's answers (from this conversation, or a spoken transcript) for them to review;
+   * drafts are never stored as conversation messages and nothing is saved until the member approves.
+   */
+  guide?: { ref: string; draft?: boolean; transcript?: string | null; assist?: boolean } | null;
+  /** The page the member opened Journey from (the persistent Journey button): a path, described from an allowlist. */
+  page?: string | null;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
   // Owner "View as": free personas are refused like any free member; paid personas use the owner's private test budget.
@@ -175,7 +185,7 @@ export async function sendJourneyMessage(input: {
     const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
     if (!m || level === "none") return refuse(403, "Journey is a benefit of paid memberships.");
     // Lessons, discovery and the portfolio belong to every paid plan: use an experience the plan includes.
-    if ((input.lesson || input.discovery || input.portfolio) && input.mode !== "concierge") {
+    if ((input.lesson || input.discovery || input.portfolio || input.guide || input.page) && input.mode !== "concierge") {
       const em = effectiveMode(input.mode, level, m.membership);
       if (em) input = { ...input, mode: em };
     }
@@ -248,7 +258,7 @@ export async function sendJourneyMessage(input: {
     db.from("journey_training_entries").select("category, topic, scenario, founder_principles, interpretation, approach, example_response, follow_ups, safety").eq("status", "approved").limit(600),
     db.from("journey_training_categories").select("key, title, founder_decisions"),
   ]);
-  const picked = selectTraining((trained ?? []) as TrainingEntry[], input.message, { lesson: input.lesson, mode: input.mode });
+  const picked = selectTraining((trained ?? []) as TrainingEntry[], input.message, { lesson: input.lesson ?? input.guide?.ref ?? null, mode: input.mode });
   const pickedCats = new Set(picked.map((e) => e.category));
   const training = formatTraining(picked, (tcats ?? []).filter((c) => pickedCats.has(c.key)).map((c) => ({ title: c.title, decisions: c.founder_decisions ?? [] })));
   if (training) instructions += `\n\n${training}`;
@@ -259,6 +269,24 @@ export async function sendJourneyMessage(input: {
     instructions += `\n\n${portfolioInstructions(portfolioContext(assemblePortfolio(pin), statuses, pin.summaries))}`;
     input = { ...input, conversationId: null, comparisonId: null, message: PORTFOLIO_REQUEST };
   }
+
+  // Guided module: Journey knows the lesson, its objectives, what's answered and what's left (the member's own answers only).
+  let draftOnly = false;
+  if (input.guide) {
+    const gm = await resolveGuide(db, input.guide.ref);
+    if (!gm) return refuse(404, "That lesson wasn't found.");
+    const answered = await loadGuideAnswers(db, viewer.id, gm);
+    if (!input.lesson) instructions += `\n\n${await teachingGuidance(db, input.guide.ref)}`;
+    instructions += `\n\n${guideInstructions(gm, answered, false, Boolean(input.guide.assist && !input.guide.draft))}`;
+    if (input.guide.draft) {
+      draftOnly = true;
+      const transcript = input.guide.transcript?.trim() || null;
+      input = { ...input, comparisonId: null, message: guideDraftRequest(gm, transcript ?? undefined), ...(transcript ? { conversationId: null } : {}) };
+    }
+  }
+
+  const where = !input.guide && input.page ? pageContext(input.page) : null;
+  if (where) instructions += `\n\n# Where the member is\nThe member opened Journey from ${where}. Help in that context. Speak only about features and information their membership includes, and never reveal anyone else's information.`;
 
   // Adaptive Discovery Session: only the member's own ACTIVE session, continuing its own conversation.
   let discovery: { id: string; category: string; conversation_id: string | null; exchanges: number; skipped: number } | null = null;
@@ -332,11 +360,11 @@ export async function sendJourneyMessage(input: {
   }
 
   let conversationId = input.conversationId ?? null;
-  if (!conversationId && !input.comparisonId) {
+  if (!conversationId && !input.comparisonId && !draftOnly) {
     const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, title: `${input.ownerTest ? "[Owner test] " : ""}${discovery ? `Discovery · ${discoveryCategory(discovery.category)?.title}` : input.message}`.slice(0, 80) }).select("id").single();
     conversationId = c?.id ?? null;
   }
-  if (conversationId && !input.comparisonId) {
+  if (conversationId && !input.comparisonId && !draftOnly) {
     await db.from("journey_messages").insert([
       { conversation_id: conversationId, user_id: viewer.id, role: "member", content: input.message },
       { conversation_id: conversationId, user_id: viewer.id, role: "journey", content: result.text },

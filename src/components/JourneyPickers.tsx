@@ -29,7 +29,7 @@ const VOICES: { id: "warm" | "calm" | "confident" | "soft" | "friendly"; name: s
 
 type Status = "idle" | "connecting" | "live" | "paused" | "ended";
 
-export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, lesson = null, discovery = null, mode = "life", voiceSummary = null, avatarImage = null }: {
+export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts = false, available, reason, ownerTest = false, onSavePrefs, onEnded, lesson = null, discovery = null, mode = "life", voiceSummary = null, avatarImage = null }: {
   /** The member's chosen Journey portrait (fictional), shown in the listening circle. */
   avatarImage?: string | null;
   /** When set, the member's saved Customize Your Journey choice is shown instead of the legacy style picker. */
@@ -45,6 +45,8 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
   reason: string;
   ownerTest?: boolean;
   onSavePrefs?: (style: string, transcripts: boolean) => Promise<void>;
+  /** Guided modules: receives the spoken conversation when it ends, so the member can review documented answers. */
+  onEnded?: (transcript: string) => void;
 }) {
   const [voice, setVoice] = useState(initialStyle);
   const [muted, setMuted] = useState(false);
@@ -74,6 +76,7 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
     setStatus("ended"); setLeft(null);
     if (r.id) {
       const id = r.id; r.id = undefined;
+      if (onEnded && r.lines.length) onEnded(r.lines.join("\n"));
       const res = await fetch("/api/journey/voice/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ voiceSessionId: id, transcript: r.lines.join("\n"), saveTranscript: transcript }) }).then((x) => x.json()).catch(() => null);
       setNote(`${reasonText ? reasonText + " " : ""}Conversation ended${res?.seconds ? ` · ${Math.max(1, Math.round(res.seconds / 60))} minute${res.seconds >= 90 ? "s" : ""} used` : ""}.`);
     }
@@ -101,6 +104,9 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
       try {
         const ev = JSON.parse(m.data);
         if (typeof ev.type === "string" && (ev.type.startsWith("input_audio_buffer.speech") || ev.type.startsWith("response."))) bump();
+        if (ev.type === "conversation.item.input_audio_transcription.completed" && ev.transcript) {
+          ref.current.lines.push(`Member: ${ev.transcript}`); setLines([...ref.current.lines]);
+        }
         if (ev.type === "response.output_audio_transcript.done" && ev.transcript) {
           ref.current.lines.push(`Journey: ${ev.transcript}`); setLines([...ref.current.lines]);
         }

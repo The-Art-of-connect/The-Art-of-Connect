@@ -13,6 +13,9 @@ import { MemberTabBar } from "@/components/nav/MemberTabBar";
 import { MobileMenu } from "@/components/MobileMenu";
 import { getNavState } from "@/lib/nav-state";
 import { entriesFor, pick } from "@/lib/search-scope";
+import { JourneyCompanion } from "@/components/JourneyCompanion";
+import { guideAccess } from "@/lib/journey-guide-access";
+import { avatarById } from "@/lib/journey-customize";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +37,8 @@ export default async function MemberLayout({ children }: { children: React.React
   const notes = Object.fromEntries((statusRows ?? []).map((r) => [r.path, r.member_note]));
   const reviewer = hasRole(viewer, ["owner", "executive"]) && !viewer.viewAs;
   const searchable = entriesFor(viewer);
-  const nav = await getNavState();
+  const [nav, journeyAccess] = await Promise.all([getNavState(), guideAccess()]);
+  const { data: look } = !preview && sb ? await sb.from("journey_voice_preferences").select("avatar").eq("user_id", viewer.id).maybeSingle() : { data: null };
   const quick = pick(searchable, ["/app", "/app/journey", "/app/business", "/app/relationships", "/app/counseling", "/app/membership", "/app/safety", "/"]);
   return (
     <div className="theme-ivory min-h-dvh">
@@ -70,6 +74,7 @@ export default async function MemberLayout({ children }: { children: React.React
         )}
       </main>
       {reviewer && <OwnerReview status={status} />}
+      {!preview && !pending.length && <JourneyCompanion access={journeyAccess} avatar={look?.avatar ? avatarById(look.avatar).image ?? null : null} />}
       {!preview && <MemberTabBar state={nav} />}
     </div>
   );

@@ -1,4 +1,6 @@
 import "server-only";
+import { guideInstructions } from "@/lib/journey-guide";
+import { loadGuideAnswers, resolveGuide } from "@/lib/journey-guide-server";
 import { teachingGuidance } from "@/lib/curricula";
 import { personaIsPaid } from "@/lib/view-as";
 import { cleanPrefs, DEFAULT_PREFS, paceSpeed, styleInstructions } from "@/lib/journey-customize";
@@ -79,7 +81,13 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
   }
 
   let topic = `\n\n# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`;
-  if (input.lesson) topic += `\n\n${await teachingGuidance(db, input.lesson)}\nThis is a live, spoken lesson: teach conversationally, one idea and one question at a time.`;
+  let guided = false;
+  if (input.lesson) {
+    topic += `\n\n${await teachingGuidance(db, input.lesson)}\nThis is a live, spoken lesson: teach conversationally, one idea and one question at a time.`;
+    // Universal integration: any guided module (questionnaires, reflections, lessons) can be completed by voice.
+    const gm = await resolveGuide(db, input.lesson);
+    if (gm) { guided = true; topic += `\n\n${guideInstructions(gm, await loadGuideAnswers(db, viewer.id, gm), true)}`; }
+  }
   const dc = input.discovery ? discoveryCategory(input.discovery) : null;
   if (dc) {
     const { data: tc } = await db.from("journey_training_categories").select("learning_objectives").eq("key", dc.key).maybeSingle();
@@ -95,7 +103,11 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "OpenAI-Safety-Identifier": await hashId(viewer.id) },
     body: JSON.stringify({
       expires_after: { anchor: "created_at", seconds: 60 },
-      session: { type: "realtime", model: cfg.voice.model, instructions, audio: { output: { voice: prefs.voice, speed: paceSpeed(prefs.pace) } }, max_output_tokens: 1200 },
+      session: { type: "realtime", model: cfg.voice.model, instructions, audio: {
+        output: { voice: prefs.voice, speed: paceSpeed(prefs.pace) },
+        // Guided modules only: the member's words are transcribed so they can review the answers Journey documents.
+        ...(guided ? { input: { transcription: { model: "gpt-4o-mini-transcribe" } } } : {}),
+      }, max_output_tokens: 1200 },
     }),
     signal: AbortSignal.timeout(15_000),
   }).catch(() => null);
