@@ -16,6 +16,8 @@ import {
   type Selection,
 } from "@/lib/pricing";
 import { LEGAL_TITLES, autoRenewalStatement, checkoutDocs } from "@/lib/legal-requirements";
+import { EliteBadge } from "@/components/EliteBadge";
+import { ELITE_BENEFITS } from "@/lib/elite";
 
 type Mode = "enroll" | "preview" | "change" | "checkout";
 
@@ -185,12 +187,24 @@ export function MembershipBuilder({
                 if (p.slug === "elite-concierge" && !eliteInvited) {
                   return (
                     <a key={p.slug} href="/elite" className="theme-dark band relative block rounded-[22px] border-2 border-[#c9a96e]/70 p-6 text-left transition hover:border-[#e8892b]">
-                      <span className="absolute right-4 top-4 rounded-full border border-[#e8892b]/70 px-3 py-1 text-[0.65rem] uppercase tracking-[0.18em] text-[#f0a35a]">By Invitation Only</span>
-                      <p className="eyebrow">Distinction. Intention. Influence.</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <EliteBadge size={20} interactive={false} />
+                        <span className="rounded-full border border-[#e8892b]/70 px-3 py-1 text-[0.65rem] uppercase tracking-[0.18em] text-[#f0a35a]">By Invitation Only</span>
+                      </div>
+                      <p className="eyebrow mt-4 leading-relaxed">Distinction. Intention. Influence.</p>
                       <p className="display mt-2 text-3xl text-ivory">{p.name}</p>
                       {showPrices && p.monthly_price_cents != null && <p className="mt-1 text-gold-bright">{money(p.monthly_price_cents)} / month, for invited members</p>}
                       <p className="mt-4 text-sm text-ivory/80">Our highest distinction, for verified, accomplished individuals. Admission is by invitation: earned through your membership, through expedited verification for those who qualify, or extended personally by our founder.</p>
-                      <p className="mt-4 text-sm font-semibold text-[#f0a35a]">Explore Elite eligibility →</p>
+                      <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#f0c98a]">What Elite members receive</p>
+                      <ul className="mt-2 space-y-2 text-sm text-ivory/80">
+                        {ELITE_BENEFITS.map((x) => (
+                          <li key={x.id} className="flex gap-2">
+                            {x.id === "badge" ? <EliteBadge size={16} interactive={false} /> : <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#e8892b]" aria-hidden="true" />}
+                            <span><span className="font-semibold text-ivory">{x.title}</span>{x.ready ? "" : <span className="ml-1 text-[0.65rem] uppercase tracking-wider text-ivory/50">· In preparation</span>}<span className="block text-xs text-ivory/65">{x.body}</span></span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-5 text-sm font-semibold text-[#f0a35a]">Explore Elite eligibility →</p>
                     </a>
                   );
                 }

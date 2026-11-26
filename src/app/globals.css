@@ -451,3 +451,35 @@ select.field { appearance: none; }
   .print-light { background: #fff !important; color: #2b1d16 !important; box-shadow: none !important; }
   .print-light * { color: #2b1d16 !important; }
 }
+
+/* Branded selections: gold ring, orange center. Replaces the browser's default blue everywhere. */
+input[type="radio"]:not(.sr-only) {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.1rem 0 0;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-content: center;
+  border: 1.5px solid #c9a96e;
+  border-radius: 9999px;
+  background: transparent;
+  cursor: pointer;
+  vertical-align: -0.2em;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input[type="radio"]:not(.sr-only)::before {
+  content: "";
+  width: 0.58rem;
+  height: 0.58rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f0a35a, #e8701a);
+  transform: scale(0);
+  transition: transform 0.15s ease;
+}
+input[type="radio"]:not(.sr-only):checked { border-color: #e8701a; box-shadow: 0 0 0 3px rgb(232 112 26 / 0.15); }
+input[type="radio"]:not(.sr-only):checked::before { transform: scale(1); }
+input[type="radio"]:not(.sr-only):focus-visible { outline: 2px solid #e8701a; outline-offset: 2px; }
+input[type="radio"]:not(.sr-only):disabled { opacity: 0.5; cursor: not-allowed; }
+input[type="checkbox"] { accent-color: #e8701a; }

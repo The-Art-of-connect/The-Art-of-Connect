@@ -11,8 +11,9 @@ const CHOICES = [
 ] as const;
 
 /**
- * Owner review bar, shown on every member page to the owner and executives.
- * Floats at the bottom on phones and sits at the corner on larger screens.
+ * Owner review, shown on every member page to the owner and executives.
+ * Closed, it is a slim tab on the right edge so it never covers page content, the bottom
+ * navigation or Journey's message box. Open, it is a panel the owner dismisses when done.
  */
 export function OwnerReview({ status }: { status: Record<string, string> }) {
   const path = usePathname() ?? "/app";
@@ -22,7 +23,7 @@ export function OwnerReview({ status }: { status: Record<string, string> }) {
   const current = status[path] === "coming_soon" ? "Coming soon for members" : "Open to members";
 
   return (
-    <div className="theme-dark fixed inset-x-3 bottom-[5.5rem] z-50 sm:inset-x-auto sm:right-6 sm:bottom-24 sm:w-[24rem] lg:bottom-6">
+    <div className={open ? "theme-dark fixed inset-x-3 bottom-[5.5rem] z-50 sm:inset-x-auto sm:right-6 sm:bottom-24 sm:w-[24rem] lg:bottom-6" : "theme-dark fixed right-0 top-[38%] z-40"}>
       {open ? (
         <form action={action} className="rounded-2xl border border-gold/40 !bg-espresso/95 p-5 shadow-2xl backdrop-blur-xl">
           <div className="flex items-start justify-between gap-3">
@@ -51,8 +52,9 @@ export function OwnerReview({ status }: { status: Record<string, string> }) {
           {state && <p className={`mt-2 text-xs ${state.ok ? "text-success" : "text-danger"}`} role="status">{state.message}</p>}
         </form>
       ) : (
-        <button onClick={() => setOpen(true)} className="btn btn-gold w-full shadow-2xl sm:w-auto">
-          Review this page
+        <button onClick={() => setOpen(true)} aria-label="Review this page"
+          className="rounded-l-xl border border-r-0 border-gold/60 bg-[linear-gradient(180deg,#d8be8c,#b8975e)] px-1.5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#2a1d14] shadow-lg [writing-mode:vertical-rl] rotate-180 opacity-90 transition hover:opacity-100">
+          Review
         </button>
       )}
     </div>

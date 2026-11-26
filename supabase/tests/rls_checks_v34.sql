@@ -4,7 +4,7 @@ reset request.jwt.claim.sub;
 reset request.jwt.claims;
 insert into public.elite_financial_sessions (id, user_id, candidate_id, stripe_session_id, stripe_customer_id, consent_version)
   select '00000000-0000-0000-0000-0000000000f1', c.user_id, c.id, 'fcsess_test1', 'cus_test1', 'elite-fc-2026-11' from public.elite_candidates c where c.user_id = '00000000-0000-0000-0000-0000000000e1';
-insert into public.elite_financial_accounts (user_id, candidate_id, session_id, stripe_account_id, institution_name, last4, ownership_result, balance_cents, balance_currency, deposits_12m_cents, data_status)
+insert into public.elite_financial_accounts (user_id, candidate_id, session_id, stripe_account_id, institution_name, last4, ownership_result, balance_cents, balance_currency, deposits_cents, data_status)
   select c.user_id, c.id, '00000000-0000-0000-0000-0000000000f1', 'fca_test1', 'Test Bank', '6789', 'match', 123456700, 'usd', 61234500, 'collected' from public.elite_candidates c where c.user_id = '00000000-0000-0000-0000-0000000000e1';
 insert into public.elite_verification_payments (user_id, candidate_id, amount_cents, status, paid_at)
   select c.user_id, c.id, 99500, 'paid', now() from public.elite_candidates c where c.user_id = '00000000-0000-0000-0000-0000000000e1';
