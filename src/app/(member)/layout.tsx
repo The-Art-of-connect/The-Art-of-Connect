@@ -12,6 +12,7 @@ import { DesktopNav } from "@/components/nav/DesktopNav";
 import { ProfileMenu } from "@/components/nav/ProfileMenu";
 import { MemberTabBar } from "@/components/nav/MemberTabBar";
 import { MobileMenu } from "@/components/MobileMenu";
+import { AssistLink } from "@/components/AssistLink";
 import { getNavState } from "@/lib/nav-state";
 import { entriesFor, pick } from "@/lib/search-scope";
 import { JourneyCompanion } from "@/components/JourneyCompanion";
@@ -73,6 +74,7 @@ export default async function MemberLayout({ children }: { children: React.React
         ) : (
           <SectionGate status={status} notes={notes} staff={isStaff(viewer) || preview || Boolean(viewer.viewAs) || Boolean((await getLaunchState()).testSession)}>{children}</SectionGate>
         )}
+        {!preview && <AssistLink />}
       </main>
       {reviewer && <OwnerReview status={status} />}
       {!preview && !pending.length && <JourneyCompanion access={journeyAccess} avatar={look?.avatar ? avatarById(look.avatar).image ?? null : null} />}
