@@ -79,3 +79,13 @@ export async function checkOpenAIConnection(): Promise<OpenAICheck> {
     return { configured: true, reachable: false, status: null, models: [], error: e instanceof Error ? e.message.slice(0, 200) : "Network error", checkedAt };
   }
 }
+
+/** Whether a specific model (e.g. a realtime voice model) is available to this OpenAI account. Uses no tokens. */
+export async function openAIModelAvailable(id: string): Promise<boolean | null> {
+  const key = serverSecret("OPENAI_API_KEY");
+  if (!key || !/^[A-Za-z0-9._:-]{2,80}$/.test(id)) return null;
+  try {
+    const res = await fetch(`https://api.openai.com/v1/models/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(10_000), cache: "no-store" });
+    return res.ok ? true : res.status === 404 ? false : null;
+  } catch { return null; }
+}

@@ -11,9 +11,10 @@ import { env } from "@/lib/env";
 import { verifyOpenAI } from "@/app/actions/journey-admin";
 import { saveCheckinSettings } from "@/app/actions/checkins";
 import { OwnerTest } from "@/components/admin/OwnerTest";
+import { JourneyLiveTest } from "@/components/admin/JourneyLiveTest";
 import { Empty, NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
 import {
-  publishInstructions, saveExample, saveInstructions, saveJourneyLimits, saveKnowledge, saveModel, savePackage, saveSessionProduct, saveTierLimit, saveVoiceSettings, setJourneySwitch,
+  publishInstructions, saveExample, saveInstructions, saveJourneyLimits, saveKnowledge, saveModel, savePackage, saveSessionProduct, saveTierLimit, saveVoiceSettings, setJourneySwitch, activateJourney, pauseJourney,
 } from "@/app/actions/journey-admin";
 
 export const metadata = { title: "Journey Intelligence Center" };
@@ -92,39 +93,59 @@ export default async function JourneyAdmin() {
       <PageHeader eyebrow="Owner Portal · Journey" title="Journey Intelligence Center" />
       <p className="-mt-4 mb-8 max-w-3xl text-sm text-muted">AI management, financial controls and member assistance. Journey runs on OpenAI only. Member conversations, journals and assessments are never shown here — only totals.</p>
 
-      <section aria-labelledby="owner-test" className="glass mb-8 p-6">
-        <h2 id="owner-test" className="display text-2xl">Private owner testing · your checklist</h2>
-        <p className="mt-1 text-sm text-muted">Each step shows ✓ once it&rsquo;s done. Members stay blocked throughout: Journey only opens to them when live payments are turned on, and live payments, registration and public launch are separate switches that stay off.</p>
-        <ol className="mt-4 space-y-2 text-sm">
-          {([
-            [isOpenAIConfigured(), "OpenAI key is visible to the website", "If not, add OPENAI_API_KEY in Netlify (Site configuration → Environment variables) and redeploy."],
-            [lastCheck?.action === "journey.openai.connected", "Press “Verify connection” (in the readiness panel below)", "Confirms OpenAI answers. Costs a fraction of a cent."],
-            [testCap != null, `Owner testing budget: ${testCap != null ? usd(testCap) : "not set"} per month (spent ${usd(testSpent)})`, "Testing stops automatically when it's used. The company budget is also capped."],
-            [Boolean(s?.owner_testing_enabled), "Switch on “Owner testing”", "Already on."],
-            [Boolean(s?.enabled), "Switch on “Journey”", "The master switch. Turning it off stops all AI use instantly."],
-            [Boolean(s?.paid_usage_authorized), "Switch on “Billable OpenAI usage authorized” (type AUTHORIZE)", "Allows OpenAI charges within your budgets. It does not open Journey to members."],
-            [Boolean(s?.voice_model && s?.voice_cents_per_minute != null), "Voice: save a voice model and cost per minute under “Voice and Auto-Reload safeguards”", "Suggested for testing: gpt-realtime-mini at $0.10 per minute (a cautious estimate used for budgeting)."],
-            [Boolean(s?.voice_enabled), "Switch on “Talk to Journey (voice)”", "Needed only for live voice."],
-          ] as [boolean, string, string][]).map(([done, title, hint]) => (
-            <li key={title} className="flex gap-3">
-              <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${done ? "bg-burgundy text-ivory" : "border border-champagne text-faint"}`}>{done ? "✓" : ""}</span>
-              <span><span className={done ? "text-muted line-through decoration-champagne" : "font-semibold"}>{title}</span><span className="block text-xs text-faint">{hint}</span></span>
-            </li>
-          ))}
-        </ol>
-        <div className="mt-5 rounded-2xl bg-champagne/15 p-4 text-sm">
-          <p className="font-semibold">Then test on the website (signed in with two-step verification):</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Written conversations: <a href="/app/journey" className="text-gold underline">Talk with Journey</a></li>
-            <li>Live voice: <a href="/app/journey/voice" className="text-gold underline">Talk to Journey</a></li>
-            <li>Adaptive questioning: <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a></li>
-            <li>Educational modules: any lesson, e.g. <a href="/app/know-yourself/who-am-i/beyond-my-titles" className="text-gold underline">Beyond my titles</a> → Chat With Journey or Talk to Journey</li>
-            <li>Personalized analyses: the Personal Discovery card at the end of a lesson, or your <a href="/app/know-yourself/portfolio" className="text-gold underline">Portfolio</a></li>
-            <li>Avatar and voice: <a href="/app/journey/customize" className="text-gold underline">Customize Your Journey</a></li>
-            <li>As a paid member: choose a paid membership in the gold <strong>View as</strong> bar at the top of member pages. Pages members see as &ldquo;Coming soon&rdquo; open for you with a note, and every message uses your private testing budget.</li>
-          </ul>
+      <section aria-labelledby="activate" className="mb-10 overflow-hidden rounded-[24px] border border-gold/40 bg-ink-2">
+        <div className="border-b border-line px-6 py-5">
+          <h2 id="activate" className="display text-3xl text-gold-bright">Activate &amp; test Journey</h2>
+          <p className="mt-1 text-sm text-muted">Everything you need for private testing, in one place. Members stay blocked: registration, live payments and public launch are separate switches that remain off.</p>
         </div>
-        <p className="mt-3 text-xs text-muted"><a href="/admin/journey/review" className="text-gold">Review the Blueprint and all training entries →</a></p>
+        <div className="grid gap-0 lg:grid-cols-[1fr_1.3fr]">
+          <div className="space-y-5 border-b border-line p-6 lg:border-b-0 lg:border-r">
+            <ul className="grid grid-cols-2 gap-2 text-xs">
+              {([
+                ["OpenAI key", isOpenAIConfigured()],
+                ["OpenAI connection", lastCheck?.action === "journey.openai.connected"],
+                ["Journey", Boolean(s?.enabled)],
+                ["Billable usage", Boolean(s?.paid_usage_authorized)],
+                ["Owner testing", Boolean(s?.owner_testing_enabled)],
+                ["Live voice", Boolean(s?.voice_enabled && s?.voice_model && s?.voice_cents_per_minute != null)],
+                ["Members (public)", false],
+                ["Live payments", launch.payments_live],
+              ] as [string, boolean][]).map(([label, on]) => (
+                <li key={label} className={`flex items-center justify-between rounded-xl border px-3 py-2 ${on ? "border-success/40" : "border-line"}`}>
+                  <span>{label}</span><span className={on ? "font-semibold text-success" : "text-faint"}>{on ? "On" : "Off"}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-sm">Testing budget: <strong>{testCap != null ? usd(testCap) : "not set"}</strong> per month · spent <strong>{usd(testSpent)}</strong>. Testing stops automatically at the limit.</p>
+
+            <ActionForm action={activateJourney} className="space-y-4 rounded-2xl border border-line p-4">
+              <p className="text-sm font-semibold">1 · Activate for private testing</p>
+              <p className="text-xs text-muted">One press: verifies your OpenAI connection first (nothing changes if it fails), then turns on Journey, billable usage within your budgets, and owner testing.</p>
+              {!s?.paid_usage_authorized && (
+                <label className="block text-xs text-muted">Type AUTHORIZE to allow billable OpenAI usage within your budgets
+                  <input name="confirm" autoComplete="off" className="field mt-1 w-full" placeholder="AUTHORIZE" /></label>
+              )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-xs text-muted">Voice model<input name="voiceModel" defaultValue={s?.voice_model ?? "gpt-realtime-mini"} className="field mt-1 w-full" /></label>
+                <label className="text-xs text-muted">Voice cost per minute ($, for budgeting)<input name="voiceRate" defaultValue={s?.voice_cents_per_minute != null ? dollars(s.voice_cents_per_minute) : "0.10"} className="field mt-1 w-full" /></label>
+              </div>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="voice" defaultChecked={s?.voice_enabled ?? true} /> Enable live voice</label>
+              <button className="btn btn-gold w-full" disabled={!owner}>{s?.enabled && s?.paid_usage_authorized ? "Save settings" : "Activate Journey for private testing"}</button>
+            </ActionForm>
+            <div className="flex flex-wrap items-center gap-3">
+              <ActionForm action={verifyOpenAI}><button className="btn btn-ghost btn-sm">Verify OpenAI connection</button></ActionForm>
+              {s?.enabled && <ActionForm action={pauseJourney}><button className="btn btn-ghost btn-sm" disabled={!owner}>Turn Journey off</button></ActionForm>}
+            </div>
+            <p className="text-xs text-faint">{lastCheck ? `Last connection check ${new Date(lastCheck.created_at).toLocaleString("en-US")}: ${lastCheck.action === "journey.openai.connected" ? "connected" : "failed"}.` : "Connection not checked yet."} Checking uses no tokens.</p>
+          </div>
+          <div>
+            <p className="px-6 pt-5 text-sm font-semibold">2 · Test Journey now</p>
+            <JourneyLiveTest ready={Boolean(s?.enabled && s?.paid_usage_authorized && s?.owner_testing_enabled)}
+              voiceReady={Boolean(s?.enabled && s?.paid_usage_authorized && s?.voice_enabled && s?.voice_model && s?.voice_cents_per_minute != null)}
+              voiceReason="Turn on “Enable live voice” in step 1 and press Save settings." />
+            <p className="border-t border-line px-6 py-4 text-xs text-muted">Also try Journey across the website: <a href="/app/know-yourself/who-am-i/beyond-my-titles" className="text-gold underline">a lesson</a>, <a href="/app/journey/discover" className="text-gold underline">Discovery Sessions</a>, <a href="/app/journey/customize" className="text-gold underline">avatar &amp; voice</a>, or any paid membership through <strong>View as</strong>. All use this same private budget.</p>
+          </div>
+        </div>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
