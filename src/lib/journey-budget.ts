@@ -5,7 +5,8 @@
  * (journey_reserve) so simultaneous requests cannot slip past a limit.
  *
  * Founder rules:
- *   • Journey is paid-only. No membership has unlimited access.
+ *   • Journey is paid-only. Elite Concierge (all-inclusive) has unlimited text,
+ *     protected by fair-use and abuse safeguards; every other membership has an allowance.
  *   • Each membership has ONE monthly message allowance (bundles are not
  *     multiplied). Couples share one allowance between both partners.
  *   • Included messages reset each billing period and do not roll over.
@@ -78,6 +79,9 @@ export type TierLimit = {
   tierMonthlyLimitCents: number | null;
   maxOutputTokens: number;
   model: string | null;
+  /** All-inclusive memberships: no message allowance and never a purchase prompt; fair use only. */
+  unlimited?: boolean;
+  fairUseDaily?: number;
 };
 
 /** Usage counted against one allowance holder (a member, or a couple's shared account). */
@@ -166,6 +170,15 @@ export function decide(input: {
   }
 
   const t = tier!;
+  if (t.unlimited) {
+    for (const [v, name] of [[t.memberMonthlyLimitCents, "member fair-use ceiling"], [t.tierMonthlyLimitCents, "membership spending limit"]] as const)
+      if (v === null || v < 0) return deny(`The ${name} is not set`);
+    const FAIR = "You've had a remarkable number of conversations with Journey today. To keep Journey fast and attentive for every member, please continue a little later.";
+    if (u.dayMessages >= (t.fairUseDaily ?? 300)) return deny("Fair-use daily limit", FAIR);
+    if (u.periodCents + reserve > t.memberMonthlyLimitCents!) return deny("Fair-use cost ceiling", FAIR);
+    if (u.tierMonthCents + reserve > t.tierMonthlyLimitCents!) return deny("Membership spending limit reached");
+    return { allowed: true, model: rate.id, maxOutputTokens: t.maxOutputTokens, reserveCents: reserve, usesPurchased: false };
+  }
   for (const [v, name] of [[t.monthlyMessages, "monthly message allowance"], [t.dailyMessages, "daily message limit"], [t.memberMonthlyLimitCents, "member spending limit"], [t.tierMonthlyLimitCents, "membership spending limit"]] as const)
     if (v === null || v < 0) return deny(`The ${name} is not set`);
 
@@ -184,6 +197,8 @@ export function decide(input: {
 
 // ─── What the member sees ───────────────────────────────────────────
 export type AllowanceView = {
+  /** All-inclusive (Elite): unlimited text, fair use applies. `remaining` is then a large sentinel. */
+  unlimited?: boolean;
   allowance: number;
   used: number;
   remaining: number;
@@ -193,6 +208,10 @@ export type AllowanceView = {
   notice: (typeof USAGE_NOTICE_THRESHOLDS)[number] | null;
 };
 
+export const UNLIMITED_SENTINEL = 9999;
+export function unlimitedView(used: number, periodEnd: Date): AllowanceView {
+  return { unlimited: true, allowance: 0, used, remaining: UNLIMITED_SENTINEL, purchasedRemaining: 0, percentUsed: 0, resetsOn: periodEnd.toISOString().slice(0, 10), notice: null };
+}
 export function allowanceView(allowance: number, used: number, purchasedRemaining: number, periodEnd: Date): AllowanceView {
   const remaining = Math.max(0, allowance - used);
   const percentUsed = allowance > 0 ? Math.min(100, Math.floor((used / allowance) * 100)) : 100;

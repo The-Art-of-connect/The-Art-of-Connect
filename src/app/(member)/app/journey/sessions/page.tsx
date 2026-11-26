@@ -5,6 +5,9 @@ import { LuxCard, LuxHero, LuxSection, Notice, SafetyFooter } from "@/components
 import { MemberForm } from "@/components/MemberForm";
 import { SessionRoom } from "@/components/SessionRoom";
 import { buy, setSessionObjective } from "@/app/actions/journey-member";
+import { hasAllAccess } from "@/lib/journey-commerce";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { membershipFor } from "@/lib/journey-server";
 
 export const metadata = { title: "Journey Private Sessions" };
 
@@ -27,10 +30,12 @@ export default async function Sessions() {
     : [{ data: null }, { data: [] }];
   const list = products?.length ? products : FALLBACK;
   const showPrices = Boolean(products?.length);
+  const admin = createAdminClient();
+  const allAccess = live && admin ? await hasAllAccess(viewer.id, (await membershipFor(admin, viewer.id))?.holderId) : false;
   return (
     <>
       <LuxHero eyebrow="Journey" title="Private Sessions" tagline="Focused. Structured. Entirely yours." tone="burgundy">
-        <p className="max-w-2xl text-muted">Purchased separately and guided by Journey in writing or by voice. Each session has a clear objective, a guided conversation, time to reflect, practical next steps and an optional private summary.</p>
+        <p className="max-w-2xl text-muted">{allAccess ? "Included with your Elite Concierge membership" : "Purchased separately"} and guided by Journey in writing or by voice. Each session has a clear objective, a guided conversation, time to reflect, practical next steps and an optional private summary.</p>
       </LuxHero>
 
       {(mine ?? []).filter((s) => s.status === "purchased" || s.status === "active").map((s) => (
@@ -50,12 +55,12 @@ export default async function Sessions() {
       <LuxSection title="Choose your session">
         <div className="grid gap-5 sm:grid-cols-2">
           {list.map((p) => (
-            <LuxCard key={p.slug} mark={String(p.minutes)} title={p.name} body={p.objective} badge={showPrices && p.price_cents ? money(p.price_cents) : "Pricing soon"}>
+            <LuxCard key={p.slug} mark={String(p.minutes)} title={p.name} body={p.objective} badge={allAccess ? "Included" : showPrices && p.price_cents ? money(p.price_cents) : "Pricing soon"}>
               <p className="text-xs text-faint">minutes · text or voice</p>
-              {showPrices && (
+              {(showPrices || allAccess) && (
                 <MemberForm action={buy} className="mt-4">
                   <input type="hidden" name="kind" value="session" /><input type="hidden" name="slug" value={p.slug} />
-                  <button className="btn btn-gold btn-sm">Book this session</button>
+                  <button className="btn btn-gold btn-sm">{allAccess ? "Begin this session" : "Book this session"}</button>
                   {isStaff(viewer) && <p className="mt-2 text-xs text-faint">Owner: works with Stripe test keys before launch.</p>}
                 </MemberForm>
               )}

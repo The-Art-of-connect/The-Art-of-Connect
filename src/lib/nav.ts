@@ -106,6 +106,7 @@ export const PROFILE_LINKS: NavLink[] = [
   { href: "/app/journey/check-ins", label: "Notifications & check-ins" },
   { href: "/app/verify", label: "Identity verification" },
   { href: "/app/safety", label: "Privacy & safety" },
+  { href: "/app/support", label: "Support" },
   { href: "/legal", label: "Legal & policies" },
 ];
 

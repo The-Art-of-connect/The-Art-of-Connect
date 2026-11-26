@@ -83,7 +83,7 @@ export async function startVoice(input: {
     const extra = (credits ?? []).reduce((n, c) => n + (c.messages - c.used), 0) * 60;
     const remaining = t.monthly_voice_minutes * 60 + extra - Number(used ?? 0);
     allowed = Math.min(allowed, remaining);
-    if (allowed < 30) return { ok: false, message: "You've used this period's voice minutes. You can still chat with Journey in writing, and your minutes reset on your next billing date." };
+    if (allowed < 30) return { ok: false, message: "You've used this period's voice minutes. You can keep talking with Journey in writing, your minutes reset on your next billing date, and additional voice minutes are available at our cost in Journey Plus if you'd like." };
   }
 
   const previewVoice = input.ownerTest && input.previewVoice && voiceById(input.previewVoice) && hasRole(viewer, ["owner"]) && !viewer.viewAs ? voiceById(input.previewVoice)! : null;

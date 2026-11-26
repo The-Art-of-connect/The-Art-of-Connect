@@ -17,7 +17,7 @@ import { JOURNEY_VOICES } from "@/lib/journey-customize";
 import { VoicePreviewRecorder } from "@/components/admin/VoicePreviewRecorder";
 import { Empty, NotConnected, PageHeader, Panel, Stat } from "@/components/admin/ui";
 import {
-  publishInstructions, saveExample, saveInstructions, saveJourneyLimits, saveKnowledge, saveModel, savePackage, saveSessionProduct, saveTierLimit, saveVoiceSettings, setJourneySwitch, activateJourney, pauseJourney,
+  publishInstructions, saveExample, saveInstructions, saveJourneyLimits, saveKnowledge, saveModel, savePackage, saveSessionProduct, saveTierLimit, saveUsagePricing, saveVoiceSettings, setJourneySwitch, activateJourney, pauseJourney,
 } from "@/app/actions/journey-admin";
 
 export const metadata = { title: "Journey Intelligence Center" };
@@ -30,11 +30,14 @@ export default async function JourneyAdmin() {
   const supabase = await createClient();
   if (!supabase) return <><PageHeader eyebrow="Journey" title="Journey Intelligence Center" /><NotConnected /></>;
   const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)).toISOString();
-  const [{ data: s }, { data: models }, { data: tiers }, { data: packages }, { data: versions }, { data: knowledge }, { data: examples }, { data: usage }, { data: pkgs }] = await Promise.all([
+  const [{ data: s }, { data: models }, { data: tiers }, { data: packages }, { data: voicePacks }, { data: textCosts }, { data: voiceCosts }, { data: versions }, { data: knowledge }, { data: examples }, { data: usage }, { data: pkgs }] = await Promise.all([
     supabase.from("journey_settings").select("*").maybeSingle(),
     supabase.from("journey_models").select("*").order("id"),
     supabase.from("journey_tier_limits").select("*"),
     supabase.from("journey_message_packages").select("*").order("sort_order"),
+    supabase.from("journey_voice_packages").select("*").order("sort_order"),
+    supabase.from("journey_usage").select("cost_cents").eq("status", "completed").not("cost_cents", "is", null).order("created_at", { ascending: false }).limit(2000),
+    supabase.from("journey_voice_sessions").select("seconds_used, cost_cents, provider_cost_cents").gt("seconds_used", 0).order("started_at", { ascending: false }).limit(1000),
     supabase.from("journey_instruction_versions").select("id, version, note, status, created_at, published_at").order("version", { ascending: false }).limit(20),
     supabase.from("journey_knowledge").select("id, mode, title, status, updated_at").order("updated_at", { ascending: false }).limit(50),
     supabase.from("journey_examples").select("id, mode, member_message, status").order("updated_at", { ascending: false }).limit(30),
@@ -329,12 +332,52 @@ export default async function JourneyAdmin() {
                   <label className="text-[0.65rem] text-faint">Longest reply (tokens)<input name="maxOutput" defaultValue={t?.max_output_tokens ?? 700} className="field mt-1 w-full" /></label>
                   <label className="text-[0.65rem] text-faint">Voice minutes / mo<input name="voiceMinutes" defaultValue={t?.monthly_voice_minutes ?? ""} className="field mt-1 w-full" /></label>
                   <button className="btn btn-ghost btn-sm">Save</button>
+                  <div className="col-span-2 flex flex-wrap items-end gap-3 text-[0.65rem] text-faint sm:col-span-8">
+                    <label className="flex items-center gap-1.5 text-xs text-text"><input type="checkbox" name="unlimited" defaultChecked={t?.unlimited_messages} /> Unlimited text (all-inclusive; message limits ignored)</label>
+                    <label>Fair use / day<input name="fairDaily" defaultValue={t?.fair_use_daily ?? 300} className="field mt-1 w-20" /></label>
+                    <label>Fair use / hour<input name="fairHourly" defaultValue={t?.fair_use_hourly ?? 60} className="field mt-1 w-20" /></label>
+                  </div>
                 </ActionForm>
               );
             })}
           </div>
         </Panel>
       </div>
+
+      {(() => {
+        const tc = (textCosts ?? []).map((x) => Number(x.cost_cents)).filter((x) => x > 0);
+        const avgText = tc.length ? tc.reduce((a, b) => a + b, 0) / tc.length : null;
+        const vSecs = (voiceCosts ?? []).reduce((a, x) => a + Number(x.seconds_used ?? 0), 0);
+        const vCents = (voiceCosts ?? []).reduce((a, x) => a + Number(x.provider_cost_cents ?? x.cost_cents ?? 0), 0);
+        const avgVoice = vSecs > 60 ? vCents / (vSecs / 60) : null;
+        const fmt = (c: number | null) => (c == null ? "not enough data yet" : `${c.toFixed(3)}¢`);
+        return (
+          <div className="mt-6">
+            <Panel title="At-cost usage pricing (no markup)">
+              <div className="grid gap-6 p-5 lg:grid-cols-2">
+                <div className="space-y-2 text-sm">
+                  <p className="text-xs text-muted">Additional Journey usage recovers our operating cost only: the OpenAI rate plus card processing. Membership subscriptions are where the platform earns. Prices update whenever you save.</p>
+                  <p><span className="text-faint">Measured text cost per message:</span> {fmt(avgText)} {tc.length ? `(${tc.length} messages)` : ""}</p>
+                  <p><span className="text-faint">Measured voice cost per minute:</span> {fmt(avgVoice)} {vSecs ? `(${Math.round(vSecs / 60)} minutes)` : ""}</p>
+                  <p className="text-xs text-faint">Published rates: {s?.default_model ?? "gpt-4.1-mini"} text ≈ 0.5¢ per Journey message (≈10k input tokens of instructions and history, ≈400 output). GPT-Live voice: 5¢ per active minute (2¢ standby). Card processing: 2.9% + 30¢ per purchase.</p>
+                </div>
+                <ActionForm action={saveUsagePricing} className="grid grid-cols-2 gap-3 text-xs">
+                  <label className="text-faint">Text cost per message (¢)<input name="textCost" defaultValue={Number(s?.text_cost_cents_per_message ?? 0.5)} className="field mt-1 w-full" /></label>
+                  <label className="text-faint">Voice cost per minute (¢)<input name="voiceCost" defaultValue={Number(s?.voice_cost_cents_per_minute ?? 5)} className="field mt-1 w-full" /></label>
+                  <label className="text-faint">Card fee (%)<input name="feePct" defaultValue={Number(s?.card_fee_percent ?? 2.9)} className="field mt-1 w-full" /></label>
+                  <label className="text-faint">Card fee (¢ per purchase)<input name="feeFixed" defaultValue={Number(s?.card_fee_fixed_cents ?? 30)} className="field mt-1 w-full" /></label>
+                  <button className="btn btn-gold btn-sm col-span-2">Save costs and re-price at cost</button>
+                </ActionForm>
+              </div>
+              <div className="grid gap-4 border-t border-line p-5 text-sm sm:grid-cols-2">
+                <div><p className="font-semibold">Voice minutes (all members, including Elite)</p><ul className="mt-2 space-y-1 text-xs text-muted">{(voicePacks ?? []).map((v) => <li key={v.slug}>{v.minutes} minutes · {money(v.price_cents ?? 0)}{v.is_active ? "" : " · not offered"}</li>)}</ul></div>
+                <div><p className="font-semibold">Text messages (memberships with an allowance)</p><ul className="mt-2 space-y-1 text-xs text-muted">{(packages ?? []).map((p) => <li key={p.slug}>{p.messages} messages · {money(p.price_cents ?? 0)}{p.is_active ? "" : " · not offered"}</li>)}</ul></div>
+              </div>
+              <p className="px-5 pb-4 text-xs text-faint">Stripe&rsquo;s minimum charge is 50¢. Elite Concierge members have unlimited text and are never offered message packages. Nothing is ever charged without the member choosing and confirming a package.</p>
+            </Panel>
+          </div>
+        );
+      })()}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Panel title="Additional message packages">

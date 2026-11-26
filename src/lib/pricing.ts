@@ -26,6 +26,8 @@ export type MembershipPackage = {
   experiences: Experience[];
   love_track: LoveTrack | null;
   benefits: string[];
+  /** All-inclusive (Elite Concierge): no couples upgrade, add-ons or onboarding fee; everything is included. */
+  all_access?: boolean;
   highlight: string | null;
   monthly_price_cents: number | null;
   annual_price_cents: number | null;
@@ -60,6 +62,8 @@ export type PricingCatalogue = {
     description: string;
     eligible_types: string[];
     benefits: string[];
+  /** All-inclusive (Elite Concierge): no couples upgrade, add-ons or onboarding fee; everything is included. */
+  all_access?: boolean;
     eligibility: string | null;
     monthly_price_cents: number | null;
     onboarding_fee_cents: number | null;
@@ -160,7 +164,8 @@ const pct = (cents: number, percent: number | null | undefined) => Math.round((c
 export function quote(cat: PricingCatalogue, rawSel: Selection, promo?: Promotion | null): Quote {
   const sel = normalizeSelection(cat, rawSel);
   const { pkg, needsCouplesUpgrade } = matchPackage(cat, sel);
-  const addons = cat.addons.filter((a) => sel.addons.includes(a.slug));
+  const allAccess = Boolean(pkg?.all_access);
+  const addons = allAccess ? [] : cat.addons.filter((a) => sel.addons.includes(a.slug));
   const empty: Quote = {
     pkg, priced: false, packageMonthly: null, couplesMonthly: null, addonsMonthly: null, monthlyTotal: null,
     separateMonthly: null, bundleSavingsMonthly: null, monthsCharged: null, annualTotal: null, annualSavings: null,
@@ -169,12 +174,12 @@ export function quote(cat: PricingCatalogue, rawSel: Selection, promo?: Promotio
   const priced =
     pkg != null &&
     pkg.monthly_price_cents != null &&
-    (!needsCouplesUpgrade || cat.couples_upgrade.monthly_price_cents != null) &&
+    (allAccess || !needsCouplesUpgrade || cat.couples_upgrade.monthly_price_cents != null) &&
     addons.every((a) => a.price_cents != null);
   if (!priced || !pkg) return empty;
 
   const packageMonthly = pkg.monthly_price_cents!;
-  const couplesMonthly = needsCouplesUpgrade ? cat.couples_upgrade.monthly_price_cents! : 0;
+  const couplesMonthly = needsCouplesUpgrade && !allAccess ? cat.couples_upgrade.monthly_price_cents! : 0;
   const addonsMonthly = addons.filter((a) => a.billing === "monthly").reduce((s, a) => s + a.price_cents!, 0);
   const monthlyTotal = packageMonthly + couplesMonthly + addonsMonthly;
 
@@ -189,7 +194,7 @@ export function quote(cat: PricingCatalogue, rawSel: Selection, promo?: Promotio
   const annualSavings = Math.max(0, monthlyTotal * 12 - annualTotal);
   const recurringTotal = sel.interval === "year" ? annualTotal : monthlyTotal;
 
-  const onboardingFee = pkg.onboarding_fee_cents ?? 0;
+  const onboardingFee = allAccess ? 0 : pkg.onboarding_fee_cents ?? 0;
   const oneTimeTotal = addons.filter((a) => a.billing === "one_time").reduce((s, a) => s + a.price_cents!, 0) + onboardingFee;
 
   // Promotions apply to the first billing period's membership charge only.

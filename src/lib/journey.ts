@@ -211,3 +211,6 @@ export function buildJourneyInstructions(input: {
     "For anything outside that list, explain kindly that it is not part of the member's current access, without pressuring them to upgrade.",
   ].join("\n\n");
 }
+
+/** Human wording for remaining Journey messages; Elite (all-inclusive) text is unlimited. */
+export const messagesLeft = (n: number | null | undefined) => (n == null ? "" : n >= 9999 ? "unlimited" : String(n));

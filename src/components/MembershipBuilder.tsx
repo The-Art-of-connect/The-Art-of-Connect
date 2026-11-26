@@ -200,6 +200,12 @@ export function MembershipBuilder({
                             <li key={x.id} className="flex flex-col items-center gap-1.5 text-[#f0c98a]"><EliteExperienceIcon kind={x.icon} /><span className="text-sm font-semibold">{x.title}</span></li>
                           ))}
                         </ul>
+                        {p.benefits.length > 0 && (
+                          <div className="mx-auto mt-6 max-w-md text-left">
+                            <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#f0c98a]">Elite Membership — All Access</p>
+                            <ul className="mt-3 space-y-1.5 text-sm text-ivory/80">{p.benefits.map((b) => <li key={b} className="flex gap-2"><span className="text-[#e8892b]" aria-hidden="true">✓</span>{b}</li>)}</ul>
+                          </div>
+                        )}
                         {showPrices && p.monthly_price_cents != null && <p className="mt-5 text-sm text-gold-bright">{money(p.monthly_price_cents)} / month once approved</p>}
                         <a href="/join/elite" className="btn btn-gold mt-5 w-full">{ELITE_APPLY_LINE}</a>
                         <p className="mt-3 text-xs text-ivory/65">{ELITE_APPLY_NOTE} Standard verification is complimentary.</p>

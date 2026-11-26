@@ -26,21 +26,49 @@ async function paymentsAllowed(staff: boolean) {
   return { stripe: s.stripe, reason: null } as const;
 }
 
+/**
+ * All-inclusive memberships (Elite Concierge): everything is included except additional Journey voice minutes,
+ * which are sold at cost. Checked against the membership that funds this member's Journey (own or partner's).
+ */
+export async function hasAllAccess(userId: string, holderId?: string) {
+  const db = createAdminClient();
+  if (!db) return false;
+  const { data: subs } = await db.from("subscriptions").select("tier_slug").in("user_id", [...new Set([userId, holderId ?? userId])]).in("status", ["active", "trialing", "past_due"]);
+  const slugs = (subs ?? []).map((x) => x.tier_slug).filter(Boolean);
+  if (!slugs.length) return false;
+  const { data: pk } = await db.from("membership_packages").select("slug").in("slug", slugs).eq("all_access", true).limit(1);
+  return Boolean(pk?.length);
+}
+
 export async function startPurchase(input: { userId: string; holderId: string; email: string; kind: Kind; slug: string; staff: boolean }): Promise<CommerceResult> {
   const db = createAdminClient();
   if (!db) return { ok: false, message: "Purchases open soon." };
   const { data: s } = await db.from("journey_settings").select("message_packages_published, sessions_published").maybeSingle();
   let name = "", quantity = 0, price: number | null = null;
+  const allAccess = await hasAllAccess(input.userId, input.holderId);
+  if (allAccess && input.kind === "messages") return { ok: false, message: "Journey text conversations are unlimited with your Elite membership." };
   if (input.kind === "session") {
     if (!s?.sessions_published && !input.staff) return { ok: false, message: "Private Sessions open soon." };
     const { data: p } = await db.from("journey_session_products").select("name, minutes, price_cents, is_active").eq("slug", input.slug).maybeSingle();
     if (!p?.is_active) return { ok: false, message: "That session isn't available." };
     name = `Journey ${p.name} (${p.minutes} minutes)`; quantity = 1; price = p.price_cents;
+    // Elite: Private Sessions are included. Grant immediately, with no checkout and no charge.
+    if (allAccess) {
+      const { data: purchase } = await db.from("journey_purchases").insert({ user_id: input.userId, holder_id: input.holderId, kind: "session", package_slug: input.slug, quantity: 1, amount_cents: 0 }).select("id").single();
+      if (!purchase) return { ok: false, message: "That session couldn't start. Please try again." };
+      await db.rpc("journey_grant_purchase", { p_purchase: purchase.id, p_payment_intent: null });
+      return { ok: true, message: "Included with your Elite membership. Your session is ready below." };
+    }
+  } else if (input.kind === "voice_minutes") {
+    if (!s?.message_packages_published && !input.staff) return { ok: false, message: "Additional voice minutes open soon." };
+    const { data: p } = await db.from("journey_voice_packages").select("minutes, price_cents, is_active").eq("slug", input.slug).maybeSingle();
+    if (!p?.is_active) return { ok: false, message: "That package isn't available." };
+    name = `Journey Live — ${p.minutes} additional voice minutes (at cost)`; quantity = p.minutes; price = p.price_cents;
   } else {
     if (!s?.message_packages_published && !input.staff) return { ok: false, message: "Journey Plus opens soon." };
     const { data: p } = await db.from("journey_message_packages").select("messages, price_cents, is_active").eq("slug", input.slug).maybeSingle();
     if (!p?.is_active) return { ok: false, message: "That package isn't available." };
-    name = `Journey Plus — ${p.messages} ${input.kind === "voice_minutes" ? "voice minutes" : "messages"}`; quantity = p.messages; price = p.price_cents;
+    name = `Journey Plus — ${p.messages} additional messages (at cost)`; quantity = p.messages; price = p.price_cents;
   }
   if (price === null || price <= 0) return { ok: false, message: "Pricing is being finalized." };
 

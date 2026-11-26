@@ -15,7 +15,9 @@ type Tile = { title: string; body: string; href?: string; ready: boolean };
 const TILES: Tile[] = [
   { title: "Private Journey Concierge", body: "Journey with your enhanced Elite allowance, in writing and live voice.", href: "/app/journey", ready: true },
   { title: "Membership & verification", body: "Your Elite membership, billing and verification status.", href: "/app/membership", ready: true },
-  { title: "Enhanced privacy", body: "Control who sees your profile, photographs and activity.", href: "/app/safety", ready: true },
+  { title: "Elite privacy", body: "Show your profile to Elite members and your connections only, and control every photograph.", href: "/app/connect/profile", ready: true },
+  { title: "Private Sessions", body: "Included with your membership, by text or voice.", href: "/app/journey/sessions", ready: true },
+  { title: "Elite circles", body: "Verified peers, and every open circle you choose.", href: "/app/connect/circles?category=elite", ready: true },
   { title: "Elite Business Connections", body: "High-level networking, strategic partnerships, executive mentorship, expansion, acquisition and succession conversations.", ready: false },
   { title: "Elite Introductions", body: "Personalized professional and relationship introductions, curated with care.", ready: false },
   { title: "Elite In Love", body: "High-end dating and intentional connections between verified Elite singles (30+), by your choice only.", ready: false },
@@ -24,7 +26,7 @@ const TILES: Tile[] = [
   { title: "Curated experiences & events", body: "Executive roundtables and exclusive social experiences.", ready: false },
   { title: "Private concierge requests", body: "Personal requests handled with discretion.", ready: false },
   { title: "Elite Knowledge Exchange", body: "Exclusive educational opportunities with distinguished members.", ready: false },
-  { title: "Priority member support", body: "First in line, always.", ready: false },
+  { title: "Priority member support", body: "First in line, always.", href: "/app/support", ready: true },
 ];
 
 /** The Elite Concierge dashboard: only for members with an active Elite badge (and the owner, for review). */

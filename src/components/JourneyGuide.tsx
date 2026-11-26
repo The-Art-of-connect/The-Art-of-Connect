@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { messagesLeft } from "@/lib/journey";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cleanGuideAnswers, parseGuideDraft, type GuideAccess, type GuideAnswers, type GuideModule, type GuideQuestion } from "@/lib/journey-guide";
@@ -43,7 +44,7 @@ export function JourneyGuide({ mod, access, hasAnswers, children }: { mod: Guide
           </button>
         </div>
         <p className="relative mt-4 text-xs text-ivory/60">
-          {access.kind === "paid" ? `Included in your membership · ${access.credits} Journey messages left this period. Nothing is saved until you review and approve it.`
+          {access.kind === "paid" ? `Included in your membership · ${messagesLeft(access.credits)} Journey messages ${access.credits >= 9999 ? "with your Elite membership" : "left this period"}. Nothing is saved until you review and approve it.`
             : access.kind === "owner" ? "Owner test: uses your private testing budget. Members can't use Journey until live payments are on."
             : "Journey is included with paid memberships. Every lesson stays fully open to you self-guided."}
         </p>

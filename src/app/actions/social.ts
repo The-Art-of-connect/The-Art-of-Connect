@@ -52,9 +52,10 @@ export async function saveSocialProfile(_p: ActionResult, f: FormData): Promise<
     show_location: f.get("show_location") === "on",
     interests: cleanList(f.getAll("interests"), INTERESTS, 20), seeking: cleanList(f.getAll("seeking"), SEEKING, 7),
     discoverable: f.get("discoverable") === "on", updated_at: new Date().toISOString(),
+    profile_visibility: ["members", "connections", "elite"].includes(s(f, "profile_visibility")) ? s(f, "profile_visibility") : "members",
   };
   const { error } = await m.db.from("social_profiles").upsert(row);
-  if (error) return fail("Not saved. Please try again.");
+  if (error) return fail(error.message.includes("Elite") ? error.message : "Not saved. Please try again.");
   revalidatePath("/app/connect", "layout");
   return ok("Your profile is saved.");
 }

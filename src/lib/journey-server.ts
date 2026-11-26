@@ -21,7 +21,7 @@ import {
   type JourneyCapability, type JourneyMode, type PaidMembership,
 } from "@/lib/journey";
 import {
-  allowanceView, costCents, decide, trimHistory, type AllowanceView, type JourneySettings, type TierLimit,
+  allowanceView, unlimitedView, costCents, decide, trimHistory, type AllowanceView, type JourneySettings, type TierLimit,
 } from "@/lib/journey-budget";
 
 /**
@@ -93,6 +93,13 @@ export async function loadSettings(db: Db) {
 }
 
 /** The paying membership behind this member, and whose allowance they draw from (a couple shares the subscriber's). */
+/** Personalized concierge guidance for Elite Concierge members. Verification and finances are never mentioned. */
+const ELITE_CONCIERGE_GUIDANCE = `# This member belongs to the Elite Concierge Society
+- Offer concierge-level care: anticipate needs, be discreet, personal and proactive, and keep a refined, unhurried tone.
+- When it genuinely helps, suggest relevant Elite circles, Elite experiences on The Connect Calendar, Private Sessions (included in their membership) or the priority support desk.
+- They may also take part in any general community; never imply Elite members should keep to Elite spaces.
+- Never mention their income, wealth, verification documents or how they were admitted, and never treat accomplishment as a measure of worth.`;
+
 export async function membershipFor(db: Db, userId: string) {
   const pick = "user_id, kind, status, tier_slug, experiences, amount_cents, couples_upgrade, current_period_end, billing_interval";
   const { data: own } = await db.from("subscriptions").select(pick).eq("user_id", userId).eq("kind", "member").order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -202,7 +209,7 @@ export async function sendJourneyMessage(input: {
       packageSlug: t.package_slug, monthlyMessages: t.monthly_messages, dailyMessages: t.daily_messages,
       memberMonthlyLimitCents: t.member_monthly_limit_cents === null ? null : Number(t.member_monthly_limit_cents),
       tierMonthlyLimitCents: t.tier_monthly_limit_cents === null ? null : Number(t.tier_monthly_limit_cents),
-      maxOutputTokens: t.max_output_tokens, model: t.model,
+      maxOutputTokens: t.max_output_tokens, model: t.model, unlimited: Boolean(t.unlimited_messages), fairUseDaily: t.fair_use_daily,
     } : null;
   }
 
@@ -212,7 +219,8 @@ export async function sendJourneyMessage(input: {
 
   const { data: u } = await db.rpc("journey_holder_usage", { p_holder: holderId, p_period_start: periodStart.toISOString() });
   const usage = u as Record<string, number | string> | null;
-  const view = tier?.monthlyMessages != null && usage
+  const view = tier?.unlimited && usage ? unlimitedView(Number(usage.period_messages), periodEnd)
+    : tier?.monthlyMessages != null && usage
     ? allowanceView(tier.monthlyMessages, Number(usage.period_messages), Number(usage.purchased_remaining), periodEnd)
     : null;
 
@@ -340,7 +348,7 @@ export async function sendJourneyMessage(input: {
     if (summarize) await db.from("discovery_analyses").insert({ user_id: viewer.id, scope: `category:${discovery.category}`, source: "journey", content: result.text.slice(0, 20000) });
   }
   if (input.ownerTest) return { ok: true, reply: result.text, conversationId, allowance: null, test: { id: testRunId, model: d.model, latencyMs, inputTokens: result.inputTokens, outputTokens: result.outputTokens, costCents: actual, instructionVersion: published?.version ?? null } };
-  const after = view && !d.usesPurchased
+  const after = view?.unlimited ? unlimitedView(view.used + 1, periodEnd) : view && !d.usesPurchased
     ? allowanceView(view.allowance, view.used + 1, view.purchasedRemaining, periodEnd)
     : view && { ...view, purchasedRemaining: Math.max(0, view.purchasedRemaining - 1) };
   return { ok: true, reply: result.text, conversationId, allowance: after };
@@ -363,9 +371,10 @@ export async function getJourneyStatus(): Promise<{
     // Owner "View as": show exactly what this membership would see (a full, unused allowance).
     const pkg = PERSONAS[viewer.viewAs]?.packageSlug;
     if (!pkg || !db) return { ...none, enabled };
-    const { data: t } = await db.from("journey_tier_limits").select("monthly_messages").eq("package_slug", pkg).maybeSingle();
+    const { data: t } = await db.from("journey_tier_limits").select("monthly_messages, unlimited_messages").eq("package_slug", pkg).maybeSingle();
     const access = (cfg?.enhancedPackages ?? DEFAULT_ENHANCED_PACKAGES).includes(pkg) ? "enhanced" : "standard";
-    return { access, enabled, packageSlug: pkg, allowance: t?.monthly_messages != null ? allowanceView(t.monthly_messages, 0, 0, new Date(Date.now() + 30 * 86_400_000)) : null };
+    const ends = new Date(Date.now() + 30 * 86_400_000);
+    return { access, enabled, packageSlug: pkg, allowance: t?.unlimited_messages ? unlimitedView(0, ends) : t?.monthly_messages != null ? allowanceView(t.monthly_messages, 0, 0, ends) : null };
   }
   if (viewer.roles.length) return { access: "staff", enabled, allowance: null, packageSlug: null };
   if (!db || !cfg) return none;
@@ -373,11 +382,12 @@ export async function getJourneyStatus(): Promise<{
   const access = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
   if (!m || access === "none") return { ...none, enabled };
   const [{ data: t }, { data: u }] = await Promise.all([
-    db.from("journey_tier_limits").select("monthly_messages").eq("package_slug", m.membership.packageSlug ?? "").maybeSingle(),
+    db.from("journey_tier_limits").select("monthly_messages, unlimited_messages").eq("package_slug", m.membership.packageSlug ?? "").maybeSingle(),
     db.rpc("journey_holder_usage", { p_holder: m.holderId, p_period_start: m.periodStart.toISOString() }),
   ]);
   const usage = u as Record<string, number | string> | null;
-  const allowance = t?.monthly_messages != null && usage
+  const allowance = t?.unlimited_messages && usage ? unlimitedView(Number(usage.period_messages), m.periodEnd)
+    : t?.monthly_messages != null && usage
     ? allowanceView(t.monthly_messages, Number(usage.period_messages), Number(usage.purchased_remaining), m.periodEnd)
     : null;
   return { access, enabled, allowance, packageSlug: m.membership.packageSlug };
@@ -502,11 +512,14 @@ export async function composeFoundation(db: Db, cfg: NonNullable<Awaited<ReturnT
     exampleText && `# Approved example conversations (match their spirit and quality, not their exact words)\n${exampleText}`,
   ].filter(Boolean).join("\n\n");
   const principles = Object.entries(FOUNDER_PRINCIPLES).map(([k, list]) => `## ${k.replace(/-/g, " ")}\n${list.map((x) => `- ${x}`).join("\n")}`).join("\n");
+  const { data: eliteBadge } = await db.from("elite_badges").select("status").eq("user_id", o.userId).maybeSingle();
+  const eliteGuidance = eliteBadge?.status === "active" ? ELITE_CONCIERGE_GUIDANCE : "";
   const parts = [
     buildJourneyInstructions({ mode: o.mode, access: o.access, ownerInstructions: ownerText || null, disabledCapabilities: cfg.disabled }),
     JOURNEY_IDENTITY,
     `# The founder's educational principles, by subject (the founder's own words; teach from these)\n${principles}`,
     JOURNEY_EI_GUIDANCE,
+    eliteGuidance,
     o.lesson ? await teachingGuidance(db, o.lesson) : "",
     o.mode === "life" || o.mode === "love" ? (await loveLanguageContext(db, o.userId)).trim() : "",
     prefRow ? styleInstructions(cleanPrefs({ ...prefRow, age: prefRow.age_style }), o.spoken) : "",

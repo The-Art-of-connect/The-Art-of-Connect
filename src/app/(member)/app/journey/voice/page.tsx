@@ -38,7 +38,9 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
     const m = await membershipFor(db, viewer.id);
     const { data: t } = await db.from("journey_tier_limits").select("monthly_voice_minutes").eq("package_slug", m?.membership.packageSlug ?? "").maybeSingle();
     const { data: used } = m ? await db.rpc("journey_voice_used", { p_holder: m.holderId, p_period_start: m.periodStart.toISOString() }) : { data: 0 };
-    if (t?.monthly_voice_minutes != null) minutes = { total: t.monthly_voice_minutes, remaining: Math.max(0, t.monthly_voice_minutes - Math.ceil(Number(used ?? 0) / 60)) };
+    const { data: credits } = m ? await db.from("journey_message_credits").select("messages, used").eq("holder_id", m.holderId).eq("kind", "voice_minutes").or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`) : { data: [] };
+    const extra = (credits ?? []).reduce((n, c) => n + (c.messages - c.used), 0);
+    if (t?.monthly_voice_minutes != null) minutes = { total: t.monthly_voice_minutes + extra, remaining: Math.max(0, t.monthly_voice_minutes + extra - Math.ceil(Number(used ?? 0) / 60)) };
   }
   const voiceReady = Boolean(s?.voice_enabled && s.voice_model && s.voice_cents_per_minute != null && status.enabled);
   const owner = hasRole(viewer, ["owner"]);
@@ -69,6 +71,7 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
           lesson={lesson} discovery={disc?.key ?? null} mode={disc ? discoveryMode(disc.key) : "life"} />
         )}
       </div>
+      {minutes && <p className="mt-4 text-sm text-muted">{minutes.remaining} of {minutes.total} voice minutes remaining this period. <Link href="/app/journey/plus" className="text-gold-deep underline">Additional minutes at our cost →</Link></p>}
       <LuxSection title="Designed around you">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <LuxCard title="Speak naturally" body="Interrupt, pause or change direction anytime — Journey follows the conversation as a thoughtful listener would." />

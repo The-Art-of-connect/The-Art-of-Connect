@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EliteBadge } from "@/components/EliteBadge";
 import { getViewer } from "@/lib/auth";
+import { getCatalogue } from "@/lib/catalogue";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EliteExperienceIcon } from "@/components/EliteIcons";
 import { ELITE_BENEFITS, ELITE_EXPERIENCES, ELITE_QUALIFICATIONS, ELITE_TAGLINE, usd, type Thresholds } from "@/lib/elite";
@@ -25,6 +26,7 @@ export default async function ElitePage() {
   const admin = createAdminClient();
   const { data: s } = admin ? await admin.from("elite_settings").select("thresholds").maybeSingle() : { data: null };
   const t = (s?.thresholds ?? {}) as Thresholds;
+  const allAccess = ((await getCatalogue()).packages.find((p) => p.slug === "elite-concierge")?.benefits ?? []) as string[];
   return (
     <div className="theme-dark" style={{ background: "#1b1310" }}>
       <section className="relative overflow-hidden px-4 pb-20 pt-24 text-center sm:px-8">
@@ -70,6 +72,17 @@ export default async function ElitePage() {
         </div>
         <p className="mt-4 text-center text-xs text-[#f5ecdf]/55">Connections marked &ldquo;In preparation&rdquo; are being built and aren&rsquo;t available yet. Introductions are never guaranteed.</p>
       </section>
+
+      {allAccess.length > 0 && (
+        <section className="mx-auto max-w-3xl px-4 pb-16 sm:px-8">
+          <div className="rounded-[28px] border border-[#c9a96e]/50 bg-white/[0.03] p-8">
+            <p className="flex items-center justify-center gap-2 text-xs uppercase tracking-[0.25em] text-[#f0c98a]"><EliteBadge size={18} interactive={false} /> Elite Membership</p>
+            <h2 className="display mt-3 text-center text-4xl text-[#f6e7c8]">All Access</h2>
+            <ul className="mt-6 grid gap-2.5 text-sm text-[#f5ecdf]/85 sm:grid-cols-2">{allAccess.map((b) => <li key={b} className="flex gap-2"><span className="text-[#e8892b]" aria-hidden="true">✓</span>{b}</li>)}</ul>
+            <p className="mt-5 text-center text-xs text-[#f5ecdf]/55">Available once your Elite application is approved. Singles and couples services follow their own age and relationship-status requirements.</p>
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-8">
         <h2 className="display text-center text-4xl text-[#f6e7c8]">Qualification</h2>
