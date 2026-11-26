@@ -26,6 +26,7 @@ changes an earlier one, the later one wins.
 | 20 | [Paid membership enhancement, Executive Private & Elite Concierge](20-paid-membership-enhancement.md) | **Audit complete; Phase One built.** Feature directory, What's New, paid home, central membership levels. Phases 2–5 on the tracker. |
 | 21 | [Executive & Elite Signature Services](21-executive-elite-signature-services.md) | **Recorded.** Planned within directive 20's Executive and Elite phases; news source and concierge staffing need approval. |
 | 22 | [Business & Tax Education Center](22-business-tax-education-center.md) | **Recorded.** Extends the Business Intelligence Center; uses an owner-approved, dated source library. |
+| 23 | [Premium membership implementation & development authorization](23-premium-membership-implementation.md) | **In progress.** Executive Office, Elite Signature Experience, Business Intelligence and Tax Education, Journey cost controls. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
