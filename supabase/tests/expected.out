@@ -364,10 +364,10 @@ v11-16) Executives see program metrics (expect 6|1):
 6|1
 v12-1) Journey starts switched off with paid usage unauthorized and no budgets (expect f|f|||f):
 f|f|||f
-v12-2) Initial allowances are seeded, one per membership, none unlimited (expect 10|150|250|750|0):
-10|150|250|750|0
-v12-3) Message packages are seeded at the proposed prices (expect 25:499,50:899,100:1499,250:2999):
-25:499,50:899,100:1499,250:2999
+v12-2) Allowances are seeded, one per membership; only Elite (all-inclusive) has unlimited text (expect 10|150|250|450|1):
+10|150|250|450|1
+v12-3) Additional message packages are priced at cost: API cost plus card processing, 50c minimum (expect 25:50,50:57,100:83,250:160,500:289,1000:546):
+25:50,50:57,100:83,250:160,500:289,1000:546
 v12-4) A member cannot see Journey settings or unpublished package prices (expect 0|0):
 0|0
 v12-5) A member cannot switch Journey on or authorize spending (expect f|f):
@@ -843,3 +843,25 @@ v38-19) Connection preferences are private to the member (expect 1, then 0):
 0
 v38-20) Every non-Elite circle is open to all eligible members: no circle limits ordinary members by income (expect 0):
 0
+v39-1) Elite has unlimited text with no monthly message cap; voice stays at 300 minutes (expect t||300):
+t||300
+v39-2) Only Elite is all-access (expect elite-concierge):
+elite-concierge
+v39-3) Voice minutes are priced at cost: 5c a minute plus 2.9% + 30c (expect 15:109,30:186,60:340,120:649):
+15:109,30:186,60:340,120:649
+v39-4) Members cannot change usage pricing (expect error):
+ERROR:  Not permitted
+v39-5) ...and cannot edit voice package prices (expect 0 rows changed):
+0
+v39-6) An Elite member past 750 messages this month is still served (expect a reservation id, not refused):
+reserved
+v39-7) Fair use still protects against abuse within a single day (expect refused:fair_use_day):
+refused:fair_use_day
+v39-8) Only Elite members may choose Elite-only profile visibility (expect error):
+ERROR:  The Elite-only visibility option is part of Elite Concierge.
+v39-9) A connections-only profile is hidden from members who are not connected (expect 0):
+0
+v39-10) Support requests from Elite members are prioritized automatically; others cannot claim priority (expect standard):
+standard
+v39-11) An Elite member's request is marked priority (expect elite):
+elite

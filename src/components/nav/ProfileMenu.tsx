@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { messagesLeft } from "@/lib/journey";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { PROFILE_LINKS } from "@/lib/nav";
@@ -24,7 +25,7 @@ export function ProfileList({ state, onNavigate }: { state: NavState; onNavigate
         {PROFILE_LINKS.map((l) => (
           <li key={l.href}>
             <Link href={l.href} onClick={onNavigate} className="flex items-center justify-between px-5 py-2.5 text-sm transition hover:bg-champagne/15">
-              {l.label}{l.href === "/app/journey/plus" && state.paid && state.credits != null && <span className="text-xs text-gold-deep">{state.credits}</span>}
+              {l.label}{l.href === "/app/journey/plus" && state.paid && state.credits != null && <span className="text-xs text-gold-deep">{messagesLeft(state.credits)}</span>}
             </Link>
           </li>
         ))}

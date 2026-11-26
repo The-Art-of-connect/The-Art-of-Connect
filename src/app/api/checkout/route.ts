@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     if (!accepted) return NextResponse.json({ error: "We couldn’t record your acceptance. Please try again." }, { status: 500 });
 
     const names = selection.experiences.map((e) => EXPERIENCES[e].name);
-    const extras = [q.couplesMonthly ? catalogue.couples_upgrade.name : null, ...catalogue.addons.filter((a) => selection.addons.includes(a.slug) && a.billing === "monthly").map((a) => a.name)].filter(Boolean);
+    const extras = [q.couplesMonthly ? catalogue.couples_upgrade.name : null, ...(pkg.all_access ? [] : catalogue.addons.filter((a) => selection.addons.includes(a.slug) && a.billing === "monthly").map((a) => a.name))].filter(Boolean);
     lineItems.push({
       quantity: 1,
       price_data: {
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     if (q.onboardingFee) {
       lineItems.push({ quantity: 1, price_data: { currency, unit_amount: q.onboardingFee, product_data: { name: `${pkg.name} onboarding` } } });
     }
-    for (const a of catalogue.addons.filter((x) => selection.addons.includes(x.slug) && x.billing === "one_time" && x.price_cents)) {
+    for (const a of catalogue.addons.filter((x) => !pkg.all_access && selection.addons.includes(x.slug) && x.billing === "one_time" && x.price_cents)) {
       lineItems.push({ quantity: 1, price_data: { currency, unit_amount: a.price_cents!, product_data: { name: a.name } } });
     }
     if (q.promotionDiscount && promo) {
@@ -108,11 +108,12 @@ export async function POST(request: NextRequest) {
       kind: "member",
       tier_slug: pkg.slug,
       tier_name: pkg.name,
-      experiences: selection.experiences.join(","),
+      // All-inclusive packages grant every experience they include, partner access at no charge and no add-ons.
+      experiences: (pkg.all_access ? pkg.experiences : selection.experiences).join(","),
       interval: selection.interval,
       couples: selection.couples ? "1" : "0",
-      couples_upgrade: q.couplesMonthly ? "1" : "0",
-      addons: selection.addons.join(","),
+      couples_upgrade: q.couplesMonthly || (pkg.all_access && selection.couples) ? "1" : "0",
+      addons: pkg.all_access ? "" : selection.addons.join(","),
       amount_cents: String(q.recurringTotal),
       monthly_equivalent_cents: String(selection.interval === "year" ? Math.round(q.annualTotal! / 12) : q.monthlyTotal!),
       promo: promo?.code ?? "",

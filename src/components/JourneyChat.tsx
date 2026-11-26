@@ -21,6 +21,13 @@ const STARTERS = [
 ];
 
 export function AllowanceMeter({ a }: { a: AllowanceView }) {
+  if (a.unlimited) return (
+    <div className="theme-dark rounded-2xl border border-gold/40 p-5" style={{ background: "#1b1310" }}>
+      <p className="text-xs tracking-[0.25em] text-gold uppercase">Elite Concierge · Journey</p>
+      <p className="mt-2"><span className="display text-4xl text-gold-bright">Unlimited</span> <span className="text-muted">text conversations</span></p>
+      <p className="mt-2 text-xs text-faint">{a.used} this month · included in your membership. Fair use applies to keep Journey attentive for everyone; nothing is ever charged for text.</p>
+    </div>
+  );
   const pct = a.allowance > 0 ? Math.min(100, Math.round((a.used / a.allowance) * 100)) : 100;
   return (
     <div className="theme-dark rounded-2xl border border-gold/30 p-5" style={{ background: "var(--ink-2)" }}>

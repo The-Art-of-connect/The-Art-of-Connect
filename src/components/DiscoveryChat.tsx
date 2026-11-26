@@ -89,7 +89,7 @@ export function DiscoveryChat({ sessionId, mode, opening, history, allowance, av
         {meter ? <AllowanceMeter a={meter} /> : <div className="glass p-5 text-sm text-muted">{ownerTest ? "Owner testing uses your private test budget." : "Your allowance appears here once your membership includes Journey."}</div>}
         <div className="glass space-y-2 p-5 text-xs text-muted">
           <p className="font-semibold text-text">Included in your membership</p>
-          <p>Each reply from Journey, including a skipped question or your final summary, uses 1 message{remaining != null ? ` (you have ${remaining})` : ""}. Opening, pausing, changing topics and ending never do.</p>
+          <p>Each reply from Journey, including a skipped question or your final summary, uses 1 message{meter?.unlimited ? " (unlimited with your Elite membership)" : remaining != null ? ` (you have ${remaining})` : ""}. Opening, pausing, changing topics and ending never do.</p>
           <p>Journey only asks what helps you, and will offer your summary once it understands enough.</p>
         </div>
         {!done && <div className="px-1">{endForm}</div>}

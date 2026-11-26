@@ -81,6 +81,8 @@ export async function saveTierLimit(_p: ActionResult, f: FormData): Promise<Acti
     member_monthly_limit_cents: cents(f.get("memberCap")), tier_monthly_limit_cents: cents(f.get("tierCap")),
     max_output_tokens: int(f.get("maxOutput")) ?? 700, model: String(f.get("model") ?? "") || null,
     monthly_voice_minutes: int(f.get("voiceMinutes")),
+    unlimited_messages: f.get("unlimited") === "on",
+    fair_use_daily: int(f.get("fairDaily")) ?? 300, fair_use_hourly: int(f.get("fairHourly")) ?? 60,
   };
   if (Object.values(row).some((x) => typeof x === "number" && Number.isNaN(x))) return fail("Check the numbers.");
   const supabase = (await createClient())!;
@@ -329,4 +331,22 @@ export async function pauseJourney(_p: ActionResult): Promise<ActionResult> {
   if (error) return fail("Not saved.");
   await done("journey.enabled.off", "enabled");
   return ok("Journey is off. No AI usage can occur until you activate it again.");
+}
+
+/** Additional Journey usage is priced at cost: OpenAI rates plus card processing, no markup. */
+export async function saveUsagePricing(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  await requireStaff(["owner", "finance"]);
+  const num = (k: string, max: number) => { const n = Number(String(f.get(k) ?? "").trim()); return Number.isFinite(n) && n >= 0 && n <= max ? n : NaN; };
+  const row = {
+    text_cost_cents_per_message: num("textCost", 100), voice_cost_cents_per_minute: num("voiceCost", 500),
+    card_fee_percent: num("feePct", 20), card_fee_fixed_cents: Math.round(num("feeFixed", 500)),
+  };
+  if (Object.values(row).some((x) => Number.isNaN(x))) return fail("Check the numbers.");
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("journey_settings").update(row).eq("id", true);
+  if (error) return fail("Not saved.");
+  const { error: rp } = await supabase.rpc("journey_reprice_at_cost");
+  if (rp) return fail("Saved, but packages couldn't be re-priced.");
+  await done("journey.usage_pricing", "at_cost", row);
+  return ok("Saved. Every additional message and voice-minute package is now priced at cost.");
 }

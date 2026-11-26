@@ -21,6 +21,8 @@ export default async function MyProfile() {
     db.rpc("social_photo_limit", { p: viewer.id }),
   ]);
   const urls = await signPhotos(db, [...(photos ?? []).map((x) => x.path), p?.avatar_path]);
+  const { data: badge } = await db.from("elite_badges").select("status").eq("user_id", viewer.id).maybeSingle();
+  const elite = badge?.status === "active";
   const has = (list: string[] | null | undefined, v: string) => Boolean(list?.includes(v));
 
   return (
@@ -58,6 +60,13 @@ export default async function MyProfile() {
           ))}</div>
         </fieldset>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="discoverable" defaultChecked={p?.discoverable} /> Let members find me in Find People Like Me (only for what I&rsquo;m available for)</label>
+        <label className="block text-sm">Who can see my profile
+          <select name="profile_visibility" defaultValue={p?.profile_visibility ?? "members"} className="field mt-1 w-full">
+            <option value="members">All members</option>
+            <option value="connections">Only my connections</option>
+            {elite && <option value="elite">Elite members and my connections (Elite privacy)</option>}
+          </select>
+        </label>
         <button className="btn btn-gold btn-sm">Save my profile</button>
       </ActionForm>
 

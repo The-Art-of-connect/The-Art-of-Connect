@@ -9,7 +9,7 @@ export default async function SupportPage() {
   await requireStaff(rolesFor("/admin/support"));
   const supabase = await createClient();
   const { data: tickets } = supabase
-    ? await supabase.from("support_tickets").select("*").order("created_at", { ascending: false }).limit(100)
+    ? await supabase.from("support_tickets").select("*").order("priority", { ascending: true }).order("created_at", { ascending: false }).limit(100)
     : { data: [] as any[] };
 
   return (
@@ -22,7 +22,7 @@ export default async function SupportPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-text">{t.subject}</p>
-                  <span className="chip">{t.category}</span><span className="chip">{t.status}</span>
+                  {t.priority === "elite" && <span className="chip !border-[#e8701a] !text-[#c8701a]">Elite priority</span>}<span className="chip">{t.category}</span><span className="chip">{t.status}</span>
                 </div>
                 <p className="mt-2 line-clamp-3 text-sm text-muted">{t.body}</p>
                 <p className="mt-2 text-xs text-faint">{t.email} · {date(t.created_at)}</p>

@@ -20,7 +20,7 @@ export default async function MyMembershipPage() {
   const [{ data: sub }, catalogue, launch] = await Promise.all([
     supabase
       .from("subscriptions")
-      .select("tier_name, experiences, billing_interval, amount_cents, couples_upgrade, addons, status, current_period_end, cancel_at_period_end")
+      .select("tier_slug, tier_name, experiences, billing_interval, amount_cents, couples_upgrade, addons, status, current_period_end, cancel_at_period_end")
       .eq("user_id", viewer.id)
       .eq("kind", "member")
       .order("created_at", { ascending: false })
@@ -44,6 +44,8 @@ export default async function MyMembershipPage() {
     );
   }
 
+  const allAccessPkg = catalogue.packages.find((p) => p.slug === sub.tier_slug && p.all_access) ?? null;
+  const allAccess = Boolean(allAccessPkg);
   const initial: Selection = { experiences: sub.experiences ?? [], interval: sub.billing_interval === "year" ? "year" : "month", couples: sub.couples_upgrade, addons: sub.addons ?? [] };
   return (
     <>
@@ -54,8 +56,16 @@ export default async function MyMembershipPage() {
         {sub.current_period_end ? ` · ${sub.cancel_at_period_end ? "ends" : "renews"} ${new Date(sub.current_period_end).toLocaleDateString("en-US", { dateStyle: "medium" })}` : ""}
       </p>
       {["active", "trialing", "past_due"].includes(sub.status) && <CancelMembership cancelling={sub.cancel_at_period_end} />}
+      {allAccess ? (
+        <section className="theme-dark mt-10 rounded-[28px] border border-[#c9a96e]/50 p-8" style={{ background: "#1b1310" }}>
+          <p className="text-xs uppercase tracking-[0.25em] text-[#f0c98a]">Elite Membership — All Access</p>
+          <ul className="mt-4 grid gap-2 text-sm text-[#f5ecdf]/85 sm:grid-cols-2">{(allAccessPkg?.benefits ?? []).map((b) => <li key={b} className="flex gap-2"><span className="text-[#e8892b]" aria-hidden="true">✓</span>{b}</li>)}</ul>
+          <p className="mt-5 text-xs text-[#f5ecdf]/60">Everything is included. The only optional extra is additional Journey voice time, offered at our cost in <Link href="/app/journey/plus" className="underline">Journey Plus</Link>. Billing questions: <Link href="/app/support" className="underline">priority support</Link>.</p>
+        </section>
+      ) : <>
       <h2 className="mt-14 mb-6 text-lg font-semibold">Add or remove experiences, or change billing</h2>
       <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live} kind="change" eliteInvited={eliteInvited} />
+      </>}
       {viewer.society && <SocietyPanel current={viewer.society} />}
     </>
   );

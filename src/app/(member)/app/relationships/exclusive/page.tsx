@@ -12,7 +12,7 @@ const AFTER = [
   "Other connections receive a discreet note that you're no longer available — your partner is never named.",
   "Where available, they're offered other compatible introductions.",
   "You open a shared relationship space, first-date planning and activities together.",
-  "The Couples Experience is offered as an optional upgrade — never charged automatically.",
+  "The Couples Experience is included with Elite Concierge; with other memberships it is an optional upgrade, never charged automatically.",
 ];
 
 export default async function Exclusive() {

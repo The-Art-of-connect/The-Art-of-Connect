@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EliteBadge } from "@/components/EliteBadge";
+import { EliteHome } from "@/components/EliteHome";
 import { getViewer, isInsidePreview, isStaff } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
@@ -39,7 +40,11 @@ export default async function MemberHome() {
   const subName = (k: string) => (k === "relationships" && viewer.society === "singles" ? "Singles" : k === "relationships" && viewer.society === "couples" ? "Couples" : null);
   const referralLink = viewer.referralCode ? `${env.siteUrl}/membership?ref=${viewer.referralCode}` : null;
 
-  const { data: elite } = isInsidePreview(viewer) ? { data: null } : await supabase.from("elite_candidates").select("status").eq("user_id", viewer.id).maybeSingle();
+  const [{ data: elite }, { data: badge }] = isInsidePreview(viewer) ? [{ data: null }, { data: null }] : await Promise.all([
+    supabase.from("elite_candidates").select("status").eq("user_id", viewer.id).maybeSingle(),
+    supabase.from("elite_badges").select("status, issued_at").eq("user_id", viewer.id).maybeSingle(),
+  ]);
+  const isElite = badge?.status === "active";
   return (
     <>
       {elite?.status === "invitation_issued" && (
@@ -48,7 +53,7 @@ export default async function MemberHome() {
           <span className="text-sm font-semibold text-[#f0a35a]">View my invitation →</span>
         </Link>
       )}
-      <LivingHero
+      {isElite ? <EliteHome name={viewer.displayName} since={badge?.issued_at ? new Date(badge.issued_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null} /> : <LivingHero
         slides={[
           { src: "/images/library/life/journaling.webp", alt: "Writing in a journal by a sunlit window" },
           { src: "/images/society/roundtable.webp", alt: "Business owners gathered around a boardroom table" },
@@ -59,7 +64,7 @@ export default async function MemberHome() {
         subtitle="Every meaningful connection begins with understanding yourself. Your journey starts here."
         cta={{ href: "/app/know-yourself", label: "The Art of Knowing Yourself" }}
         secondary={{ href: "/app/journey", label: "Meet Journey" }}
-      />
+      />}
       <div className="mt-10">
         <Greeting name={viewer.displayName} />
         <p className="mt-2 max-w-xl text-muted">Each experience is a separate space with its own profile. What you share in one never appears in another.</p>
@@ -124,7 +129,7 @@ export default async function MemberHome() {
         </div>
       </section>
 
-      {others.length > 0 && (
+      {others.length > 0 && !isElite && (
         <section aria-labelledby="explore" className="mt-14 rounded-[28px] border border-champagne/60 bg-ivory/70 p-6 sm:p-9">
           <p className="eyebrow">Explore Memberships</p>
           <h2 id="explore" className="display mt-2 text-3xl">Discover more of The Art of Connect</h2>
