@@ -69,3 +69,4 @@
 20270116000002_circle_starter_and_tracker.sql	exists (select 1 from public.circle_topics where source = 'peace')
 20270117000001_paid_membership_tracker.sql	exists (select 1 from public.dev_tracker where key = 'feature-directory')
 20270118000001_tax_source_library.sql	exists (select 1 from information_schema.tables where table_name = 'knowledge_sources')
+20270118000002_tax_sources_draft.sql	exists (select 1 from public.knowledge_sources where prepared_by = 'peace')
