@@ -36,3 +36,4 @@
 20261228000001_tracker_cleanup.sql	exists (select 1 from public.dev_tracker where key = 'universal-journey')
 20261229000001_voice_owner_budget.sql	position('refused:test_budget' in pg_get_functiondef('public.journey_voice_start(uuid,uuid,text,integer,boolean,numeric)'::regprocedure)) > 0
 20261230000001_tracker_notes.sql	not exists (select 1 from public.dev_tracker where next_step like '%Apply database migrations%')
+20261231000001_tracker_intelligence.sql	exists (select 1 from public.dev_tracker where key = 'journey-intelligence')
