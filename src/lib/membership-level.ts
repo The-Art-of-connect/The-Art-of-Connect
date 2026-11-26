@@ -2,8 +2,8 @@
  * Membership levels (founder directive 20, section 1). One central definition used by the feature directory, dashboards
  * and permission checks. Pure: the server helper supplies the facts.
  *
- * Since membership access v2 (directive 14), The Art of Becoming is free for everyone, so "Complete Society" (all three
- * societies) is reached with both paid societies: The Professional Society and The Personal Society (Business + Love).
+ * Founder decision (November 26, 2026): "Complete Society" means both paid societies, In Business (The Professional
+ * Society) and In Love (The Personal Society), with The Art of Becoming remaining complimentary.
  */
 export type Level = "free" | "one" | "complete" | "executive" | "elite";
 export const LEVEL_ORDER: Level[] = ["free", "one", "complete", "executive", "elite"];
