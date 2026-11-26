@@ -55,3 +55,4 @@
 20270110000001_social_ecosystem_plan.sql	exists (select 1 from public.dev_tracker where key = 'social-couples-travel')
 20270111000001_social_core.sql	to_regclass('public.social_posts') is not null
 20270111000002_social_phase1_tracker.sql	exists (select 1 from public.qa_features where key = 'circle-community')
+20270112000001_elite_all_access.sql	exists (select 1 from public.membership_packages where slug = 'elite-concierge' and description = 'Elite Membership — All Access.')
