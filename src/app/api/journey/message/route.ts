@@ -17,6 +17,8 @@ const Body = z.object({
   comparisonId: z.uuid().nullish(),
   discovery: z.object({ sessionId: z.uuid(), summarize: z.boolean().optional(), skip: z.boolean().optional() }).nullish(),
   lesson: z.string().regex(/^[a-z0-9-]{2,60}(\/[a-z0-9-]{2,60})?$/).nullish(),
+  guide: z.object({ ref: z.string().regex(/^[a-z0-9-]{2,60}(\/[a-z0-9-]{2,60})?$/), draft: z.boolean().optional(), transcript: z.string().max(60000).nullish(), assist: z.boolean().optional() }).nullish(),
+  page: z.string().max(200).nullish(),
 });
 
 /** Journey written conversations. Every permission and spending check runs on the server before OpenAI is called. */

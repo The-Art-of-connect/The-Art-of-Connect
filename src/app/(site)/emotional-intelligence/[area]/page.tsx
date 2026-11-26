@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { EI_AREAS, eiArea } from "@/lib/emotional-intelligence";
 import { saveEIReflections } from "@/app/actions/emotional-intelligence";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { JourneyGuide } from "@/components/JourneyGuide";
+import { guideFor } from "@/lib/journey-guide-access";
 import { EIIcon } from "@/components/EIIcon";
 import { EIJourneyBand } from "@/components/EIJourneyBand";
 import { EIScenario } from "@/components/EIScenario";
@@ -29,6 +31,7 @@ export default async function EIAreaPage({ params }: { params: Promise<{ area: s
     const { data } = await supabase.from("discovery_answers").select("question_key, answer").eq("user_id", viewer.id).in("question_key", a.reflections.map((r) => r.key));
     saved = Object.fromEntries((data ?? []).map((r) => [r.question_key, r.answer ?? ""]));
   }
+  const guide = member ? await guideFor(`ei/${a.slug}`) : null;
   const i = EI_AREAS.findIndex((x) => x.slug === a.slug);
   const next = EI_AREAS[(i + 1) % EI_AREAS.length];
   const card = "rounded-[22px] border border-champagne/70 bg-ivory/70 p-7 sm:p-9";
@@ -82,13 +85,15 @@ export default async function EIAreaPage({ params }: { params: Promise<{ area: s
           <div className={card}>
             <p className="text-xs tracking-[0.28em] uppercase text-gold-deep">Reflect · optional & private</p>
             {member ? (
-              <ActionForm action={saveEIReflections} className="mt-4 space-y-4">
+              <div className="mt-4"><JourneyGuide mod={guide!.mod} access={guide!.access} hasAnswers={guide!.hasAnswers}>
+              <ActionForm action={saveEIReflections} className="space-y-4">
                 {a.reflections.map((r) => (
                   <label key={r.key} className="block space-y-1.5"><span className="text-sm font-semibold">{r.prompt}</span>
                     <textarea name={r.key} defaultValue={saved[r.key] ?? ""} maxLength={4000} rows={3} className="field" /></label>
                 ))}
                 <button className="rounded-xl bg-burgundy px-6 py-3 font-medium text-ivory">Save privately</button>
               </ActionForm>
+              </JourneyGuide></div>
             ) : (
               <>
                 <ul className="mt-4 space-y-3">{a.reflections.map((r) => <li key={r.key} className="flex gap-2 text-text/85"><span className="text-gold">◆</span>{r.prompt}</li>)}</ul>

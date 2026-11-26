@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { EI_AREAS, EI_KEYS, EI_PROFILE } from "@/lib/emotional-intelligence";
 import { saveEIReflections } from "@/app/actions/emotional-intelligence";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { JourneyGuide } from "@/components/JourneyGuide";
+import { guideFor } from "@/lib/journey-guide-access";
 import { EIIcon } from "@/components/EIIcon";
 import { EIJourneyBand } from "@/components/EIJourneyBand";
 
@@ -20,6 +22,7 @@ export default async function EIProfile() {
   ]);
   const saved = Object.fromEntries((rows ?? []).map((r) => [r.question_key, r.answer ?? ""]));
   const versions = (history ?? []).length;
+  const guide = (await guideFor("ei/profile"))!;
 
   return (
     <div className="space-y-10">
@@ -46,6 +49,7 @@ export default async function EIProfile() {
         })}
       </section>
 
+      <JourneyGuide mod={guide.mod} access={guide.access} hasAnswers={guide.hasAnswers}>
       <ActionForm action={saveEIReflections} className="rounded-[22px] border border-champagne/70 bg-ivory/70 p-6 sm:p-9">
         <div className="grid gap-5 md:grid-cols-2">
           {EI_PROFILE.map((p) => (
@@ -61,6 +65,7 @@ export default async function EIProfile() {
         </div>
         <p className="mt-4 text-xs text-muted">Visible only to you — never to matches, partners, business connections, providers or our team.</p>
       </ActionForm>
+      </JourneyGuide>
 
       <EIJourneyBand ask="I’d like to explore my emotional patterns and how I respond to conflict." title="Reflect with Journey" body="Talk through your patterns, triggers and growth privately — Journey helps you notice, never labels." />
     </div>

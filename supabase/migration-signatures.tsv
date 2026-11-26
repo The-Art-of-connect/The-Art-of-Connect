@@ -33,3 +33,4 @@
 20261224000001_wellness_center.sql	to_regclass('counseling.support_preferences') is not null
 20261225000001_society_transitions.sql	to_regclass('public.society_transitions') is not null
 20261227000001_tracker_stages.sql	exists (select 1 from information_schema.columns where table_name = 'dev_tracker' and column_name = 'owner_approved')
+20261228000001_tracker_cleanup.sql	exists (select 1 from public.dev_tracker where key = 'universal-journey')

@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getJourneyStatus, membershipFor } from "@/lib/journey-server";
 import { VoiceStudio } from "@/components/JourneyPickers";
+import { GuidedVoice } from "@/components/JourneyGuide";
+import { resolveGuide } from "@/lib/journey-guide-server";
 import { LuxCard, LuxSection, SafetyFooter } from "@/components/Lux";
 import { saveVoicePrefs } from "@/app/actions/journey-member";
 import { CURRICULA } from "@/lib/curricula";
@@ -19,8 +21,9 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
   const curriculum = lesson ? CURRICULA[sectionKey] : null;
   const lessonTitle = curriculum ? (curriculum.lessons.find((l) => l.slug === lessonSlug)?.title ?? curriculum.title) : null;
   const disc = sp.discover ? discoveryCategory(sp.discover) : null;
-  const topicTitle = lessonTitle ?? (disc ? `${disc.title} discovery` : null);
-  const backHref = curriculum ? `/app/know-yourself/${sectionKey === "emotional-intelligence" ? "emotional-intelligence/lessons" : sectionKey}${lessonSlug ? `#${lessonSlug}` : ""}` : disc ? `/app/journey/discover/${disc.key}` : null;
+  const guide = lesson ? await resolveGuide(createAdminClient(), lesson) : null;
+  const topicTitle = guide?.title ?? lessonTitle ?? (disc ? `${disc.title} discovery` : null);
+  const backHref = guide ? guide.href : curriculum ? `/app/know-yourself/${sectionKey === "emotional-intelligence" ? "emotional-intelligence/lessons" : sectionKey}${lessonSlug ? `#${lessonSlug}` : ""}` : disc ? `/app/journey/discover/${disc.key}` : null;
   const viewer = (await getViewer())!;
   const status = await getJourneyStatus();
   const supabase = await createClient();
@@ -52,11 +55,18 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
       )}
       <p className="mt-3 max-w-2xl text-muted">Natural, two-way spoken conversation with the same warmth, memory permissions and philosophy as written Journey. Switch between voice and chat whenever you like.</p>
       <div className="mt-10">
+        {guide ? (
+          <GuidedVoice mod={guide} minutes={minutes} available={available} reason={reason} ownerTest={owner && status.access === "staff"}
+            initialStyle={(prefs?.voice_style as "warm") ?? "warm"} initialTranscripts={prefs?.save_transcripts ?? false} onSavePrefs={saveVoicePrefs}
+            voiceSummary={prefs?.voice ? `${voiceById(prefs.voice)?.name ?? "Journey"} (${prefs.presentation} voice)` : null}
+            avatarImage={prefs?.avatar ? avatarById(prefs.avatar).image ?? null : null} lesson={lesson} mode="life" />
+        ) : (
         <VoiceStudio minutes={minutes} available={available} reason={reason} ownerTest={owner && status.access === "staff"}
           initialStyle={(prefs?.voice_style as "warm") ?? "warm"} initialTranscripts={prefs?.save_transcripts ?? false} onSavePrefs={saveVoicePrefs}
           voiceSummary={prefs?.voice ? `${voiceById(prefs.voice)?.name ?? "Journey"} (${prefs.presentation} voice)` : null}
           avatarImage={prefs?.avatar ? avatarById(prefs.avatar).image ?? null : null}
           lesson={lesson} discovery={disc?.key ?? null} mode={disc ? discoveryMode(disc.key) : "life"} />
+        )}
       </div>
       <LuxSection title="Designed around you">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

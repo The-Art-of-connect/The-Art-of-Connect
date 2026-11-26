@@ -12,6 +12,8 @@ import { PillarIcon } from "@/components/PillarIcon";
 import { PersonalDiscoveryCard, discoveryBlocks } from "@/components/PersonalDiscoveryCard";
 import { analysisKey, composeReflection, parseJourneyDiscovery } from "@/lib/personal-discovery";
 import { getJourneyStatus } from "@/lib/journey-server";
+import { guideFor } from "@/lib/journey-guide-access";
+import { JourneyGuide } from "@/components/JourneyGuide";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,7 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
       .in("question_key", mod.questions.map((q) => q.key)).order("recorded_at", { ascending: true }),
     getJourneyStatus().catch(() => null),
   ]);
+  const guide = await guideFor(`who-am-i/${mod.slug}`);
   const firstVersion = (key: string) => (history ?? []).find((h) => h.question_key === key);
   const versions = (key: string) => (history ?? []).filter((h) => h.question_key === key).length;
   const pillar = PILLARS.find((p) => p.key === mod.pillar)!;
@@ -48,26 +51,7 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
     : js.access === "staff" ? { kind: "staff" as const, enabled: js.enabled }
     : { kind: "member" as const, enabled: js.enabled, credits: js.allowance ? js.allowance.remaining + js.allowance.purchasedRemaining : 0 };
 
-  return (
-    <>
-      <Link href="/app/know-yourself#who-am-i" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold"><span aria-hidden="true">←</span> Who Am I?</Link>
-      {mod.slug === "what-my-life-represents" ? (
-        <div className="mt-4"><SelfBanner section="purpose" /><p className="mt-4 flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-gold-deep"><PillarIcon pillar={mod.pillar} className="h-4 w-4" /> {pillar.title} · Module {idx + 1} of {MODULES.length}</p><p className="mt-2 max-w-2xl text-muted">{mod.intro}</p></div>
-      ) : (
-      <section className="theme-dark relative mt-4 overflow-hidden rounded-[28px] bg-ink">
-          <div className="relative aspect-[16/9] sm:aspect-[21/8]">
-            <Image src={mod.image} alt="" fill priority sizes="100vw" className="kenburns object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/75 to-ink/5" />
-          </div>
-          <div className="relative -mt-24 px-6 pb-8 sm:-mt-28 sm:px-10">
-            <p className="flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-gold"><PillarIcon pillar={mod.pillar} className="h-4 w-4" /> {pillar.title} · Module {idx + 1} of {MODULES.length}</p>
-            <h1 className="display rise mt-3 text-4xl sm:text-6xl">{mod.title}</h1>
-            <p className="rise rise-2 mt-3 max-w-2xl text-muted">{mod.intro}</p>
-          </div>
-        </section>
-      )}
-
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+  const form = (
         <ActionForm action={saveDiscoveryModule} className="glass space-y-7 p-6 sm:p-8">
           <input type="hidden" name="module" value={mod.slug} />
           {mod.questions.map((q, i) => {
@@ -106,6 +90,29 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
           </div>
           <p className="text-xs text-muted">Leave anything blank and come back anytime. Your answers are private and never shared with connections, matches, partners, providers or our team.</p>
         </ActionForm>
+  );
+
+  return (
+    <>
+      <Link href="/app/know-yourself#who-am-i" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold"><span aria-hidden="true">←</span> Who Am I?</Link>
+      {mod.slug === "what-my-life-represents" ? (
+        <div className="mt-4"><SelfBanner section="purpose" /><p className="mt-4 flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-gold-deep"><PillarIcon pillar={mod.pillar} className="h-4 w-4" /> {pillar.title} · Module {idx + 1} of {MODULES.length}</p><p className="mt-2 max-w-2xl text-muted">{mod.intro}</p></div>
+      ) : (
+      <section className="theme-dark relative mt-4 overflow-hidden rounded-[28px] bg-ink">
+          <div className="relative aspect-[16/9] sm:aspect-[21/8]">
+            <Image src={mod.image} alt="" fill priority sizes="100vw" className="kenburns object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/75 to-ink/5" />
+          </div>
+          <div className="relative -mt-24 px-6 pb-8 sm:-mt-28 sm:px-10">
+            <p className="flex items-center gap-2 text-xs tracking-[0.25em] uppercase text-gold"><PillarIcon pillar={mod.pillar} className="h-4 w-4" /> {pillar.title} · Module {idx + 1} of {MODULES.length}</p>
+            <h1 className="display rise mt-3 text-4xl sm:text-6xl">{mod.title}</h1>
+            <p className="rise rise-2 mt-3 max-w-2xl text-muted">{mod.intro}</p>
+          </div>
+        </section>
+      )}
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div>{guide ? <JourneyGuide mod={guide.mod} access={guide.access} hasAnswers={guide.hasAnswers}>{form}</JourneyGuide> : form}</div>
 
         <aside className="space-y-5">
           {lesson && (
@@ -116,7 +123,7 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
               <p className="mt-4 rounded-xl bg-champagne/15 p-3 text-sm"><span className="font-semibold">Practice: </span>{lesson.practice}</p>
             </div>
           )}
-          <Link href="/app/journey" className="theme-dark lift relative block overflow-hidden rounded-[24px] bg-ink p-6">
+          <Link href={`/app/journey?lesson=who-am-i/${mod.slug}`} className="theme-dark lift relative block overflow-hidden rounded-[24px] bg-ink p-6">
             <div className="orb-halo pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgb(240_200_140/0.4),transparent_70%)]" aria-hidden="true" />
             <p className="display relative text-2xl text-gold-bright">Reflect further with Journey</p>
             <p className="relative mt-2 text-sm text-muted">Paid members can explore this module with Journey, within their allowance. Journey asks questions — you find your own answers.</p>

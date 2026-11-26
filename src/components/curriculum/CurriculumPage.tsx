@@ -9,6 +9,9 @@ import { ActionForm } from "@/components/admin/ActionForm";
 import { SelfBanner } from "@/components/SelfBanner";
 import { PersonalDiscoveryCard } from "@/components/PersonalDiscoveryCard";
 import { OpenOnHash } from "@/components/OpenOnHash";
+import { JourneyGuide } from "@/components/JourneyGuide";
+import { guideAccess } from "@/lib/journey-guide-access";
+import { guideFromLesson } from "@/lib/journey-guide";
 
 /** A founder-written curriculum of The Art of Self: lessons, interactive questions, two learning experiences and a written analysis. */
 export async function CurriculumPage({ section: SECTION, backHref = "/app/know-yourself#art-of-self", backLabel = "The Art of Self", intro }: { section: string; backHref?: string; backLabel?: string; intro?: React.ReactNode }) {
@@ -16,10 +19,12 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
   const supabase = await createClient();
   const c = (await getCurriculum(supabase, SECTION))!;
   const keys = [...curriculumKeys(c), analysisStoreKey(c)];
-  const [{ data }, js] = await Promise.all([
+  const [{ data }, js, access] = await Promise.all([
     supabase ? supabase.from("discovery_answers").select("question_key, answer, choices, updated_at").eq("user_id", viewer.id).in("question_key", keys) : Promise.resolve({ data: [] as never[] }),
     getJourneyStatus().catch(() => null),
+    guideAccess(),
   ]);
+  const lessonHref = (slug: string) => SECTION === "emotional-intelligence" ? `/app/know-yourself/emotional-intelligence/lessons#${slug}` : `/app/know-yourself/${SECTION}#${slug}`;
   const rows = (data ?? []) as { question_key: string; answer: string | null; choices: string[] | null; updated_at: string }[];
   const answers: Answers = Object.fromEntries(rows.map((r) => [r.question_key, r]));
   const analysis = assembleAnalysis(c, answers);
@@ -120,22 +125,10 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
                   </div>
                 )}
 
-                <div className="theme-dark mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-ink px-5 py-4 text-ivory">
-                  <div>
-                    <p className="text-xs tracking-[0.2em] uppercase text-gold">Learn this lesson with Journey</p>
-                    <p className="mt-1 text-sm text-ivory/80">{paid || staff ? `A private, one-on-one session${paid ? " · included in your membership" : " · owner test"}` : "Live and written sessions with Journey are included with paid memberships."}</p>
-                  </div>
-                  {paid || staff ? (
-                    <div className="flex flex-wrap gap-2">
-                      <Link href={`/app/journey/voice?lesson=${SECTION}/${l.slug}`} className="btn btn-gold btn-sm">Start a live session</Link>
-                      <Link href={`/app/journey?lesson=${SECTION}/${l.slug}&ask=${encodeURIComponent(l.journeyPrompt)}#chat`} className="btn btn-ghost btn-sm">Chat with Journey</Link>
-                    </div>
-                  ) : (
-                    <Link href="/membership" className="btn btn-ghost btn-sm">Explore memberships</Link>
-                  )}
-                </div>
-
-                <ActionForm action={saveLessonAnswers} className="mt-8 space-y-7">
+                <div className="mt-8">
+                <JourneyGuide mod={guideFromLesson(c, l, lessonHref(l.slug))} access={access}
+                  hasAnswers={l.questions.some((q) => answers[choiceKey(c, q.key)]) || Boolean(answers[reflectionKey(c, l.slug)]?.answer)}>
+                <ActionForm action={saveLessonAnswers} className="space-y-7">
                   <input type="hidden" name="section" value={SECTION} />
                   <input type="hidden" name="lesson" value={l.slug} />
                   <h3 className="eyebrow">Discovery questions</h3>
@@ -193,6 +186,8 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
                     {n < c.lessons.length - 1 && <a href={`#${c.lessons[n + 1].slug}`} className="text-sm text-burgundy">Next lesson →</a>}
                   </div>
                 </ActionForm>
+                </JourneyGuide>
+                </div>
               </div>
             </details>
           );

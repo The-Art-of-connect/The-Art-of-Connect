@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { AREAS, RESPECT_GUIDE, type Area } from "@/lib/know-yourself";
 import { saveSelfDiscovery } from "@/app/actions/know-yourself";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { JourneyGuide } from "@/components/JourneyGuide";
+import { guideAccess } from "@/lib/journey-guide-access";
+import { resolveGuide } from "@/lib/journey-guide-server";
 
 export const metadata = { title: "Boundaries & non-negotiables" };
 export const dynamic = "force-dynamic";
@@ -16,6 +19,8 @@ export default async function KnowYourself() {
   const supabase = (await createClient())!;
   const { data } = await supabase.from("self_discovery").select("area, core_values, will_do, wont_do, say_it").eq("user_id", viewer.id);
   const answers = Object.fromEntries(((data ?? []) as Row[]).map((r) => [r.area, r])) as Partial<Record<Area, Row>>;
+  const access = await guideAccess();
+  const guides = Object.fromEntries(await Promise.all(AREAS.map(async (a) => [a.key, await resolveGuide(supabase, `boundaries/${a.key}`)] as const)));
   const complete = AREAS.filter((a) => { const r = answers[a.key]; return r && (r.will_do || r.wont_do); });
 
   return (
@@ -70,7 +75,9 @@ export default async function KnowYourself() {
                   <h2 className="display mt-1 text-4xl">{a.title}</h2>
                 </div>
               </div>
-              <ActionForm action={saveSelfDiscovery} className="space-y-4 p-6 sm:p-8">
+              <div className="p-6 sm:p-8">
+              <JourneyGuide mod={guides[a.key]!} access={access} hasAnswers={Boolean(r && (r.core_values || r.will_do || r.wont_do || r.say_it))}>
+              <ActionForm action={saveSelfDiscovery} className="space-y-4">
                 <p className="text-muted">{a.intro}</p>
                 <input type="hidden" name="area" value={a.key} />
                 <label className="block space-y-1.5"><span className="text-sm font-semibold">{a.values}</span>
@@ -84,6 +91,8 @@ export default async function KnowYourself() {
                 <p className="rounded-xl border border-champagne/40 bg-champagne/10 p-3 text-xs italic text-muted">Example: {a.example}</p>
                 <button className="btn btn-gold">Save privately</button>
               </ActionForm>
+              </JourneyGuide>
+              </div>
             </div>
           </section>
         );
