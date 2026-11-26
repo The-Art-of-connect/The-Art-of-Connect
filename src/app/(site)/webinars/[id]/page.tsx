@@ -54,7 +54,7 @@ export default async function PublicWebinar({ params, searchParams }: { params: 
               <Link href={memberLink} className="btn btn-gold mt-8">Register to Attend</Link>
             ) : (
               <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-                <Link href={`/join/business?next=${encodeURIComponent(memberLink)}`} className="btn btn-gold">Create a free business account to attend</Link>
+                <Link href={`/join/business?next=${encodeURIComponent(memberLink)}`} className="btn btn-gold">Join The Professional Society to attend</Link>
                 <Link href={`/sign-in?next=${encodeURIComponent(memberLink)}`} className="btn btn-ghost">Sign in</Link>
               </div>
             )}
@@ -76,7 +76,7 @@ export default async function PublicWebinar({ params, searchParams }: { params: 
               <div><p className="font-semibold">{w.host_display_name}</p><p className="text-xs text-muted">Your host</p></div>
             </div>
             {w.host_bio && <p className="mt-4 text-sm text-muted">{w.host_bio}</p>}
-            <p className="mt-6 text-xs text-muted">Free business accounts include complimentary webinars. No credit card required. For business owners 21+.</p>
+            <p className="mt-6 text-xs text-muted">Eligible webinars are included with The Professional Society, which new members can try free for 15 days. For business owners 21+.</p>
             <p className="mt-3 break-all text-xs text-faint">{publicWebinarUrl(id)}</p>
           </aside>
         </div>

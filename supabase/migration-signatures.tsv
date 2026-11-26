@@ -61,3 +61,4 @@
 20270112000004_elite_all_inclusive_tracker.sql	exists (select 1 from public.qa_features where key = 'elite-privacy-support')
 20270113000001_assistance_center.sql	to_regclass('public.site_issues') is not null
 20270113000002_assistance_automation.sql	to_regclass('public.site_issue_events') is not null
+20270114000001_membership_access_v2.sql	exists (select 1 from information_schema.tables where table_name = 'membership_trials')

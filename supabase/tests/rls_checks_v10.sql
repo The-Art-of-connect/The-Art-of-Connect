@@ -9,8 +9,8 @@ insert into auth.users(id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-000000000032', 'owner-b@example.com', jsonb_build_object('date_of_birth', '1968-02-02')),
   ('00000000-0000-0000-0000-000000000033', 'owner-c@example.com', jsonb_build_object('date_of_birth', '1975-03-03'));
 insert into public.experience_access (user_id, experience, source) values
-  ('00000000-0000-0000-0000-000000000031', 'business', 'free_tier'),
-  ('00000000-0000-0000-0000-000000000032', 'business', 'free_tier'),
+  ('00000000-0000-0000-0000-000000000031', 'business', 'subscription'),
+  ('00000000-0000-0000-0000-000000000032', 'business', 'subscription'),
   ('00000000-0000-0000-0000-000000000033', 'business', 'subscription');
 
 \echo 'v10-1) Seeded reference data only, no fabricated activity (expect 20|13|23|12|0|0):'
@@ -26,7 +26,7 @@ reset role;
 
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000031';
-\echo 'v10-4) Free member tier and feature access (expect free|t|f):'
+\echo 'v10-4) Membership access v2: business access is always a paid membership or trial (expect premium|t|f):'
 select business.member_tier(), business.can_use('connection_board'), business.can_use('strategic_matching');
 \echo 'v10-5) Profile without consent is not public; with consent it is, and consent time is recorded (expect 0|1|t):'
 insert into business.profiles (user_id, company, display_name, industry, city, state, help_needed, help_offered, mentorship, onboarding_completed_at)

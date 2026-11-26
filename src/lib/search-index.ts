@@ -16,7 +16,7 @@ export const SITE_PAGES: SearchEntry[] = [
   site("/membership", "Memberships & pricing", "Memberships", "Choose your experiences and build your membership.", "price prices cost plans packages join subscribe annual monthly bundle couples dual society"),
   site("/membership#build", "Build your membership", "Memberships", "Pick experiences and see your package.", "builder join sign up choose plan"),
   site("/business", "The Professional Society", "In Business", "Professional connections, networking, mentorship and partnerships.", "business networking mentor partners entrepreneurs owners"),
-  site("/business/explore", "Explore The Professional Society", "In Business", "See what’s included before you join — free business accounts.", "free business account founding member explore guest"),
+  site("/business/explore", "Explore The Professional Society", "In Business", "See what’s included before you join. Try The Professional Society free for 15 days.", "business trial founding member explore guest"),
   site("/webinars", "The Knowledge Exchange — webinars", "In Business", "Live business webinars hosted by members.", "webinar webinars classes learn events live training education"),
   site("/life", "The Art of Becoming", "In Life", "Self-discovery, personal growth, journaling and guidance.", "life growth personal development journal counseling coaching wellness"),
   site("/love", "The Personal Society", "In Love", "Intentional matchmaking for singles and enrichment for couples.", "love dating singles couples relationship match matchmaking partner"),

@@ -19,7 +19,7 @@ export default async function WebinarCatalogue() {
           <p className="eyebrow">The Professional Society</p>
           <h1 className="display mt-4 text-5xl sm:text-6xl">The Knowledge Exchange</h1>
           <p className="mt-4 text-gold">Learn from experience. Share your expertise. Grow together.</p>
-          <p className="mx-auto mt-4 max-w-2xl text-muted">Live webinars hosted by business owners for business owners — across cities and states. Free business accounts include complimentary webinars.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-muted">Live webinars hosted by business owners for business owners — across cities and states. Eligible webinars are included with The Professional Society (try it free for 15 days).</p>
         </section>
       </div>
       <div className="band theme-cream">

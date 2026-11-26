@@ -34,8 +34,7 @@ export default async function ExploreProfessionalSociety() {
   const price = catalogue.published && pkg?.monthly_price_cents != null ? formatMoney(pkg.monthly_price_cents, catalogue.currency) : null;
   const tiers = [
     { key: "guest", title: "Explore as a Guest", price: "Free", note: "No registration or credit card required.", dark: false },
-    { key: "free", title: "Free Business Account", price: "$0", note: "Registration without payment. No automatic subscription.", dark: false },
-    { key: "premium", title: "Professional Society Membership", price: price ? `${price} / month` : "Pricing announced at launch", note: "Activated when the founding community is ready.", dark: true },
+    { key: "premium", title: "Professional Society Membership", price: price ? `${price} / month` : "Pricing announced at launch", note: "Begin with a 15-day free trial (card required; cancel before it ends and you won’t be charged).", dark: true },
   ] as const;
 
   return (
@@ -182,13 +181,13 @@ export default async function ExploreProfessionalSociety() {
           <p className="mt-3 text-muted">Build. Collaborate. Grow. Together.</p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             {launch.registrations_open ? (
-              <Link href="/join/business" className="btn btn-gold">Create a free business account</Link>
+              <Link href="/join/business" className="btn btn-gold">Start your 15-day free trial</Link>
             ) : (
               <Link href="/#membership" className="btn btn-gold">Notify me when founding enrollment opens</Link>
             )}
             <Link href="/webinars" className="btn btn-ghost">The Knowledge Exchange</Link>
           </div>
-          <p className="mt-6 text-xs text-faint">No credit card required for a free account. We don’t guarantee funding, partnerships or business outcomes.</p>
+          <p className="mt-6 text-xs text-faint">The Professional Society is a paid membership; new members may try it free for 15 days. The Art of Becoming is free with every account. We don’t guarantee funding, partnerships or business outcomes.</p>
         </section>
       </div>
     </>

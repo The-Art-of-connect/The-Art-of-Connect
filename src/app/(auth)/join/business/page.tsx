@@ -6,27 +6,30 @@ import { getLaunchState } from "@/lib/launch";
 import { getViewer, hasRole } from "@/lib/auth";
 import { OwnerPreviewNote } from "@/components/OwnerPreviewNote";
 
-export const metadata: Metadata = { title: "Free business account — The Professional Society", robots: { index: false } };
+export const metadata: Metadata = { title: "Join The Professional Society", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-/** Free Professional Society account: no card, no subscription. Opens when the owner authorizes it. */
+/**
+ * The Professional Society (membership access v2): a paid membership, which new members may begin with a 15-day trial.
+ * Creates the account; the membership or trial is chosen and confirmed at checkout. Opens when registration opens.
+ */
 export default async function JoinBusiness() {
   const [launch, catalogue] = await Promise.all([getLaunchState(), getCatalogue()]);
-  const live = launch.registrations_open && launch.free_business_accounts_open;
+  const live = launch.registrations_open;
   const open = live || hasRole(await getViewer(), ["owner"]);
   return (
     <>
-      {!live && open && <OwnerPreviewNote what="Free business registration" />}
-      <p className="eyebrow">The Professional Society · Founding Member</p>
-      <h1 className="display mt-4 text-4xl">{open ? "Create your free business account." : "Founding enrollment opens soon."}</h1>
+      {!live && open && <OwnerPreviewNote what="Professional Society registration" />}
+      <p className="eyebrow">The Professional Society · In Business</p>
+      <h1 className="display mt-4 text-4xl">{open ? "Join The Professional Society." : "Enrollment opens soon."}</h1>
       <p className="mt-4 text-muted">
         {open
-          ? "No credit card and no subscription. Build your business profile, set your goals and connect with owners across cities and states."
-          : "Explore The Professional Society now — we’ll open founding business accounts soon."}
+          ? "Create your account, then begin with a 15-day free trial or join today. A card is required for the trial, and you won’t be charged if you cancel before it ends. The Art of Becoming is free with every account."
+          : "Explore The Professional Society now. We’ll open enrollment soon."}
       </p>
       <div className="mt-8">
         {open ? (
-          <JoinForm business selection={{ experiences: ["business"], interval: "month", couples: false, addons: [], package: null }} loveStatus={null} minimumAge={catalogue.minimum_member_age} />
+          <JoinForm selection={{ experiences: ["business"], interval: "month", couples: false, addons: [], package: null }} loveStatus={null} minimumAge={catalogue.minimum_member_age} />
         ) : (
           <Link href="/business/explore" className="btn btn-gold w-full">Explore The Professional Society</Link>
         )}

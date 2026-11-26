@@ -39,10 +39,10 @@ export function JoinForm({ selection, loveStatus, minimumAge, business = false, 
     <form action={action} className="space-y-4">
       {free && (
         <fieldset className="space-y-2">
-          <legend className="mb-2 text-sm text-muted">Choose your society <span className="text-faint">(one to begin; The Art of Self is included for everyone)</span></legend>
+          <legend className="mb-2 text-sm text-muted">Which connections interest you most? <span className="text-faint">(optional: this helps us suggest a membership later; your free account includes The Art of Becoming)</span></legend>
           {SOCIETIES.map((x) => (
             <label key={x.id} className="block cursor-pointer">
-              <input type="radio" name="society" value={x.id} required defaultChecked={society === x.id} className="peer sr-only" />
+              <input type="radio" name="society" value={x.id} defaultChecked={society === x.id} className="peer sr-only" />
               <span className="block rounded-2xl border border-line px-4 py-3 transition peer-checked:border-gold peer-checked:bg-gold/10 peer-focus-visible:ring-2 peer-focus-visible:ring-gold">
                 <span className="block font-semibold">{x.title}</span><span className="block text-xs text-muted">{x.line}</span>
               </span>
@@ -97,7 +97,7 @@ export function JoinForm({ selection, loveStatus, minimumAge, business = false, 
       </label>
       <Turnstile action="sign_up" resetSignal={state} onReady={setVerified} />
       {state?.error && <p className="text-sm text-danger" role="alert">{state.error}</p>}
-      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Creating your account…" : verified ? (elite ? "Create my account and apply" : business ? "Create my free business account" : "Become a Member") : "Verifying…"}</button>
+      <button className="btn btn-gold w-full" disabled={pending || !verified}>{pending ? "Creating your account…" : verified ? (elite ? "Create my account and apply" : business ? "Create my account" : "Become a Member") : "Verifying…"}</button>
     </form>
   );
 }

@@ -79,6 +79,28 @@ export const templates = {
       paragraphs: [`Thank you, ${first(name)}. Your membership includes ${experiences.join(", ")}.`, `Billing: ${money(amount, currency)} per ${interval}. You can change or cancel anytime from My membership.`],
       action: { label: "View my membership", url: `${SITE}/app/membership` },
     })),
+  trialStarted: (f: { name?: string | null; tierName: string; amount: number; currency?: string; interval: "month" | "year"; firstCharge: string }) =>
+    t(f, ({ name, tierName, amount, currency, interval, firstCharge }) => ({
+      subject: `Your 15-day ${tierName} trial has begun`,
+      preheader: `Nothing is charged until ${firstCharge}.`,
+      heading: "Your trial has begun.",
+      paragraphs: [
+        `Welcome, ${first(name)}. Enjoy ${tierName} free for 15 days.`,
+        `On ${firstCharge}, ${money(amount, currency)} will be charged to your card on file, then every ${interval} until you cancel. Cancel any time before ${firstCharge} in My membership and you won’t be charged.`,
+      ],
+      action: { label: "My membership", url: `${SITE}/app/membership` },
+    })),
+  trialEnding: (f: { name?: string | null; tierName: string; amount: number; currency?: string; interval: "month" | "year"; firstCharge: string }) =>
+    t(f, ({ name, tierName, amount, currency, interval, firstCharge }) => ({
+      subject: `Your ${tierName} trial ends ${firstCharge}`,
+      preheader: `${money(amount, currency)} will be charged on ${firstCharge} unless you cancel.`,
+      heading: "Your trial ends soon.",
+      paragraphs: [
+        `Hello ${first(name)}, your 15-day ${tierName} trial ends on ${firstCharge}.`,
+        `If you'd like to continue, there's nothing to do: ${money(amount, currency)} will be charged to your card on file, then every ${interval}. To cancel without being charged, visit My membership before ${firstCharge}.`,
+      ],
+      action: { label: "Review my membership", url: `${SITE}/app/membership` },
+    })),
   paymentReceipt: (f: { name?: string | null; amount: number; currency?: string; date: string }) =>
     t(f, ({ name, amount, currency, date }) => ({
       subject: "Payment received — thank you",
@@ -92,7 +114,7 @@ export const templates = {
       subject: "Action needed: your payment didn’t go through",
       preheader: "Please update your payment method to keep your membership.",
       heading: "Your payment didn’t go through.",
-      paragraphs: [`Hello ${first(name)}, we weren’t able to process your payment of ${money(amount, currency)}.`, "Please review your payment method. Your access continues for now while we retry."],
+      paragraphs: [`Hello ${first(name)}, we weren’t able to process your payment of ${money(amount, currency)}.`, "Your paid features are paused until your account is current; The Art of Becoming stays open to you. Update your card in My membership and we’ll retry the payment."],
       action: { label: "Review my membership", url: `${SITE}/app/membership` },
     })),
   refundIssued: (f: { name?: string | null; amount: number; currency?: string }) =>

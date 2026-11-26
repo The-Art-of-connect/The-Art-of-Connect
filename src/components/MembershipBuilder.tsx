@@ -17,6 +17,7 @@ import {
 } from "@/lib/pricing";
 import { LEGAL_TITLES, autoRenewalStatement, checkoutDocs } from "@/lib/legal-requirements";
 import { EliteBadge } from "@/components/EliteBadge";
+import { TRIAL_DAYS, firstChargeDate, formatChargeDate, trialEligiblePackage } from "@/lib/trial";
 import { ELITE_APPLY_LINE, ELITE_APPLY_NOTE, ELITE_EXPERIENCES, ELITE_INTRO } from "@/lib/elite";
 import { EliteExperienceIcon } from "@/components/EliteIcons";
 
@@ -35,6 +36,7 @@ export function MembershipBuilder({
   mode = "enroll",
   onChangeSubmit,
   eliteInvited = false,
+  trialAvailable = true,
 }: {
   catalogue: PricingCatalogue;
   initial: Selection;
@@ -43,6 +45,8 @@ export function MembershipBuilder({
   onChangeSubmit?: (sel: Selection, promo: string | null, accepted?: boolean) => void;
   /** Elite Concierge: anyone may apply; selectable once the member is approved (qualification and verification). */
   eliteInvited?: boolean;
+  /** Whether this visitor can still start the one 15-day trial (unknown visitors: shown as available to new members). */
+  trialAvailable?: boolean;
 }) {
   const [sel, setSel] = useState<Selection>(() => normalizeSelection(catalogue, initial));
   const [loveChosen, setLoveChosen] = useState<boolean>(Boolean(initial.couples) || initial.experiences?.includes("relationships"));
@@ -62,6 +66,9 @@ export function MembershipBuilder({
   const incentive = annualIncentiveLabel(q.pkg?.annual_months_charged ?? catalogue.annual_months_charged);
   const loveStatus: "single" | "couple" | null = sel.experiences.includes("relationships") ? (sel.couples ? "couple" : loveChosen ? "single" : null) : null;
   const ready = Boolean(q.pkg) && (!hasLove || loveStatus !== null);
+  // The 15-day trial: every paid membership except Elite, once per member, never combined with one-time charges.
+  const trialHere = trialAvailable && trialEligiblePackage(q.pkg?.slug) && !(q.oneTimeTotal ?? 0);
+  const firstCharge = formatChargeDate(firstChargeDate());
 
   // Keep the URL shareable as the selection changes (no page reload).
   useEffect(() => {
@@ -118,10 +125,11 @@ export function MembershipBuilder({
             <span className="display text-3xl text-gold">{next()}</span>
             <span className="text-lg font-semibold">Choose your experiences</span>
           </legend>
-          <p className="mt-2 text-sm text-muted">Choose one, two or all three — combinations are bundled at a lower rate.</p>
+          <p className="mt-2 text-sm text-muted">Choose In Business, In Love or both. The Art of Becoming is free and included with every account.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             {catalogue.experiences.map((e) => {
-              const on = !sel.package && sel.experiences.includes(e.experience);
+              const free = e.experience === "counseling";
+              const on = free || (!sel.package && sel.experiences.includes(e.experience));
               const info = EXPERIENCES[e.experience];
               const single = catalogue.packages.find((p) => p.category === "single" && p.experiences.length === 1 && p.experiences[0] === e.experience && p.love_track !== "couple");
               return (
@@ -130,7 +138,9 @@ export function MembershipBuilder({
                   type="button"
                   role="checkbox"
                   aria-checked={on}
-                  onClick={() => toggle(e.experience)}
+                  aria-disabled={free || undefined}
+                  title={free ? "The Art of Becoming is free and included with every account" : undefined}
+                  onClick={() => { if (!free) toggle(e.experience); }}
                   className={`group relative overflow-hidden rounded-[22px] border-2 text-left transition-all duration-300 ${on ? "border-champagne shadow-[0_18px_50px_-24px_rgb(168_138_92/0.9)]" : "border-transparent hover:border-champagne/50"}`}
                 >
                   <div className="theme-dark relative aspect-[4/3] sm:aspect-[3/4]">
@@ -140,10 +150,11 @@ export function MembershipBuilder({
                       ✓
                     </span>
                     <div className="absolute inset-x-0 bottom-0 p-4">
-                      <p className="eyebrow !text-[0.6rem]">{single?.name ?? e.subtitle}</p>
+                      {free && <span className="mb-2 inline-block rounded-full bg-champagne px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-espresso">Free</span>}
+                      <p className="eyebrow !text-[0.6rem]">{free ? "The Art of Becoming" : single?.name ?? e.subtitle}</p>
                       <p className="display mt-1 text-3xl text-ivory">{e.name}</p>
                       <p className="mt-1 text-sm text-ivory/90">
-                        {showPrices && single?.monthly_price_cents != null ? `From ${money(single.monthly_price_cents)} / month` : info.caption}
+                        {free ? "Free · included with every account" : showPrices && single?.monthly_price_cents != null ? `From ${money(single.monthly_price_cents)} / month` : info.caption}
                       </p>
                     </div>
                   </div>
@@ -349,7 +360,16 @@ export function MembershipBuilder({
               {q.onboardingFee! > 0 && <div className="flex justify-between"><span className="text-muted">One-time onboarding</span><span>{money(q.onboardingFee)}</span></div>}
               {q.oneTimeTotal! - q.onboardingFee! > 0 && <div className="flex justify-between"><span className="text-muted">One-time add-ons</span><span>{money(q.oneTimeTotal! - q.onboardingFee!)}</span></div>}
               {q.promotionDiscount! > 0 && <div className="flex justify-between text-gold"><span>Promotion</span><span>−{money(q.promotionDiscount)}</span></div>}
-              <div className="flex justify-between border-t border-line pt-3 font-semibold"><span>Due today</span><span>{money(q.dueToday)}</span></div>
+              {trialHere ? (
+                <>
+                  <div className="flex justify-between border-t border-line pt-3 font-semibold"><span>Due today</span><span>{money(0)}</span></div>
+                  <p className="rounded-xl bg-champagne/15 px-4 py-3 text-xs leading-relaxed text-ivory/90" data-testid="trial-terms">
+                    <strong className="text-gold-bright">15 days free.</strong> A valid card is required. Unless you cancel before {firstCharge}, {money(q.recurringTotal)} is charged on {firstCharge} and every {sel.interval === "year" ? "year" : "month"} after. Cancel anytime in My membership; cancel during the trial and you won’t be charged. One trial per member.
+                  </p>
+                </>
+              ) : (
+                <div className="flex justify-between border-t border-line pt-3 font-semibold"><span>Due today</span><span>{money(q.dueToday)}</span></div>
+              )}
             </div>
           ) : q.pkg && ready ? (
             <p className="mt-6 rounded-2xl border border-line px-4 py-3 text-sm text-muted">Membership pricing will be announced when enrollment opens. Your selection is saved in this page’s link.</p>
@@ -370,7 +390,7 @@ export function MembershipBuilder({
               <label className="flex items-start gap-3 rounded-2xl border border-line p-4 text-left text-xs text-muted">
                 <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--champagne)]" />
                 <span>
-                  {autoRenewalStatement({ packageName: q.pkg.name, amount: money(q.recurringTotal) ?? "", interval: sel.interval })}{" "}
+                  {autoRenewalStatement({ packageName: q.pkg.name, amount: money(q.recurringTotal) ?? "", interval: sel.interval, ...(trialHere ? { trialDays: TRIAL_DAYS, firstCharge } : {}) })}{" "}
                   I have read and agree to the{" "}
                   {checkoutDocs(sel.experiences, q.pkg.love_track === "couple" || (q.couplesMonthly ?? 0) > 0).map((slug, i, all) => (
                     <span key={slug}>
@@ -383,7 +403,7 @@ export function MembershipBuilder({
             )}
             {mode === "change" || mode === "checkout" ? (
               <button type="button" disabled={!ready || !q.priced || !enrollmentOpen || (mode === "checkout" && !accepted)} onClick={() => onChangeSubmit?.(sel, promo?.code ?? null, accepted)} className="btn btn-gold w-full">
-                {mode === "change" ? "Update my membership" : "Continue to secure payment"}
+                {mode === "change" ? "Update my membership" : trialHere ? "Start my 15-day free trial" : "Continue to secure payment"}
               </button>
             ) : mode === "preview" ? null : enrollmentOpen ? (
               <Link href={ready ? joinHref : "#build"} aria-disabled={!ready} className={`btn btn-gold w-full ${ready ? "" : "pointer-events-none opacity-50"}`}>Become a Member</Link>
@@ -394,6 +414,7 @@ export function MembershipBuilder({
               <button type="button" onClick={share} className="btn btn-ghost w-full">{copied ? "Link copied" : "Share this membership"}</button>
             )}
           </div>
+          {mode === "enroll" && trialHere && <p className="mt-4 text-center text-xs text-gold">New members: try it free for 15 days. Card required; cancel before the trial ends and you won’t be charged.</p>}
           <p className="mt-5 text-center text-xs text-faint">One private account on every device — no extra device fees · change or cancel any time</p>
           <p className="mt-2 text-center text-xs font-semibold tracking-wide text-gold">Adults {catalogue.minimum_member_age}+ · Personal Society singles 30+</p>
         </div>

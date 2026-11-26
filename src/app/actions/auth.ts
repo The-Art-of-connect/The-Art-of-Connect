@@ -243,9 +243,8 @@ export async function confirmAccountLink(_prev: AuthState, form: FormData): Prom
 }
 
 /**
- * Free Professional Society business account: no payment, no subscription.
- * Opens only when the owner has opened registration AND free business
- * accounts, and the required agreements are in effect. 21+ applies.
+ * The Professional Society sign-up (membership access v2): a free Art of Becoming account that notes an interest in
+ * business; Professional Society access then comes from a paid membership or the 15-day trial.
  */
 export async function signUpBusiness(prev: AuthState, form: FormData): Promise<AuthState> {
   form.set("society", "business");
@@ -253,23 +252,25 @@ export async function signUpBusiness(prev: AuthState, form: FormData): Promise<A
 }
 
 type FreeSociety = "business" | "singles" | "couples";
-const SOCIETY_WELCOME: Record<FreeSociety, string> = {
-  business: "Welcome to The Professional Society.",
-  singles: "Welcome to The Personal Society.",
-  couples: "Welcome to The Personal Society for couples.",
+const SOCIETY_WELCOME: Record<FreeSociety | "none", string> = {
+  business: "Welcome to The Art of Connect. When you're ready, start The Professional Society with a 15-day trial or join today.",
+  singles: "Welcome to The Art of Connect. When you're ready, start The Personal Society with a 15-day trial or join today.",
+  couples: "Welcome to The Art of Connect. When you're ready, start The Personal Society for couples with a 15-day trial or join today.",
+  none: "Welcome to The Art of Connect.",
 };
 
 /**
- * Free membership: The Art of Self for everyone, plus ONE selected society.
- * Business 21+ · Singles 30+ · Couples 21+ (both partners; the partner confirms their own age when joining).
- * No payment details, no Journey and no billable AI. Access is granted here, on the server, only for the chosen society.
+ * Free account (membership access v2, founder directives 14 and 15): The Art of Becoming, including The Art of Self.
+ * The optional society choice only records what interests the member (singles 30+ is still checked); it grants no
+ * society access. Social and society experiences need a paid membership or the 15-day trial. No payment details,
+ * no Journey and no billable AI.
  */
 export async function signUpFree(_prev: AuthState, form: FormData): Promise<AuthState> {
-  const society = String(form.get("society") ?? "") as FreeSociety;
-  if (!["business", "singles", "couples"].includes(society)) return { error: "Please choose one society to begin." };
+  const raw = String(form.get("society") ?? "");
+  const society = (["business", "singles", "couples"].includes(raw) ? raw : null) as FreeSociety | null;
   const launch = await getLaunchState();
   // Every switch respects the master launch lock.
-  if (!launch.registrations_open || (society === "business" && !launch.free_business_accounts_open)) return { error: "Free memberships open soon." };
+  if (!launch.registrations_open) return { error: "Free accounts open soon." };
   if (!launch.testSession && !(await allInEffect(REGISTRATION_DOCS))) return { error: "Our agreements are being finalized. Enrollment opens soon." };
   const parsed = joinSchema
     .pick({ displayName: true, email: true, password: true, dobYear: true, dobMonth: true, dobDay: true, agree: true })
@@ -293,7 +294,7 @@ export async function signUpFree(_prev: AuthState, form: FormData): Promise<Auth
 
   const supabase = await createClient();
   if (!supabase) return { error: "Registration is not available yet." };
-  const next = society === "business" ? "/app/business/onboarding" : "/app/relationships/onboarding";
+  const next = "/app/know-yourself";
   // Owner testing session: this registration becomes a flagged, fictional test account.
   if (launch.testSession && !(await approveTestSignup(d.email, (await getOwnerTestSession())?.ownerId ?? null))) return { error: "The test account couldn't be prepared. Please try again." };
   const { data: created, error } = await supabase.auth.signUp({
@@ -303,8 +304,8 @@ export async function signUpFree(_prev: AuthState, form: FormData): Promise<Auth
       emailRedirectTo: `${env.siteUrl}/auth/callback?next=${next}`,
       data: {
         display_name: d.displayName, account_type: "member", date_of_birth: dob.toISOString().slice(0, 10),
-        plan: society === "business" ? "free_business" : "free_personal",
-        selection: { experiences: [society === "business" ? "business" : "relationships"], package: null, love_status: society === "business" ? null : society === "couples" ? "couple" : "single" },
+        plan: "free_becoming",
+        selection: { experiences: society ? [society === "business" ? "business" : "relationships"] : [], package: null, love_status: society === "business" || !society ? null : society === "couples" ? "couple" : "single" },
         accepted_terms_at: new Date().toISOString(),
       },
     },
@@ -314,12 +315,11 @@ export async function signUpFree(_prev: AuthState, form: FormData): Promise<Auth
   if (admin) {
     const { ipHash, userAgent } = await clientMeta();
     await admin.rpc("record_legal_acceptance_for", { target: created.user.id, docs: REGISTRATION_DOCS, ctx: "registration", statement: acceptanceStatement(REGISTRATION_DOCS), ip_hash: ipHash, user_agent: userAgent });
-    // Only the chosen society, with no subscription and no payment details.
-    await admin.from("experience_access").upsert({ user_id: created.user.id, experience: society === "business" ? "business" : "relationships", status: "active", source: "free_tier" }, { onConflict: "user_id,experience" });
-    await admin.from("profiles").update({ primary_society: society }).eq("id", created.user.id);
-    if (form.get("marketing") === "on") await admin.from("consents").insert({ user_id: created.user.id, consent_type: "marketing", version: "2026-12", details: { source: `free_${society}_registration` } });
+    // No society access is granted: the choice records interest only (used to suggest a membership later).
+    if (society) await admin.from("profiles").update({ primary_society: society }).eq("id", created.user.id);
+    if (form.get("marketing") === "on") await admin.from("consents").insert({ user_id: created.user.id, consent_type: "marketing", version: "2026-12", details: { source: `free_${society ?? "becoming"}_registration` } });
   }
-  return { notice: `${SOCIETY_WELCOME[society]} Please check your inbox to confirm your email, then sign in. The Art of Self is waiting for you too.` };
+  return { notice: `${SOCIETY_WELCOME[society ?? "none"]} Please check your inbox to confirm your email, then sign in. Your complimentary Art of Becoming is ready for you.` };
 }
 
 /**

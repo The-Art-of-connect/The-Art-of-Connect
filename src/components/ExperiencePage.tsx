@@ -29,7 +29,11 @@ export function ExperiencePage({
           <h1 className="display rise rise-2 mt-6 text-5xl sm:text-7xl">{headline}</h1>
           <p className="rise rise-3 mt-8 max-w-xl text-lg leading-relaxed text-muted">{intro}</p>
           <div className="rise rise-4 mt-10 flex flex-col gap-3 sm:flex-row">
-            <Link href={`/membership?experiences=${URL_KEY[experience]}#build`} className="btn btn-gold">Choose {e.name}</Link>
+            {experience === "counseling" ? (
+              <Link href="/join/free" className="btn btn-gold">Begin free</Link>
+            ) : (
+              <Link href={`/membership?experiences=${URL_KEY[experience]}#build`} className="btn btn-gold">Choose {e.name}</Link>
+            )}
             {experience === "business" ? (
               <Link href="/business/explore" className="btn btn-ghost">Explore The Professional Society</Link>
             ) : (

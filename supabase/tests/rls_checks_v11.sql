@@ -10,7 +10,7 @@ select (select count(*) from business.webinar_topics), (select count(*) from bus
 
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000031';
-\echo 'v11-2) A free member cannot host (expect error):'
+\echo 'v11-2) Membership access v2: every business member is paid, so hosting is allowed (expect no error):'
 insert into business.webinars (host_id, title, description, host_display_name, starts_at, media_rights_confirmed)
   values (auth.uid(), 'Free member webinar', 'Trying to host without membership — should be refused.', 'Alpha', now() + interval '1 day', true);
 
@@ -53,7 +53,7 @@ select (business.join_webinar('00000000-0000-0000-0000-0000000000a1')) is not nu
 select (business.join_webinar('00000000-0000-0000-0000-0000000000a2')) is not null;
 select (business.join_webinar('00000000-0000-0000-0000-0000000000a3')) is not null;
 select business.complimentary_used();
-\echo 'v11-12) A fourth webinar requires membership; re-joining an attended one still works (expect error, t):'
+\echo 'v11-12) Paid members have no complimentary-webinar limit; re-joining still works (expect join details, t):'
 select business.join_webinar('00000000-0000-0000-0000-0000000000a4');
 select (business.join_webinar('00000000-0000-0000-0000-0000000000a1')) is not null;
 \echo 'v11-13) Feedback is allowed; hosts see counts, not attendee identities (expect 4|0):'
@@ -68,7 +68,7 @@ select status from business.webinars where id = '00000000-0000-0000-0000-0000000
 update business.webinars set is_featured = true where id = '00000000-0000-0000-0000-0000000000a2';
 
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000021';
-\echo 'v11-16) Executives see program metrics (expect 6|1):'
+\echo 'v11-16) Executives see program metrics (expect 7|1):'
 select (business.knowledge_exchange_metrics()->>'attendance')::int + (business.knowledge_exchange_metrics()->>'registrations')::int - 1, (business.knowledge_exchange_metrics()->>'free_members_at_allowance')::int;
 reset role;
 reset request.jwt.claim.sub;

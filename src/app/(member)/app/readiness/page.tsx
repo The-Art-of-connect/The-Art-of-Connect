@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getViewer } from "@/lib/auth";
+import { requireExperience } from "@/lib/auth";
 import { loadAnswers } from "@/lib/onboarding-server";
 import { DEFAULT_REGISTRY, stageProgress } from "@/lib/onboarding";
 import { LuxCard, LuxSection, Notice, SafetyFooter } from "@/components/Lux";
@@ -16,7 +16,7 @@ const AREAS: [string, string][] = [
 ];
 
 export default async function Readiness() {
-  const viewer = (await getViewer())!;
+  const { viewer } = await requireExperience("relationships");
   const answers = await loadAnswers(viewer.id);
   const done = stageProgress(DEFAULT_REGISTRY, "readiness", { track: "single", answers }).complete;
   return (

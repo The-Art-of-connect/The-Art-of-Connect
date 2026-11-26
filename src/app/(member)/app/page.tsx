@@ -116,7 +116,7 @@ export default async function MemberHome() {
                 </div>
                 <div className="flex flex-1 flex-col justify-between p-7">
                   <div>
-                    <span className={`chip ${open ? "chip-live" : "chip-locked"}`}>{open ? (subName(key) ?? "Active") : live ? "Staff preview" : "Opening soon"}</span>
+                    <span className={`chip ${open ? "chip-live" : "chip-locked"}`}>{open ? (key === "counseling" ? "Free · included with every account" : subName(key) ?? "Active") : live ? "Staff preview" : "Opening soon"}</span>
                     <h3 className="display mt-5 text-3xl" style={{ color: e.accent }}>{SOCIETY_NAME[key]}</h3>
                     <p className="mt-1 text-xs tracking-wide text-faint uppercase">{e.name} · {e.subtitle}</p>
                     <p className="mt-3 text-sm text-muted">{e.caption}</p>
@@ -133,7 +133,7 @@ export default async function MemberHome() {
         <section aria-labelledby="explore" className="mt-14 rounded-[28px] border border-champagne/60 bg-ivory/70 p-6 sm:p-9">
           <p className="eyebrow">Explore Memberships</p>
           <h2 id="explore" className="display mt-2 text-3xl">Discover more of The Art of Connect</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted">These experiences aren&rsquo;t part of your membership yet. Explore them whenever you&rsquo;re curious, and add them if they feel right for you.</p>
+          <p className="mt-2 max-w-2xl text-sm text-muted">These experiences aren&rsquo;t part of your membership yet. Explore them whenever you&rsquo;re curious. New members can try a membership free for 15 days (card required; cancel before it ends and you won&rsquo;t be charged).</p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {others.map((key) => (
               <Link key={key} href={EXPERIENCES[key].href} className="group flex items-center gap-4 rounded-2xl border border-champagne/60 bg-ivory p-4 transition hover:border-gold">
@@ -142,7 +142,7 @@ export default async function MemberHome() {
               </Link>
             ))}
           </div>
-          <Link href="/membership#build" className="btn btn-gold btn-sm mt-6">Explore memberships</Link>
+          <Link href="/app/onboarding" className="btn btn-gold btn-sm mt-6">Start a trial or choose a membership</Link>
         </section>
       )}
 

@@ -5,5 +5,6 @@ import type { NavState } from "@/lib/nav-state";
 export const linkFor = (l: NavLink, s: NavState) =>
   l.access && l.access !== "public" && !s.signedIn ? `/sign-in?next=${encodeURIComponent(l.href)}` : l.href;
 
+/** Membership access v2: "Free" for The Art of Becoming (any free account); paid features show whether they're included. */
 export const badgeFor = (l: NavLink, s: NavState) =>
-  l.access === "paid" ? (s.paid ? "Included" : "Paid membership") : l.access === "member" && !s.signedIn ? "Members" : null;
+  l.access === "paid" ? (s.paid ? "Included" : "Paid membership") : l.access === "member" && !s.paid ? "Free" : null;

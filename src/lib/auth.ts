@@ -44,7 +44,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   const [{ data: profile }, { data: roles }, { data: access }] = await Promise.all([
     supabase.from("profiles").select("display_name, status, account_type, age_eligible, referral_code, primary_society").eq("id", auth.user.id).maybeSingle(),
     supabase.from("staff_roles").select("role").eq("user_id", auth.user.id),
-    supabase.from("experience_access").select("experience, status, expires_at").eq("user_id", auth.user.id),
+    supabase.from("experience_access").select("experience, status, expires_at, source").eq("user_id", auth.user.id),
   ]);
   if (profile?.status && profile.status !== "active") return null;
 
@@ -71,9 +71,11 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     referralCode: profile?.referral_code ?? null,
     roles: roleList,
     society: (profile?.primary_society as Society | null) ?? null,
-    experiences: (access ?? [])
-      .filter((a) => a.status === "active" && (!a.expires_at || new Date(a.expires_at).getTime() > now))
-      .map((a) => a.experience as Experience),
+    // Membership access v2: The Art of Becoming (counseling) is complimentary for every account. Other experiences come
+    // only from a paid membership, active trial, comp or owner grant (the retired free tier never counts).
+    experiences: [...new Set<Experience>(["counseling", ...(access ?? [])
+      .filter((a) => a.status === "active" && a.source !== "free_tier" && (!a.expires_at || new Date(a.expires_at).getTime() > now))
+      .map((a) => a.experience as Experience)])],
   };
 });
 
@@ -112,6 +114,22 @@ export async function requireExperience(experience: Experience) {
   const granted = viewer.experiences.includes(experience);
   const live = launch[`${experience}_live` as const];
   const staffPreview = isStaff(viewer) || isInsidePreview(viewer);
-  if (!staffPreview && !(granted && live)) redirect("/app?locked=" + experience);
+  if (!staffPreview && !(granted && live)) redirect(granted ? "/app?locked=" + experience : `/app/membership?locked=${experience}`);
   return { viewer, preview: staffPreview && !(granted && live) };
+}
+
+/** Membership access v2: a paid membership or active trial (Business or In Love access), staff, or an owner preview. */
+export const hasPaidAccess = (v: Viewer | null) =>
+  Boolean(v && (v.experiences.includes("business") || v.experiences.includes("relationships") || isStaff(v)));
+
+/**
+ * The social ecosystem and other interactive member features: a paid membership or an active 15-day trial.
+ * Free accounts are sent to the invitation page (they can still read about every feature).
+ */
+export async function requirePaidAccess(feature: string) {
+  const viewer = await getViewer();
+  if (!viewer) redirect(`/sign-in?next=/app`);
+  const preview = isStaff(viewer) || isInsidePreview(viewer);
+  if (!preview && !hasPaidAccess(viewer)) redirect(`/app/membership?locked=${encodeURIComponent(feature)}`);
+  return { viewer, preview: preview && !hasPaidAccess(viewer) };
 }
