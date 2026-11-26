@@ -668,3 +668,15 @@ v30-1) An owner voice test larger than the testing budget is refused (expect ref
 refused:test_budget
 v30-2) A member voice session is not limited by the owner testing budget (expect a session id, not refused):
 t
+v31-1) The test plan covers all ten departments (expect 10):
+10
+v31-2) "Needs changes" opens a correction and requires a retest (expect 1|t|f):
+1|t|f
+v31-3) Approval is refused without a pass (expect error):
+ERROR:  new row for relation "qa_features" violates check constraint "qa_features_check"
+v31-4) Fixing the correction returns it for retest; a pass then allows approval (expect t|t|f):
+t|t|f
+v31-5) A member sees none of the test plan or corrections (expect 0|0):
+0|0
+v31-6) A member cannot record results (expect 0 rows changed):
+0
