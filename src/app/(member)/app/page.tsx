@@ -77,8 +77,9 @@ export default async function MemberHome() {
         <h2 id="mine" className="display mt-2 text-3xl sm:text-4xl">Your experiences</h2>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
           <div className="glass lift tile-in group flex min-h-64 flex-col justify-between overflow-hidden !p-0">
-            <div className="relative aspect-[16/10] overflow-hidden">
-              <Image src="/images/self/identity-self-love.webp" alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover object-right transition-transform duration-[1200ms] group-hover:scale-110" />
+            {/* The banner's exact proportions, so the whole artwork (including its title) always shows. */}
+            <div className="relative aspect-[1672/941] overflow-hidden">
+              <Image src="/images/self/identity-self-love.webp" alt="Identity & Self-Love: Discover who you are beyond roles, responsibilities and expectations." fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
             </div>
             <div className="flex flex-1 flex-col justify-between p-7">
               <div>
