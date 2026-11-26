@@ -9,6 +9,7 @@ export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; 
   { href: "/admin/launch", label: "Launch readiness", roles: ["owner", "executive", "finance"], group: "Command" },
   { href: "/admin/analytics", label: "Analytics", roles: ["owner", "executive", "admin"], group: "Command" },
   { href: "/admin/members", label: "Members", roles: ["owner", "executive", "admin", "support"], group: "People" },
+  { href: "/admin/elite", label: "Elite Management Center", roles: ["owner"], group: "People" },
   { href: "/admin/counselors", label: "Professional applications", roles: ["owner", "executive", "admin"], group: "People" },
   { href: "/admin/access", label: "Access & referrals", roles: ["owner", "executive", "admin"], group: "People" },
   { href: "/admin/memberships", label: "Memberships", roles: ["owner", "executive", "finance"], group: "Revenue" },

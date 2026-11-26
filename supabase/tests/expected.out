@@ -690,5 +690,32 @@ v32-4) A member cannot remove their own test flag (expect error):
 ERROR:  Not permitted to change these account fields
 v32-5) Members cannot read the test sign-up list (expect 0):
 0
-v32-6) Elite Concierge is no longer labeled invitation-only (expect Our Most Exclusive Experience):
-Our Most Exclusive Experience
+v32-6) Elite Concierge is labeled By Invitation Only (expect By Invitation Only):
+By Invitation Only
+v33-1) A member screens privately for the expedited pathway (expect preliminary):
+preliminary
+v33-2) No amounts are stored, only the pathway and self-reported yes (expect personal_income|t):
+personal_income|t
+v33-3) A member cannot approve themselves (expect 0 rows changed):
+0
+v33-4) A member cannot give themselves a badge (expect error):
+ERROR:  new row violates row-level security policy for table "elite_badges"
+v33-5) Without verification, no invitation is issued (expect f|f|preliminary):
+f|f|preliminary
+v33-6) Another member cannot see this candidacy (expect 0):
+0
+v33-7) Elite checkout is refused without an accepted invitation (expect f):
+f
+v33-8) Owner verifies identity and qualification and waives the fee: the invitation issues automatically (expect invitation_issued):
+invitation_issued
+v33-9) The member accepts, and only then may check out (expect accepted|t):
+accepted
+t
+v33-10) A paid Elite subscription activates the badge (expect active|membership_activated):
+active|membership_activated
+v33-11) Other members can learn only that a badge is active (expect 1):
+1
+v33-12) ...and cannot read the evidence (expect 0):
+0
+v33-13) A founder invitation to a non-member attaches when they join with that email (expect founder|qualification_approved):
+founder|qualification_approved

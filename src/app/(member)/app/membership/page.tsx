@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { eliteCanChoose } from "@/lib/elite";
 import { CancelMembership } from "@/components/CancelMembership";
 import { SocietyPanel } from "@/components/SocietyPanel";
 import { MemberBilling } from "@/components/MemberBilling";
-import { getViewer } from "@/lib/auth";
+import { getViewer, isInsidePreview } from "@/lib/auth";
 import { getCatalogue } from "@/lib/catalogue";
 import { getLaunchState } from "@/lib/launch";
 import { formatMoney, type Selection } from "@/lib/pricing";
@@ -12,6 +13,9 @@ export const metadata = { title: "My membership" };
 
 export default async function MyMembershipPage() {
   const viewer = (await getViewer())!;
+  const eliteDb = isInsidePreview(viewer) ? null : await createClient();
+  const { data: eliteRow } = eliteDb ? await eliteDb.from("elite_candidates").select("status").eq("user_id", viewer.id).maybeSingle() : { data: null };
+  const eliteInvited = eliteCanChoose(eliteRow?.status);
   const supabase = (await createClient())!;
   const [{ data: sub }, catalogue, launch] = await Promise.all([
     supabase
@@ -51,7 +55,7 @@ export default async function MyMembershipPage() {
       </p>
       {["active", "trialing", "past_due"].includes(sub.status) && <CancelMembership cancelling={sub.cancel_at_period_end} />}
       <h2 className="mt-14 mb-6 text-lg font-semibold">Add or remove experiences, or change billing</h2>
-      <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live} kind="change" />
+      <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live} kind="change" eliteInvited={eliteInvited} />
       {viewer.society && <SocietyPanel current={viewer.society} />}
     </>
   );

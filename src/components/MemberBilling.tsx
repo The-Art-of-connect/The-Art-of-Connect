@@ -4,7 +4,7 @@ import { MembershipBuilder } from "@/components/MembershipBuilder";
 import type { PricingCatalogue, Selection } from "@/lib/pricing";
 
 /** Builder wired to checkout (new members) or to subscription changes (existing members). */
-export function MemberBilling({ catalogue, initial, paymentsOpen, kind }: { catalogue: PricingCatalogue; initial: Selection; paymentsOpen: boolean; kind: "checkout" | "change" }) {
+export function MemberBilling({ catalogue, initial, paymentsOpen, kind, eliteInvited = false }: { catalogue: PricingCatalogue; initial: Selection; paymentsOpen: boolean; kind: "checkout" | "change"; eliteInvited?: boolean }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -35,7 +35,7 @@ export function MemberBilling({ catalogue, initial, paymentsOpen, kind }: { cata
           Membership payments open soon. You can review your selection now; you’ll be able to complete it at launch.
         </p>
       )}
-      <MembershipBuilder catalogue={catalogue} initial={initial} enrollmentOpen={paymentsOpen} mode={kind} onChangeSubmit={submit} />
+      <MembershipBuilder catalogue={catalogue} initial={initial} enrollmentOpen={paymentsOpen} mode={kind} onChangeSubmit={submit} eliteInvited={eliteInvited} />
       {msg && <p className="mt-6 text-center text-sm" role="status">{msg}</p>}
     </div>
   );

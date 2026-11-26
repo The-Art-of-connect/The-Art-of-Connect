@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EliteBadge } from "@/components/EliteBadge";
 import { getViewer, isInsidePreview, isStaff } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
@@ -38,8 +39,15 @@ export default async function MemberHome() {
   const subName = (k: string) => (k === "relationships" && viewer.society === "singles" ? "Singles" : k === "relationships" && viewer.society === "couples" ? "Couples" : null);
   const referralLink = viewer.referralCode ? `${env.siteUrl}/membership?ref=${viewer.referralCode}` : null;
 
+  const { data: elite } = isInsidePreview(viewer) ? { data: null } : await supabase.from("elite_candidates").select("status").eq("user_id", viewer.id).maybeSingle();
   return (
     <>
+      {elite?.status === "invitation_issued" && (
+        <Link href="/app/elite/eligibility" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border-2 border-[#e8892b]/60 px-6 py-4 text-[#f6e7c8]" style={{ background: "#1b1310" }}>
+          <span className="flex items-center gap-3"><EliteBadge size={22} interactive={false} /><span><span className="display block text-2xl">You&rsquo;re invited to the Elite Concierge Society.</span><span className="text-xs text-[#f5ecdf]/70">A private invitation is waiting for you. Nothing is charged until you choose.</span></span></span>
+          <span className="text-sm font-semibold text-[#f0a35a]">View my invitation →</span>
+        </Link>
+      )}
       <LivingHero
         slides={[
           { src: "/images/library/life/journaling.webp", alt: "Writing in a journal by a sunlit window" },

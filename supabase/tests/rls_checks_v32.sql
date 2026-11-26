@@ -20,5 +20,5 @@ update public.profiles set is_test = false where id = '00000000-0000-0000-0000-0
 select count(*) from public.test_signups;
 reset role;
 reset request.jwt.claim.sub;
-\echo 'v32-6) Elite Concierge is no longer labeled invitation-only (expect Our Most Exclusive Experience):'
+\echo 'v32-6) Elite Concierge is labeled By Invitation Only (expect By Invitation Only):'
 select highlight from public.membership_packages where slug = 'elite-concierge';

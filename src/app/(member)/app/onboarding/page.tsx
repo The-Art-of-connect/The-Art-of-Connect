@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
+import { eliteCanChoose } from "@/lib/elite";
 import { MemberBilling } from "@/components/MemberBilling";
-import { getViewer } from "@/lib/auth";
+import { getViewer, isInsidePreview } from "@/lib/auth";
 import { getCatalogue } from "@/lib/catalogue";
 import { getLaunchState } from "@/lib/launch";
 import type { Selection } from "@/lib/pricing";
@@ -10,6 +11,9 @@ export const metadata = { title: "Complete your membership" };
 
 export default async function OnboardingPage() {
   const viewer = (await getViewer())!;
+  const eliteDb = isInsidePreview(viewer) ? null : await createClient();
+  const { data: eliteRow } = eliteDb ? await eliteDb.from("elite_candidates").select("status").eq("user_id", viewer.id).maybeSingle() : { data: null };
+  const eliteInvited = eliteCanChoose(eliteRow?.status);
   if (viewer.accountType !== "member") redirect("/app");
   const supabase = (await createClient())!;
   const [{ data: auth }, { data: accepted }, { data: sub }, catalogue, launch] = await Promise.all([
@@ -49,7 +53,7 @@ export default async function OnboardingPage() {
         </li>
         <li className={agreed ? "" : "pointer-events-none opacity-50"} aria-disabled={!agreed}>
           <p className="mb-6 flex items-baseline gap-3"><span className="display text-3xl text-gold">02</span><span className="text-lg font-semibold">Review your membership and pay securely</span></p>
-          <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live && agreed} kind="checkout" />
+          <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live && agreed} kind="checkout" eliteInvited={eliteInvited} />
         </li>
       </ol>
     </>

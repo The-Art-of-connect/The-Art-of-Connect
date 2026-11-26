@@ -13,6 +13,7 @@ import { acceptanceStatement, autoRenewalStatement, checkoutDocs } from "@/lib/l
 import { clientMeta } from "@/lib/security";
 import { formatMoney } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const body = z.discriminatedUnion("kind", [
   z.object({
@@ -68,6 +69,12 @@ export async function POST(request: NextRequest) {
     const q = quote(catalogue, selection, promo);
     if (!q.priced || !q.pkg || q.recurringTotal == null) return NextResponse.json({ error: "This membership is not available yet." }, { status: 409 });
     const pkg = q.pkg;
+    // Elite Concierge is BY INVITATION ONLY: an accepted, unexpired invitation is required (also enforced in the database).
+    if (pkg.slug === "elite-concierge") {
+      const admin = createAdminClient();
+      const { data: allowed } = admin ? await admin.rpc("elite_checkout_allowed", { p_user: viewer.id }) : { data: false };
+      if (!allowed) return NextResponse.json({ error: "Elite Concierge is by invitation only. Accept your invitation first, or explore Elite eligibility." }, { status: 403 });
+    }
     // Affirmative acceptance of the published agreements and the automatic-renewal terms, recorded before payment.
     const docs = checkoutDocs(selection.experiences, pkg.love_track === "couple" || (q.couplesMonthly ?? 0) > 0);
     if (!launch.testSession && !(await allInEffect(docs))) return NextResponse.json({ error: "Our membership agreements are being finalized. Payments open soon." }, { status: 409 });
