@@ -284,3 +284,49 @@ export async function rateTestRun(input: { id: string; ratings: Record<string, n
   revalidatePath("/admin/journey/models");
   return ok("Rating saved.");
 }
+
+/**
+ * One-step private activation for owner testing. Verifies the OpenAI connection FIRST and changes nothing
+ * if it fails. Never touches registration, live payments, society launches or any published price:
+ * members remain blocked until live payments are switched on separately.
+ */
+export async function activateJourney(_p: ActionResult, f: FormData): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const supabase = (await createClient())!;
+  const { data: cur } = await supabase.from("journey_settings").select("paid_usage_authorized, owner_test_monthly_limit_cents, company_monthly_limit_cents, default_model").maybeSingle();
+  if (!cur) return fail("Journey settings weren't found.");
+  if (!cur.paid_usage_authorized && String(f.get("confirm") ?? "").trim().toUpperCase() !== "AUTHORIZE") return fail("Type AUTHORIZE to allow billable OpenAI usage within your budgets.");
+  if (cur.owner_test_monthly_limit_cents == null || cur.company_monthly_limit_cents == null) return fail("Set your owner testing and company budgets first.");
+  const wantVoice = f.get("voice") === "on";
+  const voiceModel = String(f.get("voiceModel") ?? "").trim();
+  const rate = cents(f.get("voiceRate"));
+  if (wantVoice && (!/^[A-Za-z0-9._:-]{2,80}$/.test(voiceModel) || rate === null || Number.isNaN(rate))) return fail("Enter the voice model and its cost per minute to turn on live voice.");
+
+  const { checkOpenAIConnection } = await import("@/lib/openai");
+  const c = await checkOpenAIConnection();
+  await audit(c.reachable ? "journey.openai.connected" : "journey.openai.failed", "journey", "openai", { status: c.status, models: c.models.length, error: c.error ?? null });
+  if (!c.configured) { revalidatePath(PATH); return fail("Nothing was changed: the OpenAI key isn't visible to the website. Add OPENAI_API_KEY in Netlify (Site configuration → Environment variables), redeploy, then press Activate again."); }
+  if (!c.reachable) { revalidatePath(PATH); return fail(`Nothing was changed: OpenAI didn't accept the connection${c.status ? ` (${c.status})` : ""}. ${c.error ?? "Please check the key and try again."}`); }
+
+  if (wantVoice) {
+    const { openAIModelAvailable } = await import("@/lib/openai");
+    if ((await openAIModelAvailable(voiceModel)) === false) return fail(`Nothing was changed: the voice model "${voiceModel}" isn't available to your OpenAI account. Try gpt-realtime-mini or gpt-realtime.`);
+  }
+  const row: Record<string, unknown> = { enabled: true, paid_usage_authorized: true, owner_testing_enabled: true, updated_by: viewer.id };
+  if (voiceModel && rate !== null && !Number.isNaN(rate)) Object.assign(row, { voice_model: voiceModel, voice_cents_per_minute: rate });
+  row.voice_enabled = wantVoice;
+  const { error, count } = await supabase.from("journey_settings").update(row, { count: "exact" }).eq("id", true);
+  if (error || !count) return fail("OpenAI is connected, but the settings couldn't be saved. Please try again.");
+  await done("journey.owner_activation", "settings", { voice: wantVoice, voice_model: voiceModel || null });
+  return ok(`Journey is on for your private testing${wantVoice ? ", with live voice" : ""}. OpenAI connected. Members remain blocked while live payments are off. Test below.`);
+}
+
+/** Immediately stops all Journey AI use (written and voice). */
+export async function pauseJourney(_p: ActionResult): Promise<ActionResult> {
+  const viewer = await requireStaff(["owner"]);
+  const supabase = (await createClient())!;
+  const { error } = await supabase.from("journey_settings").update({ enabled: false, voice_enabled: false, updated_by: viewer.id }).eq("id", true);
+  if (error) return fail("Not saved.");
+  await done("journey.enabled.off", "enabled");
+  return ok("Journey is off. No AI usage can occur until you activate it again.");
+}
