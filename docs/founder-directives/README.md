@@ -27,6 +27,8 @@ changes an earlier one, the later one wins.
 | 21 | [Executive & Elite Signature Services](21-executive-elite-signature-services.md) | **Recorded.** Planned within directive 20's Executive and Elite phases; news source and concierge staffing need approval. |
 | 22 | [Business & Tax Education Center](22-business-tax-education-center.md) | **Recorded.** Extends the Business Intelligence Center; uses an owner-approved, dated source library. |
 | 23 | [Premium membership implementation & development authorization](23-premium-membership-implementation.md) | **In progress.** Executive Office, Elite Signature Experience, Business Intelligence and Tax Education, Journey cost controls. |
+| 24 | [CONNECT 360 — The Opportunity Intelligence System](24-connect-360.md) | **Recorded.** Phase One (portfolio, offer/seeking, blueprint builder, opportunity database, organization foundation) next. |
+| 25 | [CONNECT 360 Global Opportunity Intelligence](25-connect-360-global-intelligence.md) | **Recorded; costed.** External research uses the existing OpenAI provider; needs a research budget approval before activation. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
