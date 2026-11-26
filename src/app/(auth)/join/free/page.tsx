@@ -3,6 +3,8 @@ import Link from "next/link";
 import { JoinForm } from "@/components/AuthForms";
 import { getCatalogue } from "@/lib/catalogue";
 import { getLaunchState } from "@/lib/launch";
+import { getViewer, hasRole } from "@/lib/auth";
+import { OwnerPreviewNote } from "@/components/OwnerPreviewNote";
 
 export const metadata: Metadata = { title: "Begin Free", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -10,7 +12,8 @@ export const dynamic = "force-dynamic";
 export default async function JoinFree({ searchParams }: { searchParams: Promise<{ society?: string }> }) {
   const [launch, catalogue, sp] = await Promise.all([getLaunchState(), getCatalogue(), searchParams]);
   const society = ["business", "singles", "couples"].includes(sp.society ?? "") ? sp.society! : null;
-  if (!launch.registrations_open) {
+  const owner = hasRole(await getViewer(), ["owner"]);
+  if (!launch.registrations_open && !owner) {
     return (
       <div className="text-center">
         <p className="eyebrow">Begin free</p>
@@ -22,6 +25,7 @@ export default async function JoinFree({ searchParams }: { searchParams: Promise
   }
   return (
     <>
+      {!launch.registrations_open && <OwnerPreviewNote what="Free registration" />}
       <p className="eyebrow">Begin free · No payment details</p>
       <h1 className="display mt-4 text-4xl">Create your free account.</h1>
       <p className="mt-3 mb-6 text-sm text-muted">Your free membership includes The Art of Self and the complimentary features of the one society you choose. Journey is included with paid memberships, whenever you&rsquo;re ready.</p>

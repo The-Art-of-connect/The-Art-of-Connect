@@ -3,6 +3,8 @@ import Link from "next/link";
 import { JoinForm } from "@/components/AuthForms";
 import { getCatalogue } from "@/lib/catalogue";
 import { getLaunchState } from "@/lib/launch";
+import { getViewer, hasRole } from "@/lib/auth";
+import { OwnerPreviewNote } from "@/components/OwnerPreviewNote";
 
 export const metadata: Metadata = { title: "Free business account — The Professional Society", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -10,9 +12,11 @@ export const dynamic = "force-dynamic";
 /** Free Professional Society account: no card, no subscription. Opens when the owner authorizes it. */
 export default async function JoinBusiness() {
   const [launch, catalogue] = await Promise.all([getLaunchState(), getCatalogue()]);
-  const open = launch.registrations_open && launch.free_business_accounts_open;
+  const live = launch.registrations_open && launch.free_business_accounts_open;
+  const open = live || hasRole(await getViewer(), ["owner"]);
   return (
     <>
+      {!live && open && <OwnerPreviewNote what="Free business registration" />}
       <p className="eyebrow">The Professional Society · Founding Member</p>
       <h1 className="display mt-4 text-4xl">{open ? "Create your free business account." : "Founding enrollment opens soon."}</h1>
       <p className="mt-4 text-muted">

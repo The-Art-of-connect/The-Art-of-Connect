@@ -39,3 +39,5 @@
 20261231000001_tracker_intelligence.sql	exists (select 1 from public.dev_tracker where key = 'journey-intelligence')
 20270101000001_voice_models.sql	exists (select 1 from information_schema.columns where table_name = 'journey_voice_sessions' and column_name = 'provider_cost_cents')
 20270102000001_personalization.sql	exists (select 1 from information_schema.columns where table_name = 'journey_voice_previews' and column_name = 'mime')
+20270103000001_quality_assurance.sql	to_regclass('public.qa_features') is not null
+20270103000002_qa_plan.sql	exists (select 1 from public.qa_features where key = 'public-site')

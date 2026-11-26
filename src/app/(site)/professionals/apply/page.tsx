@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProfessionalApplicationForm, ProfessionalInterestForm } from "@/components/ProfessionalForms";
-import { getViewer } from "@/lib/auth";
+import { getViewer, hasRole } from "@/lib/auth";
+import { OwnerPreviewNote } from "@/components/OwnerPreviewNote";
 import { getLaunchState } from "@/lib/launch";
 
 export const metadata: Metadata = { title: "Professional application", robots: { index: false } };
@@ -9,11 +10,13 @@ export const dynamic = "force-dynamic";
 
 export default async function ApplyPage() {
   const [launch, viewer] = await Promise.all([getLaunchState(), getViewer()]);
-  const open = launch.counselor_applications_open;
+  const owner = hasRole(viewer, ["owner"]);
+  const open = launch.counselor_applications_open || owner;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-20 sm:px-8 lg:py-28">
       <Link href="/professionals" className="text-sm text-gold hover:text-gold-bright">← Professional pathway</Link>
+      {owner && !launch.counselor_applications_open && <div className="mt-6"><OwnerPreviewNote what="Professional applications" /></div>}
       <h1 className="display mt-6 text-5xl">{open ? "Professional application" : "Express your interest"}</h1>
       <p className="mt-4 text-muted">
         {open

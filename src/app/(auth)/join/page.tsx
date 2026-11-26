@@ -3,6 +3,8 @@ import Link from "next/link";
 import { JoinForm } from "@/components/AuthForms";
 import { getCatalogue } from "@/lib/catalogue";
 import { getLaunchState } from "@/lib/launch";
+import { getViewer, hasRole } from "@/lib/auth";
+import { OwnerPreviewNote } from "@/components/OwnerPreviewNote";
 import { EXPERIENCES } from "@/lib/experiences";
 import { normalizeSelection, quote, selectionFromQuery, selectionToQuery, formatMoney } from "@/lib/pricing";
 
@@ -27,7 +29,8 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
     </div>
   ) : null;
 
-  if (!launch.registrations_open) {
+  const owner = hasRole(await getViewer(), ["owner"]);
+  if (!launch.registrations_open && !owner) {
     return (
       <div className="text-center">
         <p className="eyebrow">Adults {catalogue.minimum_member_age}+ · Personal Society singles 30+</p>
