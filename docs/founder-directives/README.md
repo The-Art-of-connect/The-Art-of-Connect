@@ -22,6 +22,7 @@ changes an earlier one, the later one wins.
 | 16 | [The Art of Becoming as the foundation of the Connection Intelligence Engine](16-becoming-foundation-of-connection-intelligence.md) | **Partly built.** Private Connection Readiness indicator and readiness-gated invitations; member-to-member compatibility next. |
 | 17 | [The Art of Becoming Daily Sanctuary](17-daily-sanctuary.md) | **Built.** My Daily Sanctuary, library, scenarios, Vision Board, reminders, Curriculum Studio. Starter content awaits founder approval. |
 | 18 | [Discover What's Possible](18-discover-whats-possible.md) | **Built.** Preference-based invitations, Inside Connect previews, conversion analytics. |
+| 19 | [The Becoming Circle — Founder Master Directive](19-becoming-circle-master-directive.md) | **Phase One built.** Written open discussions every four hours, moderation, Safety Shield, previews, Who Am I Becoming?. Phases 2–5 on the tracker; live audio awaits infrastructure approval. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

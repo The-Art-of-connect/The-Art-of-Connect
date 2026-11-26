@@ -1,0 +1,85 @@
+-- Starter featured topics for The Becoming Circle, prepared by Peace as DRAFTS for founder approval (directive 19).
+insert into public.circle_topics (category, title, prompt, source, status) values
+  ('everyday-life', 'What small daily habit has changed your life the most?', 'Share one simple habit that made a real difference for you, and how you made it stick.', 'peace', 'draft'),
+  ('everyday-life', 'What does a truly good day look like for you?', 'Describe an ordinary day you would happily repeat. What makes it good?', 'peace', 'draft'),
+  ('relationships-marriage', 'Can two people grow in different directions and remain together?', 'People change over the years. What helps a couple grow together rather than apart, and what have you learned about supporting a partner''s evolving needs?', 'peace', 'draft'),
+  ('relationships-marriage', 'What does respect look like in a healthy relationship?', 'Beyond the big gestures, what everyday actions show respect between partners?', 'peace', 'draft'),
+  ('relationships-marriage', 'How do you keep friendship alive within a long-term relationship?', 'What keeps the friendship strong alongside the romance?', 'peace', 'draft'),
+  ('friendships', 'How do you make new friends as an adult?', 'Making friends gets harder after school and early careers. What has worked for you?', 'peace', 'draft'),
+  ('friendships', 'What makes a friendship last for decades?', 'Think of your longest friendship. What has kept it going?', 'peace', 'draft'),
+  ('parenting', 'What is one lesson you hope to pass on to the next generation?', 'Whether you are a parent, mentor, aunt, uncle or friend: what wisdom would you most want young people to carry?', 'peace', 'draft'),
+  ('family', 'How do you set healthy boundaries with family you love?', 'Family relationships can be the most rewarding and the most complicated. How do you protect your peace while staying close?', 'peace', 'draft'),
+  ('personal-development', 'Who are you becoming this year?', 'If you met yourself a year from now, what would you hope had changed?', 'peace', 'draft'),
+  ('personal-development', 'What belief about yourself did you have to unlearn?', 'Many of us carry old stories about who we are. Which one did you outgrow, and how?', 'peace', 'draft'),
+  ('business', 'What is the best business advice you have ever received?', 'Share advice that changed how you work or lead, and why it stayed with you.', 'peace', 'draft'),
+  ('business', 'What business idea do you wish someone would build?', 'What problem in your community or industry deserves a better solution?', 'peace', 'draft'),
+  ('career', 'How do you know when it''s time for a career change?', 'What signs told you it was time to move on, or to stay and grow?', 'peace', 'draft'),
+  ('career', 'What makes a workplace one where people thrive?', 'Think of the best team you''ve been part of. What made it work?', 'peace', 'draft'),
+  ('financial-mindset', 'What did you learn about money growing up?', 'How did the money lessons of your childhood shape your choices today? (Educational discussion, not financial advice.)', 'peace', 'draft'),
+  ('financial-mindset', 'What does financial peace mean to you?', 'Is it security, freedom, generosity or something else? How do you define it?', 'peace', 'draft'),
+  ('retirement', 'What do you want your retirement years to feel like?', 'Beyond finances: purpose, community, travel, learning. What would make those years meaningful?', 'peace', 'draft'),
+  ('travel-lifestyle', 'Which journey changed the way you see the world?', 'Share a trip, near or far, that shifted your perspective.', 'peace', 'draft'),
+  ('travel-lifestyle', 'What does living well mean to you?', 'Is it comfort, adventure, simplicity or connection? How do you choose your lifestyle on purpose?', 'peace', 'draft'),
+  ('current-events', 'How do you stay informed without feeling overwhelmed?', 'With constant news, how do you stay aware while protecting your peace? (Please keep the conversation respectful and fact-based.)', 'peace', 'draft'),
+  ('world-perspectives', 'What can we learn from how other cultures approach family and community?', 'Share a tradition or practice from another culture that you admire.', 'peace', 'draft'),
+  ('culture-society', 'How has technology changed the way we connect?', 'Has it brought us closer, pushed us apart, or both? How do you use it intentionally?', 'peace', 'draft'),
+  ('culture-society', 'What does community mean in today''s world?', 'Where do you find a sense of belonging, and how do you create it for others?', 'peace', 'draft'),
+  ('communication-ei', 'How do you disagree with someone without damaging the relationship?', 'What helps you stay respectful and curious when you see things differently?', 'peace', 'draft'),
+  ('communication-ei', 'What does it mean to truly listen?', 'How can you tell when someone is really listening to you, and how do you practice it yourself?', 'peace', 'draft'),
+  ('goals-ambitions', 'What goal are you working toward right now?', 'Share a goal that matters to you and the next small step you''ll take.', 'peace', 'draft'),
+  ('goals-ambitions', 'Where do you see yourself in five years?', 'What would you like your life to look like, and what are you doing today to move toward it?', 'peace', 'draft'),
+  ('goals-ambitions', 'What would you attempt if you knew you couldn''t fail?', 'Dream a little. What is stopping you, and what could you start with?', 'peace', 'draft'),
+  ('personal-development', 'How do you recover after a hard season?', 'Everyone faces difficult periods. What helps you rebuild your strength and hope?', 'peace', 'draft');
+insert into public.sanctuary_content (kind, topic, title, body, example, reflection, activity, course, course_order, prepared_by, status) values
+  ('lesson', 'relationships', 'Growing together, or growing apart?', 'As people grow, their needs, dreams and priorities can change. Couples, friends and colleagues who grow well together tend to talk openly about those changes, stay curious about each other, and make room for each person''s growth. Growing differently is not automatically a problem; disconnection usually comes from not talking about it. This lesson is for reflection only: only you can decide what is right for your life and relationships.', 'Two partners notice they want different things from their weekends. Instead of resenting it, they talk about what each is hoping for, and each keeps one ritual just for themselves while they plan another to share.', 'Where are you growing right now, and do the important people in your life know about it?', 'This week, ask someone close to you: ''What are you hoping for in the year ahead?'' Listen fully before sharing your own answer.', 'who-am-i-becoming', 1, 'peace', 'draft');
+insert into public.sanctuary_content (kind, topic, body, course, prepared_by, status) values
+  ('question', 'intentional-living', 'Does my current career align with the person I am becoming?', 'who-am-i-becoming', 'peace', 'draft'),
+  ('question', 'intentional-living', 'Which of my friendships support who I am becoming, and which hold me to who I was?', 'who-am-i-becoming', 'peace', 'draft'),
+  ('question', 'intentional-living', 'Are my partner and I talking about how we are each changing?', 'who-am-i-becoming', 'peace', 'draft'),
+  ('question', 'intentional-living', 'What does my current lifestyle say about my priorities, and is that what I want it to say?', 'who-am-i-becoming', 'peace', 'draft'),
+  ('question', 'intentional-living', 'What need of mine has changed in the last few years, and have I shared it with the people closest to me?', 'who-am-i-becoming', 'peace', 'draft'),
+  ('question', 'intentional-living', 'What would my future self thank me for starting this month?', 'who-am-i-becoming', 'peace', 'draft');
+
+-- Development Tracker: all five phases (honest stages; nothing marked operational or owner-approved).
+insert into public.dev_tracker (key, area, title, detail, status, next_step, sort_order, designed, built, tests_passed, merged, deployed, operational, awaiting) values
+  ('becoming-circle-p1', 'The Becoming Circle', 'Phase 1: Becoming Circle foundation',
+   'A new featured complimentary topic every four hours (filled automatically from the owner-approved pool), written perspectives, questions and comments, moderator polls, topic suggestions, staff and trained member moderators with presence and an audit history, reports, emergency pause and close, the Safety Shield, and locked previews of paid experiences.',
+   'deployed', 'Owner: approve the starter topics in the Global Conversation Control Center.', 460, true, true, true, true, true, false, 'owner'),
+  ('safety-shield', 'Safety', 'The Art of Connect Safety Shield',
+   'Blocks personal phone numbers, email addresses, Social Security numbers, card and bank numbers and credentials in Circle comments, suggestions, Connect posts, comments, messages and profiles (database-enforced); asks members to revise disrespectful wording; blocks threats and escalates. Optional AI screening is off until the owner approves it.',
+   'deployed', 'Owner: review the screening rules; decide on optional AI screening.', 461, true, true, true, true, true, false, 'owner'),
+  ('becoming-expansion', 'The Art of Becoming', 'Who Am I Becoming? and My Future Self',
+   'Private becoming statement, future-self description, growth plan, and one-, five- and ten-year goals; growth-alignment lesson and reflections (drafts) with no judgments about relationships.',
+   'deployed', 'Owner: approve the Who Am I Becoming? lesson and reflections.', 462, true, true, true, true, true, false, 'owner'),
+  ('becoming-circle-p2', 'The Becoming Circle', 'Phase 2: moderated live audio and two-minute speaking turns',
+   'Live audio with mandatory human moderator, server-controlled two-minute timer (orange at 30 seconds, notice at 10), I''m Finished Speaking, one active microphone, fair queue, speaking purchases in Sandbox ($2.99 turn and $7.99 day pass proposed, not approved).',
+   'designed', 'Owner: review the real-time audio infrastructure options and costs Peace presents.', 463, true, false, false, false, false, false, 'owner'),
+  ('becoming-circle-p3', 'The Becoming Circle', 'Phase 3: lounges, member-created topics, scheduling priority, moderator training',
+   'Personalized paid lounges from authorized discovery; Create the Conversation by membership level; automated topic approval with human appeals; Elite → Executive → three → two → one society priority; The Art of Leading a Conversation training; external invitations with QR codes; follow and connect from discussions; My Privacy & Safety Center; personalized conversation calendar.',
+   'designed', 'After phase 2.', 464, true, false, false, false, false, false, null),
+  ('becoming-circle-p4', 'The Becoming Circle', 'Phase 4: Private Meeting Suite (Executive and Elite)',
+   'Open, approval-required and closed private meetings; invitations to selected members; international scheduling; host controls.',
+   'designed', 'After phase 3; needs infrastructure approval.', 465, true, false, false, false, false, false, 'owner'),
+  ('becoming-circle-p5', 'The Becoming Circle', 'Phase 5: Global Boardroom and advanced features',
+   'Video, screen sharing, agendas, documents, waiting rooms, notes, action items, recurring series, captions and multilingual translation, expanded analytics.',
+   'designed', 'After phase 4; each item needs infrastructure approval.', 466, true, false, false, false, false, false, 'owner')
+on conflict (key) do nothing;
+
+insert into public.qa_features (key, department, title, tracker_key, href, purpose, steps, expected, sort) values
+  ('becoming-circle', 'art-of-self', 'The Becoming Circle (written phase)', 'becoming-circle-p1', '/app/circle',
+    'Complimentary open discussion every four hours, safe and moderated.',
+    array['Approve several starter topics in Owner Portal → Global Conversation Control Center; the next 48 hours of slots fill automatically.', 'As a free test account, open The Becoming Circle: the featured topic, the next topic time and upcoming topics show in your local time.', 'Share a perspective, ask a question and vote in a poll.', 'Post twice within 20 seconds: the second is gently refused.', 'When the next topic begins, the earlier discussion stays open for comments (24 hours by default).', 'Lounges and the Private Meeting Suite appear greyed out with membership and trial options.']::text[],
+    'Free and paid members take part; no AI is used; nothing is invented.', 460),
+  ('safety-shield', 'security', 'Safety Shield', 'safety-shield', '/app/circle',
+    'Personal information never appears in discussions or messages.',
+    array['Try posting a phone number, an email address, 123-45-6789 or a 16-digit card number: each is refused with a privacy notice.', 'Write something disrespectful (e.g. "you are an idiot"): you are asked to revise before it can be posted.', 'Write a threat: it is blocked and recorded for moderators.', 'A website address such as theartofconnect.com is allowed.']::text[],
+    'Blocked content is never published; the database refuses it even if the page is bypassed.', 461),
+  ('circle-moderation', 'admin', 'Circle moderation and audit history', 'becoming-circle-p1', '/admin/circle',
+    'Human moderators control every discussion, and every action is recorded.',
+    array['As a moderator, open a topic: the moderator tools appear and members see Authorized moderator present.', 'Hide a comment, warn and remove a participant, create a poll, pause and close the discussion.', 'Each action appears in the audit history in the Control Center.', 'A member cannot use moderator actions.']::text[],
+    'Only authorized moderators act; everything is logged.', 462),
+  ('becoming-plan', 'art-of-self', 'Who Am I Becoming?', 'becoming-expansion', '/app/sanctuary/becoming',
+    'Private future-self planning with one-, five- and ten-year goals.',
+    array['Write who you are becoming, your future self and a growth plan.', 'Add goals for one, five and ten years; mark one achieved.', 'As another test account, none of it is visible.']::text[],
+    'Private, saved, no judgments.', 463)
+on conflict (key) do nothing;

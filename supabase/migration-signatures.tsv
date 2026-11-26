@@ -65,3 +65,5 @@
 20270115000001_daily_sanctuary.sql	exists (select 1 from information_schema.tables where table_name = 'sanctuary_content')
 20270115000002_sanctuary_starter_content.sql	exists (select 1 from public.sanctuary_content where prepared_by = 'peace')
 20270115000003_sanctuary_tracker.sql	exists (select 1 from public.dev_tracker where key = 'daily-sanctuary')
+20270116000001_becoming_circle.sql	exists (select 1 from information_schema.tables where table_name = 'circle_topics')
+20270116000002_circle_starter_and_tracker.sql	exists (select 1 from public.circle_topics where source = 'peace')

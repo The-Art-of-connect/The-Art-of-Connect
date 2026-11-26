@@ -934,3 +934,41 @@ v42-11) Conversion analytics are for the owner only (expect 0):
 0
 v42-12) Circle sizes are shown only from 10 members up (expect t):
 t
+v43-1) Starter topics are drafts awaiting the owner (expect t):
+t
+v43-2) Approved topics fill the coming four-hour slots automatically (expect 2, then t):
+2
+t
+v43-3) A free member sees scheduled topics but never drafts (expect 2|0):
+2|0
+v43-4) A free member can share a perspective in The Becoming Circle (expect 1):
+1
+v43-5) Posting again within 20 seconds is refused (expect error):
+ERROR:  Please wait a moment before posting again.
+v43-6) A discussion that has not begun yet is not open (expect error):
+ERROR:  This discussion is not open for comments right now.
+v43-7) A member cannot approve topics or use moderator actions (expect 0, then error):
+0
+ERROR:  Only authorized moderators can do this.
+v43-8) The Safety Shield refuses personal information, even if the page is bypassed (expect phone, email, ssn, card, then allowed):
+{phone}
+{email}
+{ssn}
+{card}
+t
+v43-9) A comment with a phone number is blocked (expect SAFETY_SHIELD error):
+ERROR:  SAFETY_SHIELD:phone
+v43-10) A moderator removes a participant; the action is recorded (expect ok, then 1):
+ok
+1
+v43-11) A moderator creates a poll (expect 1):
+1
+v43-12) A removed participant cannot post in that discussion (expect error):
+ERROR:  A moderator has removed you from this discussion.
+v43-13) Poll votes are counted without revealing voters (expect 1|0):
+1|0
+v43-14) Members cannot read the moderation history (expect 0):
+0
+v43-15) Who Am I Becoming? is private (expect 1, then 0):
+1
+0
