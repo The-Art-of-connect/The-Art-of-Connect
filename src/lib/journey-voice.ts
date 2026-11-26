@@ -1,5 +1,6 @@
 import "server-only";
 import { guideInstructions } from "@/lib/journey-guide";
+import { isLiveModel, providerCostCents, voiceModelById } from "@/lib/journey-voice-models";
 import { loadGuideAnswers, resolveGuide } from "@/lib/journey-guide-server";
 import { personaIsPaid } from "@/lib/view-as";
 import { cleanPrefs, DEFAULT_PREFS, paceSpeed } from "@/lib/journey-customize";
@@ -30,10 +31,20 @@ export const VOICE_STYLES = {
 export type VoiceStyle = keyof typeof VOICE_STYLES;
 
 export type VoiceStart =
-  | { ok: true; clientSecret: string; voiceSessionId: string; allowedSeconds: number; inactivitySeconds: number; model: string }
+  | { ok: true; family: "realtime"; clientSecret: string; voiceSessionId: string; allowedSeconds: number; inactivitySeconds: number; model: string }
+  | { ok: true; family: "live"; answerSdp: string; liveSessionId: string; voiceSessionId: string; allowedSeconds: number; inactivitySeconds: number; model: string }
   | { ok: false; message: string };
 
-export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; ownerTest?: boolean; lesson?: string | null; discovery?: string | null }): Promise<VoiceStart> {
+/** GPT-Live accepts up to 16,384 tokens of instructions; keep a safe margin (about 4 characters per token). */
+const LIVE_INSTRUCTION_CHARS = 56_000;
+
+export async function startVoice(input: {
+  mode: JourneyMode; style: VoiceStyle; ownerTest?: boolean; lesson?: string | null; discovery?: string | null;
+  /** Owner Voice Studio only: compare another supported voice model. Members always use the production model. */
+  model?: string | null;
+  /** GPT-Live: the browser's WebRTC offer, exchanged here for OpenAI's answer (the API key never leaves the server). */
+  sdp?: string | null;
+}): Promise<VoiceStart> {
   const viewer = await getViewer();
   if (!viewer) return { ok: false, message: "Please sign in to talk with Journey." };
   if (viewer.viewAs) {
@@ -73,7 +84,13 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     if (allowed < 30) return { ok: false, message: "You've used this period's voice minutes. You can still chat with Journey in writing, and your minutes reset on your next billing date." };
   }
 
-  const reserve = Math.round(((cfg.voice.centsPerMinute * allowed) / 60) * 10_000) / 10_000;
+  const model = input.ownerTest && input.model && voiceModelById(input.model) ? input.model : cfg.voice.model;
+  const catalog = voiceModelById(model);
+  const live = isLiveModel(model);
+  if (live && !input.sdp) return { ok: false, message: "Please refresh the page and try again." };
+  // GPT-Live has an official per-minute price; other models use the owner's rate, or the catalog estimate when comparing.
+  const rate = live ? (catalog?.liveCentsPerMinute ?? 5) : model === cfg.voice.model ? cfg.voice.centsPerMinute : (catalog?.budgetCentsPerMinute ?? cfg.voice.centsPerMinute);
+  const reserve = Math.round(((rate * allowed) / 60) * 10_000) / 10_000;
   const { data: started } = await db.rpc("journey_voice_start", { p_user: viewer.id, p_holder: holder, p_package: pkg, p_allowed_seconds: allowed, p_owner_test: Boolean(input.ownerTest), p_reserve: reserve });
   if (typeof started !== "string" || started.startsWith("refused:")) {
     const why: Record<string, string> = {
@@ -85,6 +102,7 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     };
     return { ok: false, message: (input.ownerTest && typeof started === "string" && why[started]) || (started === "refused:in_progress" ? why[started] : "Talk to Journey is resting right now. Please try again later.") };
   }
+  await db.from("journey_voice_sessions").update({ model, cents_per_minute: rate }).eq("id", started);
 
   // The same foundation as written conversations: Blueprint, philosophy, founder principles, knowledge, member context.
   const foundation = await composeFoundation(db, cfg, { userId: viewer.id, mode: input.mode, access, ownerTest: Boolean(input.ownerTest), lesson: input.lesson ?? null, spoken: true });
@@ -105,12 +123,40 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
   const { data: prefRow } = await db.from("journey_voice_preferences").select("presentation, voice, age_style, language, accent, personality, pace, avatar").eq("user_id", viewer.id).maybeSingle();
   const prefs = prefRow ? cleanPrefs({ ...prefRow, age: prefRow.age_style }) : { ...DEFAULT_PREFS, voice: VOICE_STYLES[input.style].voice };
   const instructions = foundation.instructions + topic;
+  const fail = async (detail?: string) => {
+    await db.rpc("journey_voice_end", { p_id: started, p_user: viewer.id, p_transcript: "" });
+    return { ok: false as const, message: `Journey couldn't connect just now. No minutes were used.${input.ownerTest && detail ? ` OpenAI said: ${detail}` : ""}` };
+  };
+
+  if (live) {
+    // GPT-Live: full-duplex conversation. No backend model: Journey answers from her foundation directly.
+    const livePrompt = `${instructions}
+
+# Live conversation policies
+Backchannel policy: Use gentle, natural backchannels (a soft "mm-hm" or "I hear you") sparingly, without talking over the member.
+Interruption policy: When the member starts speaking, stop and listen. Continue from what they said, not from where you stopped.
+Delegation policy: There is no backend. ${model === "gpt-live-1" ? "Do not generate <|SpawnThinking|>." : "Do not delegate."} Answer directly from your instructions and the conversation.
+Greet the member once, warmly and briefly, when the conversation begins.`.slice(0, LIVE_INSTRUCTION_CHARS);
+    const create = (voice: string) => fetch("https://api.openai.com/v1/live/sessions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ session: { model, instructions: livePrompt, audio: { output: { voice } }, delegation: { type: "client" } }, transport: { type: "webrtc", sdp: input.sdp } }),
+      signal: AbortSignal.timeout(20_000),
+    }).catch(() => null);
+    let res = await create(prefs.voice);
+    // Some voices may not be offered by GPT-Live; fall back to its default voice rather than failing.
+    if (res && res.status === 400 && prefs.voice !== "marin") res = await create("marin");
+    const json = res ? await res.json().catch(() => null) : null;
+    if (!res?.ok || !json?.transport?.sdp || !json?.session?.id) return fail(json?.error?.message ? String(json.error.message).slice(0, 300) : res ? `HTTP ${res.status}` : "no response");
+    return { ok: true, family: "live", answerSdp: String(json.transport.sdp), liveSessionId: String(json.session.id), voiceSessionId: started, allowedSeconds: allowed, inactivitySeconds: cfg.voice.inactivitySeconds, model };
+  }
+
   const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "OpenAI-Safety-Identifier": await hashId(viewer.id) },
     body: JSON.stringify({
       expires_after: { anchor: "created_at", seconds: 60 },
-      session: { type: "realtime", model: cfg.voice.model, instructions, audio: {
+      session: { type: "realtime", model, instructions, audio: {
         output: { voice: prefs.voice, speed: paceSpeed(prefs.pace) },
         input: {
           // The member's words are transcribed so the private transcript (when they choose to keep one) and lesson answers include both sides.
@@ -125,18 +171,21 @@ export async function startVoice(input: { mode: JourneyMode; style: VoiceStyle; 
     signal: AbortSignal.timeout(15_000),
   }).catch(() => null);
   const json = res ? await res.json().catch(() => null) : null;
-  if (!res?.ok || !json?.value) {
-    await db.rpc("journey_voice_end", { p_id: started, p_user: viewer.id, p_transcript: "" });
-    return { ok: false, message: "Journey couldn't connect just now. No minutes were used." };
-  }
-  return { ok: true, clientSecret: json.value, voiceSessionId: started, allowedSeconds: allowed, inactivitySeconds: cfg.voice.inactivitySeconds, model: cfg.voice.model };
+  if (!res?.ok || !json?.value) return fail(json?.error?.message ? String(json.error.message).slice(0, 300) : res ? `HTTP ${res.status}` : "no response");
+  return { ok: true, family: "realtime", clientSecret: json.value, voiceSessionId: started, allowedSeconds: allowed, inactivitySeconds: cfg.voice.inactivitySeconds, model };
 }
 
-export async function endVoice(voiceSessionId: string, transcript: string, saveTranscript: boolean): Promise<number> {
+export async function endVoice(voiceSessionId: string, transcript: string, saveTranscript: boolean, providerUsage?: Record<string, number> | null): Promise<number> {
   const viewer = await getViewer();
   const db = createAdminClient();
   if (!viewer || !db) return 0;
   const { data } = await db.rpc("journey_voice_end", { p_id: voiceSessionId, p_user: viewer.id, p_transcript: saveTranscript ? transcript : "" });
+  // Usage as OpenAI reported it to the browser (seconds for GPT-Live, tokens for Realtime), priced from the published rates.
+  // Informational for the owner's model comparison; budgets always use the server-measured time above.
+  if (providerUsage) {
+    const { data: v } = await db.from("journey_voice_sessions").select("model").eq("id", voiceSessionId).eq("user_id", viewer.id).maybeSingle();
+    if (v?.model) await db.from("journey_voice_sessions").update({ provider_usage: providerUsage, provider_cost_cents: providerCostCents(v.model, providerUsage) }).eq("id", voiceSessionId).eq("user_id", viewer.id);
+  }
   return Number(data ?? 0);
 }
 
