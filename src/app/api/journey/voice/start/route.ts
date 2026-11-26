@@ -9,6 +9,7 @@ const Body = z.object({ mode: z.enum(["business", "life", "love", "concierge"]),
   discovery: z.string().regex(/^[a-z-]{2,40}$/).nullish(),
   model: z.string().regex(/^[A-Za-z0-9._:-]{2,80}$/).nullish(),
   sdp: z.string().max(20000).nullish(),
+  previewVoice: z.string().regex(/^[a-z]{2,20}$/).nullish(),
 });
 
 /** Mints a short-lived voice key only after membership, minutes and budget checks pass. */
