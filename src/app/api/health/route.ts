@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isSupabaseConfigured, serverSecret } from "@/lib/env";
 import { isOpenAIConfigured } from "@/lib/openai";
 import { providerConfig } from "@/lib/intel-providers";
+import { vaultConfig } from "@/lib/vault-aws";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -28,5 +29,8 @@ export async function GET() {
   // CONNECT 360 research providers: presence and format only (never a value).
   const p = providerConfig();
   const research = { parallel_key: p.parallelKey, parallel_webhook_secret: p.parallelWebhookSecret, exa_key: p.exaKey, exa_webhook_secret: p.exaWebhookSecret };
-  return NextResponse.json({ status: database === "connected" ? "ok" : "degraded", database, schema, stripe, stripe_publishable, openai, research }, { headers: { "Cache-Control": "no-store" } });
+  // Document Vault (testing): presence and format only.
+  const vc = vaultConfig().presence;
+  const vault = { access_key_id: vc.access_key_id, secret_access_key: vc.secret_access_key, external_id: vc.external_id, role_arn: vc.role_arn, region: vc.region === "not_configured" ? "not_configured" : "configured", bucket: vc.bucket === "not_configured" ? "not_configured" : "configured" };
+  return NextResponse.json({ status: database === "connected" ? "ok" : "degraded", database, schema, stripe, stripe_publishable, openai, research, vault }, { headers: { "Cache-Control": "no-store" } });
 }
