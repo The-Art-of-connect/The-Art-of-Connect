@@ -34,6 +34,7 @@ changes an earlier one, the later one wins.
 | 28 | [Strategic Business Development & Professional Collaboration Suite](28-strategic-business-development-suite.md) | **Recorded.** Built with 27 on one foundation; no binding execution, e-signature or paid services. |
 | 29 | [Capital & Funding Intelligence Center](29-capital-funding-intelligence-center.md) | **Recorded.** Built with 27–28 on one foundation; not a lender or broker; affiliate (T. Turner & Associates, LLC) disclosure required. |
 | 30 | [Capital Marketplace, Lending API Network & Commission Revenue](30-capital-marketplace-lending-network.md) | **Recorded (sections 1–5 received).** Lender research in progress; commissions and credit applications stay restricted pending legal review. |
+| 31 | [Complimentary Career & Business Launch Center](31-career-business-launch-center.md) | **Recorded; in development.** Résumé builder (free, no AI for free members) and 51-jurisdiction Launch Center; Bizee sandbox only; no live filings or payments. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
