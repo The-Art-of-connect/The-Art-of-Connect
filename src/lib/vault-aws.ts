@@ -27,12 +27,13 @@ export function vaultConfig() {
   const presence = {
     access_key_id: v.accessKeyId ? (/^AKIA[A-Z0-9]{16}$/.test(v.accessKeyId) ? "configured" : "unexpected_format") : "not_configured",
     secret_access_key: v.secretAccessKey ? (v.secretAccessKey.length >= 30 ? "configured" : "unexpected_format") : "not_configured",
-    external_id: v.externalId ? (v.externalId.length >= 16 ? "configured" : "too_short") : "not_configured",
-    role_arn: v.roleArn ? (/^arn:aws:iam::\d{12}:role\/[\w+=,.@-]+$/.test(v.roleArn) ? "configured" : "unexpected_format") : "not_configured",
+    // AWS accepts only letters, digits and _ + = , . @ : / - in an External ID (2 to 1,224 characters).
+    external_id: !v.externalId ? "not_configured" : !/^[\w+=,.@:/-]+$/.test(v.externalId) ? "invalid_characters" : v.externalId.length < 16 ? "too_short" : v.externalId.length > 1224 ? "too_long" : "configured",
+    role_arn: v.roleArn ? (/^arn:aws:iam::\d{12}:role\/[\w+=,.@/-]+$/.test(v.roleArn) ? "configured" : "unexpected_format") : "not_configured",
     region: v.region || "not_configured",
     bucket: v.bucket || "not_configured",
   } as const;
-  const ready = Object.values(presence).every((x) => x !== "not_configured" && x !== "unexpected_format" && x !== "too_short");
+  const ready = Object.values(presence).every((x) => !["not_configured", "unexpected_format", "too_short", "too_long", "invalid_characters"].includes(x));
   return { ...v, presence, ready };
 }
 
@@ -40,6 +41,12 @@ type Session = { client: S3Client; accessKeyPrefix: string; expiresAt: Date };
 let cached: Session | null = null;
 
 /** Temporary credentials for the vault role (15 minutes), reused until a minute before they expire. */
+/** Names the request fields AWS rejected (for example "externalId"), never their values. */
+export function rejectedFields(e: unknown): string[] {
+  const msg = String((e as Error)?.message ?? "");
+  return [...new Set([...msg.matchAll(/at '([A-Za-z]+)'/g)].map((m) => m[1]))].filter((f) => /^(externalId|roleArn|roleSessionName|durationSeconds|policy|serialNumber|tokenCode)$/.test(f));
+}
+
 export async function vaultSession(force = false): Promise<Session> {
   const c = vaultConfig();
   if (!c.ready) throw new Error("vault_not_configured");
