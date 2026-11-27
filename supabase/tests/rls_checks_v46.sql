@@ -24,6 +24,8 @@ insert into business.profiles (user_id, company, state) values
 on conflict (user_id) do nothing;
 
 set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f201';
+insert into public.resumes (user_id, title, template, status, data) values (auth.uid(), 'Fictional approved résumé', 'signature', 'approved', '{}');
 set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f202';
 update business.profiles set collab_opt_in = true, collab_welcome_requests = true, collab_interests = '{operational_partnership,expansion}' where user_id = auth.uid();
 

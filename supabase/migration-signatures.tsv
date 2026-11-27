@@ -73,3 +73,4 @@
 20270119000001_intelligence_division.sql	exists (select 1 from information_schema.tables where table_name = 'intel_assignments')
 20270120000001_business_development_suite.sql	exists (select 1 from information_schema.tables where table_schema = 'business' and table_name = 'deal_rooms')
 20270121000001_owner_decisions_launch_center.sql	exists (select 1 from information_schema.tables where table_name = 'resumes')
+20270122000001_professional_readiness.sql	exists (select 1 from information_schema.tables where table_name = 'resume_uploads')

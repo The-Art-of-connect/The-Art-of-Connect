@@ -1083,3 +1083,12 @@ v47-15) Commissions cannot be recorded while restricted (expect error):
 ERROR:  Commission tracking opens after legal review of transaction-based compensation.
 v47-16) Members cannot approve a state's fee data (expect draft):
 draft
+v47-17) Without an approved résumé, an Executive member cannot send professional introductions (expect error):
+ERROR:  Please approve your professional résumé before sending introductions. Everything else in your membership stays available.
+v47-18) Journey's draft cannot be approved by the system, only by the member (expect error):
+ERROR:  Only the member approves their résumé.
+v47-19) The member approves it; editing it again returns it to draft (expect approved, then draft):
+approved
+draft
+v47-20) Only one master professional history (expect error):
+ERROR:  duplicate key value violates unique constraint "resumes_one_master"

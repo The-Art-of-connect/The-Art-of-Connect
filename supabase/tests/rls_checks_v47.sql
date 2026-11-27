@@ -70,3 +70,23 @@ insert into public.formation_jurisdictions (code, name, status) values ('ZZ', 'F
 select status from public.formation_jurisdictions where code = 'ZZ';
 delete from public.formation_jurisdictions where code = 'ZZ';
 reset request.jwt.claim.sub;
+\echo 'v47-17) Without an approved résumé, an Executive member cannot send professional introductions (expect error):'
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f202';
+insert into business.conversations (requester_id, recipient_id, kind, purpose, project, reason)
+  values (auth.uid(), '00000000-0000-0000-0000-00000000f201', 'collaboration', 'expansion', 'Fictional project for a readiness check.', 'Fictional reason for a readiness check.');
+reset role;
+\echo 'v47-18) Journey''s draft cannot be approved by the system, only by the member (expect error):'
+insert into public.resumes (user_id, title, template, status, source, data) values ('00000000-0000-0000-0000-00000000f302', 'Journey draft', 'signature', 'pending_approval', 'journey_enhanced', '{}');
+update public.resumes set status = 'approved' where source = 'journey_enhanced';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f302';
+\echo 'v47-19) The member approves it; editing it again returns it to draft (expect approved, then draft):'
+update public.resumes set status = 'approved' where source = 'journey_enhanced';
+select status from public.resumes where source = 'journey_enhanced';
+update public.resumes set data = '{"summary": "Edited."}' where source = 'journey_enhanced';
+select status from public.resumes where source = 'journey_enhanced';
+\echo 'v47-20) Only one master professional history (expect error):'
+update public.resumes set is_master = true where user_id = auth.uid();
+reset role;
+reset request.jwt.claim.sub;
