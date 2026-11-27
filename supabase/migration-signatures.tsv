@@ -75,3 +75,4 @@
 20270121000001_owner_decisions_launch_center.sql	exists (select 1 from information_schema.tables where table_name = 'resumes')
 20270122000001_professional_readiness.sql	exists (select 1 from information_schema.tables where table_name = 'resume_uploads')
 20270122000002_formation_jurisdictions_draft.sql	exists (select 1 from public.formation_jurisdictions where code = 'DC')
+20270123000001_intel_webhook_deliveries.sql	exists (select 1 from information_schema.tables where table_name = 'intel_webhook_deliveries')

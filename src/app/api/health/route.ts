@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isSupabaseConfigured, serverSecret } from "@/lib/env";
 import { isOpenAIConfigured } from "@/lib/openai";
+import { providerConfig } from "@/lib/intel-providers";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -24,5 +25,8 @@ export async function GET() {
   const stripe_publishable = !pk ? "not_configured" : pk.startsWith("pk_live_") ? "live" : pk.startsWith("pk_test_") ? "test" : "unrecognized";
   // Whether Journey's AI key is visible to the website (never the key itself).
   const openai = isOpenAIConfigured() ? "configured" : "not_configured";
-  return NextResponse.json({ status: database === "connected" ? "ok" : "degraded", database, schema, stripe, stripe_publishable, openai }, { headers: { "Cache-Control": "no-store" } });
+  // CONNECT 360 research providers: presence and format only (never a value).
+  const p = providerConfig();
+  const research = { parallel_key: p.parallelKey, parallel_webhook_secret: p.parallelWebhookSecret, exa_key: p.exaKey, exa_webhook_secret: p.exaWebhookSecret };
+  return NextResponse.json({ status: database === "connected" ? "ok" : "degraded", database, schema, stripe, stripe_publishable, openai, research }, { headers: { "Cache-Control": "no-store" } });
 }
