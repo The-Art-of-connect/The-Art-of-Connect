@@ -280,10 +280,10 @@ t
 ERROR:  The legal audit trail cannot be changed or deleted
 v9-21) A member cannot record acceptance on behalf of another account (expect permission denied):
 ERROR:  permission denied for function record_legal_acceptance_for
-v10-1) Seeded reference data only, no fabricated activity (expect 20|13|23|12|0|0):
-20|13|23|12|0|0
-v10-2) Guests explore industries and features; no public profiles yet (expect 20|23|0):
-20|23|0
+v10-1) Seeded reference data only, no fabricated activity (expect 20|13|27|12|0|0):
+20|13|27|12|0|0
+v10-2) Guests explore industries and features; no public profiles yet (expect 20|27|0):
+20|27|0
 v10-3) Guests cannot read the Connection Board (expect permission denied):
 ERROR:  permission denied for table posts
 v10-4) Membership access v2: business access is always a paid membership or trial (expect premium|t|f):
@@ -982,3 +982,72 @@ v44-4) A free account sees no sources (expect 0):
 0
 v44-5) Approval records an annual review date (expect t):
 t
+v45-1) One Society members cannot commission research (expect error):
+ERROR:  My Intelligence Office is part of Executive Private and Elite Concierge.
+v45-2) Executive members can (expect 1):
+1
+v45-3) Members cannot set research cost or stage (expect error):
+ERROR:  Research progress is recorded by the system.
+v45-4) Executive members cannot use the Elite watchlist (expect error):
+ERROR:  My Global Watchlist is part of Elite Concierge.
+v45-5) Personal details are blocked by the Safety Shield (expect error):
+ERROR:  SAFETY_SHIELD:phone
+v45-6) Another member never sees someone else's research (expect 0):
+0
+v45-7) Members cannot change the owner's intelligence settings (expect 0 rows changed):
+0
+v45-8) Nothing is spent until the owner enables the division and a budget (expect refused:division_off):
+refused:division_off
+v45-9) Enabled with no budget still spends nothing (expect refused:company_monthly):
+refused:company_monthly
+v46-1) Investor solicitation in a collaboration request is restricted (expect REGULATED_ACTIVITY error):
+ERROR:  REGULATED_ACTIVITY:investor_matching
+v46-2) A purpose-specific collaboration request is sent (expect 1):
+1
+v46-3) Personal contact details are blocked before mutual acceptance (expect SAFETY_SHIELD error):
+ERROR:  SAFETY_SHIELD:phone
+v46-4) The recipient asks for more information, then accepts to discuss (expect accepted):
+accepted
+v46-5) Guaranteed returns are always prohibited, even after acceptance (expect REGULATED_ACTIVITY error):
+ERROR:  REGULATED_ACTIVITY:guaranteed_returns
+v46-6) Bank account numbers stay blocked after acceptance (expect SAFETY_SHIELD error):
+ERROR:  SAFETY_SHIELD:bank
+v46-7) Seller financing education and partnership discussion are allowed (expect 1):
+1
+v46-8) Executive member opens a Deal Room and invites their accepted collaborator (expect 2):
+2
+v46-9) Each principal invites their own attorney with a one-time link:
+v46-10) The other principal sees the shared document but not the privileged memo (expect 1|0):
+1|0
+v46-11) A non-attorney cannot record a review decision (expect error):
+ERROR:  Only an attorney or accountant in this Deal Room can record a review decision.
+v46-12) Attorney A joins without a membership and sees both of A's documents; attorney B's link is not theirs (expect 2):
+t
+2
+v46-13) Attorney A marks the memo as an authorized final document (expect final_authorized):
+final_authorized
+t
+v46-14) Attorney B (the other party's counsel) never sees A's privileged memo (expect 1|0):
+1|0
+v46-15) Journey and other automated processes cannot record a review (expect error):
+ERROR:  Reviews are recorded by the reviewing professional personally.
+v46-16) Proposals are nonbinding by construction (expect error):
+ERROR:  new row for relation "proposal_versions" violates check constraint "proposal_versions_binding_check"
+v46-17) The other principal cannot see a draft (expect 0):
+0
+v46-18) After authorization they see it and can accept a discussion, but there is no "agree" response (expect 1, then error):
+1
+ERROR:  new row for relation "proposal_responses" violates check constraint "proposal_responses_kind_check"
+v46-19) Declared funds are recorded, never verified by the member (expect recorded, then error):
+recorded
+ERROR:  Not permitted
+v46-20) Financing cannot be marked approved without the lender's letter (expect error):
+ERROR:  Attach the lender's letter or confirmation before marking financing as approved or funded.
+v46-21) When a principal withdraws, their advisor leaves and their shared funding information is revoked (expect 0|removed):
+0|removed
+v46-22) One Society members cannot open Deal Rooms (expect error):
+ERROR:  Business Deal Rooms are part of Executive Private and Elite Concierge.
+v46-23) The owner sees counts, never Deal Room documents, messages or proposals (expect 1|0|0):
+1|0|0
+v46-24) A restriction cannot be lifted without a recorded legal review (expect error):
+ERROR:  A restriction can be lifted only after legal review: record the reviewer, date and conclusion.

@@ -27,6 +27,12 @@ changes an earlier one, the later one wins.
 | 21 | [Executive & Elite Signature Services](21-executive-elite-signature-services.md) | **Recorded.** Planned within directive 20's Executive and Elite phases; news source and concierge staffing need approval. |
 | 22 | [Business & Tax Education Center](22-business-tax-education-center.md) | **Recorded.** Extends the Business Intelligence Center; uses an owner-approved, dated source library. |
 | 23 | [Premium membership implementation & development authorization](23-premium-membership-implementation.md) | **In progress.** Executive Office, Elite Signature Experience, Business Intelligence and Tax Education, Journey cost controls. |
+| 24 | [CONNECT 360 — The Opportunity Intelligence System](24-connect-360.md) | **Recorded.** Phase One (portfolio, offer/seeking, blueprint builder, opportunity database, organization foundation) next. |
+| 25 | [CONNECT 360 Global Opportunity Intelligence](25-connect-360-global-intelligence.md) | **Recorded; costed.** External research uses the existing OpenAI provider; needs a research budget approval before activation. |
+| 26 | [Dual Intelligence Infrastructure](26-dual-intelligence-infrastructure.md) | **Decided: Parallel + Exa behind Journey.** Evaluation and assignment-system foundation in progress; nothing paid activated. |
+| 27 | [Business Credibility, Financial Readiness & Collaboration Intelligence](27-business-credibility-financial-readiness.md) | **Recorded; audited.** Proof-of-funds needs its own consent and Stripe purpose approval; Sandbox and fictional data only. |
+| 28 | [Strategic Business Development & Professional Collaboration Suite](28-strategic-business-development-suite.md) | **Recorded.** Built with 27 on one foundation; no binding execution, e-signature or paid services. |
+| 29 | [Capital & Funding Intelligence Center](29-capital-funding-intelligence-center.md) | **Recorded.** Built with 27–28 on one foundation; not a lender or broker; affiliate (T. Turner & Associates, LLC) disclosure required. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
