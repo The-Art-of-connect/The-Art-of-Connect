@@ -9,6 +9,7 @@ import { FOUNDER_PRINCIPLES, RESPONSE_STANDARDS } from "@/lib/journey-training-s
 import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discovery";
 import { assemblePortfolio, categoryStatuses, portfolioContext, portfolioInstructions, PORTFOLIO_REQUEST } from "@/lib/portfolio";
 import { loadPortfolioInput } from "@/lib/portfolio-server";
+import { resumeInstructions, RESUME_REQUEST } from "@/lib/resume-ai";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -155,6 +156,8 @@ export async function sendJourneyMessage(input: {
   guide?: { ref: string; draft?: boolean; transcript?: string | null; assist?: boolean } | null;
   /** The page the member opened Journey from (the persistent Journey button): a path, described from an allowlist. */
   page?: string | null;
+  /** Résumé enhancement (directives 33–34): the member's own résumé text with contact details removed. Never stored as a conversation. */
+  resume?: { text: string; industry?: string | null } | null;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
   // Owner "View as": free personas are refused like any free member; paid personas use the owner's private test budget.
@@ -192,7 +195,7 @@ export async function sendJourneyMessage(input: {
     const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
     if (!m || level === "none") return refuse(403, "Journey is a benefit of paid memberships.");
     // Lessons, discovery and the portfolio belong to every paid plan: use an experience the plan includes.
-    if ((input.lesson || input.discovery || input.portfolio || input.guide || input.page) && input.mode !== "concierge") {
+    if ((input.lesson || input.discovery || input.portfolio || input.guide || input.page || input.resume) && input.mode !== "concierge") {
       const em = effectiveMode(input.mode, level, m.membership);
       if (em) input = { ...input, mode: em };
     }
@@ -235,6 +238,13 @@ export async function sendJourneyMessage(input: {
     const statuses = categoryStatuses(pin);
     instructions += `\n\n${portfolioInstructions(portfolioContext(assemblePortfolio(pin), statuses, pin.summaries))}`;
     input = { ...input, conversationId: null, comparisonId: null, message: PORTFOLIO_REQUEST };
+  }
+
+  let resumeDraft = false;
+  if (input.resume) {
+    resumeDraft = true;
+    instructions += `\n\n${resumeInstructions(input.resume.industry ?? null)}`;
+    input = { ...input, conversationId: null, comparisonId: null, message: `${RESUME_REQUEST}\n\n--- MEMBER'S RÉSUMÉ TEXT ---\n${input.resume.text}` };
   }
 
   // Guided module: Journey knows the lesson, its objectives, what's answered and what's left (the member's own answers only).
@@ -300,9 +310,12 @@ export async function sendJourneyMessage(input: {
     return refuse(429, d.memberMessage, view);
   }
 
+  // A résumé draft is one structured document: allow a longer reply and reserve for it proportionally.
+  const outTokens = resumeDraft ? Math.max(d.maxOutputTokens, 3200) : d.maxOutputTokens;
+  const reserveCents = Math.ceil(d.reserveCents * (outTokens / Math.max(1, d.maxOutputTokens)));
   const { data: reserved } = await db.rpc("journey_reserve", {
     p_user: viewer.id, p_holder: holderId, p_request_key: input.requestKey, p_package: packageSlug, p_mode: input.mode,
-    p_model: d.model, p_reserve: d.reserveCents, p_period_start: periodStart.toISOString(), p_owner_test: Boolean(input.ownerTest),
+    p_model: d.model, p_reserve: reserveCents, p_period_start: periodStart.toISOString(), p_owner_test: Boolean(input.ownerTest),
   });
   if (typeof reserved !== "string" || reserved.startsWith("refused:")) {
     const why = String(reserved ?? "");
@@ -311,10 +324,10 @@ export async function sendJourneyMessage(input: {
   const usageId = Number(reserved);
 
   const started = Date.now();
-  const result = await createResponse({ model: d.model, instructions, history, message: input.message, maxOutputTokens: d.maxOutputTokens });
+  const result = await createResponse({ model: d.model, instructions, history, message: input.message, maxOutputTokens: outTokens });
   const latencyMs = Date.now() - started;
   const rate = cfg.settings.models.find((m) => m.id === d.model)!;
-  const actual = costCents(rate, result.inputTokens, result.outputTokens) ?? d.reserveCents;
+  const actual = costCents(rate, result.inputTokens, result.outputTokens) ?? reserveCents;
   await db.rpc("journey_complete", { p_id: usageId, p_ok: result.ok, p_in: result.inputTokens, p_out: result.outputTokens, p_cost: actual });
   if (!result.ok) return refuse(502, "Journey couldn't reply just now. This message didn't count toward your allowance.", view);
 
@@ -328,6 +341,7 @@ export async function sendJourneyMessage(input: {
   }
 
   let conversationId = input.conversationId ?? null;
+  if (resumeDraft) draftOnly = true;
   if (!conversationId && !input.comparisonId && !draftOnly) {
     const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, title: `${input.ownerTest ? "[Owner test] " : ""}${discovery ? `Discovery · ${discoveryCategory(discovery.category)?.title}` : input.message}`.slice(0, 80) }).select("id").single();
     conversationId = c?.id ?? null;

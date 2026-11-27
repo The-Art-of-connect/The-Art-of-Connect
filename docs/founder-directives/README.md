@@ -33,6 +33,11 @@ changes an earlier one, the later one wins.
 | 27 | [Business Credibility, Financial Readiness & Collaboration Intelligence](27-business-credibility-financial-readiness.md) | **Recorded; audited.** Proof-of-funds needs its own consent and Stripe purpose approval; Sandbox and fictional data only. |
 | 28 | [Strategic Business Development & Professional Collaboration Suite](28-strategic-business-development-suite.md) | **Recorded.** Built with 27 on one foundation; no binding execution, e-signature or paid services. |
 | 29 | [Capital & Funding Intelligence Center](29-capital-funding-intelligence-center.md) | **Recorded.** Built with 27–28 on one foundation; not a lender or broker; affiliate (T. Turner & Associates, LLC) disclosure required. |
+| 30 | [Capital Marketplace, Lending API Network & Commission Revenue](30-capital-marketplace-lending-network.md) | **Recorded (sections 1–5 received).** Lender research in progress; commissions and credit applications stay restricted pending legal review. |
+| 31 | [Complimentary Career & Business Launch Center](31-career-business-launch-center.md) | **Recorded; in development.** Résumé builder (free, no AI for free members) and 51-jurisdiction Launch Center; Bizee sandbox only; no live filings or payments. |
+| 32 | [Opportunity Radar & Application Assistance Center](32-opportunity-radar-application-assistance.md) | **Recorded (partial text received).** Design follows the full text; consent-based matching and official-source verification. |
+| 33 | [Professional Credibility & Opportunity Readiness](33-professional-credibility-opportunity-readiness.md) | **Recorded.** Completes directive 32; one system with the Résumé Builder and Intelligence Division. |
+| 34 | [Mandatory Professional Résumé (Executive & Elite)](34-mandatory-professional-resume.md) | **Recorded; in development.** Upload, build or approve; master history; readiness dashboard; required only for introductions and applications. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
