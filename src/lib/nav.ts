@@ -27,6 +27,8 @@ export const NAV: NavGroup[] = [
       { href: "/app/sanctuary/becoming", label: "Who Am I Becoming?", note: "My Future Self · 1, 5 and 10-year goals", access: "member" },
       { href: "/app/sanctuary/vision", label: "My Vision Board", access: "member" },
       { href: "/app/discover", label: "Discover What’s Possible", note: "What could you meet, learn and share?", access: "member" },
+      { href: "/app/career", label: "My Professional Readiness", note: "Résumé Builder · upload, build or approve", access: "member" },
+      { href: "/app/launch", label: "Business Launch Center", note: "Start a business in any state", access: "member" },
       { href: "/app/know-yourself", label: "The Art of Knowing Yourself", note: "Who Am I? — identity & self-love", access: "member" },
       { href: "/app/know-yourself/portfolio", label: "My Personal Discovery Portfolio", note: "Everything you've discovered, together", access: "member" },
       { href: "/app/know-yourself/identity-self-love", label: "Identity & Self-Love", note: "Six lessons · founding curriculum", access: "member" },

@@ -109,3 +109,87 @@ export async function setPortfolio(_p: R, f: FormData): Promise<R> {
   refresh(id);
   return { ok: true, message: on ? "Authorized for your Opportunity Portfolio. You can withdraw this at any time." : "Removed from your Opportunity Portfolio." };
 }
+
+// ─── Professional onboarding (directives 33–34): upload, Journey enhancement, approval, master history ───
+
+/** Upload an existing résumé (PDF or Word). The original is preserved unchanged in private storage; its text is read on our server. */
+export async function uploadResume(_p: R, f: FormData): Promise<R> {
+  const m = await me(); if (!m) return PREVIEW;
+  const file = f.get("file");
+  if (!(file instanceof File) || !file.size) return fail("Choose a PDF or Word (.docx) file.");
+  const { UPLOAD_TYPES, sniff, extractText } = await import("@/lib/resume-extract");
+  if (!UPLOAD_TYPES[file.type]) return fail("Please upload a PDF or Word (.docx) file.");
+  if (file.size > 5 * 1024 * 1024) return fail("Please upload a file under 5 MB.");
+  const buf = new Uint8Array(await file.arrayBuffer());
+  if (!sniff(buf, file.type)) return fail("That file doesn't look like a valid PDF or Word document.");
+  const { createHash, randomUUID } = await import("node:crypto");
+  const sha = createHash("sha256").update(buf).digest("hex");
+  let text = "";
+  try { text = (await extractText(buf, file.type)).trim(); } catch { text = ""; }
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const admin = createAdminClient();
+  if (!admin) return fail("Uploads aren't available right now.");
+  const path = `u/${m.viewer.id}/${randomUUID()}.${UPLOAD_TYPES[file.type]}`;
+  const { error: se } = await admin.storage.from("resume-uploads").upload(path, buf, { contentType: file.type, upsert: false });
+  if (se) return fail("That file couldn't be stored. Please try again.");
+  const { data: up, error } = await admin.from("resume_uploads").insert({
+    user_id: m.viewer.id, storage_path: path, file_name: file.name.slice(0, 255), mime_type: file.type, size_bytes: file.size, sha256: sha, extracted_text: text || null,
+  }).select("id").single();
+  if (error || !up) { await admin.storage.from("resume-uploads").remove([path]); return fail("That file couldn't be saved."); }
+  revalidatePath("/app/career");
+  redirect(`/app/career/upload/${up.id}`);
+}
+
+/** Journey prepares an enhanced draft from an uploaded résumé (paid memberships; uses the member's Journey allowance). */
+export async function enhanceUpload(_p: R, f: FormData): Promise<R> {
+  const m = await me(); if (!m) return PREVIEW;
+  if (!hasPaidAccess(m.viewer)) return fail("Journey's personalized enhancement is part of paid memberships. You can still build your résumé with our guided templates.");
+  const { data: up } = await m.db.from("resume_uploads").select("id, file_name, extracted_text").eq("id", String(f.get("id") ?? "")).maybeSingle();
+  if (!up) return fail("Unknown upload.");
+  if (!up.extracted_text || up.extracted_text.length < 200) return fail("We couldn't read enough text from this file (it may be a scanned image). Try a Word version, or build your résumé with the guided form.");
+  const { stripContact, parseEnhanced, verifyAgainstSource } = await import("@/lib/resume-ai");
+  const { sendJourneyMessage } = await import("@/lib/journey-server");
+  const { randomUUID } = await import("node:crypto");
+  const contact = stripContact(up.extracted_text);
+  const industry = String(f.get("industry") ?? "").trim().slice(0, 80) || null;
+  const reply = await sendJourneyMessage({ mode: "business", message: "resume", requestKey: randomUUID(), resume: { text: contact.cleaned, industry }, ownerTest: m.viewer.roles.length > 0 });
+  if (!reply.ok) return fail(reply.message);
+  const parsed = parseEnhanced(reply.reply, contact);
+  if (!parsed) return fail("Journey's draft didn't come back in a usable form. This didn't use a message; please try again.");
+  const checked = verifyAgainstSource(parsed, up.extracted_text);
+  const { data: row, error } = await m.db.from("resumes").insert({
+    user_id: m.viewer.id, kind: "resume", template: "signature", title: `Enhanced: ${up.file_name}`.slice(0, 120), data: checked.data,
+    status: "pending_approval", source: "journey_enhanced", upload_id: up.id, review: { questions: checked.questions, changes: checked.changes, from: up.file_name },
+  }).select("id").single();
+  if (error || !row) return fail("The draft couldn't be saved.");
+  revalidatePath("/app/career");
+  redirect(`/app/career/resume/${row.id}`);
+}
+
+/** The member approves a résumé as accurate (only the member can). Optionally makes it the master professional history. */
+export async function approveResume(_p: R, f: FormData): Promise<R> {
+  const m = await me(); if (!m) return PREVIEW;
+  if (f.get("accurate") !== "on") return fail("Please confirm that everything in this résumé is accurate.");
+  const id = String(f.get("id") ?? "");
+  const { error } = await m.db.from("resumes").update({ status: "approved" }).eq("id", id).eq("kind", "resume");
+  if (error) return fail("That couldn't be approved.");
+  if (f.get("master") === "on") {
+    await m.db.from("resumes").update({ is_master: false }).eq("user_id", m.viewer.id).eq("is_master", true).neq("id", id);
+    await m.db.from("resumes").update({ is_master: true }).eq("id", id);
+  }
+  revalidatePath("/app/career"); refresh(id);
+  return { ok: true, message: "Approved. Thank you for confirming it's accurate." };
+}
+
+/** A tailored copy of the master history for a specific opportunity (the master itself stays unchanged). */
+export async function tailorResume(_p: R, f: FormData): Promise<R> {
+  const m = await me(); if (!m) return PREVIEW;
+  const { data: r } = await m.db.from("resumes").select("id, template, data").eq("id", String(f.get("id") ?? "")).eq("kind", "resume").maybeSingle();
+  if (!r) return fail("Unknown résumé.");
+  const opportunity = String(f.get("opportunity") ?? "").trim().slice(0, 160);
+  if (opportunity.length < 3) return fail("Name the opportunity or role this version is for.");
+  const { data: row, error } = await m.db.from("resumes").insert({ user_id: m.viewer.id, kind: "resume", template: r.template, title: `For: ${opportunity}`.slice(0, 120), data: r.data, parent_id: r.id, opportunity }).select("id").single();
+  if (error || !row) return fail("That version couldn't be created.");
+  revalidatePath("/app/career");
+  redirect(`/app/career/resume/${row.id}`);
+}
