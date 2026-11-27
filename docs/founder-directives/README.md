@@ -36,6 +36,8 @@ changes an earlier one, the later one wins.
 | 30 | [Capital Marketplace, Lending API Network & Commission Revenue](30-capital-marketplace-lending-network.md) | **Recorded (sections 1–5 received).** Lender research in progress; commissions and credit applications stay restricted pending legal review. |
 | 31 | [Complimentary Career & Business Launch Center](31-career-business-launch-center.md) | **Recorded; in development.** Résumé builder (free, no AI for free members) and 51-jurisdiction Launch Center; Bizee sandbox only; no live filings or payments. |
 | 32 | [Opportunity Radar & Application Assistance Center](32-opportunity-radar-application-assistance.md) | **Recorded (partial text received).** Design follows the full text; consent-based matching and official-source verification. |
+| 33 | [Professional Credibility & Opportunity Readiness](33-professional-credibility-opportunity-readiness.md) | **Recorded.** Completes directive 32; one system with the Résumé Builder and Intelligence Division. |
+| 34 | [Mandatory Professional Résumé (Executive & Elite)](34-mandatory-professional-resume.md) | **Recorded; in development.** Upload, build or approve; master history; readiness dashboard; required only for introductions and applications. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
