@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID, createHash } from "node:crypto";
-import { MAX_UPLOAD_BYTES, baseUserClient, presignDownload, presignUpload, readScan, removeObject, testCommands as C, vaultConfig, vaultSession } from "@/lib/vault-aws";
+import { MAX_UPLOAD_BYTES, baseUserClient, rejectedFields, presignDownload, presignUpload, readScan, removeObject, testCommands as C, vaultConfig, vaultSession } from "@/lib/vault-aws";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
@@ -40,7 +40,13 @@ export async function phaseOne(): Promise<{ objects: Objects; results: Result[] 
     results.push(r("T01", "Temporary credential authentication", "Role session with temporary (ASIA) keys lasting 15 minutes or less", s.accessKeyPrefix === "ASIA" && minutes <= 15.5 ? "pass" : "fail",
       `Assumed the vault role with the External ID. Temporary key type ${s.accessKeyPrefix === "ASIA" ? "ASIA (temporary)" : s.accessKeyPrefix}; expires in ${minutes.toFixed(1)} minutes.`));
   } catch (e) {
-    results.push(r("T01", "Temporary credential authentication", "Role session issued", "fail", `AssumeRole failed (${errName(e)}). Check the role trust policy, External ID and user permission.`));
+    const fields = rejectedFields(e);
+    const why = errName(e) === "ValidationError"
+      ? `AWS rejected the request format${fields.length ? ` (field: ${fields.join(", ")})` : ""}. ${fields.includes("externalId") || !fields.length ? "An External ID may contain only letters, numbers and _ + = , . @ : / - (no other symbols)." : ""}`
+      : errName(e) === "AccessDenied" ? "AWS refused: the role's trust policy must name this IAM user and the same External ID, and the user needs sts:AssumeRole on the role."
+      : ["InvalidClientTokenId", "SignatureDoesNotMatch"].includes(errName(e)) ? "AWS didn't recognize the access key pair: check AOC_AWS_ACCESS_KEY_ID and AOC_AWS_SECRET_ACCESS_KEY."
+      : "Check the role trust policy, External ID and user permission.";
+    results.push(r("T01", "Temporary credential authentication", "Role session issued", "fail", `AssumeRole failed (${errName(e)}). ${why}`.trim()));
     return { objects: { ...objects, done: true }, results };
   }
   const { client } = await vaultSession();
