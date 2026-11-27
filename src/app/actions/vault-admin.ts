@@ -13,8 +13,9 @@ export async function startVaultSelfTest(): Promise<RunView | { error: string }>
   if (!vaultConfig().ready) return { error: "The vault settings in Netlify are incomplete. See the configuration panel." };
   const db = createAdminClient();
   if (!db) return { error: "The database isn't available." };
-  const { data: running } = await db.from("vault_security_runs").select("id").eq("status", "running").gte("started_at", new Date(Date.now() - 15 * 60_000).toISOString()).maybeSingle();
-  if (running) return { error: "A self-test is already running. Continue it, or wait 15 minutes." };
+  // An unfinished run (for example after the page was reloaded) is resumed rather than started again.
+  const { data: running } = await db.from("vault_security_runs").select("id, results, started_at").eq("status", "running").order("started_at", { ascending: false }).limit(1).maybeSingle();
+  if (running) return { id: running.id, status: "running", results: running.results as Result[], startedAt: running.started_at, finished: false, message: "Resuming the self-test already in progress…" };
   const { objects, results } = await phaseOne();
   const { data: row } = await db.from("vault_security_runs").insert({ started_by: viewer.id, objects, results, status: objects.done ? "failed" : "running", finished_at: objects.done ? new Date().toISOString() : null }).select("id, started_at").single();
   await db.from("audit_log").insert({ actor_id: viewer.id, action: "vault.selftest_started", target_table: "vault_security_runs", target_id: row?.id ?? null, details: { passed: results.filter((x) => x.outcome === "pass").length, total: results.length } });

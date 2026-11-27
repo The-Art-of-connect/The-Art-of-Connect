@@ -26,7 +26,7 @@ export function VaultSelfTest({ storage }: { storage: string }) {
     const v = await startVaultSelfTest();
     if ("error" in v) { setMsg(v.error); return; }
     setRun(v);
-    if (!v.finished) { setMsg("Waiting for GuardDuty to scan the fictional files (usually under two minutes)…"); await poll(v.id); }
+    if (!v.finished) { setMsg(v.message ?? "Waiting for GuardDuty to scan the fictional files (usually under two minutes)…"); await poll(v.id); }
   });
   const counts = run ? ["pass", "fail", "inconclusive", "owner_action"].map((k) => [k, run.results.filter((r) => r.outcome === k).length] as const) : [];
 
@@ -49,7 +49,7 @@ export function VaultSelfTest({ storage }: { storage: string }) {
             <p className="font-semibold">Security self-test</p>
             <p className="text-sm text-muted">Tests the real AWS role and bucket with fictional files: a plain text document and the standard EICAR antivirus test file. About 2–5 minutes. AWS cost is a fraction of a cent.</p>
           </div>
-          <button className="btn btn-gold btn-sm" disabled={pending} onClick={begin}>{pending ? "Running…" : "Run security self-test"}</button>
+          <button className="btn btn-gold btn-sm" disabled={pending} onClick={begin}>{pending ? "Running…" : "Run or resume security self-test"}</button>
         </div>
         {msg && <p className="mt-3 text-sm text-muted" role="status">{msg}</p>}
         {run && (
