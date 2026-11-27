@@ -998,8 +998,8 @@ v45-7) Members cannot change the owner's intelligence settings (expect 0 rows ch
 0
 v45-8) Nothing is spent until the owner enables the division and a budget (expect refused:division_off):
 refused:division_off
-v45-9) Enabled with no budget still spends nothing (expect refused:company_monthly):
-refused:company_monthly
+v45-9) With the owner-approved testing budget, a designated test account may run research (expect allowed):
+allowed
 v46-1) Investor solicitation in a collaboration request is restricted (expect REGULATED_ACTIVITY error):
 ERROR:  REGULATED_ACTIVITY:investor_matching
 v46-2) A purpose-specific collaboration request is sent (expect 1):
@@ -1042,7 +1042,7 @@ v46-19) Declared funds are recorded, never verified by the member (expect record
 recorded
 ERROR:  Not permitted
 v46-20) Financing cannot be marked approved without the lender's letter (expect error):
-ERROR:  Attach the lender's letter or confirmation before marking financing as approved or funded.
+ERROR:  Attach the lender's approval or commitment letter before marking financing as approved.
 v46-21) When a principal withdraws, their advisor leaves and their shared funding information is revoked (expect 0|removed):
 0|removed
 v46-22) One Society members cannot open Deal Rooms (expect error):
@@ -1051,3 +1051,35 @@ v46-23) The owner sees counts, never Deal Room documents, messages or proposals 
 1|0|0
 v46-24) A restriction cannot be lifted without a recorded legal review (expect error):
 ERROR:  A restriction can be lifted only after legal review: record the reviewer, date and conclusion.
+v47-1) While testing only, research for a real (non-test) member is refused (expect refused:testing_only):
+refused:testing_only
+v47-2) The testing ceiling cannot be exceeded by a mistyped limit (expect error):
+ERROR:  new row for relation "intel_settings" violates check constraint "intel_settings_testing_ceiling"
+v47-3) The approved limits are in place (expect 2500|500|1500|6000|t):
+2500|500|1500|6000|t
+v47-4) A commitment letter alone does not make financing funded (expect error):
+ERROR:  Financing is marked funded only with the lender's disbursement confirmation. An approval letter alone is not enough.
+v47-5) The lender's disbursement confirmation does (expect funded):
+funded
+v47-6) A complimentary member builds a résumé and saves a version; portfolio link stays off without a paid membership (expect 1|1|f):
+1|1|f
+v47-7) Another member never sees it (expect 0|0):
+0|0
+v47-8) A member tracks a business and drafts a formation order; fees come only from the provider (expect error):
+ERROR:  Fees and order details come from the provider.
+v47-9) An order cannot be authorized before every fee is disclosed (expect error):
+ERROR:  Review every fee before authorizing.
+v47-10) Members cannot see lenders that are not active, or commission rules (expect 0|0):
+0|0
+v47-11) The owner cannot activate a lender without an executed agreement (expect error):
+ERROR:  A lender is activated only with an executed partnership agreement.
+v47-12) Even with an agreement, activation waits for the recorded legal review (expect error):
+ERROR:  Sending applications to lenders stays restricted until legal review is recorded.
+v47-13) The 5% commission rule cannot be approved while compensation is restricted (expect error):
+ERROR:  Compensation arrangements stay restricted until legal review is recorded.
+v47-14) Commission rules never charge members (expect error):
+ERROR:  new row for relation "commission_rules" violates check constraint "commission_rules_payer_check"
+v47-15) Commissions cannot be recorded while restricted (expect error):
+ERROR:  Commission tracking opens after legal review of transaction-based compensation.
+v47-16) Members cannot approve a state's fee data (expect draft):
+draft

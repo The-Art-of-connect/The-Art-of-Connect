@@ -34,7 +34,7 @@ reset role;
 reset request.jwt.claim.sub;
 \echo 'v45-8) Nothing is spent until the owner enables the division and a budget (expect refused:division_off):'
 select public.intel_can_spend((select id from public.intel_assignments limit 1), 10);
-\echo 'v45-9) Enabled with no budget still spends nothing (expect refused:company_monthly):'
+\echo 'v45-9) With the owner-approved testing budget, a designated test account may run research (expect allowed):'
 update public.intel_settings set enabled = true;
 select public.intel_can_spend((select id from public.intel_assignments limit 1), 10);
 update public.intel_settings set enabled = false;
