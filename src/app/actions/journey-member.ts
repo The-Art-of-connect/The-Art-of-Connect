@@ -5,7 +5,7 @@ import { getViewer, hasRole, isInsidePreview, isStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { startAutoReloadSetup, startPurchase } from "@/lib/journey-commerce";
-import { membershipFor, sendJourneyMessage } from "@/lib/journey-server";
+import { getJourneyStatus, membershipFor, sendJourneyMessage } from "@/lib/journey-server";
 import { randomUUID } from "node:crypto";
 import type { ActionResult } from "@/app/actions/admin";
 
@@ -117,6 +117,9 @@ export async function logPractice(_p: R, f: FormData): Promise<R> {
 export async function buy(_p: R, f: FormData): Promise<R> {
   const m = await me();
   if (!m) return fail("Preview only — nothing is charged.");
+  if (!isStaff(m.viewer) && (await getJourneyStatus()).access === "none") {
+    return fail("Pay-as-you-go Journey credits for Free accounts are coming soon.");
+  }
   const kind = z.enum(["messages", "voice_minutes", "session"]).safeParse(f.get("kind"));
   const slug = str(f, "slug", 40);
   if (!kind.success || !slug) return fail("Choose a package.");
@@ -129,6 +132,9 @@ export async function buy(_p: R, f: FormData): Promise<R> {
 export async function enableAutoReload(_p: R, f: FormData): Promise<R> {
   const m = await me();
   if (!m) return fail("Preview only — nothing is charged.");
+  if (!isStaff(m.viewer) && (await getJourneyStatus()).access === "none") {
+    return fail("Pay-as-you-go Journey credits for Free accounts are coming soon.");
+  }
   if (f.get("agree") !== "on") return fail("Please confirm you authorize these charges.");
   const slug = str(f, "package", 40);
   const capRaw = str(f, "cap", 12).replace(/[$,]/g, "");
