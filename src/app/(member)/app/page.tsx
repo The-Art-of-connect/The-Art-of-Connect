@@ -18,6 +18,8 @@ import { ReferralShare } from "@/components/ReferralShare";
 import { DashboardHub } from "@/components/DashboardHub";
 import { getNavState } from "@/lib/nav-state";
 import { getDiscovery, nextModuleHref } from "@/lib/know-yourself-server";
+import { AskJourney } from "@/components/AskJourney";
+import { ExperienceDoors } from "@/components/ExperienceDoors";
 
 const SOCIETY_NAME: Record<string, string> = { business: "The Professional Society", relationships: "The Personal Society", counseling: "The Art of Becoming" };
 const PHOTO: Record<string, string> = {
@@ -57,6 +59,12 @@ export default async function MemberHome() {
           <span className="text-sm font-semibold text-[#f0a35a]">View my invitation →</span>
         </Link>
       )}
+      <section className="mb-10 rounded-[2rem] border border-line bg-[var(--surface,#fffdf8)] px-5 py-8 shadow-sm sm:px-10 sm:py-12">
+        <p className="eyebrow">Your world. Your possibilities.</p>
+        <h1 className="display mt-3 text-4xl leading-tight sm:text-5xl">What would you like to experience today?</h1>
+        <div className="mt-6 max-w-2xl"><AskJourney level={membership?.level ?? "free"} journey={nav.paid} /></div>
+        <div className="mt-8"><ExperienceDoors love={viewer.experiences.includes("relationships")} business={viewer.experiences.includes("business")} /></div>
+      </section>
       {isElite ? <EliteHome name={viewer.displayName} since={badge?.issued_at ? new Date(badge.issued_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null} /> : <LivingHero
         slides={[
           { src: "/images/library/life/journaling.webp", alt: "Writing in a journal by a sunlit window" },

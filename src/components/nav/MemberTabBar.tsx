@@ -7,12 +7,11 @@ import type { NavState } from "@/lib/nav-state";
 import { NavIcon } from "@/components/nav/NavIcons";
 import { ProfileList } from "@/components/nav/ProfileMenu";
 
-/** Simplified bottom navigation for signed-in members on phones. The Professional Society keeps its own tabs. */
+/** Four destinations for signed-in members on phones (founder directive 35): Home · Connect · Journey · My World. */
 export function MemberTabBar({ state }: { state: NavState }) {
   const path = usePathname();
   const [sheet, setSheet] = useState(false);
   useEffect(() => setSheet(false), [path]);
-  if (path.startsWith("/app/business")) return null;
   const active = (t: (typeof MEMBER_TABS)[number]) => (t.href === "/app" ? path === "/app" : t.match.some((m) => path === m || path.startsWith(m + "/")));
 
   return (
@@ -23,17 +22,13 @@ export function MemberTabBar({ state }: { state: NavState }) {
         </div>
       )}
       <nav aria-label="Member" className="fixed inset-x-0 bottom-0 z-40 border-t border-champagne/50 bg-ivory/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-        <ul className="mx-auto grid max-w-lg grid-cols-5">
+        <ul className="mx-auto grid max-w-lg grid-cols-4">
           {MEMBER_TABS.map((t) => {
-            const on = t.href === "#profile" ? sheet || active(t) : active(t);
+            const on = active(t);
             const cls = `flex w-full flex-col items-center gap-1 py-2.5 text-[0.7rem] transition-colors ${on ? "font-semibold text-burgundy" : "text-gold-deep"}`;
             return (
               <li key={t.label}>
-                {t.href === "#profile" ? (
-                  <button type="button" onClick={() => setSheet(!sheet)} aria-expanded={sheet} className={cls}><NavIcon name={t.icon} className="h-6 w-6" />{t.label}</button>
-                ) : (
-                  <Link href={t.label === "Connect" ? (state.experiences.includes("relationships") ? "/app/relationships" : state.experiences.includes("business") ? "/app/business" : "/membership#build") : t.href} aria-current={on ? "page" : undefined} className={cls}><NavIcon name={t.icon} className="h-6 w-6" />{t.label}</Link>
-                )}
+                <Link href={t.href} aria-current={on ? "page" : undefined} className={cls}><NavIcon name={t.icon} className="h-6 w-6" />{t.label}</Link>
               </li>
             );
           })}
