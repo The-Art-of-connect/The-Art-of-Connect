@@ -19,6 +19,7 @@ import { JourneyCompanion } from "@/components/JourneyCompanion";
 import { guideAccess } from "@/lib/journey-guide-access";
 import { avatarById } from "@/lib/journey-customize";
 import { UpgradeProvider } from "@/components/Upgrade";
+import { LiveInvite } from "@/components/LiveInvite";
 import { getGateContext } from "@/lib/gate-server";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,7 @@ export default async function MemberLayout({ children }: { children: React.React
       {reviewer && <OwnerReview status={status} />}
       {!preview && !pending.length && <JourneyCompanion access={journeyAccess} avatar={look?.avatar ? avatarById(look.avatar).image ?? null : null} />}
       {!preview && <MemberTabBar state={nav} />}
+      {!preview && !pending.length && <LiveInvite />}
     </div>
     </UpgradeProvider>
   );
