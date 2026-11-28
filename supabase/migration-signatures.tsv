@@ -97,3 +97,4 @@
 20270207200001_watchlist_radar_applications.sql	exists (select 1 from pg_proc where proname = 'application_deadline_tick')
 20270207300001_matchmaking_verification_required.sql	exists (select 1 from public.platform_settings where key = 'require_identity_for_matchmaking' and value = 'true')
 20270207500001_journey_free_credits.sql	exists (select 1 from pg_proc where proname = 'journey_reserve_credit')
+20270208000001_journey_home_conversations.sql	to_regclass('public.journey_conversations_home_chat_recent_idx') is not null

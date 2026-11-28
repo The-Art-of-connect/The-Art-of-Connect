@@ -52,7 +52,7 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
       )}
       {!freeAccess && (
         <div id="chat" className="mt-10 scroll-mt-24">
-          <JourneyChat allowance={status.allowance} available={available} reason={reason} ownerTest={ownerTest} initialText={ask} lesson={lesson} />
+          <JourneyChat allowance={status.allowance} available={available} reason={reason} ownerTest={ownerTest} homeChat={Boolean(viewer && !viewer.viewAs && !ownerTest && !lesson && status.access !== "none")} initialText={ask} lesson={lesson} />
         </div>
       )}
 
