@@ -6,15 +6,11 @@ import { LuxCard, LuxSection, Notice, SafetyFooter } from "@/components/Lux";
 
 export const metadata = { title: "Your Relationship Readiness Profile" };
 
-const AREAS: [string, string][] = [
-  ["Self-awareness", "Recognized strength"],
-  ["Communication", "Developing strength"],
-  ["Accountability", "Recognized strength"],
-  ["Emotional regulation", "Opportunity for growth"],
-  ["Personal boundaries", "Developing strength"],
-  ["Relationship intentions", "Clearly expressed"],
-];
-
+/**
+ * Directive 51 clarification 2 (assessment integrity): no fabricated, simulated or placeholder results. Until the readiness
+ * methodology is professionally reviewed and approved by the founder, the profile is clearly unavailable. The member's own
+ * answers are kept, so their results can be prepared from what they actually said once the methodology is approved.
+ */
 export default async function Readiness() {
   const { viewer } = await requireExperience("relationships");
   const answers = await loadAnswers(viewer.id);
@@ -24,35 +20,29 @@ export default async function Readiness() {
       <div className="rounded-[2rem] border border-gold/30 p-7 sm:p-10" style={{ background: "var(--cream)" }}>
         <p className="text-xs tracking-[0.25em] text-gold-deep uppercase">Your private discovery report</p>
         <h1 className="display mt-3 text-5xl" style={{ color: "var(--burgundy)" }}>Understanding You</h1>
-        <p className="mt-2 text-sm text-faint">{done ? "Your personal results are prepared once our professionally reviewed scoring is approved." : "Illustrative results for a fictional member. Complete Emotional & Relationship Readiness to receive your own."}</p>
-        <dl className="mt-8 divide-y divide-gold/25">
-          {AREAS.map(([a, r]) => (
-            <div key={a} className="flex items-center justify-between gap-4 py-4">
-              <dt className="text-lg">{a}</dt>
-              <dd className="text-sm text-gold-deep">{r}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="mt-8 rounded-2xl p-6" style={{ background: "#e2d2b8" }}>
-          <p className="display text-2xl text-gold-deep">Journey recommends</p>
-          <p className="mt-2 text-lg font-semibold">Understanding emotional triggers</p>
-          <p className="mt-1 text-muted">Explore a guided seven-day educational experience focused on emotional awareness and communication.</p>
-        </div>
-        <p className="mt-6 text-sm text-muted">Additional support is available if you choose to speak with a qualified counselor or coach — always your choice, never a requirement.</p>
+        <p role="status" className="mt-6 rounded-2xl border border-gold/40 bg-white/60 p-5 text-base">
+          <span className="block font-semibold">Readiness results aren&rsquo;t available yet.</span>
+          <span className="mt-1 block text-muted">We only share results that come from your own answers and a professionally reviewed way of interpreting them. That review isn&rsquo;t finished, so we show nothing rather than something misleading.</span>
+        </p>
+        <p className="mt-5 text-sm text-muted">
+          {done
+            ? "Your reflection is complete and saved privately. Your profile will be prepared from your own answers once the approach is approved, and we'll let you know in your Message Center."
+            : "You can still complete your Emotional & Relationship Readiness reflection now. Your answers are saved privately for when results become available."}
+        </p>
       </div>
-      <LuxSection title="What these results mean — and don't">
+      <LuxSection title="What this profile will be, and won't">
         <div className="grid gap-5 sm:grid-cols-2">
-          <LuxCard title="Educational, not clinical" body="This is a reflection tool. It never diagnoses you or labels you with a condition." />
-          <LuxCard title="Never held against you" body="Your results, seeking counseling or sharing a health condition never affect your matchmaking." />
-          <LuxCard title="Yours alone" body="Your report is private. Matches, partners and our team can't read it." />
-          <LuxCard title="Grow and revisit" body="Explore the recommended activities, reflect, and retake the reflection whenever you'd like." />
+          <LuxCard title="Educational, not clinical" body="A reflection tool. It never diagnoses you or labels you with a condition." />
+          <LuxCard title="Never held against you" body="Your reflection, seeking counseling or sharing a health condition never affect your matchmaking." />
+          <LuxCard title="Yours alone" body="Your answers are private. Matches, partners and our team can't read them." />
+          <LuxCard title="Only real findings" body="Nothing is estimated or invented, by us or by Journey." />
         </div>
       </LuxSection>
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link href="/app/journey/daily" className="btn btn-gold">Start a growth activity</Link>
-        <Link href="/app/relationships/onboarding/readiness" className="btn btn-ghost">Revisit my reflection</Link>
+        <Link href="/app/relationships/onboarding/readiness" className="btn btn-gold">{done ? "Review my reflection" : "Complete my reflection"}</Link>
+        <Link href="/app/know-yourself" className="btn btn-ghost">Continue The Art of Knowing Yourself</Link>
       </div>
-      <div className="mt-8"><Notice>Readiness results are educational and kept separate from safety decisions, which are always made by trained people.</Notice></div>
+      <div className="mt-8"><Notice>Safety decisions are always made by trained people and are kept separate from any reflection.</Notice></div>
       <SafetyFooter />
     </div>
   );
