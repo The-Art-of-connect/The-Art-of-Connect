@@ -88,7 +88,7 @@ export function UpgradeDialog({ gate, decision, feature, href, need, onClose }: 
           <div className="mt-5 text-sm text-[#6f5f4e]">
             <p>Included in <span className="font-semibold text-[#2b231c]">{offer.name}</span>{price ? <> · {price} per month</> : null}</p>
             {gate.current.packageSlug && diff != null && diff > 0 && <p className="mt-1">{money(diff)} more per month than your current membership</p>}
-            {keeps.length > 0 && <p className="mt-1">You keep everything you have today, including {keeps.join(" and ")}.</p>}
+            {gate.current.packageSlug && <p className="mt-1 font-semibold text-[#2b231c]">Everything you enjoy today, plus more.</p>}{keeps.length > 0 && <p className="mt-1">You keep {keeps.join(" and ")} and all your history.</p>}
           </div>
         )}
         <div className="mt-5 grid gap-2">

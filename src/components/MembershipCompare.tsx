@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getGateContext } from "@/lib/gate-server";
-import { bestValue, describe, mostComprehensive, recommendedForYou, type Plan } from "@/lib/recommend";
+import { bestValue, describe, losses, mostComprehensive, recommendedForYou, type Plan } from "@/lib/recommend";
 import { brandName } from "@/lib/brand";
 
 const money = (c: number | null) => (c == null ? null : `$${(c / 100).toFixed(2)}`);
@@ -24,12 +24,13 @@ export async function MembershipCompare({ interest }: { interest?: "business" | 
     p.slug === value?.slug && LABEL.value,
     p.slug === top && LABEL.comprehensive,
   ].filter(Boolean) as string[];
+  const currentPlan = plans.find((x) => x.slug === current.packageSlug) ?? null;
   const have = current.experiences.filter((e) => e === "business" || e === "relationships").map((e) => (e === "business" ? "In Business" : "In Love"));
   return (
     <section id="compare" className="mt-14 scroll-mt-24">
       <p className="eyebrow">Compare memberships</p>
       <h2 className="display mt-2 text-3xl">Choose what fits your goals.</h2>
-      <p className="mt-2 max-w-2xl text-sm text-muted">You already receive The Art of Becoming{have.length ? `, ${have.join(" and ")}` : ""}. Upgrading never takes away what you have. Nothing changes until you choose, and nothing is charged before you confirm.</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted"><span className="font-semibold text-text">Every level up: everything you enjoy today, plus more.</span> You already receive The Art of Becoming{have.length ? `, ${have.join(" and ")}` : ""}. Upgrading never takes away what you have. Nothing changes until you choose, and nothing is charged before you confirm.</p>
       <ul className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((p) => {
           const t = tags(p);
@@ -43,7 +44,8 @@ export async function MembershipCompare({ interest }: { interest?: "business" | 
               <p className="mt-1 text-sm">{money(p.monthly_price_cents) ? <><span className="font-semibold">{money(p.monthly_price_cents)}</span> per month</> : <span className="text-muted">Pricing shown when memberships open</span>}</p>
               {!isCurrent && !invitation && current.packageSlug && d.priceDifferenceCents != null && d.priceDifferenceCents > 0 && <p className="text-xs text-muted">{money(d.priceDifferenceCents)} more per month than your current membership</p>}
               {p.slug === value?.slug && value.savingCents > 0 && <p className="text-xs text-muted">Saves {money(value.savingCents)} a month compared with each society separately</p>}
-              {!isCurrent && d.gains.length > 0 && <p className="mt-3 text-sm"><span className="font-semibold">You gain:</span> {d.gains.join(", ")}</p>}
+              {!isCurrent && losses(currentPlan, p).length > 0 ? <p className="mt-3 text-sm text-muted">Not a level up for you: it would remove {losses(currentPlan, p).join(", ")}.</p>
+                : !isCurrent && d.gains.length > 0 && <p className="mt-3 text-sm"><span className="font-semibold">You gain:</span> {d.gains.join(", ")}</p>}
               <ul className="mt-3 space-y-1 text-sm text-muted">{(p.benefits ?? []).slice(0, 4).map((b) => <li key={b} className="flex gap-2"><span className="text-gold" aria-hidden="true">✓</span>{b}</li>)}</ul>
               <div className="mt-auto pt-5">
                 {isCurrent ? <p className="text-sm font-semibold text-gold-deep">Your current membership</p>

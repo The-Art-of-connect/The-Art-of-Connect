@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bestValue, mostComprehensive, recommendedForYou, recommendFor, unlocks, type Current, type Plan } from "../src/lib/recommend.ts";
+import { bestValue, isLevelUp, mostComprehensive, recommendedForYou, recommendFor, unlocks, type Current, type Plan } from "../src/lib/recommend.ts";
 import { decide, needForHref, type Need } from "../src/lib/gate.ts";
 import { levelOf } from "../src/lib/membership-level.ts";
 
@@ -31,6 +31,10 @@ test("every level × every restricted feature: the recommendation always unlocks
     const r = recommendFor(need, c, PLANS);
     if (allowed || who === "elite") { assert.ok(!r.recommended || who !== "elite", `${who} → ${what}`); continue; }
     if (need.elite) { assert.equal(r.recommended, null, `${who} → ${what}: Elite is invitation-only`); continue; }
+    // Directive 44: if no purchasable plan is a genuine level up that unlocks it, there is no recommendation (the comparison shows the options).
+    const anyLevelUp = PLANS.some((p) => !p.all_access && p.slug !== c.packageSlug && unlocks(p, need, c) && isLevelUp(PLANS.find((x) => x.slug === c.packageSlug) ?? null, p)
+      && (!p.love_track || c.society === "business" || (c.society === "couples") === (p.love_track === "couple")));
+    if (!anyLevelUp) { assert.equal(r.recommended, null, `${who} → ${what}: no level up exists, so none is recommended`); continue; }
     assert.ok(r.recommended, `${who} → ${what} has a recommendation`);
     assert.ok(unlocks(r.recommended!.plan, need, c), `${who} → ${what}: ${r.recommended!.plan.slug} unlocks it`);
     // Every plan the member already holds must still be included after the upgrade.

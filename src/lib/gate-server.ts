@@ -8,6 +8,7 @@ import { selectionToQuery } from "@/lib/pricing";
 import { trialEligiblePackage, TRIAL_DAYS } from "@/lib/trial";
 import { createClient } from "@/lib/supabase/server";
 import { isQaAccount } from "@/lib/qa-access";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { GateFacts } from "@/lib/gate";
 import type { Current, Plan } from "@/lib/recommend";
 
@@ -23,6 +24,10 @@ export const getGateContext = cache(async (): Promise<GateContext | null> => {
   const db = await createClient();
   // The owner preview shows the site as a brand-new member, who is eligible for the 15-day trial.
   const { data: trialOk } = isInsidePreview(viewer) ? { data: true } : db ? await db.rpc("trial_available", { p: viewer.id }) : { data: false };
+  // Journey allowances per plan (directive 44: a level up never reduces them).
+  const admin = createAdminClient();
+  const { data: limits } = admin ? await admin.from("journey_tier_limits").select("package_slug, monthly_messages, unlimited_messages") : { data: null };
+  const allowanceOf = (slug: string) => { const l = (limits ?? []).find((x) => x.package_slug === slug); return l ? (l.unlimited_messages ? null : l.monthly_messages) : undefined; };
   const offers = Object.fromEntries(catalogue.packages.map((p) => [p.slug, {
     slug: p.slug, name: p.name, tagline: p.tagline, benefits: (p.benefits ?? []).slice(0, 3), monthlyCents: p.monthly_price_cents,
     href: `/membership?${selectionToQuery({ experiences: p.experiences, interval: "month", couples: p.love_track === "couple", addons: [], package: p.category === "exclusive" ? p.slug : null })}#build`,
@@ -35,7 +40,7 @@ export const getGateContext = cache(async (): Promise<GateContext | null> => {
     },
     offers, paymentsLive: launch.payments_live, trialDays: TRIAL_DAYS,
     // The centralized plans and the member's current membership, for recommendations (directive 42).
-    plans: catalogue.packages.map((p) => ({ slug: p.slug, name: p.name, category: p.category, experiences: [...p.experiences], love_track: p.love_track, monthly_price_cents: p.monthly_price_cents, all_access: p.all_access, benefits: p.benefits })),
+    plans: catalogue.packages.map((p) => ({ slug: p.slug, name: p.name, category: p.category, experiences: [...p.experiences], love_track: p.love_track, monthly_price_cents: p.monthly_price_cents, all_access: p.all_access, benefits: p.benefits, journeyMessages: allowanceOf(p.slug) })),
     current: { packageSlug: membership?.packageSlug ?? null, level: membership?.level ?? "free", experiences: viewer.experiences, society: viewer.society ?? null },
   };
 });
