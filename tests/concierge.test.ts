@@ -21,3 +21,8 @@ test("nothing is suggested for empty or meaningless input", () => {
   assert.deepEqual(route("", "elite"), []);
   assert.deepEqual(route("zzzz", "elite"), []);
 });
+
+test("free members get rule-based membership guidance without an AI conversation (directive 42)", () => {
+  assert.equal(route("which membership is right for me", "free")[0]?.href, "/app/membership#compare");
+  assert.equal(route("should I upgrade?", "one")[0]?.href, "/app/membership#compare");
+});

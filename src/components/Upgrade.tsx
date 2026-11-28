@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { decide, needForHref, type GateDecision, type Need } from "@/lib/gate";
+import { recommendFor } from "@/lib/recommend";
 import type { GateContext, Offer } from "@/lib/gate-server";
 import { brandName } from "@/lib/brand";
 
@@ -44,7 +45,7 @@ const TITLE: Record<GateDecision["kind"], string> = {
   opening_soon: "Opening soon", in_development: "Coming soon", error: "Something went wrong",
 };
 
-export function UpgradeDialog({ gate, decision, feature, href, onClose }: { gate: GateContext; decision: GateDecision; feature: FeatureInfo; href: string; need: Need; onClose: () => void }) {
+export function UpgradeDialog({ gate, decision, feature, href, need, onClose }: { gate: GateContext; decision: GateDecision; feature: FeatureInfo; href: string; need: Need; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     closeRef.current?.focus();
@@ -53,7 +54,13 @@ export function UpgradeDialog({ gate, decision, feature, href, onClose }: { gate
     document.body.style.overflow = "hidden";
     return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
   }, [onClose]);
-  const offer: Offer | null = decision.kind === "membership" || decision.kind === "verification" ? gate.offers[decision.packageSlug] ?? null : null;
+  // Directive 42: the lowest published membership that unlocks this feature and keeps what the member has, plus alternatives.
+  const rec = decision.kind === "membership" ? recommendFor(need, gate.current, gate.plans) : null;
+  const pick = rec?.recommended?.plan.slug ?? (decision.kind === "membership" || decision.kind === "verification" ? decision.packageSlug : null);
+  const offer: Offer | null = pick ? gate.offers[pick] ?? null : null;
+  const diff = rec?.recommended?.priceDifferenceCents ?? null;
+  const alternatives = (rec?.alternatives ?? []).map((a) => ({ ...a, offer: gate.offers[a.plan.slug] })).filter((a) => a.offer);
+  const keeps = gate.current.experiences.filter((e) => e === "business" || e === "relationships").map((e) => (e === "business" ? "In Business" : "In Love"));
   const benefits = (feature.benefits?.length ? feature.benefits : offer?.benefits ?? []).slice(0, 3);
   const remember = () => { try { document.cookie = `${RETURN_COOKIE}=${encodeURIComponent(href)}; path=/; max-age=3600; samesite=lax; secure`; } catch { /* the member can still navigate back */ } };
   const price = money(offer?.monthlyCents ?? null);
@@ -78,7 +85,11 @@ export function UpgradeDialog({ gate, decision, feature, href, onClose }: { gate
           </ul>
         )}
         {decision.kind === "membership" && offer && (
-          <p className="mt-5 text-sm text-[#6f5f4e]">Included in <span className="font-semibold text-[#2b231c]">{offer.name}</span>{price ? <> · {price} per month</> : null}</p>
+          <div className="mt-5 text-sm text-[#6f5f4e]">
+            <p>Included in <span className="font-semibold text-[#2b231c]">{offer.name}</span>{price ? <> · {price} per month</> : null}</p>
+            {gate.current.packageSlug && diff != null && diff > 0 && <p className="mt-1">{money(diff)} more per month than your current membership</p>}
+            {keeps.length > 0 && <p className="mt-1">You keep everything you have today, including {keeps.join(" and ")}.</p>}
+          </div>
         )}
         <div className="mt-5 grid gap-2">
           {decision.kind === "membership" && offer && (
@@ -87,7 +98,15 @@ export function UpgradeDialog({ gate, decision, feature, href, onClose }: { gate
             </Link>
           )}
           {decision.kind === "verification" && <Link href="/elite" className="rounded-2xl bg-[#b89b6a] px-5 py-4 text-base font-semibold text-[#2b231c]">Learn about {brandName("elite-concierge")}</Link>}
-          {(decision.kind === "membership" || decision.kind === "verification") && <Link href="/membership#build" onClick={remember} className="py-3 text-base font-semibold">Explore Membership Options</Link>}
+          {alternatives.length > 0 && (
+            <div className="mt-1 rounded-2xl border border-[#d9cbb3] px-4 py-3 text-left text-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9c7f4b]">Also consider</p>
+              <ul className="mt-1 space-y-1">{alternatives.map((a) => (
+                <li key={a.plan.slug}><Link href={a.offer!.href} onClick={remember} className="flex justify-between gap-3 py-1"><span><span className="font-semibold text-[#2b231c]">{a.plan.name}</span>{a.gains.length > 0 && <span className="block text-xs">Adds {a.gains.join(", ")}</span>}</span>{money(a.plan.monthly_price_cents) && <span className="shrink-0">{money(a.plan.monthly_price_cents)}/mo</span>}</Link></li>
+              ))}</ul>
+            </div>
+          )}
+          {(decision.kind === "membership" || decision.kind === "verification") && <Link href="/app/membership#compare" onClick={remember} className="py-3 text-base font-semibold">Explore Membership Options</Link>}
           {decision.kind === "membership" && !gate.paymentsLive && <p className="text-xs text-[#8a7b6a]">Memberships open soon. Nothing is charged today.</p>}
           <button type="button" onClick={onClose} className="py-2 text-sm text-[#8a7b6a]">{decision.kind === "membership" || decision.kind === "verification" ? "Maybe later" : "Close"}</button>
         </div>
