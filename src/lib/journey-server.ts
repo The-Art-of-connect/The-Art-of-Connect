@@ -128,6 +128,7 @@ export async function membershipFor(db: Db, userId: string) {
   const start = sub.billing_interval === "year" || !periodStart ? monthStart : periodStart;
   const base: PaidMembership = {
     kind: sub.kind, status: sub.status, packageSlug: sub.tier_slug, experiences: sub.experiences ?? [], amountCents: sub.amount_cents,
+    couples: Boolean(sub.couples_upgrade) || sub.tier_slug === "couples-membership",
   };
   // The owner-listed fictional QA account: only its $0 price is treated as paid; the selected tier still governs everything.
   const membership = withQaException(base, !base.amountCents || base.amountCents <= 0 ? await isQaAccount(sub.user_id as string) : false);
@@ -214,7 +215,8 @@ export async function sendJourneyMessage(input: {
     packageSlug = m.membership.packageSlug;
     periodStart = m.periodStart;
     periodEnd = m.periodEnd;
-    const { data: t } = await db.from("journey_tier_limits").select("*").eq("package_slug", packageSlug ?? "").maybeSingle();
+    // Directive 44: a couple's allowance never falls below Couples Membership's when they level up.
+    const { data: t } = (await db.rpc("journey_effective_tier", { p_slug: packageSlug ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle()) as { data: Record<string, any> | null }; // eslint-disable-line @typescript-eslint/no-explicit-any
     tier = t ? {
       packageSlug: t.package_slug, monthlyMessages: t.monthly_messages, dailyMessages: t.daily_messages,
       memberMonthlyLimitCents: t.member_monthly_limit_cents === null ? null : Number(t.member_monthly_limit_cents),
@@ -408,7 +410,7 @@ export async function getJourneyStatus(): Promise<{
   const access = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
   if (!m || access === "none") return { ...none, enabled };
   const [{ data: t }, { data: u }] = await Promise.all([
-    db.from("journey_tier_limits").select("monthly_messages, unlimited_messages").eq("package_slug", m.membership.packageSlug ?? "").maybeSingle(),
+    db.rpc("journey_effective_tier", { p_slug: m.membership.packageSlug ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle<{ monthly_messages: number | null; unlimited_messages: boolean }>(),
     db.rpc("journey_holder_usage", { p_holder: m.holderId, p_period_start: m.periodStart.toISOString() }),
   ]);
   const usage = u as Record<string, number | string> | null;

@@ -116,6 +116,8 @@ export type PaidMembership = {
   experiences: readonly string[];
   /** Amount actually billed for the membership; a zero-price membership is not paid. */
   amountCents: number | null;
+  /** The couples experience (Couples Membership or the Couples upgrade): allowances never fall below Couples Membership's. */
+  couples?: boolean;
 };
 
 export function journeyAccessFor(

@@ -36,7 +36,7 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
   let minutes: { remaining: number; total: number } | null = null;
   if (db && (status.access === "standard" || status.access === "enhanced")) {
     const m = await membershipFor(db, viewer.id);
-    const { data: t } = await db.from("journey_tier_limits").select("monthly_voice_minutes").eq("package_slug", m?.membership.packageSlug ?? "").maybeSingle();
+    const { data: t } = await db.rpc("journey_effective_tier", { p_slug: m?.membership.packageSlug ?? "", p_couples: Boolean(m?.membership.couples) }).maybeSingle<{ monthly_voice_minutes: number | null }>();
     const { data: used } = m ? await db.rpc("journey_voice_used", { p_holder: m.holderId, p_period_start: m.periodStart.toISOString() }) : { data: 0 };
     const { data: credits } = m ? await db.from("journey_message_credits").select("messages, used").eq("holder_id", m.holderId).eq("kind", "voice_minutes").or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`) : { data: [] };
     const extra = (credits ?? []).reduce((n, c) => n + (c.messages - c.used), 0);

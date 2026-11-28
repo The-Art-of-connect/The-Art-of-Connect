@@ -133,3 +133,14 @@ test("annual incentive label", () => {
   assert.equal(annualIncentiveLabel(10), "12 months for the price of 10");
   assert.equal(annualIncentiveLabel(12), null);
 });
+
+test("couples keep the couples experience at every level: Executive Private takes the Couples upgrade; Elite Concierge includes it", () => {
+  const withUpgrade = cat({ couples_upgrade: { name: "Couples upgrade", description: "", monthly_price_cents: 1000 } });
+  const ex = matchPackage(withUpgrade, sel([], { package: "executive-private", couples: true }));
+  assert.equal(ex.pkg?.slug, "executive-private");
+  assert.equal(ex.needsCouplesUpgrade, true);
+  const q = quote(withUpgrade, sel([], { package: "executive-private", couples: true }));
+  assert.equal(q.couplesMonthly, 1000);
+  // Without an approved Couples upgrade price, nothing is priced (never invented).
+  assert.equal(quote(cat({ couples_upgrade: { name: "Couples upgrade", description: "", monthly_price_cents: null } }), sel([], { package: "executive-private", couples: true })).priced, false);
+});

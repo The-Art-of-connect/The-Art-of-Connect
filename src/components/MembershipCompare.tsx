@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getGateContext } from "@/lib/gate-server";
-import { bestValue, describe, losses, mostComprehensive, recommendedForYou, type Plan } from "@/lib/recommend";
+import { bestValue, COUPLES_SUFFIX, describe, losses, mostComprehensive, recommendedForYou, type Plan } from "@/lib/recommend";
 import { brandName } from "@/lib/brand";
 
 const money = (c: number | null) => (c == null ? null : `$${(c / 100).toFixed(2)}`);
@@ -14,7 +14,10 @@ const LABEL = { current: "Current Membership", recommended: "Recommended for You
 export async function MembershipCompare({ interest }: { interest?: "business" | "relationships" | null }) {
   const gate = await getGateContext();
   if (!gate || gate.current.level === "elite") return null;
-  const { plans, current, offers } = gate;
+  const { current, offers } = gate;
+  // Couples options are shown to couples (and to anyone who already has one); singles see the singles plans.
+  const couple = current.society === "couples" || Boolean(current.packageSlug?.endsWith(COUPLES_SUFFIX)) || current.packageSlug === "couples-membership";
+  const plans = gate.plans.filter((p) => couple ? p.love_track !== "single" : !p.slug.endsWith(COUPLES_SUFFIX));
   const rec = recommendedForYou(current, interest ? [interest] : [], plans);
   const value = bestValue(plans);
   const top = mostComprehensive(plans);

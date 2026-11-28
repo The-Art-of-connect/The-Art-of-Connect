@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isQaAccount } from "@/lib/qa-access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { GateFacts } from "@/lib/gate";
-import type { Current, Plan } from "@/lib/recommend";
+import { withCouplesOptions, COUPLES_SUFFIX, type Current, type Plan } from "@/lib/recommend";
 
 export type Offer = { slug: string; name: string; tagline: string; benefits: string[]; monthlyCents: number | null; href: string; trial: boolean };
 export type GateContext = { facts: GateFacts; offers: Record<string, Offer>; plans: Plan[]; current: Current; paymentsLive: boolean; trialDays: number };
@@ -22,6 +22,9 @@ export const getGateContext = cache(async (): Promise<GateContext | null> => {
   const [launch, membership, catalogue] = await Promise.all([getLaunchState(), getMembership(viewer), getCatalogue()]);
   const preview = isStaff(viewer) || isInsidePreview(viewer) || Boolean(launch.testSession) || (await isQaAccount(viewer.id));
   const db = await createClient();
+  // Whether the member's membership already carries the couples experience (Couples upgrade).
+  const { data: subRow } = db && !isInsidePreview(viewer) ? await db.from("subscriptions").select("couples_upgrade").eq("user_id", viewer.id).eq("kind", "member").in("status", ["active", "trialing"]).order("created_at", { ascending: false }).limit(1).maybeSingle() : { data: null };
+  const couplesNow = Boolean(subRow?.couples_upgrade);
   // The owner preview shows the site as a brand-new member, who is eligible for the 15-day trial.
   const { data: trialOk } = isInsidePreview(viewer) ? { data: true } : db ? await db.rpc("trial_available", { p: viewer.id }) : { data: false };
   // Journey allowances per plan (directive 44: a level up never reduces them).
@@ -33,6 +36,13 @@ export const getGateContext = cache(async (): Promise<GateContext | null> => {
     href: `/membership?${selectionToQuery({ experiences: p.experiences, interval: "month", couples: p.love_track === "couple", addons: [], package: p.category === "exclusive" ? p.slug : null })}#build`,
     trial: trialOk === true && trialEligiblePackage(p.slug),
   } satisfies Offer]));
+  // Couples options: the same plan with the Couples upgrade selected in the membership builder.
+  for (const p of catalogue.packages.filter((x) => x.experiences.includes("relationships") && !x.love_track && !x.all_access)) {
+    const base = offers[p.slug];
+    offers[p.slug + COUPLES_SUFFIX] = { ...base, slug: p.slug + COUPLES_SUFFIX, name: `${p.name} with the Couples upgrade`,
+      monthlyCents: p.monthly_price_cents != null && catalogue.couples_upgrade.monthly_price_cents != null ? p.monthly_price_cents + catalogue.couples_upgrade.monthly_price_cents : null,
+      href: `/membership?${selectionToQuery({ experiences: p.experiences, interval: "month", couples: true, addons: [], package: p.category === "exclusive" ? p.slug : null })}#build` };
+  }
   return {
     facts: {
       signedIn: true, level: membership?.level ?? "free", experiences: viewer.experiences, society: viewer.society ?? null,
@@ -40,7 +50,7 @@ export const getGateContext = cache(async (): Promise<GateContext | null> => {
     },
     offers, paymentsLive: launch.payments_live, trialDays: TRIAL_DAYS,
     // The centralized plans and the member's current membership, for recommendations (directive 42).
-    plans: catalogue.packages.map((p) => ({ slug: p.slug, name: p.name, category: p.category, experiences: [...p.experiences], love_track: p.love_track, monthly_price_cents: p.monthly_price_cents, all_access: p.all_access, benefits: p.benefits, journeyMessages: allowanceOf(p.slug) })),
-    current: { packageSlug: membership?.packageSlug ?? null, level: membership?.level ?? "free", experiences: viewer.experiences, society: viewer.society ?? null },
+    plans: withCouplesOptions(catalogue.packages.map((p) => ({ slug: p.slug, name: p.name, category: p.category, experiences: [...p.experiences], love_track: p.love_track, monthly_price_cents: p.monthly_price_cents, all_access: p.all_access, benefits: p.benefits, journeyMessages: allowanceOf(p.slug) })), catalogue.couples_upgrade.monthly_price_cents),
+    current: { packageSlug: membership?.packageSlug ? membership.packageSlug + (couplesNow && membership.packageSlug !== "couples-membership" ? COUPLES_SUFFIX : "") : null, level: membership?.level ?? "free", experiences: viewer.experiences, society: viewer.society ?? null },
   };
 });

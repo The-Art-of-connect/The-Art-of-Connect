@@ -75,7 +75,7 @@ export async function startVoice(input: {
     if (!launch.payments_live) return { ok: false, message: "Talk to Journey opens soon." };
     access = level; holder = m.holderId; pkg = m.membership.packageSlug;
     const [{ data: t }, { data: used }, { data: credits }] = await Promise.all([
-      db.from("journey_tier_limits").select("monthly_voice_minutes").eq("package_slug", pkg ?? "").maybeSingle(),
+      db.rpc("journey_effective_tier", { p_slug: pkg ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle<{ monthly_voice_minutes: number | null }>(),
       db.rpc("journey_voice_used", { p_holder: holder, p_period_start: m.periodStart.toISOString() }),
       db.from("journey_message_credits").select("messages, used").eq("holder_id", holder).eq("kind", "voice_minutes").or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
     ]);
