@@ -20,7 +20,7 @@ export async function savePrefs(_p: R, f: FormData): Promise<R> {
   if (!viewer || isInsidePreview(viewer)) return { ok: false, message: "Preview only: nothing is saved." };
   const db = await createClient();
   const on = (k: string) => f.get(k) === "on";
-  const { error } = (await db?.from("notification_prefs").upsert({ user_id: viewer.id, live_qa_popup: on("live_qa_popup"), live_qa_message: on("live_qa_message"), milestones: on("milestones"), growth_reports: on("growth_reports"), updated_at: new Date().toISOString() })) ?? { error: true };
+  const { error } = (await db?.from("notification_prefs").upsert({ user_id: viewer.id, live_qa_popup: on("live_qa_popup"), live_qa_message: on("live_qa_message"), milestones: on("milestones"), growth_reports: on("growth_reports"), application_deadlines: on("application_deadlines"), updated_at: new Date().toISOString() })) ?? { error: true };
   revalidatePath("/app/message-center");
   return error ? { ok: false, message: "Your preferences couldn't be saved." } : { ok: true, message: "Saved." };
 }

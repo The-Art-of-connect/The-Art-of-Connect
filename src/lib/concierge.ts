@@ -3,11 +3,14 @@
  * straight to the right place. Matching is done here, privately and for free; paid members can continue the conversation with
  * Journey. Members never need to know which technology performs a service.
  */
-export type Access = "member" | "paid" | "executive";
+export type Access = "member" | "paid" | "executive" | "elite";
 export type Destination = { id: string; label: string; line: string; href: string; access: Access; words: string[] };
 
 export const DESTINATIONS: Destination[] = [
-  { id: "research", label: "Ask Journey to research something", line: "Opportunities, organizations, requirements and sources", href: "/app/connect360/intelligence", access: "executive", words: ["research", "find out", "look up", "investigate", "information about", "learn about", "opportunit", "casting", "audition", "board seat", "acquire", "franchise"] },
+  { id: "research", label: "Ask Journey to research something", line: "Opportunities, organizations, requirements and sources", href: "/app/connect360/intelligence", access: "executive", words: ["research", "find out", "look up", "investigate", "information about", "learn about", "acquire", "franchise"] },
+  { id: "radar", label: "Show me opportunities", line: "Opportunity Radar: confirmed opportunities matched to your interests", href: "/app/connect360/radar", access: "executive", words: ["opportunit", "casting", "audition", "board seat", "speaking engagement", "contract opportunit", "open call"] },
+  { id: "applications", label: "Track my applications", line: "Application Center: status, deadlines and documents", href: "/app/connect360/applications", access: "executive", words: ["my applications", "application status", "application deadline", "track my application", "applications", "deadline"] },
+  { id: "watchlist", label: "Watch a company or topic", line: "My Global Watchlist in My Intelligence Office", href: "/app/connect360/intelligence/watchlist", access: "elite", words: ["watchlist", "watch list", "keep an eye on", "follow a company", "monitor"] },
   { id: "idea", label: "Develop my business idea", line: "A clear, professional proposal", href: "/app/connect360/proposals", access: "executive", words: ["business idea", "proposal", "pitch", "plan for my business", "present my", "partnership idea"] },
   { id: "funding", label: "Help me find funding", line: "Assess, plan and prepare for financing", href: "/app/connect360/funding", access: "executive", words: ["funding", "loan", "financ", "capital", "money for my business", "lender", "sba", "grant"] },
   { id: "collaborate", label: "Find business collaborators", line: "Members who welcome collaboration", href: "/app/connect360/collaborate", access: "executive", words: ["collaborat", "business partner", "partner with", "joint venture", "co-founder", "work with someone"] },
@@ -37,7 +40,7 @@ export function route(text: string, level: "free" | "one" | "complete" | "execut
   const q = ` ${norm(text)} `;
   if (q.trim().length < 2) return [];
   const rank = { free: 0, one: 1, complete: 2, executive: 3, elite: 4 }[level];
-  const need = { member: 0, paid: 1, executive: 3 } as const;
+  const need = { member: 0, paid: 1, executive: 3, elite: 4 } as const;
   return DESTINATIONS
     .map((d) => ({ d, score: d.words.reduce((n, w) => n + (q.includes(norm(w)) ? (w.includes(" ") ? 3 : 2) : 0), 0) + (q.includes(norm(d.label)) ? 4 : 0) }))
     .filter((x) => x.score > 0)

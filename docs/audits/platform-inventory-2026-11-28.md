@@ -341,14 +341,14 @@ pages need Executive or Elite.
 
 | Feature (directive) | Status | Evidence | Next step |
 |---|---|---|---|
-| Opportunity Radar and Application Center (32, 33) | Not yet implemented | In `brand.ts` only; no route, action or screen | Build after the full text of 32 is received |
+| Opportunity Radar and Application Center (32, 33) | Partially functional | `/app/connect360/radar`, `/app/connect360/applications`, `/admin/radar`; owner-curated listings, consent-based matching, application tracking and deadline reminders work (DB checks v65) | Automated discovery, notices for new listings and assisted submission await research providers and the full text of 32 |
 | Capital Marketplace and Lending API Network (30) | Database-only | `business.commission_ledger`, `commission_rules` and `lender_consents` are never read by the app | Legal review |
 | Couples Connection Community (08) | Not yet implemented | No route | Build per the Social Ecosystem blueprint |
 | Business & Tax Education Center (22) | Not yet implemented | Only the owner source library (`/admin/curriculum/sources`); no member screen | Build the member center |
 | In-house counseling booking (05, The Art of Wellness) | Database-only | `counseling.appointments`, `availability`, `fees` and `session_notes` are never used | Legal and licensing approval |
 | Couples private reflections (51 §7) | Database-only | `relationships.private_reflections` and `relationships.assessments` are never used | Build screens |
 | Business formation orders (31) | Database-only | `public.formation_orders` and `formation_revenue` are never used | Live filing approval |
-| CONNECT 360 watchlist (25) | Database-only | `public.intel_watchlist` is never used | Build or drop |
+| CONNECT 360 watchlist (25) | Partially functional | My Global Watchlist at `/app/connect360/intelligence/watchlist` (Elite): add, pause, remove, related findings and listings | Scheduled monitoring awaits Global Intelligence Division activation |
 | Member Settings page (47, 51 §6) | Not yet implemented | No `/app/settings`. Growth frequency lives in `GrowthPanel` (Home and Portfolio); relationship status is behind the In Love gate | Add Settings with growth frequency, relationship status and notifications |
 | Growth-update frequency question at enrollment (51 §6) | Not yet implemented | `saveGrowthPrefs` is not called in onboarding or join flows | Add to enrollment |
 | Journey credits for free members (51 §4) | Not yet implemented | `/app/journey/plus` is Coming soon and still sells packs by message | After live payments, sell by the dollar |
@@ -385,15 +385,15 @@ pages need Executive or Elite.
 | 22 | Business & Tax Education Center | `/admin/curriculum/sources` only | Not yet implemented | No member screen |
 | 23 | Premium membership implementation | CONNECT 360, Journey cost controls | Partially functional | Executive Office and Tax Education are incomplete |
 | 24 | CONNECT 360 Phase One | `/app/connect360/*`, `src/lib/connect360.ts` | Awaiting founder approval | Built for Executive members; no paid Executive members before payments |
-| 25 | Global Opportunity Intelligence | `/app/connect360/intelligence*`, `src/lib/intel-engine.ts` | Awaiting configuration | Research budget approval; watchlist table unused |
+| 25 | Global Opportunity Intelligence | `/app/connect360/intelligence*`, `src/lib/intel-engine.ts` | Awaiting configuration | Research budget approval; My Global Watchlist built, monitoring not active |
 | 26 | Dual Intelligence (Parallel and Exa) | `src/lib/intel-providers.ts`, `/api/intel/webhooks/*`, `/admin/intelligence` | Awaiting configuration | Keys; nothing paid is active |
 | 27 | Business credibility, proof of funds | `/app/elite/eligibility`, `/api/elite/financial/*` | Awaiting external providers | Stripe purpose approval |
 | 28 | Strategic Business Development Suite | `/app/connect360/proposals*`, Deal Rooms | Awaiting founder approval | No e-signature (by design) |
 | 29 | Capital & Funding Intelligence Center | `/app/connect360/funding*` | Partially functional | Affiliate disclosure needs checking; no lender network |
 | 30 | Capital Marketplace and lending network | DB tables only | Database-only | Legal review |
 | 31 | Career and Business Launch Center | `/app/career*`, `/app/launch`, `/admin/launch-center` | Partially functional | Bizee sandbox; no live filings |
-| 32 | Opportunity Radar and Application Assistance | none | Not yet implemented | Full text pending |
-| 33 | Professional credibility and readiness | `/app/career*`, `professional_ready` RPC | Partially functional | Radar part not built |
+| 32 | Opportunity Radar and Application Assistance | `/app/connect360/radar`, `/app/connect360/applications`, `/admin/radar` | Partially functional | Automated discovery and notices for new listings await providers; full text pending |
+| 33 | Professional credibility and readiness | `/app/career*`, `professional_ready` RPC, `/app/connect360/applications` | Partially functional | Application Center links approved résumés; Opportunity Readiness Engine not built |
 | 34 | Mandatory professional résumé (Executive and Elite) | `/app/career*`; required before introductions (`collaborate/page.tsx:70`) | Fully functional | — |
 | 35 | Four destinations: Home · Connect · Journey · My World | `MEMBER_TABS`, `DesktopNav.tsx` | Partially functional | `/app/explore` and `NAV` still use the old seven groups |
 | 36 | Membership-aware upgrade pop-up, no silent redirects | `components/Upgrade`, `/app/unlock`, `auth.ts:131` | Partially functional | Ask Journey sends locked results to `/membership#build` instead of the pop-up |

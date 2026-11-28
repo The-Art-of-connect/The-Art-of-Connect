@@ -32,6 +32,8 @@ export async function POST(req: Request) {
   try { await db.rpc("circle_live_tick"); } catch { /* best-effort */ }
   // Lifelong growth (directive 45): scheduled reflections, membership anniversaries and milestone acknowledgments.
   try { await db.rpc("growth_tick"); } catch { /* best-effort */ }
+  // Application Center (directive 51 item 4): one Message Center reminder per application deadline, a week ahead.
+  try { await db.rpc("application_deadline_tick"); } catch { /* best-effort */ }
   // Connect Calendar: optional reminders, about a day before events members chose to be reminded of.
   try {
     const soon = new Date(Date.now() + 26 * 3600_000).toISOString();

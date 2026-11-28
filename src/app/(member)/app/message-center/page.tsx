@@ -7,7 +7,7 @@ import { markAllRead, savePrefs } from "@/app/actions/message-center";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Message Center" };
 
-const KIND: Record<string, string> = { live_qa: "Live Q&A", milestone: "Milestone", growth_report: "Growth reflection", system: "From The Art of Connect" };
+const KIND: Record<string, string> = { live_qa: "Live Q&A", milestone: "Milestone", growth_report: "Growth reflection", system: "From The Art of Connect", application_deadline: "Application Center" };
 
 /** Message Center (directives 43 and 45): invitations, milestone acknowledgments and growth reflections, in one place. */
 export default async function MessageCenter() {
@@ -16,11 +16,11 @@ export default async function MessageCenter() {
   const [{ data: notices }, { data: prefs }] = db
     ? await Promise.all([
         db.from("member_notices").select("id, kind, title, body, href, created_at, read_at").order("created_at", { ascending: false }).limit(50),
-        db.from("notification_prefs").select("live_qa_popup, live_qa_message, milestones, growth_reports").eq("user_id", viewer.id).maybeSingle(),
+        db.from("notification_prefs").select("live_qa_popup, live_qa_message, milestones, growth_reports, application_deadlines").eq("user_id", viewer.id).maybeSingle(),
       ])
     : [{ data: [] }, { data: null }];
   const list = notices ?? [];
-  const p = { live_qa_popup: prefs?.live_qa_popup ?? true, live_qa_message: prefs?.live_qa_message ?? true, milestones: prefs?.milestones ?? true, growth_reports: prefs?.growth_reports ?? true };
+  const p = { live_qa_popup: prefs?.live_qa_popup ?? true, live_qa_message: prefs?.live_qa_message ?? true, milestones: prefs?.milestones ?? true, growth_reports: prefs?.growth_reports ?? true, application_deadlines: prefs?.application_deadlines ?? true };
   return (
     <div className="mx-auto max-w-3xl">
       <p className="eyebrow">My World</p>
@@ -33,14 +33,14 @@ export default async function MessageCenter() {
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-gold-deep">{KIND[n.kind] ?? n.kind} · {new Date(n.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</p>
             <p className="mt-1 font-semibold">{n.title}</p>
             {n.body && <p className="text-sm text-muted">{n.body}</p>}
-            {n.href && <Link href={n.href} className="btn btn-gold btn-sm mt-3">{n.kind === "live_qa" ? "Join Live Q&A" : "Open"}</Link>}
+            {n.href && <Link href={n.href} className="btn btn-gold btn-sm mt-3">{n.kind === "live_qa" ? "Join Live Q&A" : n.kind === "application_deadline" ? "Open the application" : "Open"}</Link>}
           </li>
         ))}</ul>
       )}
       <section className="glass mt-8 p-6">
         <h2 className="display text-2xl">Notification preferences</h2>
         <MemberForm action={savePrefs} className="mt-4 space-y-3 text-sm">
-          {[["live_qa_popup", "Show a pop-up when a Live Q&A begins", p.live_qa_popup], ["live_qa_message", "Keep Live Q&A invitations here", p.live_qa_message], ["milestones", "Milestone acknowledgments", p.milestones], ["growth_reports", "Growth reflections", p.growth_reports]].map(([k, label, on]) => (
+          {[["live_qa_popup", "Show a pop-up when a Live Q&A begins", p.live_qa_popup], ["live_qa_message", "Keep Live Q&A invitations here", p.live_qa_message], ["milestones", "Milestone acknowledgments", p.milestones], ["growth_reports", "Growth reflections", p.growth_reports], ["application_deadlines", "Application deadline reminders", p.application_deadlines]].map(([k, label, on]) => (
             <label key={String(k)} className="flex items-center gap-3"><input type="checkbox" name={String(k)} defaultChecked={Boolean(on)} />{String(label)}</label>
           ))}
           <button className="btn btn-gold btn-sm">Save preferences</button>

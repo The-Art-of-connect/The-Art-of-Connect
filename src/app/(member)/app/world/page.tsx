@@ -21,7 +21,8 @@ export default async function MyWorld() {
   const count = async (q: PromiseLike<{ count: number | null }>) => (db ? (await q).count ?? 0 : 0);
   const b = db?.schema("business");
   const head = { count: "exact" as const, head: true };
-  const [resumes, businesses, convs, entries, rooms, proposals, funding, research, saved] = db && b ? await Promise.all([
+  const elite = level === "elite";
+  const [resumes, businesses, convs, entries, rooms, proposals, funding, research, saved, applications, radarSaved, watching] = db && b ? await Promise.all([
     count(db.from("resumes").select("id", head).eq("user_id", viewer.id)),
     count(db.from("member_businesses").select("id", head).eq("user_id", viewer.id)),
     count(b.from("conversations").select("id", head).in("status", ["requested", "more_info", "accepted"])),
@@ -31,7 +32,10 @@ export default async function MyWorld() {
     exec ? count(b.from("funding_projects").select("id", head).eq("user_id", viewer.id)) : 0,
     exec ? count(db.from("intel_assignments").select("id", head).eq("user_id", viewer.id)) : 0,
     exec ? count(db.from("intel_findings").select("id", head).eq("saved", true)) : 0,
-  ]) : [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    count(db.from("member_applications").select("id", head).eq("user_id", viewer.id).in("status", ["preparing", "submitted", "in_review"])),
+    exec ? count(db.from("radar_marks").select("item_id", head).eq("user_id", viewer.id).eq("state", "saved")) : 0,
+    elite ? count(db.from("intel_watchlist").select("id", head).eq("user_id", viewer.id)) : 0,
+  ]) : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
   const sections: { title: string; tiles: Tile[] }[] = [
     ...(exec ? [{ title: "My projects", tiles: [
@@ -39,6 +43,11 @@ export default async function MyWorld() {
       { href: "/app/connect360/proposals", title: "Proposals", detail: plural(proposals, "proposal", "proposals") },
       { href: "/app/connect360/funding", title: "Funding", detail: plural(funding, "project", "projects") },
       { href: "/app/connect360/intelligence", title: "My Intelligence Office", detail: `${plural(research, "assignment", "assignments")} · ${saved} saved` },
+      { href: "/app/connect360/radar", title: "Opportunity Radar", detail: `${radarSaved} saved` },
+      { href: "/app/connect360/applications", title: "Application Center", detail: plural(applications, "open application", "open applications") },
+      ...(elite ? [{ href: "/app/connect360/intelligence/watchlist", title: "My Global Watchlist", detail: plural(watching, "item", "items") }] : []),
+    ] }] : applications ? [{ title: "My projects", tiles: [
+      { href: "/app/connect360/applications", title: "Application Center", detail: plural(applications, "open application", "open applications") },
     ] }] : []),
     { title: "My professional life", tiles: [
       { href: "/app/career", title: "Résumés", detail: plural(resumes, "résumé or letter", "résumés and letters") },
