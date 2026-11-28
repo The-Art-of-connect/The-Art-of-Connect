@@ -104,3 +104,9 @@ test("search returns the official feature first for everyday language", () => {
   assert.equal(searchEntries(SEARCH_INDEX, "connect 360")[0]?.title, "CONNECT 360");
   assert.equal(searchEntries(SEARCH_INDEX, "intelligence office")[0]?.title, "My Intelligence Office");
 });
+
+test("Journey is told never to purchase or change a membership (directive 42)", () => {
+  const s = brandInstructions();
+  assert.ok(s.includes("Never purchase, upgrade, downgrade or change a membership"));
+  assert.ok(s.includes("Elite Concierge is invitation-only"));
+});

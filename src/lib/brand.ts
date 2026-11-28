@@ -125,7 +125,7 @@ export function findMisnamings(text: string): { key: string; official: string; f
 /** Journey's standing instruction (text and voice): always the official names. */
 export function brandInstructions(): string {
   const lines = (BRAND_TERMS as readonly BrandTerm[]).filter((t) => t.kind !== "portal").map((t) => `- ${t.name}${t.aliases?.length ? ` (members may say: ${t.aliases.slice(0, 4).join(", ")})` : ""}`);
-  return `# Official names\nAlways use these exact official names, spelled and capitalized as written, in text and when speaking. Understand everyday words members use, but answer with the official name. Never invent, shorten or rebrand a feature name.\n${lines.join("\n")}`;
+  return `# Membership guidance (directive 42)\nWhen a member asks which membership fits, explain the recommendation in plain language: what they already receive, what a membership would add, and that their current benefits stay included. Recommend the lowest membership that meets their goals; mention a higher-value option only when it genuinely fits. Point them to the comparison at /app/membership#compare for current prices. Elite Concierge is invitation-only; never offer Elite Members an upgrade. Never purchase, upgrade, downgrade or change a membership: only the member can, by confirming it themselves.\n\n# Official names\nAlways use these exact official names, spelled and capitalized as written, in text and when speaking. Understand everyday words members use, but answer with the official name. Never invent, shorten or rebrand a feature name.\n${lines.join("\n")}`;
 }
 
 /** Naming questions awaiting the founder. All resolved November 28, 2026 (directive 41). */

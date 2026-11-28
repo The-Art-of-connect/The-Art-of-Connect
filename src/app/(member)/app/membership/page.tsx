@@ -7,6 +7,7 @@ import { UpdateCard } from "@/components/UpdateCard";
 import { MembershipChoices } from "@/components/MembershipChoices";
 import { getViewer, isInsidePreview } from "@/lib/auth";
 import { getCatalogue } from "@/lib/catalogue";
+import { MembershipCompare } from "@/components/MembershipCompare";
 import { getLaunchState } from "@/lib/launch";
 import { formatMoney, type Selection } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
@@ -20,9 +21,11 @@ const LOCKED: Record<string, string> = {
   journey: "Personalized Journey",
 };
 
-export default async function MyMembershipPage({ searchParams }: { searchParams: Promise<{ locked?: string }> }) {
+export default async function MyMembershipPage({ searchParams }: { searchParams: Promise<{ locked?: string; for?: string }> }) {
   const viewer = (await getViewer())!;
-  const locked = LOCKED[(await searchParams).locked ?? ""] ?? null;
+  const sp = await searchParams;
+  const locked = LOCKED[sp.locked ?? ""] ?? null;
+  const interest = sp.for === "business" || sp.for === "relationships" ? sp.for : null;
   const eliteDb = isInsidePreview(viewer) ? null : await createClient();
   const { data: eliteRow } = eliteDb ? await eliteDb.from("elite_candidates").select("status").eq("user_id", viewer.id).maybeSingle() : { data: null };
   const eliteInvited = eliteCanChoose(eliteRow?.status);
@@ -63,6 +66,7 @@ export default async function MyMembershipPage({ searchParams }: { searchParams:
         <h1 className="display mt-3 text-4xl">The Art of Becoming</h1>
         <p className="mt-3 max-w-2xl text-muted">Your complimentary foundation: The Art of Knowing Yourself, personal discovery, identity, self-love, emotional intelligence, boundaries, love languages, private journaling and your Discovery Portfolio. It’s yours, free, for as long as you like.</p>
         <MembershipChoices trialAvailable={Boolean(trialOpen)} />
+        <MembershipCompare interest={interest} />
       </>
     );
   }
@@ -90,13 +94,14 @@ export default async function MyMembershipPage({ searchParams }: { searchParams:
       <div className="mt-3"><UpdateCard label="Update card on file" /></div>
       {allAccess ? (
         <section className="theme-dark mt-10 rounded-[28px] border border-[#c9a96e]/50 p-8" style={{ background: "#1b1310" }}>
-          <p className="text-xs uppercase tracking-[0.25em] text-[#f0c98a]">Elite Membership — All Access</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-[#f0c98a]">Elite Concierge — All Access</p>
           <ul className="mt-4 grid gap-2 text-sm text-[#f5ecdf]/85 sm:grid-cols-2">{(allAccessPkg?.benefits ?? []).map((b) => <li key={b} className="flex gap-2"><span className="text-[#e8892b]" aria-hidden="true">✓</span>{b}</li>)}</ul>
           <p className="mt-5 text-xs text-[#f5ecdf]/60">Everything is included. The only optional extra is additional Journey voice time, offered at our cost in <Link href="/app/journey/plus" className="underline">Journey Plus</Link>. Billing questions: <Link href="/app/support" className="underline">priority support</Link>.</p>
         </section>
       ) : <>
       <h2 className="mt-14 mb-6 text-lg font-semibold">Add or remove experiences, or change billing</h2>
       <MemberBilling catalogue={catalogue} initial={initial} paymentsOpen={launch.payments_live} kind="change" eliteInvited={eliteInvited} />
+      <MembershipCompare interest={interest} />
       </>}
       {viewer.society && <SocietyPanel current={viewer.society} />}
     </>

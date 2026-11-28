@@ -9,9 +9,10 @@ import { trialEligiblePackage, TRIAL_DAYS } from "@/lib/trial";
 import { createClient } from "@/lib/supabase/server";
 import { isQaAccount } from "@/lib/qa-access";
 import type { GateFacts } from "@/lib/gate";
+import type { Current, Plan } from "@/lib/recommend";
 
 export type Offer = { slug: string; name: string; tagline: string; benefits: string[]; monthlyCents: number | null; href: string; trial: boolean };
-export type GateContext = { facts: GateFacts; offers: Record<string, Offer>; paymentsLive: boolean; trialDays: number };
+export type GateContext = { facts: GateFacts; offers: Record<string, Offer>; plans: Plan[]; current: Current; paymentsLive: boolean; trialDays: number };
 
 /** Everything the membership-aware pop-up needs (directive 36), from the viewer's real entitlements and live prices. */
 export const getGateContext = cache(async (): Promise<GateContext | null> => {
@@ -33,5 +34,8 @@ export const getGateContext = cache(async (): Promise<GateContext | null> => {
       live: { business: launch.business_live, relationships: launch.relationships_live }, preview,
     },
     offers, paymentsLive: launch.payments_live, trialDays: TRIAL_DAYS,
+    // The centralized plans and the member's current membership, for recommendations (directive 42).
+    plans: catalogue.packages.map((p) => ({ slug: p.slug, name: p.name, category: p.category, experiences: [...p.experiences], love_track: p.love_track, monthly_price_cents: p.monthly_price_cents, all_access: p.all_access, benefits: p.benefits })),
+    current: { packageSlug: membership?.packageSlug ?? null, level: membership?.level ?? "free", experiences: viewer.experiences, society: viewer.society ?? null },
   };
 });
