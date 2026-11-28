@@ -42,7 +42,7 @@ export const PREVIEW_GROUPS: { title: string; note: string; pages: [string, stri
       ["/app/relationships/onboarding/readiness", "Readiness questions", "Emotional & Relationship Readiness, question by question."],
       ["/app/readiness", "Readiness Profile", "Your private discovery report."],
       ["/app/relationships/exclusive", "The Exclusive Connection", "Mutual exclusivity, step by step."],
-      ["/app/relationships/calendar", "Just us — couples calendar", "Shared plans, private schedules, Google/Apple/Outlook."],
+      ["/app/relationships/calendar", "Our Calendar", "Shared plans, private schedules, Google/Apple/Outlook."],
     ],
   },
   {

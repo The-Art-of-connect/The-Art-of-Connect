@@ -63,6 +63,14 @@ function t<F extends Record<string, unknown>>(fields: F, build: (f: F) => EmailC
 
 /** Every email the platform sends. Inputs are deliberately minimal. */
 export const templates = {
+  partnerInvitation: (f: { name: string; link: string }) =>
+    t(f, ({ name, link }) => ({
+      subject: `${name} invited you to share The Personal Society`,
+      preheader: "A private space for the two of you: check-ins, shared goals and your calendar together.",
+      heading: "A private space, just for the two of you.",
+      paragraphs: [`${name} has invited you to join them in The Personal Society on The Art of Connect: a private space for couples to check in, set shared goals and plan time together.`, "Your own journal, reflections and personal discoveries always remain private to you. The link below works only for this email address and expires in seven days."],
+      action: { label: "Accept the invitation", url: link },
+    })),
   welcome: (f: { name?: string | null }) =>
     t(f, ({ name }) => ({
       subject: "Welcome to The Art of Connect",

@@ -68,7 +68,7 @@ export const MEMBER_PAGES: SearchEntry[] = [
   member("/app/relationships/onboarding", "In Love onboarding", "In Love", "Your relationship questionnaire, saved as you go.", "questionnaire onboarding questions profile"),
   member("/app/readiness", "Readiness Profile", "In Love", "Your relationship readiness results.", "readiness results profile assessment"),
   member("/app/relationships/exclusive", "The Exclusive Connection", "In Love", "Pause matchmaking when you’ve found your person.", "exclusive found my person pause"),
-  member("/app/relationships/calendar", "Couples calendar", "In Love", "Your shared calendar for date nights and trips.", "calendar couples date night trip schedule"),
+  member("/app/relationships/calendar", "Our Calendar", "In Love", "Your shared calendar for date nights and trips.", "calendar couples date night trip schedule"),
   member("/app/connect360", "CONNECT 360", "In Business", "Your private business workspace: collaborators, Business Deal Rooms, proposals, funding and research. Executive Private and Elite Concierge.", "connect 360 connect360 business workspace collaboration collaborators deal room proposals funding capital research executive elite"),
   member("/app/connect360/intelligence", "My Intelligence Office", "CONNECT 360", "Ask Journey to research an opportunity: cited sources, clear labels and a private report.", "my intelligence office intelligence research assignment report opportunity radar market research acquisition suppliers sources citations"),
   member("/app/connect360/rooms", "Business Deal Rooms", "CONNECT 360", "Private rooms for a business project: people, documents, milestones and professional review.", "deal room rooms project documents milestones due diligence"),
