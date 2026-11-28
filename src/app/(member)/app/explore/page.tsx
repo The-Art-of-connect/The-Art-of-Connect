@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { GatedLink } from "@/components/Upgrade";
+import { needForHref } from "@/lib/gate";
 import { NAV } from "@/lib/nav";
 import { getNavState } from "@/lib/nav-state";
 import { badgeFor, linkFor } from "@/components/nav/linkFor";
@@ -22,10 +23,10 @@ export default async function Explore() {
               {g.links.map((l) => {
                 const badge = badgeFor(l, state);
                 return (
-                  <li key={l.href + l.label}><Link href={linkFor(l, state)} className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 text-sm transition hover:bg-champagne/10">
+                  <li key={l.href + l.label}><GatedLink href={linkFor(l, state)} need={needForHref(l.href) ?? (l.access === "paid" ? { level: "one" } : null)} feature={{ name: l.label, what: l.note }} className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 text-sm transition hover:bg-champagne/10">
                     <span>{l.label}{l.note && <span className="block text-xs text-muted">{l.note}</span>}</span>
                     {badge && badge !== "Included" && <span className="shrink-0 rounded-full border border-champagne/60 px-2 py-0.5 text-[0.65rem] text-gold-deep">{badge}</span>}
-                  </Link></li>
+                  </GatedLink></li>
                 );
               })}
             </ul>

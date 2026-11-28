@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Experience, StaffRole } from "@/lib/experiences";
 import { isQaAccount } from "@/lib/qa-access";
 import { getLaunchState } from "@/lib/launch";
+import { env } from "@/lib/env";
 import { cookies, headers } from "next/headers";
 import { isPersona, PERSONAS, VIEW_AS_COOKIE, type Society } from "@/lib/view-as";
 import { INSIDE_PREVIEW_COOKIE, INSIDE_PREVIEW_ENABLED, ANONYMOUS_PREVIEW_ENABLED, INSIDE_PREVIEW_ID } from "@/lib/inside-preview";
@@ -107,6 +108,15 @@ export async function requireStaff(roles: StaffRole[] = ["owner", "admin", "supp
   return viewer;
 }
 
+/** The member page the visitor came from (same site only), so "Maybe later" returns them there. */
+async function cameFrom() {
+  try {
+    const ref = (await headers()).get("referer");
+    const u = ref ? new URL(ref) : null;
+    return u && u.host === new URL(env.siteUrl).host && u.pathname.startsWith("/app") && !u.pathname.startsWith("/app/unlock") ? u.pathname : "/app";
+  } catch { return "/app"; }
+}
+
 /** Guard for member experience pages: signed in, granted, and launched (staff may preview). */
 export async function requireExperience(experience: Experience) {
   const viewer = await getViewer();
@@ -117,7 +127,8 @@ export async function requireExperience(experience: Experience) {
   const staffPreview = isStaff(viewer) || isInsidePreview(viewer);
   // The owner-listed fictional QA account previews experiences that are not open to members yet.
   const qaPreview = granted && !live && !viewer.viewAs && (await isQaAccount(viewer.id));
-  if (!staffPreview && !qaPreview && !(granted && live)) redirect(granted ? "/app?locked=" + experience : `/app/membership?locked=${experience}`);
+  // Directive 36: never a silent redirect. Show the membership-aware pop-up for this experience, then return the member.
+  if (!staffPreview && !qaPreview && !(granted && live)) redirect(`/app/unlock?need=${experience}&from=${encodeURIComponent(await cameFrom())}`);
   return { viewer, preview: (staffPreview || qaPreview) && !(granted && live) };
 }
 
@@ -133,6 +144,6 @@ export async function requirePaidAccess(feature: string) {
   const viewer = await getViewer();
   if (!viewer) redirect(`/sign-in?next=/app`);
   const preview = isStaff(viewer) || isInsidePreview(viewer);
-  if (!preview && !hasPaidAccess(viewer)) redirect(`/app/membership?locked=${encodeURIComponent(feature)}`);
+  if (!preview && !hasPaidAccess(viewer)) redirect(`/app/unlock?need=paid&feature=${encodeURIComponent(feature)}&from=${encodeURIComponent(await cameFrom())}`);
   return { viewer, preview: preview && !hasPaidAccess(viewer) };
 }
