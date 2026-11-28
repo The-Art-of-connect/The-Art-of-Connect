@@ -20,7 +20,8 @@ export const getGateContext = cache(async (): Promise<GateContext | null> => {
   const [launch, membership, catalogue] = await Promise.all([getLaunchState(), getMembership(viewer), getCatalogue()]);
   const preview = isStaff(viewer) || isInsidePreview(viewer) || Boolean(launch.testSession) || (await isQaAccount(viewer.id));
   const db = await createClient();
-  const { data: trialOk } = db && !isInsidePreview(viewer) ? await db.rpc("trial_available", { p: viewer.id }) : { data: false };
+  // The owner preview shows the site as a brand-new member, who is eligible for the 15-day trial.
+  const { data: trialOk } = isInsidePreview(viewer) ? { data: true } : db ? await db.rpc("trial_available", { p: viewer.id }) : { data: false };
   const offers = Object.fromEntries(catalogue.packages.map((p) => [p.slug, {
     slug: p.slug, name: p.name, tagline: p.tagline, benefits: (p.benefits ?? []).slice(0, 3), monthlyCents: p.monthly_price_cents,
     href: `/membership?${selectionToQuery({ experiences: p.experiences, interval: "month", couples: p.love_track === "couple", addons: [], package: p.category === "exclusive" ? p.slug : null })}#build`,
