@@ -63,6 +63,7 @@ export function decide(need: Need, facts: GateFacts): GateDecision {
 
 /** What a member page needs, by address. Used for menus and links that don't carry their own requirement. */
 export function needForHref(href: string): Need | null {
+  if (href.startsWith("/app/connect360/intelligence/watchlist")) return { elite: true };
   if (href.startsWith("/app/connect360")) return { level: "executive" };
   if (href.startsWith("/app/elite/") || href === "/app/elite") return { elite: true };
   if (href.startsWith("/app/relationships") || href.startsWith("/app/readiness")) return { experience: "relationships" };

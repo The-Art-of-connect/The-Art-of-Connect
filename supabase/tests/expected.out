@@ -1399,3 +1399,62 @@ v62-5) Their partner still has their own share of the couple allowance (expect t
 t
 v62-6) Members cannot read the allowance function directly (expect error):
 ERROR:  permission denied for function journey_allowance_used
+v65-1) Elite members add companies, topics and people in public roles to My Global Watchlist (expect 1):
+1
+v65-2) Another member never sees someone else's watchlist (expect 0):
+0
+v65-3) Executive members see published opportunities only (expect 1):
+1
+v65-4) Members cannot create Opportunity Radar opportunities (expect error):
+ERROR:  new row violates row-level security policy for table "radar_opportunities"
+v65-5) Members cannot change an opportunity (expect 0 rows changed):
+0
+v65-6) One Society members do not see Opportunity Radar opportunities (expect 0):
+0
+v65-7) The Application Center is part of Executive Private and Elite Concierge (expect error):
+ERROR:  The Application Center is part of Executive Private and Elite Concierge.
+v65-8) Only an approved résumé can be linked (expect error):
+ERROR:  Link a résumé you have approved.
+v65-9) An application with an approved résumé, a deadline and a checklist saves and reads back (expect 1|preparing|2):
+1|preparing|2
+v65-10) Members save and dismiss Radar items privately (expect 1):
+1
+v65-11) Members cannot set their own reminder record (expect null):
+
+v65-12) Members cannot run the reminder job (expect error):
+ERROR:  permission denied for function application_deadline_tick
+v65-13) Another member never sees someone else's applications, history or Radar marks (expect 0|0|0):
+0|0|0
+v65-14) And cannot change them (expect 0 rows changed):
+0
+v65-15) A deadline within seven days creates one Message Center notice, once (expect 1, then 0, then 1):
+1
+0
+1
+v65-16) Status changes are kept as history (expect preparing,submitted and a submitted date):
+preparing,submitted
+t
+v65-17) History cannot be erased (expect error):
+ERROR:  permission denied for table member_application_history
+v65-18) The member reads back their own deadline reminder (expect 1):
+1
+v65-19) Members cannot link an unpublished opportunity (expect error):
+ERROR:  That opportunity is no longer open.
+v65-20) Opportunity Radar preferences save and read back (expect t|{grant}|film):
+t|{grant}|film
+v65-21) My Global Watchlist stays part of Elite Concierge (expect error):
+ERROR:  My Global Watchlist is part of Elite Concierge.
+v65-22) A second application with a deadline in two days (expect 1):
+1
+v65-23) Another member never sees someone else's reminders or Radar preferences (expect 0|0):
+0|0
+v65-24) The watchlist item reads back as saved, then can be removed (expect company|Example Studio, then 0):
+company|Example Studio
+0
+v65-25) A changed deadline earns exactly one more reminder (expect 1, 1, 0 and one notice):
+1
+1
+0
+1
+v65-26) The owner, signed in with two-factor, adds and publishes an opportunity (expect 1):
+1

@@ -17,6 +17,7 @@ export const ADMIN_SECTIONS: { href: string; label: string; roles: StaffRole[]; 
   { href: "/admin/circle", label: "Global Conversation Control Center", roles: ["owner", "admin", "moderator"], group: "People" },
   { href: "/admin/vault", label: "Document Vault security", roles: ["owner"], group: "People" },
   { href: "/admin/intelligence", label: "Intelligence Division", roles: ["owner"], group: "People" },
+  { href: "/admin/radar", label: "Opportunity Radar", roles: ["owner"], group: "People" },
   { href: "/admin/launch-center", label: "Business Launch Center states", roles: ["owner", "executive"], group: "People" },
   { href: "/admin/counselors", label: "Professional applications", roles: ["owner", "executive", "admin"], group: "People" },
   { href: "/admin/access", label: "Access & referrals", roles: ["owner", "executive", "admin"], group: "People" },
