@@ -82,7 +82,13 @@ export type TierLimit = {
   /** All-inclusive memberships: no message allowance and never a purchase prompt; fair use only. */
   unlimited?: boolean;
   fairUseDaily?: number;
+  /** Directive 51: a couple's per-person share of the monthly allowance (null: the whole allowance). */
+  personMonthlyLimitCents?: number | null;
 };
+
+/** Directive 51 allowance mode: a monthly dollar allowance at actual AI cost (no message count, never unlimited). */
+export const isAllowanceMode = (t: Pick<TierLimit, "monthlyMessages" | "unlimited" | "memberMonthlyLimitCents"> | null | undefined) =>
+  Boolean(t && !t.unlimited && t.monthlyMessages == null && t.memberMonthlyLimitCents != null);
 
 /** Usage counted against one allowance holder (a member, or a couple's shared account). */
 export type Usage = {
@@ -97,6 +103,8 @@ export type Usage = {
   companyMonthCents: number;
   /** Purchased messages still unexpired. */
   purchasedRemaining: number;
+  /** Allowance mode: this person's own text and voice cost this period (couples share a holder). */
+  personCents?: number;
 };
 
 export type Decision =
@@ -170,6 +178,15 @@ export function decide(input: {
   }
 
   const t = tier!;
+  if (isAllowanceMode(t)) {
+    const FAIR = "You've had a remarkable number of conversations with Journey today. To keep Journey attentive for every member, please continue a little later.";
+    if (u.dayMessages >= (t.fairUseDaily ?? 300)) return deny("Fair-use daily limit", FAIR);
+    const over = u.periodCents + reserve > t.memberMonthlyLimitCents! || (t.personMonthlyLimitCents != null && (u.personCents ?? 0) + reserve > t.personMonthlyLimitCents);
+    if (over && u.purchasedRemaining <= 0)
+      return deny("Allowance used", "You've used this month's included Journey allowance. Your conversations are saved, and your allowance renews on your next billing date.");
+    if (t.tierMonthlyLimitCents != null && u.tierMonthCents + reserve > t.tierMonthlyLimitCents) return deny("Membership spending limit reached");
+    return { allowed: true, model: rate.id, maxOutputTokens: t.maxOutputTokens, reserveCents: reserve, usesPurchased: over };
+  }
   if (t.unlimited) {
     for (const [v, name] of [[t.memberMonthlyLimitCents, "member fair-use ceiling"], [t.tierMonthlyLimitCents, "membership spending limit"]] as const)
       if (v === null || v < 0) return deny(`The ${name} is not set`);
@@ -199,6 +216,8 @@ export function decide(input: {
 export type AllowanceView = {
   /** All-inclusive (Elite): unlimited text, fair use applies. `remaining` is then a large sentinel. */
   unlimited?: boolean;
+  /** Directive 51 allowance mode: allowance, used and remaining are cents of actual AI cost. */
+  cents?: boolean;
   allowance: number;
   used: number;
   remaining: number;
@@ -209,6 +228,26 @@ export type AllowanceView = {
 };
 
 export const UNLIMITED_SENTINEL = 9999;
+
+/** Directive 51: the included allowance in dollars at actual cost. allowance/used/remaining are cents. */
+export function dollarView(limitCents: number, usedCents: number, purchasedRemaining: number, periodEnd: Date): AllowanceView {
+  const used = Math.max(0, usedCents);
+  const remaining = Math.max(0, limitCents - used);
+  const percentUsed = limitCents > 0 ? Math.min(100, Math.floor((used / limitCents) * 100)) : 100;
+  const notice = [...USAGE_NOTICE_THRESHOLDS].reverse().find((t) => percentUsed >= t) ?? null;
+  return { cents: true, allowance: limitCents, used: Math.min(used, limitCents), remaining, purchasedRemaining, percentUsed, resetsOn: periodEnd.toISOString().slice(0, 10), notice };
+}
+
+const usd = (cents: number) => `$${(Math.floor(cents) / 100).toFixed(2)}`;
+/** One wording for the balance everywhere: Home, Journey, membership settings and the Owner Portal. */
+export function balanceLabel(v: AllowanceView | null | undefined): string | null {
+  if (!v) return null;
+  if (v.cents) return `${usd(v.remaining)} of ${usd(v.allowance)} included this month`;
+  if (v.unlimited) return "Included in your membership";
+  return `${v.remaining} of ${v.allowance} messages left this month`;
+}
+/** Whether any included or purchased Journey usage remains. */
+export const hasBalance = (v: AllowanceView | null | undefined) => Boolean(v && (v.unlimited || v.remaining >= 1 || v.purchasedRemaining > 0));
 export function unlimitedView(used: number, periodEnd: Date): AllowanceView {
   return { unlimited: true, allowance: 0, used, remaining: UNLIMITED_SENTINEL, purchasedRemaining: 0, percentUsed: 0, resetsOn: periodEnd.toISOString().slice(0, 10), notice: null };
 }

@@ -31,7 +31,7 @@ export type GuideAnswers = Record<string, string | string[]>;
 
 /** Who is looking at a module, decided on the server. Free members always get the standardized, non-AI experience. */
 export type GuideAccess =
-  | { kind: "paid"; credits: number; available: boolean; reason?: string }
+  | { kind: "paid"; credits: number; balance?: string | null; available: boolean; reason?: string }
   | { kind: "owner"; available: boolean; reason?: string }
   | { kind: "free" };
 

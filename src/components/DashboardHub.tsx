@@ -69,7 +69,7 @@ export function DashboardHub({ state, discovery, experiences, next }: { state: N
           <Link href={state.paid ? "/app/journey" : "/membership"} className="glass lift flex flex-col justify-between p-6">
             <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy text-ivory"><NavIcon name="journey" /></span><p className="text-xs uppercase tracking-wide text-faint">Journey</p></div>
             {state.paid ? (
-              <><p className="display mt-3 text-2xl text-burgundy">{(state.credits ?? 0) >= 9999 ? "Unlimited Journey conversations" : `${state.credits ?? 0} Journey messages left`}</p><p className="mt-1 text-sm text-muted">{(state.credits ?? 0) >= 9999 ? "Included in your Elite Concierge membership. Talk with Journey whenever you like." : "Talk with Journey, or continue self-guided at no cost."}</p></>
+              <><p className="display mt-3 text-2xl text-burgundy">{state.balance ?? "Journey is included"}</p><p className="mt-1 text-sm text-muted">Your included Journey allowance, measured at actual AI cost. Self-guided learning never uses it.</p></>
             ) : (
               <><p className="display mt-3 text-2xl text-burgundy">Self-guided learning</p><p className="mt-1 text-sm text-muted">Every lesson is open to you. Journey is included with paid memberships.</p></>
             )}

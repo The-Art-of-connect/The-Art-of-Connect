@@ -363,8 +363,8 @@ v11-16) Executives see program metrics (expect 7|1):
 7|1
 v12-1) Journey starts switched off with paid usage unauthorized and no budgets (expect f|f|||f):
 f|f|||f
-v12-2) Allowances are seeded, one per membership; only Elite (all-inclusive) has unlimited text (expect 10|150|250|450|1):
-10|150|250|450|1
+v12-2) Directive 51: every active membership has a dollar allowance, none is unlimited (expect 10|personal-society:500,couples-membership:1000/500,professional-society:1000,dual-society:1000,executive-private:1500,elite-concierge:2500|0):
+10|personal-society:500,couples-membership:1000/500,professional-society:1000,dual-society:1000,executive-private:1500,elite-concierge:2500|0
 v12-3) Additional message packages are priced at cost: API cost plus card processing, 50c minimum (expect 25:50,50:57,100:83,250:160,500:289,1000:546):
 25:50,50:57,100:83,250:160,500:289,1000:546
 v12-4) A member cannot see Journey settings or unpublished package prices (expect 0|0):
@@ -842,8 +842,8 @@ v38-19) Connection preferences are private to the member (expect 1, then 0):
 0
 v38-20) Every non-Elite circle is open to all eligible members: no circle limits ordinary members by income (expect 0):
 0
-v39-1) Elite has unlimited text with no monthly message cap; voice stays at 300 minutes (expect t||300):
-t||300
+v39-1) Directive 51: Elite has a monthly AI allowance at actual cost, never unlimited, no voice-minute conversion (expect f|||t):
+f|||t
 v39-2) Only Elite is all-access (expect elite-concierge):
 elite-concierge
 v39-3) Voice minutes are priced at cost: 5c a minute plus 2.9% + 30c (expect 15:109,30:186,60:340,120:649):
@@ -1280,11 +1280,11 @@ v56-15) The QA console lists the fictional participants for the QA account (expe
 3
 v56-16) Anyone else gets nothing (expect 0):
 0
-v58-1) Dual Society with the Couples upgrade keeps at least the Couples Membership allowance (expect t|t):
+v58-1) Dual Society with the Couples upgrade keeps at least the Couples Membership allowance, per couple and per person (expect t|t):
 t|t
 v58-2) Without the couples experience, the plan's own allowance applies (expect t):
 t
-v58-3) Elite Concierge stays unlimited for couples (expect t):
+v58-3) Elite Concierge couples are on a dollar allowance, never unlimited (directive 51) (expect t):
 t
 v57-1) The schedule creates the owner-chosen number of sessions per day, each with a distinct topic (expect t|t):
 t|t
@@ -1386,3 +1386,16 @@ qa_day_budget
 ok
 v61-5) Members cannot call the check themselves (expect error):
 ERROR:  permission denied for function journey_qa_allowed
+v62-1) A Singles member can use Journey within the $5 allowance (expect t):
+t
+v62-2) The allowance is measured at actual cost: past $5 it is refused (expect refused:allowance):
+refused:allowance
+v62-3) Voice draws from the same balance (expect refused:allowance):
+refused:allowance
+v62-4) Couples: one partner cannot use more than $5 of the couple's $10 (expect t, then refused:allowance):
+t
+refused:allowance
+v62-5) Their partner still has their own share of the couple allowance (expect t):
+t
+v62-6) Members cannot read the allowance function directly (expect error):
+ERROR:  permission denied for function journey_allowance_used

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { balanceLabel } from "@/lib/journey-budget";
 import { getViewer, hasRole, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -71,6 +72,7 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
           lesson={lesson} discovery={disc?.key ?? null} mode={disc ? discoveryMode(disc.key) : "life"} />
         )}
       </div>
+      {!minutes && status.allowance?.cents && <p className="mt-4 text-sm text-muted">Your Journey allowance: {balanceLabel(status.allowance)}. Writing and voice share it, each at actual AI cost.</p>}
       {minutes && <p className="mt-4 text-sm text-muted">{minutes.remaining} of {minutes.total} voice minutes remaining this period. <Link href="/app/journey/plus" className="text-gold-deep underline">Additional minutes at our cost →</Link></p>}
       <LuxSection title="Designed around you">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

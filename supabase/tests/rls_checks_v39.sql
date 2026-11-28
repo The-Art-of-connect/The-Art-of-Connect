@@ -2,8 +2,8 @@
 reset role;
 reset request.jwt.claim.sub;
 reset request.jwt.claims;
-\echo 'v39-1) Elite has unlimited text with no monthly message cap; voice stays at 300 minutes (expect t||300):'
-select unlimited_messages, monthly_messages, monthly_voice_minutes from public.journey_tier_limits where package_slug = 'elite-concierge';
+\echo 'v39-1) Directive 51: Elite has a monthly AI allowance at actual cost, never unlimited, no voice-minute conversion (expect f|||t):'
+select unlimited_messages, monthly_messages, monthly_voice_minutes, member_monthly_limit_cents is not null from public.journey_tier_limits where package_slug = 'elite-concierge';
 \echo 'v39-2) Only Elite is all-access (expect elite-concierge):'
 select string_agg(slug, ',') from public.membership_packages where all_access;
 \echo 'v39-3) Voice minutes are priced at cost: 5c a minute plus 2.9% + 30c (expect 15:109,30:186,60:340,120:649):'

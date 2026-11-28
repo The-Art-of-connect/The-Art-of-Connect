@@ -25,7 +25,7 @@ import {
   type JourneyCapability, type JourneyMode, type PaidMembership,
 } from "@/lib/journey";
 import {
-  allowanceView, unlimitedView, costCents, decide, trimHistory, type AllowanceView, type JourneySettings, type TierLimit,
+  allowanceView, unlimitedView, costCents, decide, trimHistory, type AllowanceView, type JourneySettings, type TierLimit, dollarView, isAllowanceMode,
 } from "@/lib/journey-budget";
 
 /**
@@ -230,6 +230,7 @@ export async function sendJourneyMessage(input: {
       memberMonthlyLimitCents: t.member_monthly_limit_cents === null ? null : Number(t.member_monthly_limit_cents),
       tierMonthlyLimitCents: t.tier_monthly_limit_cents === null ? null : Number(t.tier_monthly_limit_cents),
       maxOutputTokens: t.max_output_tokens, model: t.model, unlimited: Boolean(t.unlimited_messages), fairUseDaily: t.fair_use_daily,
+      personMonthlyLimitCents: t.person_monthly_limit_cents == null ? null : Number(t.person_monthly_limit_cents),
     } : null;
   }
 
@@ -239,7 +240,14 @@ export async function sendJourneyMessage(input: {
 
   const { data: u } = await db.rpc("journey_holder_usage", { p_holder: holderId, p_period_start: periodStart.toISOString() });
   const usage = u as Record<string, number | string> | null;
-  const view = tier?.unlimited && usage ? unlimitedView(Number(usage.period_messages), periodEnd)
+  // Directive 51: text and voice draw from one dollar allowance at actual cost (holder and, for couples, each person).
+  const allowanceMode = isAllowanceMode(tier);
+  const spent = allowanceMode ? ((await db.rpc("journey_allowance_used", { p_holder: holderId, p_user: viewer.id, p_period_start: periodStart.toISOString() })).data as { holder_cents: number; person_cents: number } | null) : null;
+  const holderCents = Number(spent?.holder_cents ?? 0), personCents = Number(spent?.person_cents ?? 0);
+  const personalLimit = tier && allowanceMode ? Math.min(tier.memberMonthlyLimitCents!, tier.personMonthlyLimitCents ?? Infinity) : 0;
+  const personalUsed = tier && allowanceMode ? Math.max(tier.personMonthlyLimitCents != null ? personCents : 0, holderCents - (tier.memberMonthlyLimitCents! - personalLimit)) : 0;
+  const view = allowanceMode && usage ? dollarView(personalLimit, personalUsed, Number(usage.purchased_remaining), periodEnd)
+    : tier?.unlimited && usage ? unlimitedView(Number(usage.period_messages), periodEnd)
     : tier?.monthlyMessages != null && usage
     ? allowanceView(tier.monthlyMessages, Number(usage.period_messages), Number(usage.purchased_remaining), periodEnd)
     : null;
@@ -324,7 +332,7 @@ export async function sendJourneyMessage(input: {
     settings: cfg.settings, tier, ownerTest: input.ownerTest, promptChars, messageChars: input.message.length, hasAttachment: input.hasAttachment,
     usage: {
       inFlight: Number(usage?.in_flight ?? 0), minuteRequests: Number(usage?.minute ?? 0), dayMessages: Number(usage?.day ?? 0),
-      periodMessages: Number(usage?.period_messages ?? 0), periodCents: Number(usage?.period_cents ?? 0),
+      periodMessages: Number(usage?.period_messages ?? 0), periodCents: allowanceMode ? holderCents : Number(usage?.period_cents ?? 0), personCents,
       purchasedRemaining: Number(usage?.purchased_remaining ?? 0), tierMonthCents: 0, companyMonthCents: 0,
     },
   });
@@ -390,7 +398,8 @@ export async function sendJourneyMessage(input: {
     if (summarize) await db.from("discovery_analyses").insert({ user_id: viewer.id, scope: `category:${discovery.category}`, source: "journey", content: result.text.slice(0, 20000) });
   }
   if (input.ownerTest) return { ok: true, reply: result.text, conversationId, allowance: null, test: { id: testRunId, model: d.model, latencyMs, inputTokens: result.inputTokens, outputTokens: result.outputTokens, costCents: actual, instructionVersion: published?.version ?? null } };
-  const after = view?.unlimited ? unlimitedView(view.used + 1, periodEnd) : view && !d.usesPurchased
+  const after = view?.cents ? dollarView(view.allowance, view.used + (d.usesPurchased ? 0 : actual), view.purchasedRemaining - (d.usesPurchased ? 1 : 0), periodEnd)
+    : view?.unlimited ? unlimitedView(view.used + 1, periodEnd) : view && !d.usesPurchased
     ? allowanceView(view.allowance, view.used + 1, view.purchasedRemaining, periodEnd)
     : view && { ...view, purchasedRemaining: Math.max(0, view.purchasedRemaining - 1) };
   return { ok: true, reply: result.text, conversationId, allowance: after };
@@ -413,10 +422,11 @@ export async function getJourneyStatus(): Promise<{
     // Owner "View as": show exactly what this membership would see (a full, unused allowance).
     const pkg = PERSONAS[viewer.viewAs]?.packageSlug;
     if (!pkg || !db) return { ...none, enabled };
-    const { data: t } = await db.from("journey_tier_limits").select("monthly_messages, unlimited_messages").eq("package_slug", pkg).maybeSingle();
+    const { data: t } = await db.from("journey_tier_limits").select("monthly_messages, unlimited_messages, member_monthly_limit_cents, person_monthly_limit_cents").eq("package_slug", pkg).maybeSingle();
     const access = (cfg?.enhancedPackages ?? DEFAULT_ENHANCED_PACKAGES).includes(pkg) ? "enhanced" : "standard";
     const ends = new Date(Date.now() + 30 * 86_400_000);
-    return { access, enabled, packageSlug: pkg, allowance: t?.unlimited_messages ? unlimitedView(0, ends) : t?.monthly_messages != null ? allowanceView(t.monthly_messages, 0, 0, ends) : null };
+    const viewLimit = t && !t.unlimited_messages && t.monthly_messages == null && t.member_monthly_limit_cents != null ? Math.min(Number(t.member_monthly_limit_cents), t.person_monthly_limit_cents == null ? Infinity : Number(t.person_monthly_limit_cents)) : null;
+    return { access, enabled, packageSlug: pkg, allowance: viewLimit != null ? dollarView(viewLimit, 0, 0, ends) : t?.unlimited_messages ? unlimitedView(0, ends) : t?.monthly_messages != null ? allowanceView(t.monthly_messages, 0, 0, ends) : null };
   }
   if (viewer.roles.length) return { access: "staff", enabled, allowance: null, packageSlug: null };
   if (!db || !cfg) return none;
@@ -424,10 +434,18 @@ export async function getJourneyStatus(): Promise<{
   const access = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
   if (!m || access === "none") return { ...none, enabled };
   const [{ data: t }, { data: u }] = await Promise.all([
-    db.rpc("journey_effective_tier", { p_slug: m.membership.packageSlug ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle<{ monthly_messages: number | null; unlimited_messages: boolean }>(),
+    db.rpc("journey_effective_tier", { p_slug: m.membership.packageSlug ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle<{ monthly_messages: number | null; unlimited_messages: boolean; member_monthly_limit_cents: number | null; person_monthly_limit_cents: number | null }>(),
     db.rpc("journey_holder_usage", { p_holder: m.holderId, p_period_start: m.periodStart.toISOString() }),
   ]);
   const usage = u as Record<string, number | string> | null;
+  if (t && usage && isAllowanceMode({ monthlyMessages: t.monthly_messages, unlimited: t.unlimited_messages, memberMonthlyLimitCents: t.member_monthly_limit_cents })) {
+    const { data: sp } = await db.rpc("journey_allowance_used", { p_holder: m.holderId, p_user: viewer.id, p_period_start: m.periodStart.toISOString() });
+    const used = sp as { holder_cents: number; person_cents: number } | null;
+    const holderLimit = Number(t.member_monthly_limit_cents), personLimit = t.person_monthly_limit_cents == null ? null : Number(t.person_monthly_limit_cents);
+    const limit = Math.min(holderLimit, personLimit ?? Infinity);
+    const usedC = Math.max(personLimit != null ? Number(used?.person_cents ?? 0) : 0, Number(used?.holder_cents ?? 0) - (holderLimit - limit));
+    return { access, enabled, allowance: dollarView(limit, usedC, Number(usage.purchased_remaining), m.periodEnd), packageSlug: m.membership.packageSlug };
+  }
   const allowance = t?.unlimited_messages && usage ? unlimitedView(Number(usage.period_messages), m.periodEnd)
     : t?.monthly_messages != null && usage
     ? allowanceView(t.monthly_messages, Number(usage.period_messages), Number(usage.purchased_remaining), m.periodEnd)

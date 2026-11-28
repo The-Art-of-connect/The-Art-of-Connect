@@ -21,6 +21,21 @@ const STARTERS = [
 ];
 
 export function AllowanceMeter({ a }: { a: AllowanceView }) {
+  // Directive 51: one dollar allowance at actual AI cost for writing and voice.
+  if (a.cents) {
+    const usd = (c: number) => `$${(Math.floor(c) / 100).toFixed(2)}`;
+    return (
+      <div className="theme-dark rounded-2xl border border-gold/30 p-5" style={{ background: "var(--ink-2)" }}>
+        <p className="text-xs tracking-[0.25em] text-gold uppercase">Your monthly Journey allowance</p>
+        <p className="mt-2"><span className="display text-5xl text-gold-bright">{usd(a.remaining)}</span> <span className="text-muted">of {usd(a.allowance)} remaining</span></p>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={a.percentUsed} aria-valuemin={0} aria-valuemax={100} aria-label="Allowance used">
+          <div className="h-full rounded-full" style={{ width: `${a.percentUsed}%`, background: "linear-gradient(90deg, var(--champagne-deep), var(--champagne))" }} />
+        </div>
+        <p className="mt-2 flex justify-between text-xs text-faint"><span>Writing and voice, at actual AI cost · renews {new Date(a.resetsOn + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric" })}</span><span>{a.percentUsed}% used</span></p>
+        {a.notice && <p className="mt-3 rounded-xl border border-gold/30 px-3 py-2 text-xs text-gold-bright">{a.notice === 100 ? "You've used this month's included allowance. Your conversations are saved, and nothing is ever charged automatically." : `You've used ${a.notice}% of this month's allowance.`}</p>}
+      </div>
+    );
+  }
   if (a.unlimited) return (
     <div className="theme-dark rounded-2xl border border-gold/40 p-5" style={{ background: "#1b1310" }}>
       <p className="text-xs tracking-[0.25em] text-gold uppercase">Elite Concierge · Journey</p>
