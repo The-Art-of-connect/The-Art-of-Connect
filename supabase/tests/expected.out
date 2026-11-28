@@ -1238,3 +1238,41 @@ v55-12) Someone outside the couple sees no check-ins (expect 0):
 0
 v55-13) Nor can they write into the couple (expect error):
 ERROR:  new row violates row-level security policy for table "couple_checkins"
+v56-1) The QA account sees only the compatible, test-verified fictional participant: never real members, incompatible preferences or unverified accounts (expect Marcus|f|t):
+Marcus|f|t
+v56-2) The QA account cannot reach a real member (expect error):
+ERROR:  new row violates row-level security policy for table "connections"
+v56-3) A real member never sees fictional participants (expect 0):
+0
+v56-4) Only the QA account may act for a participant (expect error):
+ERROR:  QA_NOT_ALLOWED
+v56-5) Members cannot give themselves test verification (expect error):
+ERROR:  Not permitted to change these account fields
+v56-6) Test verification never helps a real account (expect f):
+f
+v56-7) The QA account cannot act as a real member (expect error):
+ERROR:  QA_NOT_A_PARTICIPANT
+v56-8) A participant expresses interest; the QA account sees it (expect ok|Marcus|pending|received):
+ok
+Marcus|pending|received
+v56-9) The QA account accepts, the participant writes, the QA account receives it (expect ok|1):
+ok
+1
+v56-10) The participant invites the QA account to The Exclusive Connection; the QA account accepts; both choose to become a couple (expect ok|accepted|waiting|couple):
+ok
+accepted
+waiting
+couple
+v56-11) Shared goals and calendar from the partner; the partner's private check-in stays private (expect t, then 1|1|0):
+t
+1|1|0
+v56-12) A shared check-in reaches the QA account (expect 1):
+t
+1
+v56-13) Blocking and reporting by the participant (expect t|1):
+t
+t|1
+v56-14) Reset returns both to single, unblocked and unconnected, so scenarios can be repeated (expect ok|f|0|0|Marcus):
+ok
+f|0|0
+Marcus

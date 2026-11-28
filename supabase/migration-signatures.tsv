@@ -85,3 +85,4 @@
 20270130000001_membership_distinctions.sql	exists (select 1 from pg_proc where proname = 'member_marks')
 20270130000002_intel_level_expiry.sql	exists (select 1 from pg_proc where proname = 'intel_level' and prosrc ilike '%expires_at%')
 20270131000001_in_love_experience.sql	exists (select 1 from pg_proc where proname = 'become_couple')
+20270201000001_qa_cast.sql	exists (select 1 from pg_proc where proname = 'qa_act')
