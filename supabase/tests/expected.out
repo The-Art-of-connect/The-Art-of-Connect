@@ -1110,3 +1110,15 @@ v48-8) Members cannot change scan results (expect 0 rows changed):
 0
 v48-9) Only the owner reads security self-test results (expect 0):
 0
+v49-1) An Executive member sees members who opted in and welcome requests, never themselves (expect 1|0):
+1|0
+v49-2) The directory returns collaboration fields only (expect interests populated):
+{operational_partnership,expansion}
+v49-3) Collaborators the owner may invite: an accepted conversation with a paid member (expect 1):
+1
+v49-4) A Deal Room participant sees the room's people (expect t):
+t
+v49-5) A One Society member gets no directory, and outsiders see no room participants (expect 0|0):
+0|0
+v49-6) A member who stops welcoming requests leaves the directory (expect 0):
+0

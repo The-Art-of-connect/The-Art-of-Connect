@@ -76,6 +76,10 @@ export const NAV: NavGroup[] = [
       { href: "/app/business", label: "My business dashboard", access: "paid" },
       { href: "/app/business/board", label: "Business Connection Board", access: "paid" },
       { href: "/app/business/inbox", label: "Private business inbox", access: "paid" },
+      { href: "/app/connect360", label: "CONNECT 360", note: "Executive & Elite · Deal Rooms and collaboration", access: "paid" },
+      { href: "/app/connect360/rooms", label: "Business Deal Rooms", note: "Executive & Elite", access: "paid" },
+      { href: "/app/career", label: "My Professional Readiness", note: "Résumé Builder", access: "member" },
+      { href: "/app/launch", label: "Business Launch Center", note: "All 50 states and D.C.", access: "member" },
     ],
   },
   {

@@ -5,16 +5,17 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata = { title: "Private business inbox" };
 export const dynamic = "force-dynamic";
 
-const STATUS: Record<string, string> = { requested: "Request", accepted: "Connected", declined: "Declined", closed: "Closed", blocked: "Closed" };
+const STATUS: Record<string, string> = { requested: "Request", more_info: "More information requested", accepted: "Connected", declined: "Declined", closed: "Closed", blocked: "Closed", withdrawn: "Withdrawn" };
+const KIND: Record<string, string> = { collaboration: "Collaboration request", proposal: "Proposal" };
 
 export default async function BusinessInbox({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   const { viewer } = await requireExperience("business");
   const view = (await searchParams).view ?? "all";
   const supabase = (await createClient())!;
   const biz = supabase.schema("business");
-  const { data: convs } = await biz.from("conversations").select("id, post_id, requester_id, recipient_id, status, outcome, requester_saved, recipient_saved, last_message_at").order("last_message_at", { ascending: false }).limit(100);
+  const { data: convs } = await biz.from("conversations").select("id, post_id, kind, requester_id, recipient_id, status, outcome, requester_saved, recipient_saved, last_message_at").order("last_message_at", { ascending: false }).limit(100);
   const list = (convs ?? []).filter((c) => {
-    if (view === "requests") return c.status === "requested" && c.recipient_id === viewer.id;
+    if (view === "requests") return ["requested", "more_info"].includes(c.status) && c.recipient_id === viewer.id;
     if (view === "saved") return c.requester_id === viewer.id ? c.requester_saved : c.recipient_saved;
     return true;
   });
@@ -50,7 +51,7 @@ export default async function BusinessInbox({ searchParams }: { searchParams: Pr
                 <Link href={`/app/business/inbox/${c.id}`} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-champagne/10">
                   <span>
                     <span className={`block ${n ? "font-semibold" : ""}`}>{nameOf(other)}</span>
-                    <span className="block text-xs text-muted">{titleOf(c.post_id) ? `Re: ${titleOf(c.post_id)} · ` : ""}{c.requester_id === viewer.id ? "You reached out" : "Reached out to you"} · {new Date(c.last_message_at).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
+                    <span className="block text-xs text-muted">{KIND[c.kind] ? `${KIND[c.kind]} · ` : ""}{titleOf(c.post_id) ? `Re: ${titleOf(c.post_id)} · ` : ""}{c.requester_id === viewer.id ? "You reached out" : "Reached out to you"} · {new Date(c.last_message_at).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
                     {n > 0 && <span className="rounded-full bg-champagne px-2 py-0.5 text-xs font-semibold text-espresso">{n} new</span>}
