@@ -14,8 +14,8 @@ import { JourneyGuide } from "@/components/JourneyGuide";
 import { guideAccess } from "@/lib/journey-guide-access";
 import { guideFromLesson } from "@/lib/journey-guide";
 
-/** A founder-written curriculum of The Art of Self: lessons, interactive questions, two learning experiences and a written analysis. */
-export async function CurriculumPage({ section: SECTION, backHref = "/app/know-yourself#art-of-self", backLabel = "The Art of Self", intro }: { section: string; backHref?: string; backLabel?: string; intro?: React.ReactNode }) {
+/** A founder-written curriculum of The Art of Knowing Yourself: lessons, interactive questions, two learning experiences and a written analysis. */
+export async function CurriculumPage({ section: SECTION, backHref = "/app/know-yourself#art-of-self", backLabel = "The Art of Knowing Yourself", intro }: { section: string; backHref?: string; backLabel?: string; intro?: React.ReactNode }) {
   const viewer = (await getViewer())!;
   const supabase = await createClient();
   const c = (await getCurriculum(supabase, SECTION))!;
@@ -45,7 +45,7 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
       {intro}
 
       <section className="mx-auto mt-12 max-w-3xl text-center">
-        <p className="eyebrow">The Art of Self · Founding Curriculum</p>
+        <p className="eyebrow">The Art of Knowing Yourself · Founding Curriculum</p>
         {c.purpose.map((p, i) => <p key={i} className={i === 0 ? "display mt-4 text-2xl leading-snug sm:text-3xl" : "mt-4 text-muted"}>{p}</p>)}
         <div className="mx-auto mt-8 h-px w-24 bg-gold" />
         <p className="display mt-6 text-2xl italic text-burgundy">{c.philosophy}</p>

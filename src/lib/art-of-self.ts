@@ -1,4 +1,4 @@
-/** The Art of Self: each section's signature banner (approved artwork) and where it lives. */
+/** The Art of Knowing Yourself: each section's signature banner (approved artwork) and where it lives. */
 export type SelfSection = { key: string; title: string; tagline: string; banner: string; href: string | null; note?: string };
 
 export const SELF_SECTIONS: SelfSection[] = [

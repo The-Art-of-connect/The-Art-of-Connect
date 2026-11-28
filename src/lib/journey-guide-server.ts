@@ -26,7 +26,7 @@ export async function resolveGuide(db: Db | null, ref: string): Promise<GuideMod
     const pillar = PILLARS.find((p) => p.key === m.pillar);
     const lesson = LESSONS.find((l) => l.pillar === m.pillar);
     return {
-      ref, title: m.title, place: `The Art of Self · Who Am I? · ${pillar?.title ?? ""}`, href: `/app/know-yourself/who-am-i/${m.slug}`,
+      ref, title: m.title, place: `The Art of Knowing Yourself · Who Am I? · ${pillar?.title ?? ""}`, href: `/app/know-yourself/who-am-i/${m.slug}`,
       objectives: [m.intro, pillar?.line ?? "", ...(lesson ? [lesson.title, lesson.practice] : [])].filter(Boolean),
       questions: m.questions.map((q) => q.type === "values"
         ? { key: q.key, prompt: q.prompt, kind: "multi" as const, max: q.max ?? 5, options: (q.options ?? VALUES).map((v) => ({ id: v, label: v })) }
@@ -37,7 +37,7 @@ export async function resolveGuide(db: Db | null, ref: string): Promise<GuideMod
     const area = AREAS.find((x) => x.key === b);
     if (!area) return null;
     return {
-      ref, title: `Boundaries · ${area.title}`, place: "The Art of Self · Boundaries & non-negotiables", href: `/app/know-yourself/boundaries#${area.key}`,
+      ref, title: `Boundaries · ${area.title}`, place: "The Art of Knowing Yourself · Boundaries & non-negotiables", href: `/app/know-yourself/boundaries#${area.key}`,
       objectives: [area.intro, "Boundaries are a kindness to yourself and to others; they describe what the member will do, not what others must do."],
       questions: [
         { key: boundaryKey(area.key, "core_values"), prompt: area.values, kind: "text" },
@@ -49,7 +49,7 @@ export async function resolveGuide(db: Db | null, ref: string): Promise<GuideMod
   }
   if (a === "love-languages" && !b) {
     return {
-      ref, title: "How I give and receive love", place: "The Art of Self · Love languages", href: "/app/know-yourself/love-languages#profile",
+      ref, title: "How I give and receive love", place: "The Art of Knowing Yourself · Love languages", href: "/app/know-yourself/love-languages#profile",
       objectives: ["Discover how the member most naturally feels loved and expresses love.", "Love languages are preferences that can change with life's seasons: never a fixed type, a label, or the deciding factor in compatibility."],
       questions: [
         { key: "receive", prompt: "Which expressions of love help you feel most loved, from most to least meaningful?", kind: "rank", options: LOVE_OPTIONS },
@@ -62,7 +62,7 @@ export async function resolveGuide(db: Db | null, ref: string): Promise<GuideMod
   }
   if (a === "ei" && b === "profile") {
     return {
-      ref, title: "My Emotional Intelligence Profile", place: "The Art of Self · Emotional Intelligence", href: "/app/know-yourself/emotional-intelligence",
+      ref, title: "My Emotional Intelligence Profile", place: "The Art of Knowing Yourself · Emotional Intelligence", href: "/app/know-yourself/emotional-intelligence",
       objectives: ["Build a private picture of the member's emotional strengths, growth areas, triggers and communication preferences, in their own words."],
       questions: EI_PROFILE.map((p) => ({ key: p.key, prompt: p.label, kind: "text" as const })),
     };
@@ -71,7 +71,7 @@ export async function resolveGuide(db: Db | null, ref: string): Promise<GuideMod
     const area = EI_AREAS.find((x) => x.slug === b);
     if (!area) return null;
     return {
-      ref, title: area.title, place: "The Art of Self · Emotional Intelligence", href: `/emotional-intelligence/${area.slug}`,
+      ref, title: area.title, place: "The Art of Knowing Yourself · Emotional Intelligence", href: `/emotional-intelligence/${area.slug}`,
       objectives: [area.tagline, ...area.topics.map((t) => t.title)].slice(0, 10),
       questions: area.reflections.map((r) => ({ key: r.key, prompt: r.prompt, kind: "text" as const })),
     };

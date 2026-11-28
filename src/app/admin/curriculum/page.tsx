@@ -14,7 +14,7 @@ export default async function CurriculumStudio() {
   const { data } = supabase ? await supabase.from("curriculum_versions").select("section, version, status").order("version", { ascending: false }) : { data: [] };
   return (
     <>
-      <PageHeader eyebrow="The Art of Self" title="Curriculum Studio" />
+      <PageHeader eyebrow="The Art of Knowing Yourself" title="Curriculum Studio" />
       <p className="-mt-4 mb-6 max-w-3xl text-sm text-muted">Edit lessons, questions, guided answers, analysis wording and Journey&rsquo;s teaching instructions, with no code. Every save becomes a new version, and members only see what you publish.</p>
       <Panel title="My Daily Sanctuary">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">

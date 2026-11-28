@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { selfSection } from "@/lib/art-of-self";
 
-/** The approved signature banner for a section of The Art of Self, with optional actions beneath. */
+/** The approved signature banner for a section of The Art of Knowing Yourself, with optional actions beneath. */
 export function SelfBanner({ section, actions }: { section: string; actions?: { href: string; label: string; primary?: boolean }[] }) {
   const s = selfSection(section);
   return (
