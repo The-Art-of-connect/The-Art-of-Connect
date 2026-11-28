@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GrowthPanel } from "@/components/GrowthPanel";
 import { EliteBadge } from "@/components/EliteBadge";
 import { EliteHome } from "@/components/EliteHome";
 import { getViewer, hasPaidAccess, isInsidePreview, isStaff } from "@/lib/auth";
@@ -73,6 +74,7 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
         <h1 className="display mt-3 text-4xl leading-tight sm:text-5xl">What would you like to experience today?</h1>
         <div className="mt-6 max-w-2xl"><AskJourney level={membership?.level ?? "free"} journey={nav.paid} /></div>
         <div className="mt-8"><ExperienceDoors love={viewer.experiences.includes("relationships")} business={viewer.experiences.includes("business")} /></div>
+        {!isInsidePreview(viewer) && <div className="mt-8"><GrowthPanel userId={viewer.id} compact /></div>}
       </section>
       {isElite ? <EliteHome name={viewer.displayName} since={badge?.issued_at ? new Date(badge.issued_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null} /> : <LivingHero headingLevel="h2"
         slides={[

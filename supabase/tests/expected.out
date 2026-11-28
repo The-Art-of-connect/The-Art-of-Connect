@@ -1308,3 +1308,37 @@ v57-10) A member who turned pop-ups off still has the Message Center invitation,
 1|0
 v57-11) Live audio cannot be switched on without an approved provider (expect error):
 ERROR:  new row for relation "circle_live_settings" violates check constraint "live_audio_needs_provider"
+v59-1) Members choose and change their reflection frequency (expect quarterly, then annual):
+quarterly
+annual
+v59-2) Milestones are private unless shared with a partner (expect 1 private + 1 shared, partner sees 1):
+2
+1
+v59-3) Nobody else sees them (expect 0):
+0
+v59-4) Members cannot create "platform" milestones or forge growth reports (expect error, error):
+ERROR:  new row violates row-level security policy for table "milestones"
+ERROR:  permission denied for table growth_reports
+v59-5) Relationship status changes keep a private history (expect 2):
+2
+v59-6) An on-demand reflection is built from real records only, with its milestones and relationship changes (expect t, then 1|t|2|2):
+t
+1|t|2|2
+v59-7) One on-demand reflection a day (expect error):
+ERROR:  You can request one reflection a day.
+v59-8) Either partner can leave alone; access to the shared space ends immediately (expect left|0|0):
+left
+0|0
+v59-9) Leaving keeps the member's private reflections, growth reports and milestones (expect 1|1|2):
+1|1|2
+v59-10) Singles matchmaking is not switched on automatically (expect f or no profile):
+f
+v59-11) The former partner is told respectfully, and keeps the shared history (expect 1|1):
+1|1
+v59-12) The partner no longer sees the leaver's shared milestones (expect 0):
+0
+v59-13) A private (safety) departure sends no message to the former partner (expect left|0):
+left
+0
+v59-14) Scheduled reflections follow each member's frequency, and paused members get none (expect t|1):
+t|1
