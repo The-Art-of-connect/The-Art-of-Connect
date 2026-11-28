@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bestValue, mostComprehensive, recommendedForYou, recommendFor, unlocks, type Current, type Plan } from "../src/lib/recommend.ts";
+import { bestValue, isLevelUp, mostComprehensive, recommendedForYou, recommendFor, unlocks, withCouplesOptions, type Current, type Plan } from "../src/lib/recommend.ts";
 import { decide, needForHref, type Need } from "../src/lib/gate.ts";
 import { levelOf } from "../src/lib/membership-level.ts";
 
 // Founder directive 42: every membership level against every restricted feature, from the centralized plans.
-const PLANS: Plan[] = [
+const PUBLISHED: Plan[] = [
   { slug: "professional-society", name: "The Professional Society", category: "single", experiences: ["business"], monthly_price_cents: 2999 },
   { slug: "personal-society", name: "The Personal Society", category: "single", experiences: ["relationships"], love_track: "single", monthly_price_cents: 3999 },
   { slug: "couples-membership", name: "Couples Membership", category: "single", experiences: ["relationships"], love_track: "couple", monthly_price_cents: 5999 },
@@ -13,6 +13,8 @@ const PLANS: Plan[] = [
   { slug: "executive-private", name: "Executive Private", category: "exclusive", experiences: ["business", "counseling", "relationships"], monthly_price_cents: 9999 },
   { slug: "elite-concierge", name: "Elite Concierge", category: "exclusive", experiences: ["business", "counseling", "relationships"], monthly_price_cents: 24999, all_access: true },
 ];
+// Every published plan plus the Couples upgrade options (price pending the founder's approval).
+const PLANS = withCouplesOptions(PUBLISHED, null);
 const member = (packageSlug: string | null, society: Current["society"] = "singles"): Current => {
   const p = PLANS.find((x) => x.slug === packageSlug);
   const experiences = p ? p.experiences : ["counseling"];
@@ -35,7 +37,7 @@ test("every level × every restricted feature: the recommendation always unlocks
     assert.ok(unlocks(r.recommended!.plan, need, c), `${who} → ${what}: ${r.recommended!.plan.slug} unlocks it`);
     // Every plan the member already holds must still be included after the upgrade.
     for (const e of c.experiences.filter((x) => x !== "counseling")) assert.ok(r.recommended!.plan.experiences.includes(e), `${who} → ${what}: keeps ${e}`);
-    const cheaper = PLANS.filter((p) => p.slug !== c.packageSlug && !p.all_access && unlocks(p, need, c) && (p.monthly_price_cents ?? 0) < (r.recommended!.plan.monthly_price_cents ?? 0)
+    const cheaper = PLANS.filter((p) => p.slug !== c.packageSlug && !p.all_access && unlocks(p, need, c) && isLevelUp(PLANS.find((x) => x.slug === c.packageSlug) ?? null, p) && (p.monthly_price_cents ?? Infinity) < (r.recommended!.plan.monthly_price_cents ?? Infinity)
       && c.experiences.filter((x) => x !== "counseling").every((e) => p.experiences.includes(e))
       && (!p.love_track || c.society === "business" || (c.society === "couples") === (p.love_track === "couple")));
     assert.deepEqual(cheaper.map((p) => p.slug), [], `${who} → ${what}: nothing cheaper unlocks it`);

@@ -7,6 +7,8 @@ import { getLaunchState } from "@/lib/launch";
 import { normalizeSelection, quote } from "@/lib/pricing";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
+import { losses, type Plan } from "@/lib/recommend";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const body = z.object({
   experiences: z.array(z.enum(["business", "counseling", "relationships"])).max(3),
@@ -14,6 +16,8 @@ const body = z.object({
   couples: z.boolean(),
   addons: z.array(z.string().max(40)).max(20),
   package: z.string().max(40).nullable().optional(),
+  /** Directive 44: moving to a plan that removes anything needs the member's explicit confirmation. */
+  acknowledgeLoss: z.boolean().optional(),
 });
 
 /**
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
   const supabase = (await createClient())!;
   const { data: sub } = await supabase
     .from("subscriptions")
-    .select("stripe_subscription_id, stripe_product_id, stripe_membership_item_id, promotion_code")
+    .select("stripe_subscription_id, stripe_product_id, stripe_membership_item_id, promotion_code, tier_slug")
     .eq("user_id", viewer.id)
     .eq("kind", "member")
     .in("status", ["active", "trialing", "past_due"])
@@ -45,6 +49,16 @@ export async function POST(request: NextRequest) {
   const q = quote(catalogue, selection);
   if (!q.priced || !q.pkg || q.recurringTotal == null) return NextResponse.json({ error: "This membership is not available." }, { status: 409 });
   const pkg = q.pkg;
+  // Directive 44: never silently remove a benefit. List exactly what would be lost and ask the member to confirm.
+  const admin = createAdminClient();
+  const { data: limits } = admin ? await admin.from("journey_tier_limits").select("package_slug, monthly_messages, unlimited_messages") : { data: null };
+  const allowance = (slug: string) => { const l = (limits ?? []).find((x) => x.package_slug === slug); return l ? (l.unlimited_messages ? null : l.monthly_messages) : undefined; };
+  const toPlan = (p: (typeof catalogue.packages)[number]): Plan => ({ slug: p.slug, name: p.name, category: p.category, experiences: [...p.experiences], love_track: p.love_track, monthly_price_cents: p.monthly_price_cents, all_access: p.all_access, journeyMessages: allowance(p.slug) });
+  const fromPkg = catalogue.packages.find((p) => p.slug === sub.tier_slug);
+  const lost = fromPkg ? losses(toPlan(fromPkg), toPlan(pkg)) : [];
+  if (lost.length && !parsed.data.acknowledgeLoss) {
+    return NextResponse.json({ error: `This change would remove ${lost.join(", ")}. Your history and records always stay with you.`, losses: lost }, { status: 409 });
+  }
 
   const { stripe, reason } = await getStripe();
   if (!stripe) return NextResponse.json({ error: reason }, { status: 503 });

@@ -49,6 +49,7 @@ changes an earlier one, the later one wins.
 | 43 | [Live Q&A and Member Notifications](43-live-qa-and-member-notifications.md) | Two live Q&A sessions a day to start, owner-adjustable schedule, branded invitation and Message Center, continuous participation. |
 | 44 | [Progressive Membership Benefits](44-progressive-membership-benefits.md) | **Permanent.** Every level up adds value and never removes a benefit, allowance or record. |
 | 45 | [Lifelong Growth, Milestones and Journey Continuity](45-lifelong-growth-milestones-journey-continuity.md) | **Permanent.** Chronological growth record, member-chosen report frequency, milestones, Journey continuity. |
+| 46 | [Lifelong Couples Experience and Professional Independence](46-lifelong-couples-and-professional-independence.md) | **Permanent.** Couples at every stage; couples keep the Couples experience at every membership level; each partner stays independent. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

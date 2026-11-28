@@ -1280,3 +1280,9 @@ v56-15) The QA console lists the fictional participants for the QA account (expe
 3
 v56-16) Anyone else gets nothing (expect 0):
 0
+v58-1) Dual Society with the Couples upgrade keeps at least the Couples Membership allowance (expect t|t):
+t|t
+v58-2) Without the couples experience, the plan's own allowance applies (expect t):
+t
+v58-3) Elite Concierge stays unlimited for couples (expect t):
+t
