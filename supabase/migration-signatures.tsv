@@ -93,4 +93,5 @@
 20270205000001_qa_journey_testing.sql	exists (select 1 from pg_proc where proname = 'journey_qa_allowed')
 20270206000001_journey_dollar_allowances.sql	exists (select 1 from pg_proc where proname = 'journey_allowance_used')
 20270207000001_couples_reflections_community.sql	exists (select 1 from pg_proc where proname = 'in_active_couple')
+20270207100001_booking_and_formation.sql	exists (select 1 from pg_proc where proname = 'counseling_request_appointment')
 20270207300001_matchmaking_verification_required.sql	exists (select 1 from public.platform_settings where key = 'require_identity_for_matchmaking' and value = 'true')
