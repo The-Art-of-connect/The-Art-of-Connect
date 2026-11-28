@@ -49,3 +49,39 @@ export async function registerExaWebhook(confirm: boolean, replace: boolean): Pr
   await audit("intel.exa_webhook_registered", { ok: r.ok, replaced: existing.length, url });
   return r.ok ? { ok: true, id: r.id, secret: r.secret, url } : { ok: false, message: r.detail };
 }
+
+// ─── Testing mode and the integration self-test ────────────────────────────────────────────
+import type { Result } from "@/lib/vault-selftest";
+
+/** Turns the division and both providers on or off for testing. Testing-only mode and the approved limits always stay in force. */
+export async function setIntelTesting(on: boolean): Promise<{ ok: boolean; message: string }> {
+  const viewer = await requireStaff(["owner"]);
+  const db = createAdminClient();
+  if (!db) return { ok: false, message: "The database isn't available." };
+  const { error } = await db.from("intel_settings").update({ enabled: on, parallel_enabled: on, exa_enabled: on, testing_only: true, updated_by: viewer.id, updated_at: new Date().toISOString() }).eq("id", true);
+  if (error) return { ok: false, message: "That couldn't be saved." };
+  await db.from("audit_log").insert({ actor_id: viewer.id, action: "intel.testing_mode", target_table: "intel_settings", target_id: null, details: { on } });
+  return { ok: true, message: on ? "Testing mode is on: research runs only for the owner, staff and test accounts, within $25 a month and $5 a day." : "Research is off." };
+}
+
+export type IntelRun = { id: string; results: Result[]; finished: boolean; status: string };
+
+export async function runIntelSelfTest(phase: "A" | "B", runId?: string): Promise<IntelRun | { error: string }> {
+  const viewer = await requireStaff(["owner"]);
+  const db = createAdminClient();
+  if (!db) return { error: "The database isn't available." };
+  const { phaseA, phaseB } = await import("@/lib/intel-selftest");
+  if (phase === "A") {
+    const site = (await webhookUrl()).replace(/\/api\/intel\/webhooks\/exa$/, "");
+    const results = await phaseA(site);
+    const { data } = await db.from("intel_security_runs").insert({ started_by: viewer.id, results }).select("id").single();
+    return { id: data!.id, results, finished: false, status: "running" };
+  }
+  const { data: run } = await db.from("intel_security_runs").select("id, results").eq("id", runId ?? "").maybeSingle();
+  if (!run) return { error: "Unknown run." };
+  const all = [...(run.results as Result[]), ...(await phaseB(viewer.id))];
+  const status = all.some((x) => x.outcome === "fail") ? "failed" : "complete";
+  await db.from("intel_security_runs").update({ results: all, status, finished_at: new Date().toISOString() }).eq("id", run.id);
+  await db.from("audit_log").insert({ actor_id: viewer.id, action: "intel.selftest", target_table: "intel_security_runs", target_id: run.id, details: { passed: all.filter((x) => x.outcome === "pass").length, total: all.length } });
+  return { id: run.id, results: all, finished: true, status };
+}
