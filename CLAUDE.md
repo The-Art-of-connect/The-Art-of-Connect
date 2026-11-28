@@ -13,3 +13,8 @@
   via `public.member_marks`, respect visibility, and never imply any verification.
 - Founder directives are recorded word for word in `docs/founder-directives/` and listed in its README.
 - Production restrictions (live payments, public enrollment, production storage) stay off until the founder approves.
+- **Progressive membership benefits (directive 44, permanent).** Every level up keeps every existing entitlement (societies,
+  level, couples experience, Journey allowance) and adds more. Recommendations never present a plan that removes anything
+  as a level up; `src/lib/recommend.ts` and `tests/recommend.test.ts` enforce this. Never erase history on downgrade.
+- **Lifelong growth (directive 45, permanent).** Growth records are append-only history; reports follow the member's
+  chosen frequency; Journey separates member-reported facts, platform activity and AI observations, and never invents.

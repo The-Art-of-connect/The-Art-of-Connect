@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MemberForm } from "@/components/MemberForm";
 import { MemberMarks } from "@/components/MembershipEmblem";
 import { InLoveTabs } from "@/components/love/InLoveTabs";
+import { LoveSafety } from "@/components/love/LoveSafety";
 import { SINGLES_TABS } from "@/lib/in-love";
 import { messageConnection, respondInterest } from "@/app/actions/in-love";
 
@@ -21,7 +22,7 @@ export default async function Connections() {
   const received = all.filter((c) => c.status === "pending" && c.direction === "received");
   const sent = all.filter((c) => c.status === "pending" && c.direction === "sent");
   const mutual = all.filter((c) => c.status === "accepted");
-  const Name = ({ c }: { c: Conn }) => <span className="flex flex-wrap items-center gap-2 font-semibold">{c.first_name ?? "A member"}<MemberMarks distinction={c.distinction} verified={c.identity_verified} size={15} /></span>;
+  const Name = ({ c }: { c: Conn }) => <span><span className="flex flex-wrap items-center gap-2 font-semibold">{c.first_name ?? "A member"}<MemberMarks distinction={c.distinction} verified={c.identity_verified} size={15} /></span><LoveSafety userId={c.other_id} /></span>;
   return (
     <>
       <section className="rounded-[2rem] border border-line bg-[var(--surface,#fffdf8)] px-5 pt-7 shadow-sm sm:px-9">

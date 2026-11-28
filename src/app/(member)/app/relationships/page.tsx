@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MemberForm } from "@/components/MemberForm";
 import { MemberMarks } from "@/components/MembershipEmblem";
 import { InLoveTabs } from "@/components/love/InLoveTabs";
+import { LoveSafety } from "@/components/love/LoveSafety";
 import { COUPLES_TABS, INTENTS, SINGLES_TABS, questionFor } from "@/lib/in-love";
 import { addGoal, expressInterest, invitePartner, setGoalStatus } from "@/app/actions/in-love";
 import { brandName } from "@/lib/brand";
@@ -12,7 +13,7 @@ import { brandName } from "@/lib/brand";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "In Love" };
 
-type Match = { user_id: string; first_name: string | null; age: number | null; city: string | null; intent: string | null; headline: string | null; about: string | null; reasons: string[]; distinction: string | null; identity_verified: boolean };
+type Match = { user_id: string; first_name: string | null; age: number | null; city: string | null; intent: string | null; headline: string | null; about: string | null; reasons: string[]; distinction: string | null; identity_verified: boolean; test_verified?: boolean };
 
 /**
  * In Love (founder directive 38). Singles land on Discover; couples land on their shared space. Everything previously
@@ -69,13 +70,14 @@ async function Singles({ viewerId, live }: { viewerId: string; live: boolean }) 
         <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {matches.map((m) => (
             <li key={m.user_id} className="glass flex flex-col p-5">
-              <p className="flex flex-wrap items-center gap-2 text-xl font-semibold">{m.first_name ?? "A member"}{m.age ? `, ${m.age}` : ""}<MemberMarks distinction={m.distinction} verified={m.identity_verified} size={16} /></p>
+              <p className="flex flex-wrap items-center gap-2 text-xl font-semibold">{m.first_name ?? "A member"}{m.age ? `, ${m.age}` : ""}<MemberMarks distinction={m.distinction} verified={m.identity_verified} testVerified={m.test_verified} size={16} /></p>
               <p className="text-sm text-muted">{[m.headline, m.city].filter(Boolean).join(" · ")}</p>
               {m.reasons.length > 0 && <p className="mt-3 font-semibold text-gold-deep">{m.reasons.length >= 2 ? "Strong alignment" : "Worth meeting"}</p>}
               <ul className="text-sm text-muted">{m.reasons.slice(0, 3).map((r) => <li key={r}>{r}</li>)}</ul>
               {m.intent && <p className="mt-2 text-xs text-muted">Looking for: {INTENTS[m.intent] ?? m.intent}</p>}
               {m.about && <details className="mt-3 text-sm"><summary className="cursor-pointer text-gold-deep">View profile</summary><p className="mt-2 whitespace-pre-line">{m.about}</p></details>}
               <MemberForm action={expressInterest} className="mt-auto pt-4"><input type="hidden" name="to" value={m.user_id} /><button className="btn btn-gold btn-sm w-full">I&rsquo;d like to connect</button></MemberForm>
+              <LoveSafety userId={m.user_id} />
             </li>
           ))}
         </ul>

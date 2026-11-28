@@ -47,6 +47,8 @@ changes an earlier one, the later one wins.
 | 41 | [Final Naming Directive](41-final-naming-directive.md) | **Permanent.** Six naming decisions resolved: one feature, one official name, one consistent experience. |
 | 42 | [Intelligent Membership Recommendations](42-intelligent-membership-recommendations.md) | Every restricted feature recommends the lowest membership that unlocks it; Current Membership, Recommended for You, Best Value, Most Comprehensive Access. |
 | 43 | [Live Q&A and Member Notifications](43-live-qa-and-member-notifications.md) | Two live Q&A sessions a day to start, owner-adjustable schedule, branded invitation and Message Center, continuous participation. |
+| 44 | [Progressive Membership Benefits](44-progressive-membership-benefits.md) | **Permanent.** Every level up adds value and never removes a benefit, allowance or record. |
+| 45 | [Lifelong Growth, Milestones and Journey Continuity](45-lifelong-growth-milestones-journey-continuity.md) | **Permanent.** Chronological growth record, member-chosen report frequency, milestones, Journey continuity. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

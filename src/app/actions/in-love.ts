@@ -9,7 +9,7 @@ import { allow } from "@/lib/ratelimit";
 import { sendEmail } from "@/lib/email";
 import { templates } from "@/lib/email-templates";
 import { env } from "@/lib/env";
-import { INTENTS, MOODS } from "@/lib/in-love";
+import { GENDERS, INTENTS, MOODS, SEEKING } from "@/lib/in-love";
 
 /**
  * In Love (founder directive 38). The database enforces every rule: discovery shows only eligible, visible,
@@ -37,6 +37,8 @@ export async function saveLoveProfile(_p: R, f: FormData): Promise<R> {
   const row = {
     user_id: m.viewer.id, headline: str(f, "headline", 120) || null, about: str(f, "about", 1500) || null, city: str(f, "city", 80) || null,
     relationship_intent: intent in INTENTS ? intent : null, is_visible: f.get("visible") === "on", track: "single", updated_at: new Date().toISOString(),
+    gender: str(f, "gender", 20) in GENDERS ? str(f, "gender", 20) : null,
+    seeking: f.getAll("seeking").map(String).filter((x) => x in SEEKING),
   };
   const { error } = await m.rel.from("profiles").upsert(row, { onConflict: "user_id" });
   if (error) return fail("Your profile couldn't be saved. Please try again.");

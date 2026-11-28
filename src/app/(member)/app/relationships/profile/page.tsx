@@ -2,7 +2,7 @@ import { requireExperience, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { MemberForm } from "@/components/MemberForm";
 import { InLoveTabs } from "@/components/love/InLoveTabs";
-import { INTENTS, SINGLES_TABS } from "@/lib/in-love";
+import { GENDERS, INTENTS, SEEKING, SINGLES_TABS } from "@/lib/in-love";
 import { saveLoveProfile } from "@/app/actions/in-love";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ const label = "mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text
 export default async function LoveProfile() {
   const { viewer } = await requireExperience("relationships");
   const db = isInsidePreview(viewer) ? null : await createClient();
-  const { data: p } = db ? await db.schema("relationships").from("profiles").select("headline, about, city, relationship_intent, is_visible").eq("user_id", viewer.id).maybeSingle() : { data: null };
+  const { data: p } = db ? await db.schema("relationships").from("profiles").select("headline, about, city, relationship_intent, is_visible, gender, seeking").eq("user_id", viewer.id).maybeSingle() : { data: null };
   return (
     <>
       <section className="rounded-[2rem] border border-line bg-[var(--surface,#fffdf8)] px-5 pt-7 shadow-sm sm:px-9">
@@ -28,6 +28,11 @@ export default async function LoveProfile() {
           <label className="block text-sm"><span className={label}>City</span><input name="city" maxLength={80} defaultValue={p?.city ?? ""} className="field w-full" /></label>
           <label className="block text-sm"><span className={label}>I&rsquo;m looking for</span><select name="intent" defaultValue={p?.relationship_intent ?? ""} className="field w-full"><option value="">Choose…</option>{Object.entries(INTENTS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
         </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm"><span className={label}>I am</span><select name="gender" defaultValue={p?.gender ?? ""} className="field w-full"><option value="">Prefer not to say</option>{Object.entries(GENDERS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+          <fieldset className="text-sm"><legend className={label}>Interested in meeting</legend><div className="flex flex-wrap gap-3">{Object.entries(SEEKING).map(([k, v]) => <label key={k} className="flex items-center gap-2"><input type="checkbox" name="seeking" value={k} defaultChecked={(p?.seeking ?? []).includes(k)} />{v}</label>)}</div></fieldset>
+        </div>
+        <p className="text-xs text-muted">Introductions respect both members&rsquo; preferences. Leave these blank and we won&rsquo;t filter.</p>
         <label className="flex items-start gap-3 text-sm"><input type="checkbox" name="visible" defaultChecked={p?.is_visible ?? false} className="mt-1" /><span><span className="font-semibold">Show my profile to compatible singles</span><span className="block text-muted">Only identity-verified singles 30+ can see you, by first name. You can pause at any time.</span></span></label>
         <button className="btn btn-gold">Save</button>
       </MemberForm>
