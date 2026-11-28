@@ -36,8 +36,9 @@ set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f591';
 insert into relationships.status (user_id, status) values (auth.uid(), 'engaged');
 update relationships.status set status = 'married' where user_id = auth.uid();
 select count(*) from relationships.status_history where user_id = auth.uid();
-\echo 'v59-6) An on-demand reflection is built from real records only (expect 1|t):'
-select count(*), bool_and(activity ? 'sanctuary_entries' and member_reported ? 'milestones') from public.growth_reports where id = public.growth_report_request();
+\echo 'v59-6) An on-demand reflection is built from real records only, with its milestones and relationship changes (expect t, then 1|t|2|2):'
+select public.growth_report_request() is not null;
+select count(*), bool_and(activity ? 'sanctuary_entries'), max(jsonb_array_length(member_reported->'milestones')), max(jsonb_array_length(member_reported->'relationship_changes')) from public.growth_reports where user_id = auth.uid();
 \echo 'v59-7) One on-demand reflection a day (expect error):'
 select public.growth_report_request();
 \echo 'v59-8) Either partner can leave alone; access to the shared space ends immediately (expect left|0|0):'
@@ -52,12 +53,19 @@ set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f592';
 select (select count(*) from public.member_notices where user_id = auth.uid() and kind = 'system'), (select count(*) from relationships.couple_goals);
 \echo 'v59-12) The partner no longer sees the leaver''s shared milestones (expect 0):'
 select count(*) from public.milestones where user_id = '00000000-0000-0000-0000-00000000f591';
-\echo 'v59-13) A private (safety) departure sends no message (expect left_and_closed|1):'
-select relationships.leave_couple(true);
-select count(*) from public.member_notices where user_id = '00000000-0000-0000-0000-00000000f591' and kind = 'system';
 reset role;
 reset request.jwt.claim.sub;
-\echo 'v59-14) Scheduled reflections follow each member''s frequency, and paused members get none (expect 1|1):'
+delete from relationships.couple_members where user_id = '00000000-0000-0000-0000-00000000f592';
+insert into relationships.couples (id, created_by) values ('00000000-0000-0000-0000-0000000c0591', '00000000-0000-0000-0000-00000000f592');
+insert into relationships.couple_members (couple_id, user_id) values ('00000000-0000-0000-0000-0000000c0591', '00000000-0000-0000-0000-00000000f592'), ('00000000-0000-0000-0000-0000000c0591', '00000000-0000-0000-0000-00000000f593');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f592';
+\echo 'v59-13) A private (safety) departure sends no message to the former partner (expect left|0):'
+select relationships.leave_couple(true);
+select count(*) from public.member_notices where user_id = '00000000-0000-0000-0000-00000000f593' and kind = 'system';
+reset role;
+reset request.jwt.claim.sub;
+\echo 'v59-14) Scheduled reflections follow each member''s frequency, and paused members get none (expect t|1):'
 update public.growth_prefs set frequency = 'monthly', next_due_at = now() - interval '1 minute' where user_id = '00000000-0000-0000-0000-00000000f591';
 insert into public.growth_prefs (user_id, frequency, paused, next_due_at) values ('00000000-0000-0000-0000-00000000f593', 'monthly', true, now() - interval '1 minute');
 select public.growth_tick() >= 1, (select count(*) from public.growth_reports where user_id = '00000000-0000-0000-0000-00000000f593') + 1;

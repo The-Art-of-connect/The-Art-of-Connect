@@ -115,6 +115,7 @@ export const NAV: NavGroup[] = [
 /** The signed-in member's profile menu: account, membership, Journey allowance and preferences. */
 export const PROFILE_LINKS: NavLink[] = [
   { href: "/app", label: "My dashboard" },
+  { href: "/app/message-center", label: "Message Center" },
   { href: "/app/know-yourself/portfolio", label: "My Personal Discovery Portfolio" },
   { href: "/app/membership", label: "Membership & billing" },
   { href: "/what-we-offer", label: "What my membership includes" },

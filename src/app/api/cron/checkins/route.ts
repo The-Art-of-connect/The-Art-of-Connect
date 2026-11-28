@@ -28,6 +28,8 @@ export async function POST(req: Request) {
   try { await sanctuaryCron(); } catch { /* best-effort */ }
   // The Becoming Circle: keep the next 48 hours of four-hour slots filled from the owner-approved pool.
   try { await db.rpc("circle_fill_slots"); } catch { /* best-effort */ }
+  // Live Q&A (directive 43): create the owner-scheduled sessions, mark them live, and deliver Message Center invitations.
+  try { await db.rpc("circle_live_tick"); } catch { /* best-effort */ }
   // Connect Calendar: optional reminders, about a day before events members chose to be reminded of.
   try {
     const soon = new Date(Date.now() + 26 * 3600_000).toISOString();

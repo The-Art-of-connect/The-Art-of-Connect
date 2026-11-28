@@ -64,6 +64,8 @@ export const BRAND_TERMS = [
   { key: "discover-possible", name: "Discover What's Possible", kind: "feature" },
   { key: "portfolio", name: "My Personal Discovery Portfolio", kind: "feature", href: "/app/know-yourself/portfolio", aliases: ["portfolio", "discovery portfolio", "personal discovery portfolio"], avoid: [/(?<!My )\bPersonal Discovery Portfolio\b/] },
   { key: "becoming-circle", name: "The Becoming Circle", kind: "feature", aliases: ["circle", "support circle", "group conversation"] },
+  { key: "live-qa", name: "Live Q&A", kind: "feature", aliases: ["live session", "live", "q and a", "qa session", "live discussion"], note: "Live sessions in The Becoming Circle." },
+  { key: "message-center", name: "Message Center", kind: "feature", href: "/app/message-center", aliases: ["notifications", "inbox", "alerts", "invitations"] },
   { key: "find-your-circle", name: "Find Your Circle", kind: "feature", href: "/app/connect/circles", aliases: ["circles", "groups", "clubs"] },
 
   { key: "vision-board", name: "My Vision Board", kind: "feature", href: "/app/sanctuary/vision", aliases: ["vision board", "goals board"] },
