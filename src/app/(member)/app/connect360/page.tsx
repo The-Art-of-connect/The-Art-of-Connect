@@ -32,7 +32,7 @@ export default async function Connect360() {
     { href: "/app/business/inbox", eyebrow: "Separate from social messages", title: "Business Collaboration Inbox", body: "Purpose-specific requests you can accept to discuss, decline, or ask about first. Accepting a discussion is never an agreement." },
     { href: "/app/career", eyebrow: "Professional readiness", title: "My Professional Readiness", body: "An approved résumé is needed before introductions are made on your behalf. Everything else stays open while you prepare it.", status: ready ? "Résumé approved" : "Résumé needed for introductions" },
     { href: "/app/connect360/proposals", eyebrow: "Present your vision", title: "Strategic Proposal Builder", body: "Guided, versioned proposals that label every section as fact, research, assumption, estimate or proposal. Clearly nonbinding, and shared only when you authorize them." },
-    { href: null, eyebrow: "Coming next", title: "Capital & Funding Intelligence Center", body: "Funding assessments, scenarios, readiness checklists and application tracking. Declared, verified, approved and committed funds always kept separate." },
+    { href: "/app/connect360/funding", eyebrow: "Become funding-ready", title: "Capital & Funding Intelligence Center", body: "Funding assessments, capital scenarios with estimated payments, readiness checklists, application tracking and lender message drafts. Declared, verified, approved and committed funds always kept separate." },
     { href: null, eyebrow: "Coming next", title: "My Intelligence Office", body: "Research assignments carried out by Journey with our research partners: sourced, verified findings and reports." },
   ];
 

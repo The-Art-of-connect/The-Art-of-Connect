@@ -79,6 +79,7 @@ export const NAV: NavGroup[] = [
       { href: "/app/connect360", label: "CONNECT 360", note: "Executive & Elite · Deal Rooms and collaboration", access: "paid" },
       { href: "/app/connect360/rooms", label: "Business Deal Rooms", note: "Executive & Elite", access: "paid" },
       { href: "/app/connect360/proposals", label: "Strategic Proposals", note: "Executive & Elite", access: "paid" },
+      { href: "/app/connect360/funding", label: "Capital & Funding Center", note: "Executive & Elite", access: "paid" },
       { href: "/app/career", label: "My Professional Readiness", note: "Résumé Builder", access: "member" },
       { href: "/app/launch", label: "Business Launch Center", note: "All 50 states and D.C.", access: "member" },
     ],
