@@ -2,6 +2,7 @@ import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, Stat } from "@/components/admin/ui";
 import { IntelConnections } from "@/components/admin/IntelConnections";
+import { IntelSelfTest } from "@/components/admin/IntelSelfTest";
 
 export const metadata = { title: "Intelligence Division · Owner Portal" };
 export const dynamic = "force-dynamic";
@@ -31,6 +32,7 @@ export default async function Intelligence() {
         <Stat label="Today" value={`${usd(today)} of ${usd(s?.company_daily_limit_cents ?? 0)}`} hint={`${deliveries ?? 0} webhook deliveries`} />
       </div>
       <div className="mt-6"><IntelConnections /></div>
+      <div className="mt-6"><IntelSelfTest enabled={Boolean(s?.enabled)} /></div>
     </>
   );
 }
