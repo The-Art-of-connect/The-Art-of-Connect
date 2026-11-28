@@ -7,6 +7,7 @@ import { MEMBER_TABS, PUBLIC_PRIMARY } from "@/lib/nav";
 import type { NavState } from "@/lib/nav-state";
 import { NavIcon } from "@/components/nav/NavIcons";
 import { ProfileList } from "@/components/nav/ProfileMenu";
+import { GatedLink } from "@/components/Upgrade";
 
 /** Phones and tablets (directive 35): the same few destinations as everywhere else, plus the three experiences. */
 export function MobileMenu({ state }: { state: NavState }) {
@@ -47,14 +48,14 @@ export function MobileMenu({ state }: { state: NavState }) {
             </form>
             <ul className="divide-y divide-line border-y border-line">
               {(state.signedIn
-                ? [...MEMBER_TABS.map((t) => ({ href: t.href, label: t.label, note: "" })), { href: "/app/life", label: "In Life", note: "Discover yourself. Become more." }, { href: state.experiences.includes("relationships") ? "/app/relationships" : "/love", label: "In Love", note: "Create meaningful connections." }, { href: state.experiences.includes("business") ? "/app/business" : "/business", label: "In Business", note: "Connect. Collaborate. Prosper." }, { href: "/app/explore", label: "Everything available to me", note: "" }]
+                ? [...MEMBER_TABS.map((t) => ({ href: t.href, label: t.label, note: "" })), { href: "/app/life", label: "In Life", note: "Discover yourself. Become more." }, { href: "/app/relationships", label: "In Love", note: "Create meaningful connections." }, { href: "/app/business", label: "In Business", note: "Connect. Collaborate. Prosper." }, { href: "/app/explore", label: "Everything available to me", note: "" }]
                 : PUBLIC_PRIMARY.map((t) => ({ href: t.href, label: t.label, note: "" }))
               ).map((l) => (
                 <li key={l.href + l.label}>
-                  <Link href={l.href} onClick={() => setOpen(false)} className="flex items-center justify-between py-4">
+                  <GatedLink href={l.href} feature={{ name: l.label, what: l.note || undefined }} onClick={() => setOpen(false)} className="flex items-center justify-between py-4">
                     <span><span className="display block text-3xl">{l.label}</span>{l.note && <span className="block text-xs text-muted">{l.note}</span>}</span>
                     <NavIcon name="chevron" className="h-5 w-5 -rotate-90 text-gold" />
-                  </Link>
+                  </GatedLink>
                 </li>
               ))}
             </ul>

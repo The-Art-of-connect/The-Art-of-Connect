@@ -1,3 +1,5 @@
+import { safeReturn } from "@/lib/gate";
+
 import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { z } from "zod";
@@ -15,6 +17,7 @@ import { clientMeta } from "@/lib/security";
 import { formatMoney } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+const returnPath = (raw: string | undefined) => { try { return safeReturn(raw ? decodeURIComponent(raw) : null) ?? "/app"; } catch { return "/app"; } };
 
 const body = z.discriminatedUnion("kind", [
   z.object({
@@ -163,7 +166,8 @@ export async function POST(request: NextRequest) {
     // A valid card is required for every membership, including trials.
     payment_method_collection: "always",
     ...(trial ? { custom_text: { submit: { message: `Free for ${TRIAL_DAYS} days. You won’t be charged if you cancel before ${formatChargeDate(firstChargeDate())}. Cancel anytime in My membership.` } } } : {}),
-    success_url: `${env.siteUrl}/app?welcome=1`,
+    // Directive 36: after an authorized purchase, return to the feature the member chose (member pages only).
+    success_url: `${env.siteUrl}${returnPath(request.cookies.get("aoc_return")?.value)}?welcome=1`,
     cancel_url: `${env.siteUrl}/app/membership`,
   });
   if (trial) {
