@@ -87,3 +87,4 @@
 20270131000001_in_love_experience.sql	exists (select 1 from pg_proc where proname = 'become_couple')
 20270201000001_qa_cast.sql	exists (select 1 from pg_proc where proname = 'qa_act')
 20270201100001_couples_level_up.sql	exists (select 1 from pg_proc where proname = 'journey_effective_tier')
+20270202000001_live_qa.sql	exists (select 1 from pg_proc where proname = 'circle_live_tick')

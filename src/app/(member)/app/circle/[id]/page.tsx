@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getViewer, isInsidePreview } from "@/lib/auth";
+import { joinLive } from "@/app/actions/message-center";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CATEGORY_LABEL, topicOpen, type Topic } from "@/lib/circle";
@@ -33,6 +34,11 @@ export default async function CircleRoom({ params }: { params: Promise<{ id: str
     live ? db.from("circle_poll_votes").select("poll_id, option_index").eq("user_id", viewer.id) : Promise.resolve({ data: [] }),
   ]);
   const list = (posts ?? []) as Post[];
+  // Live Q&A (directive 43): this topic's live session, if any, and whether the member has joined.
+  const { data: session } = await db.from("circle_live_sessions").select("id, status, starts_at, ends_at, host_id").eq("topic_id", id).maybeSingle();
+  const { data: mine } = session && live ? await db.from("circle_live_attendance").select("mode").eq("session_id", session.id).eq("user_id", viewer.id).maybeSingle() : { data: null };
+  const { data: hostRow } = session?.host_id ? await (createAdminClient() ?? db).from("profiles").select("display_name").eq("id", session.host_id).maybeSingle() : { data: null };
+  const host = (hostRow?.display_name ?? "").split(/\s+/)[0] || "The Becoming Circle host";
   // First names only: members meet each other through ideas, without profiles or contact details.
   const admin = createAdminClient();
   const ids = [...new Set(list.map((p) => p.author_id))];
@@ -67,7 +73,19 @@ export default async function CircleRoom({ params }: { params: Promise<{ id: str
           <span className="text-ivory/60">·</span>
           <span className="text-ivory/70">{notStarted ? <>Opens <LocalTime iso={topic.slot_start!} /></> : open ? "Open for comments" : topic.paused ? "Paused by a moderator" : "Closed"}</span>
         </div>
-        <p className="mt-4 text-xs text-ivory/50">Live audio with moderated two-minute speaking turns is coming soon. Until then, join in writing.</p>
+        {session?.status === "live" ? (
+          <div className="mt-5 rounded-2xl border border-[#f0c98a]/30 p-4">
+            <p className="flex flex-wrap items-center gap-2 text-sm"><span className="rounded-full bg-[#b3261e] px-3 py-0.5 text-xs font-semibold uppercase tracking-[0.12em] text-white">Live now</span><span className="text-ivory/80">Live Q&amp;A hosted by {host} · until <LocalTime iso={session.ends_at} /></span></p>
+            {mine ? <p className="mt-3 text-sm text-[#f0c98a]">You&rsquo;re here{mine.mode === "listen" ? ", listening" : ""}. Stay as long as you like; a new session never moves you.</p> : (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <MemberForm action={joinLive}><input type="hidden" name="session" value={session.id} /><input type="hidden" name="mode" value="participate" /><button className="btn btn-gold btn-sm">Join to participate</button></MemberForm>
+                <MemberForm action={joinLive}><input type="hidden" name="session" value={session.id} /><input type="hidden" name="mode" value="listen" /><button className="btn btn-ghost btn-sm">Simply listen</button></MemberForm>
+              </div>
+            )}
+            <p className="mt-3 text-xs text-ivory/50">Questions and answers happen in writing below. Live audio opens once approved. This is an educational discussion, not professional counseling; for personal support, visit the <Link href="/app/wellness" className="underline">Counseling &amp; Wellness Center</Link>.</p>
+          </div>
+        ) : session?.status === "scheduled" ? <p className="mt-4 text-xs text-ivory/60">Live Q&amp;A begins <LocalTime iso={session.starts_at} />, hosted by {host}.</p>
+          : <p className="mt-4 text-xs text-ivory/50">Live audio with moderated two-minute speaking turns is coming soon. Until then, join in writing.</p>}
       </section>
 
       {moderator && (

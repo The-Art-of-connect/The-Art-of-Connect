@@ -1286,3 +1286,25 @@ v58-2) Without the couples experience, the plan's own allowance applies (expect 
 t
 v58-3) Elite Concierge stays unlimited for couples (expect t):
 t
+v57-1) The schedule creates the owner-chosen number of sessions per day, each with a distinct topic (expect t|t):
+t|t
+v57-2) Running it again never duplicates sessions (expect 0):
+0
+v57-3) The started session is live and each member got one Message Center invitation (expect 1|t):
+1|t
+v57-4) The member sees the pop-up invitation while live (expect 1):
+1
+v57-5) After Maybe later it never shows again for that session (expect 0):
+0
+v57-6) Joining records attendance; listening is allowed (expect 1):
+1
+v57-7) Members cannot change the schedule (expect 0 rows changed):
+0
+v57-8) Nor record attendance for someone else (expect error):
+ERROR:  new row violates row-level security policy for table "circle_live_attendance"
+v57-9) Nor read anyone else's Message Center (expect 0):
+0
+v57-10) A member who turned pop-ups off still has the Message Center invitation, but no pop-up (expect 1|0):
+1|0
+v57-11) Live audio cannot be switched on without an approved provider (expect error):
+ERROR:  new row for relation "circle_live_settings" violates check constraint "live_audio_needs_provider"

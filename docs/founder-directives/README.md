@@ -50,6 +50,7 @@ changes an earlier one, the later one wins.
 | 44 | [Progressive Membership Benefits](44-progressive-membership-benefits.md) | **Permanent.** Every level up adds value and never removes a benefit, allowance or record. |
 | 45 | [Lifelong Growth, Milestones and Journey Continuity](45-lifelong-growth-milestones-journey-continuity.md) | **Permanent.** Chronological growth record, member-chosen report frequency, milestones, Journey continuity. |
 | 46 | [Lifelong Couples Experience and Professional Independence](46-lifelong-couples-and-professional-independence.md) | **Permanent.** Couples at every stage; couples keep the Couples experience at every membership level; each partner stays independent. |
+| 47 | [Relationship Transitions and Flexible Business Participation](47-relationship-transitions-and-flexible-business.md) | **Permanent.** Relationship status in Settings, unilateral and safe disconnection, opt-in return to Singles, business continuity. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
