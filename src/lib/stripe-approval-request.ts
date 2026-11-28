@@ -15,7 +15,7 @@ export const STRIPE_APPROVAL_REQUEST: { heading: string; body: string[] }[] = [
     "Business networking: The Professional Society, a Business Connection Board and private business messaging for entrepreneurs and professionals.",
     "Personal development: The Art of Knowing Yourself, self-guided curricula (identity, emotional intelligence) and Journey, an AI personal-growth companion. Journey is not therapy, gives no clinical, legal or financial advice, and directs anyone in crisis to emergency resources.",
     "Dating and matchmaking: opt-in singles matchmaking (30+) and a couples experience, with identity verification, blocking, reporting and moderation.",
-    "Elite Concierge Society: a by-invitation-only membership distinction for verified, accomplished members (described in section 4).",
+    "Elite Concierge: a by-invitation-only membership distinction for verified, accomplished members (described in section 4).",
     "Planned counseling services (not launched): a directory and booking service for independently licensed counselors. These services are disabled and will not launch until legal and professional approvals are obtained. Counselors will be independent licensed providers who are responsible for their own clinical records. The platform will not send health information to Stripe Identity or Financial Connections, and Stripe will be used only to process session payments.",
     "We do not offer adult content or services, escort services, gambling, lending, credit, insurance, housing or employment decisions.",
   ]},

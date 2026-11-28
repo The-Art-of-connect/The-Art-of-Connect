@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 const TYPES = "application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,image/jpeg,image/png";
 
 /**
- * Uploads a new version of a Deal Room document directly to the secure vault, then follows the malware scan.
+ * Uploads a new version of a Business Deal Room document directly to the secure vault, then follows the malware scan.
  * The file goes from this browser to storage over an encrypted, single-use link bound to its exact size and type;
  * it can't be opened by anyone until the security check finds no threats.
  */

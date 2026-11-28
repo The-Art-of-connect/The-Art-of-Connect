@@ -1,5 +1,5 @@
 /**
- * The Personal Discovery Portfolio: a living, cross-category picture assembled
+ * My Personal Discovery Portfolio: a living, cross-category picture assembled
  * from the member's own discoveries. Free members get this rule-based version
  * (no AI); paid members may ask Journey to write a personalized one on request.
  *
@@ -137,9 +137,9 @@ export function portfolioContext(sections: PortfolioSection[], statuses: Record<
   return t.slice(0, maxChars);
 }
 
-export const PORTFOLIO_REQUEST = "Please create my Personal Discovery Portfolio.";
+export const PORTFOLIO_REQUEST = "Please create My Personal Discovery Portfolio.";
 export const portfolioInstructions = (context: string) => [
-  "# Personal Discovery Portfolio",
+  "# My Personal Discovery Portfolio",
   `Write the member's portfolio using exactly these headings, in order: ${PORTFOLIO_SECTIONS.map((s) => s.title).join("; ")}.`,
   "Connect meaningful themes across categories only where the member's data supports them. Never invent information, assume trauma, or present unsupported causal conclusions. Mention childhood and family influences only if the member disclosed them.",
   "Begin sentences about the member's own words with \"You shared\"; everything else is your reflection. Note which categories are incomplete or skipped, without pressure.",

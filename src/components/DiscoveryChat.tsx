@@ -64,7 +64,7 @@ export function DiscoveryChat({ sessionId, mode, opening, history, allowance, av
             </div>
           ))}
           {busy && <p className="text-xs text-gold">Journey is reflecting…</p>}
-          {done && <p className="rounded-xl border border-gold/30 px-4 py-3 text-sm text-gold-bright">Your summary is saved privately in your Personal Discovery Portfolio. <Link href="/app/know-yourself/portfolio" className="underline">Open my portfolio</Link></p>}
+          {done && <p className="rounded-xl border border-gold/30 px-4 py-3 text-sm text-gold-bright">Your summary is saved privately in My Personal Discovery Portfolio. <Link href="/app/know-yourself/portfolio" className="underline">Open my portfolio</Link></p>}
         </div>
         {(notice || !available) && <p className="mx-5 mb-3 rounded-xl border border-gold/30 px-4 py-2.5 text-sm text-gold-bright">{notice ?? reason}</p>}
         {!done && (

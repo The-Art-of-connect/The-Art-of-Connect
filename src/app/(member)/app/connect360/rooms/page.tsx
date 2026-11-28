@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 type Row = { room_id: string; role: string; status: string; advisor_type: string | null; deal_rooms: { title: string; stage: string; status: string; updated_at: string } | null };
 
-/** The member's Deal Rooms: owned, joined, invited, and rooms they advise on (directive 28 §10). */
+/** The member's Business Deal Rooms: owned, joined, invited, and rooms they advise on (directive 28 §10). */
 export default async function Rooms() {
   const viewer = (await getViewer())!;
   const membership = await getMembership(viewer);
@@ -27,7 +27,7 @@ export default async function Rooms() {
   return (
     <>
       <LuxHero eyebrow="CONNECT 360" title="Business Deal Rooms" tagline="Confidential workspaces for serious collaboration." />
-      <LuxSection eyebrow="Your rooms" title={rows.length ? "Continue where you left off" : "No Deal Rooms yet"}>
+      <LuxSection eyebrow="Your rooms" title={rows.length ? "Continue where you left off" : "No Business Deal Rooms yet"}>
         {rows.length > 0 && (
           <ul className="grid gap-4 md:grid-cols-2">
             {rows.map((r) => (
@@ -43,16 +43,16 @@ export default async function Rooms() {
         )}
       </LuxSection>
       {premium ? (
-        <LuxSection eyebrow="Begin" title="Open a new Deal Room" intro="You can invite members you've accepted a business conversation with. Each of you may bring your own attorney, accountant and advisors.">
+        <LuxSection eyebrow="Begin" title="Open a new Business Deal Room" intro="You can invite members you've accepted a business conversation with. Each of you may bring your own attorney, accountant and advisors.">
           <MemberForm action={createRoom} className="glass max-w-2xl space-y-3 p-6">
             <input name="title" required minLength={3} maxLength={160} className="field w-full" placeholder="Name, e.g. Southeast distribution partnership" />
             <textarea name="objective" rows={3} maxLength={4000} className="field w-full" placeholder="What are you exploring together? (optional)" />
-            <button className="btn btn-gold btn-sm">Create Deal Room</button>
-            <p className="text-xs text-faint">Executive Private includes two active Deal Rooms; Elite Concierge includes ten.</p>
+            <button className="btn btn-gold btn-sm">Create Business Deal Room</button>
+            <p className="text-xs text-faint">Executive Private includes two active Business Deal Rooms; Elite Concierge includes ten.</p>
           </MemberForm>
         </LuxSection>
       ) : (
-        <p className="glass mt-10 p-6 text-sm text-muted">Creating Deal Rooms is part of Executive Private and Elite Concierge. Rooms you&apos;ve been invited to as an advisor appear above.</p>
+        <p className="glass mt-10 p-6 text-sm text-muted">Creating Business Deal Rooms is part of Executive Private and Elite Concierge. Rooms you&apos;ve been invited to as an advisor appear above.</p>
       )}
     </>
   );

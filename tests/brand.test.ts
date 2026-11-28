@@ -2,13 +2,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { BRAND_TERMS, brandInstructions, findMisnamings, matchTerms } from "../src/lib/brand.ts";
+import { BRAND_TERMS, PENDING_DECISIONS, brandInstructions, findMisnamings, matchTerms } from "../src/lib/brand.ts";
 import { FEATURES } from "../src/lib/features.ts";
 
 // Founder directive 37: one official name everywhere. This scans the whole site (pages, components, emails, Journey,
 // Owner Portal, reports) for incorrect variants. Routes, file names and import paths are code, not names: skipped.
 const files = (dir: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? files(p) : /\.(tsx?|md)$/.test(p) ? [p] : []; });
 const visibleText = (src: string) => src
+  .split("\n").filter((l) => !l.includes("brand-check: allow")).join("\n") // matching database text, never displayed
   .replace(/(["'`])\/[^"'`\s]*\1/g, "''")           // paths like "/app/connect360/..."
   .replace(/import[^;]+;/g, "")                       // imports
   .replace(/\b[a-z]+[A-Z]\w*\b/g, "")                 // camelCase identifiers (Connect360 component names stay code)
@@ -31,6 +32,21 @@ test("everyday language resolves to the official name", () => {
   assert.ok(matchTerms("connect 360").some((t) => t.name === "CONNECT 360"));
   assert.ok(matchTerms("I need a loan").some((t) => t.name === "Capital & Funding Intelligence Center"));
   assert.ok(matchTerms("build my resume").some((t) => t.name === "Professional Résumé Builder"));
+});
+
+test("the six final naming decisions are enforced (directive 41)", () => {
+  for (const [bad, good] of [["Open your Deal Room", "Open your Business Deal Room"], ["Daily Sanctuary is ready", "My Daily Sanctuary is ready"],
+    ["Personal Discovery Portfolio", "My Personal Discovery Portfolio"], ["Elite Concierge Society", "Elite Concierge"],
+    ["Complimentary Career & Business Launch Center", "Business Launch Center"], ["The Art of Self", "The Art of Knowing Yourself"]]) {
+    assert.ok(findMisnamings(bad).length > 0, bad);
+    assert.equal(findMisnamings(good).length, 0, good);
+  }
+  assert.equal(PENDING_DECISIONS.length, 0);
+});
+
+test("everyday words and former names lead to the official destination (directive 41 examples)", () => {
+  assert.equal(searchEntries(SEARCH_INDEX, "business funding")[0]?.title, "Capital & Funding Intelligence Center");
+  assert.equal(searchEntries(SEARCH_INDEX, "deal room")[0]?.title, "Business Deal Rooms");
 });
 
 test("The Art of Knowing Yourself is the only name (founder decision, final)", () => {

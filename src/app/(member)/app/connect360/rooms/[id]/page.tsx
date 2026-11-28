@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { MemberMarks } from "@/components/MembershipEmblem";
+import { memberMarks } from "@/lib/member-marks";
 import { notFound } from "next/navigation";
 import { getViewer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -10,7 +12,7 @@ import {
   setItemStatus, setMyParticipation, updateRoom,
 } from "@/app/actions/connect360";
 
-export const metadata = { title: "Deal Room · CONNECT 360" };
+export const metadata = { title: "Business Deal Room · CONNECT 360" };
 export const dynamic = "force-dynamic";
 
 type Person = { participant_id: string; user_id: string; display: string; role: string; advisor_type: string | null; client_id: string | null; status: string; credential: string | null };
@@ -41,12 +43,12 @@ export default async function DealRoom({ params, searchParams }: { params: Promi
     return (
       <div className="mx-auto max-w-2xl">
         <div className="glass mt-6 p-8">
-          <p className="eyebrow">Deal Room invitation</p>
+          <p className="eyebrow">Business Deal Room invitation</p>
           <h1 className="display mt-2 text-4xl">{room.title}</h1>
           {room.objective && <p className="mt-3 text-muted">{room.objective}</p>}
-          <p className="mt-4 text-sm text-muted">Joining lets you see the shared workspace and bring your own advisors. Joining a Deal Room is not an agreement or commitment of any kind, and you can withdraw at any time.</p>
+          <p className="mt-4 text-sm text-muted">Joining lets you see the shared workspace and bring your own advisors. Joining a Business Deal Room is not an agreement or commitment of any kind, and you can withdraw at any time.</p>
           <div className="mt-6 flex gap-3">
-            <MemberForm action={setMyParticipation}><input type="hidden" name="id" value={id} /><input type="hidden" name="status" value="active" /><button className="btn btn-gold btn-sm">Join the Deal Room</button></MemberForm>
+            <MemberForm action={setMyParticipation}><input type="hidden" name="id" value={id} /><input type="hidden" name="status" value="active" /><button className="btn btn-gold btn-sm">Join the Business Deal Room</button></MemberForm>
             <MemberForm action={setMyParticipation}><input type="hidden" name="id" value={id} /><input type="hidden" name="status" value="declined" /><button className="btn btn-ghost btn-sm">Decline</button></MemberForm>
           </div>
         </div>
@@ -63,6 +65,7 @@ export default async function DealRoom({ params, searchParams }: { params: Promi
     (space === "shared" ? b.from("room_documents").select("id, title, category, privileged, review_status, current_version, uploaded_by, document_versions(id, version, file_name, scan_status, created_at)").eq("room_id", id).eq("space", "shared") : b.from("room_documents").select("id, title, category, privileged, review_status, current_version, uploaded_by, document_versions(id, version, file_name, scan_status, created_at)").eq("room_id", id).eq("space", "private").eq("space_owner", side!)).order("created_at"),
   ]);
   const ppl = (people ?? []) as Person[];
+  const marks = await memberMarks(db, ppl.map((p) => p.user_id));
   const nameOf = (uid: string) => ppl.find((p) => p.user_id === uid)?.display ?? "Participant";
   const sideName = nameOf(side!);
   const members = new Set(ppl.map((p) => p.user_id));
@@ -74,7 +77,7 @@ export default async function DealRoom({ params, searchParams }: { params: Promi
 
   return (
     <>
-      <Link href="/app/connect360/rooms" className="text-sm text-gold">← Deal Rooms</Link>
+      <Link href="/app/connect360/rooms" className="text-sm text-gold">← Business Deal Rooms</Link>
       <section className="theme-dark relative mt-4 overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10" style={{ background: "var(--ink)" }}>
         <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "var(--glow)" }} aria-hidden="true" />
         <div className="relative">
@@ -178,7 +181,7 @@ export default async function DealRoom({ params, searchParams }: { params: Promi
             </ol>
             <MemberForm action={postRoomMessage} className="mt-4 space-y-2">
               {spaceFields}
-              <textarea name="body" required maxLength={4000} rows={3} className="field w-full" placeholder={space === "private" ? "Write privately to your advisors…" : "Write to everyone in this Deal Room…"} />
+              <textarea name="body" required maxLength={4000} rows={3} className="field w-full" placeholder={space === "private" ? "Write privately to your advisors…" : "Write to everyone in this Business Deal Room…"} />
               <button className="btn btn-gold btn-sm">Send</button>
               <p className="text-xs text-faint">Account numbers, login details, investment solicitations and fee arrangements can&apos;t be shared here.</p>
             </MemberForm>
@@ -191,7 +194,7 @@ export default async function DealRoom({ params, searchParams }: { params: Promi
             <ul className="mt-3 space-y-3 text-sm">
               {ppl.map((p) => (
                 <li key={p.participant_id} className="flex items-start justify-between gap-2">
-                  <span><span className="font-semibold">{p.display}{p.user_id === viewer.id ? " (you)" : ""}</span>
+                  <span><span className="inline-flex flex-wrap items-center gap-1.5 font-semibold">{p.display}{p.user_id === viewer.id ? " (you)" : ""}<MemberMarks distinction={marks[p.user_id]?.distinction} verified={marks[p.user_id]?.verified} size={14} /></span>
                     <span className="block text-xs text-muted">{p.role === "owner" ? "Room owner" : p.role === "principal" ? "Business participant" : `${ADVISOR_TYPES[p.advisor_type ?? ""]} for ${nameOf(p.client_id ?? "")}`}{p.status === "invited" ? " · invited" : ""}{p.role === "advisor" ? ` · credentials ${p.credential === "verified" ? "verified" : "not yet verified"}` : ""}</span></span>
                   {p.user_id !== viewer.id && p.role !== "owner" && (isOwner || (p.role === "advisor" && p.client_id === viewer.id)) && (
                     <MemberForm action={removeParticipant}><input type="hidden" name="room" value={id} /><input type="hidden" name="participant" value={p.participant_id} /><button className="text-xs text-muted underline">Remove</button></MemberForm>
@@ -243,8 +246,8 @@ export default async function DealRoom({ params, searchParams }: { params: Promi
           {!isOwner && (
             <MemberForm action={setMyParticipation} className="glass p-6 text-sm">
               <input type="hidden" name="id" value={id} /><input type="hidden" name="status" value="withdrawn" />
-              <p className="text-muted">You can leave this Deal Room at any time.{me.role === "principal" ? " Your advisors leave with you and anything you shared is withdrawn." : ""}</p>
-              <button className="btn btn-ghost btn-sm mt-3">Withdraw from this Deal Room</button>
+              <p className="text-muted">You can leave this Business Deal Room at any time.{me.role === "principal" ? " Your advisors leave with you and anything you shared is withdrawn." : ""}</p>
+              <button className="btn btn-ghost btn-sm mt-3">Withdraw from this Business Deal Room</button>
             </MemberForm>
           )}
         </aside>

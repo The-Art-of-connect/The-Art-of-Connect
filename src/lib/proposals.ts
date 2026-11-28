@@ -57,7 +57,7 @@ export function completeness(s: Sections) {
   const estimates = SECTIONS.filter((x) => s[x.key] && ["estimate", "assumption"].includes(s[x.key].basis)).map((x) => x.title);
   const flags: string[] = [];
   const fin = ["financial_requirements", "projections"].filter((k) => s[k]?.basis === "fact");
-  if (fin.length) flags.push("Financial figures are marked as facts: attach supporting documents in the Deal Room or relabel them as estimates.");
+  if (fin.length) flags.push("Financial figures are marked as facts: attach supporting documents in the Business Deal Room or relabel them as estimates.");
   if (s.ownership || s.legal) flags.push("Ownership and legal sections should be reviewed by each party's own attorney before any agreement.");
   if (s.funding) flags.push("Funding sections are educational. Investor solicitation and securities offerings aren't permitted here.");
   return { done: core.length - missing.length, total: core.length, missing, optionalMissing, estimates, flags };

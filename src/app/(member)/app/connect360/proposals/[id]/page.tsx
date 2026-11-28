@@ -94,7 +94,7 @@ export default async function Proposal({ params }: { params: Promise<{ id: strin
               <select name="kind" className="field w-full" defaultValue="accept_discussion">{Object.entries(RESPONSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
               <textarea name="note" rows={4} className="field w-full" placeholder="A note, questions or suggested revisions (optional)" />
               <button className="btn btn-gold btn-sm">Send response</button>
-              <p className="text-xs text-faint">Responses are never acceptance of an agreement or a financial commitment. You may invite your own attorney or accountant in a Deal Room.</p>
+              <p className="text-xs text-faint">Responses are never acceptance of an agreement or a financial commitment. You may invite your own attorney or accountant in a Business Deal Room.</p>
             </MemberForm>
           </aside>
         </div>

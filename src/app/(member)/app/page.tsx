@@ -64,7 +64,7 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
       )}
       {elite?.status === "invitation_issued" && (
         <Link href="/app/elite/eligibility" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border-2 border-[#e8892b]/60 px-6 py-4 text-[#f6e7c8]" style={{ background: "#1b1310" }}>
-          <span className="flex items-center gap-3"><EliteBadge size={22} interactive={false} /><span><span className="display block text-2xl">You&rsquo;re invited to the Elite Concierge Society.</span><span className="text-xs text-[#f5ecdf]/70">A private invitation is waiting for you. Nothing is charged until you choose.</span></span></span>
+          <span className="flex items-center gap-3"><EliteBadge size={22} interactive={false} /><span><span className="display block text-2xl">You&rsquo;re invited to Elite Concierge.</span><span className="text-xs text-[#f5ecdf]/70">A private invitation is waiting for you. Nothing is charged until you choose.</span></span></span>
           <span className="text-sm font-semibold text-[#f0a35a]">View my invitation →</span>
         </Link>
       )}
@@ -120,7 +120,7 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
                 <span className="chip chip-live">Included for every member</span>
                 <h3 className="display mt-5 text-3xl text-burgundy">The Art of Knowing Yourself</h3>
                 <p className="mt-1 text-xs tracking-wide text-faint uppercase">Self-discovery · Self-love · Reflection</p>
-                <p className="mt-3 text-sm text-muted">Know yourself, emotional intelligence, love languages and your Personal Discovery Portfolio.</p>
+                <p className="mt-3 text-sm text-muted">Know yourself, emotional intelligence, love languages and My Personal Discovery Portfolio.</p>
               </div>
               <Link href="/app/know-yourself" className="btn btn-ghost btn-sm mt-6 self-start">Enter</Link>
             </div>

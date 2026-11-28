@@ -1,5 +1,6 @@
 /**
- * Brand Terminology Registry (founder directive 37, November 28, 2026). PERMANENT REQUIREMENT.
+ * Brand Terminology Registry (founder directives 37 and 41, November 28, 2026). PERMANENT REQUIREMENT.
+ * "One feature. One official name. One consistent experience."
  *
  * Every approved feature, experience, division, membership and service has ONE official name, used everywhere:
  * navigation, page titles and headings, search results, Home cards, membership benefits, upgrade pop-ups, Journey text and
@@ -44,7 +45,7 @@ export const BRAND_TERMS = [
   { key: "intelligence-office", name: "My Intelligence Office", kind: "feature", href: "/app/connect360/intelligence", aliases: ["intelligence office", "research", "research assignment", "market research", "opportunity research"],
     avoid: [/(?<!My )\bIntelligence Office\b/, /\bResearch Office\b/, /\bIntel Office\b/] },
   { key: "global-intelligence-division", name: "Global Intelligence Division", kind: "division" },
-  { key: "deal-rooms", name: "Business Deal Rooms", kind: "feature", href: "/app/connect360/rooms", aliases: ["deal room", "deal rooms", "project room", "data room"] },
+  { key: "deal-rooms", name: "Business Deal Rooms", kind: "feature", href: "/app/connect360/rooms", aliases: ["deal room", "deal rooms", "project room", "data room"], avoid: [/(?<!Business )\bDeal Rooms?\b/] },
   { key: "proposals", name: "Strategic Proposal Builder", kind: "feature", href: "/app/connect360/proposals", aliases: ["proposal", "proposals", "business proposal", "pitch"] },
   { key: "funding", name: "Capital & Funding Intelligence Center", kind: "feature", href: "/app/connect360/funding", aliases: ["funding", "capital", "financing", "loan", "lender", "proof of funds"],
     avoid: [/\bCapital (?:&|and) Funding Center\b/, /(?<!Intelligence )\bFunding Center\b/] },
@@ -54,14 +55,14 @@ export const BRAND_TERMS = [
 
   // Career and business tools
   { key: "resume-builder", name: "Professional Résumé Builder", kind: "feature", href: "/app/career/resume", aliases: ["resume", "résumé", "cv", "cover letter"], avoid: [/\bResume Builder\b/] },
-  { key: "launch-center", name: "Business Launch Center", kind: "feature", href: "/app/launch", aliases: ["start a business", "llc", "formation", "ein", "incorporate"] },
+  { key: "launch-center", name: "Business Launch Center", kind: "feature", href: "/app/launch", aliases: ["start a business", "llc", "formation", "ein", "incorporate", "career and business launch center"], avoid: [/\bComplimentary Career (?:&|and) Business Launch Center\b/] },
   { key: "business-board", name: "Business Connection Board", kind: "feature", href: "/app/business/board", aliases: ["board", "business board"] },
   { key: "knowledge-exchange", name: "The Knowledge Exchange", kind: "feature", aliases: ["webinars", "classes", "learning"] },
 
   // Personal development
-  { key: "daily-sanctuary", name: "My Daily Sanctuary", kind: "feature", href: "/app/sanctuary", aliases: ["sanctuary", "affirmations", "daily practice", "gratitude"] },
+  { key: "daily-sanctuary", name: "My Daily Sanctuary", kind: "feature", href: "/app/sanctuary", aliases: ["daily sanctuary", "sanctuary", "affirmations", "daily practice", "gratitude"], avoid: [/(?<!My )\bDaily Sanctuary\b/] },
   { key: "discover-possible", name: "Discover What's Possible", kind: "feature" },
-  { key: "portfolio", name: "My Personal Discovery Portfolio", kind: "feature", href: "/app/know-yourself/portfolio", aliases: ["portfolio", "discovery portfolio"] },
+  { key: "portfolio", name: "My Personal Discovery Portfolio", kind: "feature", href: "/app/know-yourself/portfolio", aliases: ["portfolio", "discovery portfolio", "personal discovery portfolio"], avoid: [/(?<!My )\bPersonal Discovery Portfolio\b/] },
   { key: "becoming-circle", name: "The Becoming Circle", kind: "feature", aliases: ["circle", "support circle", "group conversation"] },
   { key: "find-your-circle", name: "Find Your Circle", kind: "feature", href: "/app/connect/circles", aliases: ["circles", "groups", "clubs"] },
 
@@ -84,7 +85,10 @@ export const BRAND_TERMS = [
   { key: "level-one", name: "One Society", kind: "membership" },
   { key: "level-complete", name: "Complete Society", kind: "membership" },
   { key: "executive-private", name: "Executive Private", kind: "membership", aliases: ["executive"] },
-  { key: "elite-concierge", name: "Elite Concierge", kind: "membership", aliases: ["elite", "concierge"], note: "Holders are Elite Members (founder directives)." },
+  { key: "executive-member", name: "Executive Member", kind: "membership", note: "An active Executive Private membership holder. Champagne-gold and charcoal shield emblem." },
+  { key: "elite-concierge", name: "Elite Concierge", kind: "membership", aliases: ["elite", "concierge", "elite concierge society"], avoid: [/\bElite Concierge Society\b/] },
+  { key: "elite-member", name: "Elite Member", kind: "membership", note: "An active Elite Concierge membership holder. Signature orange-gold and black crown shield emblem." },
+  { key: "identity-verified", name: "Identity Verified", kind: "feature", note: "The orange checkmark: identity verification only, regardless of membership level." },
 
   // Owner side
   { key: "owner-portal", name: "Owner Portal", kind: "portal", href: "/admin", avoid: [/\bAdmin Portal\b/] },
@@ -123,11 +127,15 @@ export function brandInstructions(): string {
   return `# Official names\nAlways use these exact official names, spelled and capitalized as written, in text and when speaking. Understand everyday words members use, but answer with the official name. Never invent, shorten or rebrand a feature name.\n${lines.join("\n")}`;
 }
 
-/** Naming questions awaiting the founder (the registry keeps the current name until she decides). */
-export const PENDING_DECISIONS = [
-  "Business Deal Rooms: the directives use both \"Business Deal Room\" and \"Deal Room\". The site uses \"Deal Room\" inside CONNECT 360 screens. Confirm whether the shorter form is approved there.",
-  "My Daily Sanctuary: the directives use both \"My Daily Sanctuary\" and \"Daily Sanctuary\".",
-  "My Personal Discovery Portfolio: the directives say \"Personal Discovery Portfolio\"; the site adds \"My\".",
-  "Elite Concierge Society: used on the Elite invitation banner and pages; the directives say \"Elite Concierge\". Confirm whether \"Society\" is part of the name.",
-  "Business Launch Center: directive 31 also says \"Complimentary Career & Business Launch Center\".",
+/** Naming questions awaiting the founder. All resolved November 28, 2026 (directive 41). */
+export const PENDING_DECISIONS: readonly string[] = [];
+
+/** Founder-approved naming decisions (directive 41, final). Former names stay searchable; members only ever see the official name. */
+export const RESOLVED_DECISIONS = [
+  { official: "Business Deal Rooms", discontinued: "Deal Rooms" },
+  { official: "My Daily Sanctuary", discontinued: "Daily Sanctuary" },
+  { official: "My Personal Discovery Portfolio", discontinued: "Personal Discovery Portfolio" },
+  { official: "Elite Concierge", discontinued: "Elite Concierge Society" },
+  { official: "Business Launch Center", discontinued: "Complimentary Career & Business Launch Center" },
+  { official: "The Art of Knowing Yourself", discontinued: "The Art of Self" },
 ] as const;

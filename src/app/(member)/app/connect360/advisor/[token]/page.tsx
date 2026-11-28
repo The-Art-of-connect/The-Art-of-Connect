@@ -21,7 +21,7 @@ export default async function AdvisorInvite({ params }: { params: Promise<{ toke
         </ul>
         <MemberForm action={acceptAdvisorInvite}>
           <input type="hidden" name="token" value={token} />
-          <button className="btn btn-gold">Accept and open the Deal Room</button>
+          <button className="btn btn-gold">Accept and open the Business Deal Room</button>
         </MemberForm>
         <p className="text-xs text-faint">This link works once and expires after 14 days. If it no longer works, ask your client to send a new invitation.</p>
       </div>

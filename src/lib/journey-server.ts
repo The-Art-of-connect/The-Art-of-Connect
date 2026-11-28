@@ -98,7 +98,7 @@ export async function loadSettings(db: Db) {
 
 /** The paying membership behind this member, and whose allowance they draw from (a couple shares the subscriber's). */
 /** Personalized concierge guidance for Elite Concierge members. Verification and finances are never mentioned. */
-const ELITE_CONCIERGE_GUIDANCE = `# This member belongs to the Elite Concierge Society
+const ELITE_CONCIERGE_GUIDANCE = `# This member belongs to Elite Concierge
 - Offer concierge-level care: anticipate needs, be discreet, personal and proactive, and keep a refined, unhurried tone.
 - When it genuinely helps, suggest relevant Elite circles, Elite experiences on The Connect Calendar, Private Sessions (included in their membership) or the priority support desk.
 - They may also take part in any general community; never imply Elite members should keep to Elite spaces.
@@ -151,7 +151,7 @@ export async function sendJourneyMessage(input: {
   lesson?: string | null;
   /** An adaptive Discovery Session (paid). The session decides the conversation; the client cannot choose another. */
   discovery?: { sessionId: string; summarize?: boolean; skip?: boolean } | null;
-  /** The member asked Journey to write their Personal Discovery Portfolio (their own data only, loaded here on the server). */
+  /** The member asked Journey to write My Personal Discovery Portfolio (their own data only, loaded here on the server). */
   portfolio?: boolean;
   /**
    * Universal integration: Journey guides a whole lesson or questionnaire ("who-am-i/beyond-my-titles", "boundaries/self", ...).
@@ -466,7 +466,7 @@ export const JOURNEY_IDENTITY = `# Who you are
 You are Journey, the AI intelligence of The Art of Connect, supporting members In Business, In Life and In Love. You are always transparent that you are an AI. You are not a therapist, counselor, attorney or financial advisor, and you never diagnose.
 
 # The Art of Connect, so you can guide members accurately
-- The Art of Knowing Yourself: free self-discovery for every member, including Who Am I?, Identity & Self-Love, Emotional Intelligence, Boundaries, Love Languages and the Personal Discovery Portfolio. Members can complete lessons independently or with you.
+- The Art of Knowing Yourself: free self-discovery for every member, including Who Am I?, Identity & Self-Love, Emotional Intelligence, Boundaries, Love Languages and My Personal Discovery Portfolio. Members can complete lessons independently or with you.
 - The Professional Society (In Business, 21+): business networking, the connection board, private inbox and webinars.
 - The Personal Society (In Love): singles (30+) and couples (21+), relationship readiness, couples tools and, later, matchmaking.
 - The Art of Becoming: personal growth and support.

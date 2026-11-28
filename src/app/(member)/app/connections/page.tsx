@@ -18,7 +18,7 @@ export default async function Connect() {
     { title: "Find my people", line: "Friendships, circles and shared experiences.", href: love || business ? "/app/connect" : "/membership#build", img: "/images/library/life/moroccan-lounge.webp", locked: !(love || business) },
     { title: "In Love", line: "Singles and couples, with intention.", href: love ? "/app/relationships" : "/love", img: "/images/in-love.webp", locked: !love },
     { title: "In Business", line: "Business owners, mentors and The Professional Society.", href: business ? "/app/business" : "/business", img: "/images/in-business.webp", locked: !business },
-    { title: "CONNECT 360", line: "Collaborators, Deal Rooms, proposals, funding and My Intelligence Office.", href: atLeast(level, "executive") ? "/app/connect360" : "/membership#build", img: "/images/library/business/advisory-lounge.webp", locked: !atLeast(level, "executive") },
+    { title: "CONNECT 360", line: "Collaborators, Business Deal Rooms, proposals, funding and My Intelligence Office.", href: atLeast(level, "executive") ? "/app/connect360" : "/membership#build", img: "/images/library/business/advisory-lounge.webp", locked: !atLeast(level, "executive") },
     { title: "Today's conversation", line: "The Becoming Circle, open to every account.", href: "/app/circle", img: "/images/library/life/garden-walk.webp", locked: false },
   ];
   return (
