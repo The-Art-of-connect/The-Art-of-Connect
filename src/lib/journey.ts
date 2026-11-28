@@ -130,6 +130,18 @@ export function journeyAccessFor(
   return membership.packageSlug && (opts.enhancedPackages ?? DEFAULT_ENHANCED_PACKAGES).includes(membership.packageSlug) ? "enhanced" : "standard";
 }
 
+/**
+ * The QA exception (Journey's customer audit): the owner-listed fictional QA account's complimentary membership is $0,
+ * so it is counted as paid — and NOTHING else changes. Status, package, experiences, Journey allowances, spending limits
+ * and every permission still come from the membership the QA account has selected. With no paid tier selected (Free),
+ * there is no membership and Journey stays closed.
+ */
+export function withQaException(m: PaidMembership, isQa: boolean): PaidMembership {
+  if (!isQa || m.kind !== "member" || !m.packageSlug || !m.experiences.length) return m;
+  if (m.amountCents && m.amountCents > 0) return m;
+  return { ...m, amountCents: 1 };
+}
+
 /** Whether a paid member may open a particular Journey experience. */
 export function modeAllowed(mode: JourneyMode, access: JourneyAccess, membership: PaidMembership | null | undefined): boolean {
   if (access === "none" || !membership) return false;

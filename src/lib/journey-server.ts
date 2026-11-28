@@ -21,7 +21,7 @@ import { maybeAutoReload } from "@/lib/journey-commerce";
 import { JOURNEY_EI_GUIDANCE } from "@/lib/emotional-intelligence";
 import { JOURNEY_LOVE_LANGUAGE_GUIDANCE, LOVE_LANGUAGES, isLanguage } from "@/lib/love-languages";
 import {
-  buildJourneyInstructions, DEFAULT_ENHANCED_PACKAGES, effectiveMode, journeyAccessFor, modeAllowed, ownerTestAccess,
+  buildJourneyInstructions, DEFAULT_ENHANCED_PACKAGES, effectiveMode, journeyAccessFor, modeAllowed, withQaException, ownerTestAccess,
   type JourneyCapability, type JourneyMode, type PaidMembership,
 } from "@/lib/journey";
 import {
@@ -126,11 +126,11 @@ export async function membershipFor(db: Db, userId: string) {
   // Annual members still get a MONTHLY allowance: use the current month within the paid year.
   const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
   const start = sub.billing_interval === "year" || !periodStart ? monthStart : periodStart;
-  const membership: PaidMembership = {
+  const base: PaidMembership = {
     kind: sub.kind, status: sub.status, packageSlug: sub.tier_slug, experiences: sub.experiences ?? [], amountCents: sub.amount_cents,
   };
-  // The owner-listed fictional QA account's complimentary membership counts for Journey (company Journey limit still applies).
-  if ((!membership.amountCents || membership.amountCents <= 0) && (await isQaAccount(sub.user_id as string))) membership.amountCents = 1;
+  // The owner-listed fictional QA account: only its $0 price is treated as paid; the selected tier still governs everything.
+  const membership = withQaException(base, !base.amountCents || base.amountCents <= 0 ? await isQaAccount(sub.user_id as string) : false);
   return { membership, holderId: sub.user_id as string, periodStart: start, periodEnd: periodEnd ?? new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1)) };
 }
 

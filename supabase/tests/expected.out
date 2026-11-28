@@ -1157,3 +1157,26 @@ v52-4) A regular member is not a QA account (expect f):
 f
 v52-5) An expired QA listing no longer previews (expect f):
 f
+v54-1) Elite: Elite research, In Business and In Love, active badge, $0 with no payment record (expect elite|t|t|active|0|t):
+elite
+elite|t|t|active|0|t
+v54-2) Elite to Free: nothing paid remains (expect <null>|f|f|expired|0|0):
+free
+<null>|f|f|expired|0|0
+v54-3) Free keeps The Art of Becoming (expect t):
+t
+v54-4) Free to Elite: Elite returns only after the switch (expect elite|t|active):
+elite
+elite|t|active
+v54-5) Elite to Professional: only that tier (expect <null>|t|f|expired):
+professional
+<null>|t|f|expired
+v54-6) Executive: Executive research, not Elite (expect executive):
+executive
+executive
+v54-7) The QA account cannot edit its own membership directly (expect error):
+ERROR:  permission denied for table subscriptions
+v54-8) Nor grant itself access directly (expect error):
+ERROR:  new row violates row-level security policy for table "experience_access"
+v54-9) An expired Elite badge no longer grants Elite research (expect <null>):
+<null>
