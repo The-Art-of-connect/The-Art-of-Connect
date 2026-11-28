@@ -117,9 +117,10 @@ export const PROFILE_LINKS: NavLink[] = [
   { href: "/app", label: "My dashboard" },
   { href: "/app/message-center", label: "Message Center" },
   { href: "/app/know-yourself/portfolio", label: "My Personal Discovery Portfolio" },
+  { href: "/app/settings", label: "Settings" },
   { href: "/app/membership", label: "Membership & billing" },
   { href: "/what-we-offer", label: "What my membership includes" },
-  { href: "/app/journey/plus", label: "My Journey allowance" },
+  { href: "/app/journey#chat", label: "My Journey allowance" },
   { href: "/app/journey/customize", label: "Customize Your Journey" },
   { href: "/app/journey/check-ins", label: "Notifications & check-ins" },
   { href: "/app/verify", label: "Identity verification" },
@@ -138,7 +139,7 @@ export const MEMBER_TABS = [
   { href: "/app", label: "Home", icon: "home", match: ["/app"] },
   { href: "/app/connections", label: "Connect", icon: "connect", match: ["/app/connections", "/app/connect", "/app/relationships", "/app/readiness", "/app/business", "/app/connect360"] },
   { href: "/app/journey", label: "Journey", icon: "journey", match: ["/app/journey"] },
-  { href: "/app/world", label: "My World", icon: "profile", match: ["/app/world", "/app/membership", "/app/safety", "/app/verify", "/app/career", "/app/explore"] },
+  { href: "/app/world", label: "My World", icon: "profile", match: ["/app/world", "/app/settings", "/app/membership", "/app/safety", "/app/verify", "/app/career", "/app/explore"] },
 ] as const;
 export const PUBLIC_PRIMARY = [
   { href: "/", label: "Home" }, { href: "/life", label: "In Life" }, { href: "/love", label: "In Love" }, { href: "/business", label: "In Business" }, { href: "/membership", label: "Memberships" },

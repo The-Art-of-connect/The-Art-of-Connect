@@ -29,8 +29,10 @@ export function AskJourney({ level, journey }: { level: Level; journey: boolean 
               <span className="text-gold" aria-hidden="true">→</span>
             </Link>
           ))}
+          {/* Directive 51: one search. When the navigator has no direct match, search every page and lesson. */}
+          <Link href={`/search?q=${encodeURIComponent(asked)}`} className="block rounded-2xl px-4 py-2 text-sm text-gold-deep underline">{results.length ? `See everything about “${asked}”` : `Search everything for “${asked}”`}</Link>
           {journey ? (
-            <Link href="/app/journey" className="block rounded-2xl px-4 py-2 text-sm text-gold underline">{results.length ? "Or talk it through with Journey" : "Talk it through with Journey"}</Link>
+            <Link href={`/app/journey?ask=${encodeURIComponent(asked)}#chat`} className="block rounded-2xl px-4 py-2 text-sm text-gold underline">{results.length ? "Or talk it through with Journey" : "Talk it through with Journey"}</Link>
           ) : !results.length && <p className="px-2 text-sm text-muted">Try a few words like &ldquo;start a business&rdquo;, &ldquo;help me grow&rdquo; or &ldquo;my résumé&rdquo;.</p>}
         </div>
       )}
