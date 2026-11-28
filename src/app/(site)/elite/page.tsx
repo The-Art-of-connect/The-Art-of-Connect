@@ -8,7 +8,7 @@ import { EliteExperienceIcon } from "@/components/EliteIcons";
 import { ELITE_BENEFITS, ELITE_EXPERIENCES, ELITE_QUALIFICATIONS, ELITE_TAGLINE, usd, type Thresholds } from "@/lib/elite";
 
 export const metadata: Metadata = {
-  title: "Elite Concierge Society",
+  title: "Elite Concierge",
   description: "Apply for Elite Membership. An elevated connection society of verified, accomplished individuals, In Business, In Life and In Love. Qualification and verification required.",
   alternates: { canonical: "/elite" },
 };
@@ -35,7 +35,7 @@ export default async function ElitePage() {
           <div className="mx-auto flex w-fit items-center gap-3 rounded-full border border-[#c9a96e]/50 px-4 py-1.5 text-[0.7rem] uppercase tracking-[0.3em] text-[#f0c98a]">
             <EliteBadge size={18} interactive={false} /> Qualification and verification required
           </div>
-          <h1 className="display mt-8 text-5xl text-[#f6e7c8] sm:text-7xl">Elite Concierge Society</h1>
+          <h1 className="display mt-8 text-5xl text-[#f6e7c8] sm:text-7xl">Elite Concierge</h1>
           <p className="display mt-4 text-2xl italic text-[#e8892b] sm:text-3xl">{ELITE_TAGLINE}</p>
           <p className="mx-auto mt-6 max-w-2xl text-[#f5ecdf]/80">Our highest distinction within The Art of Connect: a society of verified, accomplished and distinguished individuals seeking exceptional connections In Business, In Life and In Love. Our exclusivity comes from who qualifies, not from who may apply.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

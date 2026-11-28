@@ -1,5 +1,5 @@
 import { requireStaff } from "@/lib/auth";
-import { BRAND_TERMS, PENDING_DECISIONS, type BrandTerm } from "@/lib/brand";
+import { BRAND_TERMS, PENDING_DECISIONS, RESOLVED_DECISIONS, type BrandTerm } from "@/lib/brand";
 import { PageHeader, Panel } from "@/components/admin/ui";
 
 export const metadata = { title: "Brand Terminology Registry" };
@@ -19,8 +19,14 @@ export default async function BrandRegistryPage() {
         <p className="max-w-2xl text-sm text-muted">One official name for every approved feature, used in navigation, headings, search, Home, membership benefits, upgrade pop-ups, Journey (text and voice), emails, the Owner Portal, Help and reports. Search understands the everyday words listed, and always answers with the official name. An automatic check blocks incorrect variants before any release.</p>
       </PageHeader>
       <div className="space-y-6">
-        <Panel title={`Awaiting your decision (${PENDING_DECISIONS.length})`}>
-          <ul className="divide-y divide-line text-sm">{PENDING_DECISIONS.map((d) => <li key={d} className="px-5 py-3">{d}</li>)}</ul>
+        {PENDING_DECISIONS.length > 0 && (
+          <Panel title={`Awaiting your decision (${PENDING_DECISIONS.length})`}>
+            <ul className="divide-y divide-line text-sm">{PENDING_DECISIONS.map((d) => <li key={d} className="px-5 py-3">{d}</li>)}</ul>
+          </Panel>
+        )}
+        <Panel title="Founder-approved naming decisions (final)">
+          <ul className="divide-y divide-line text-sm">{RESOLVED_DECISIONS.map((d) => <li key={d.official} className="grid gap-1 px-5 py-3 sm:grid-cols-2"><span className="font-semibold">{d.official}</span><span className="text-muted">Discontinued: {d.discontinued}</span></li>)}</ul>
+          <p className="border-t border-line px-5 py-3 text-xs text-muted">One feature. One official name. One consistent experience.</p>
         </Panel>
         <Panel title={`Official names (${terms.length})`}>
           <div className="overflow-x-auto">

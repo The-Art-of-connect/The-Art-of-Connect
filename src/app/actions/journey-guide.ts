@@ -9,7 +9,7 @@ import type { ActionResult } from "@/app/actions/admin";
 /**
  * Saves the answers a member reviewed after completing a module with Journey.
  * Written with the member's own row-secured permissions, to the same place the written form uses,
- * so progress, the module analysis and the Personal Discovery Portfolio update exactly as if typed.
+ * so progress, the module analysis and My Personal Discovery Portfolio update exactly as if typed.
  */
 export async function saveGuidedAnswers(_p: ActionResult, f: FormData): Promise<ActionResult> {
   const viewer = await getViewer();
@@ -29,5 +29,5 @@ export async function saveGuidedAnswers(_p: ActionResult, f: FormData): Promise<
   revalidatePath("/app/know-yourself", "layout");
   revalidatePath("/emotional-intelligence", "layout");
   revalidatePath("/app");
-  return { ok: true, message: "Saved privately. Your progress, personal analysis and Personal Discovery Portfolio are updated. You can edit any answer below at any time." };
+  return { ok: true, message: "Saved privately. Your progress, personal analysis and My Personal Discovery Portfolio are updated. You can edit any answer below at any time." };
 }

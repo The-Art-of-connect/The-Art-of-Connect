@@ -9,7 +9,7 @@ import { ActionForm } from "@/components/admin/ActionForm";
 import { eliteSaveExperiences } from "@/app/actions/elite";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Elite Concierge Society" };
+export const metadata = { title: "Elite Concierge" };
 
 type Tile = { title: string; body: string; href?: string; ready: boolean };
 const TILES: Tile[] = [

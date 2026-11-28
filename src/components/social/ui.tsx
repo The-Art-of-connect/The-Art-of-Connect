@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ActionForm } from "@/components/admin/ActionForm";
-import { EliteBadge } from "@/components/EliteBadge";
+import { MemberMarks } from "@/components/MembershipEmblem";
 import { addComment, createPost, postAction, reportContent } from "@/app/actions/social";
 import { EVENT_CATEGORY_LABEL, EVENT_ORIGIN_LABEL, POST_KINDS, REPORT_REASONS } from "@/lib/social";
 import type { Feed, Person } from "@/lib/social-server";
@@ -17,7 +17,7 @@ export function Avatar({ name, url, size = 44 }: { name: string | null; url?: st
 export function PersonName({ p, id }: { p?: Person; id: string }) {
   return (
     <Link href={`/app/connect/members/${id}`} className="inline-flex items-center gap-1.5 font-semibold hover:underline">
-      {p?.display_name ?? "Member"}{p?.elite && <EliteBadge size={15} interactive={false} />}
+      {p?.display_name ?? "Member"}<MemberMarks distinction={p?.distinction ?? (p?.elite ? "elite" : null)} verified={p?.verified} size={14} />
     </Link>
   );
 }

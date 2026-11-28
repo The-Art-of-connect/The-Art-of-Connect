@@ -1,5 +1,5 @@
 /**
- * Elite Concierge Society: apply for Elite Membership; qualification and verification required. Shared labels and helpers (no server access here).
+ * Elite Concierge: apply for Elite Membership; qualification and verification required. Shared labels and helpers (no server access here).
  */
 export const ELITE_TAGLINE = "Distinction. Intention. Influence.";
 

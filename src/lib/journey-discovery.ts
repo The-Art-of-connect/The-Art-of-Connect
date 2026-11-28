@@ -55,7 +55,7 @@ export function discoveryInstructions(c: { title: string; resources: { label: st
     base.push(
       `The member has asked for their personal summary. Write it now, using exactly these headings in order: ${CATEGORY_ANALYSIS_HEADINGS.join("; ")}.`,
       "Distinguish clearly between what the member shared (begin those sentences with \"You shared\") and your own educational reflections. Include recurring themes only where the member's answers support them. Never invent information or present causal conclusions as fact.",
-      `Under Recommended Resources, choose from: ${c.resources.map((r) => r.label).join("; ")}; and The Personal Discovery Portfolio.`,
+      `Under Recommended Resources, choose from: ${c.resources.map((r) => r.label).join("; ")}; and My Personal Discovery Portfolio.`,
       "Close warmly. This is educational and reflective, not a clinical assessment.",
     );
   }

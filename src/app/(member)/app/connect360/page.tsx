@@ -40,7 +40,7 @@ export default async function Connect360() {
     <>
       <LuxHero eyebrow="Global Intelligence Division" title="CONNECT 360" tagline="Discover. Prepare. Collaborate. Advance." />
       {!premium && (
-        <p className="glass mt-8 p-6 text-sm text-muted">CONNECT 360 is part of Executive Private and Elite Concierge. <Link href="/membership" className="text-gold underline">Compare memberships</Link>. If you&apos;ve been invited to a Deal Room as a professional advisor, open the private link you were sent.</p>
+        <p className="glass mt-8 p-6 text-sm text-muted">CONNECT 360 is part of Executive Private and Elite Concierge. <Link href="/membership" className="text-gold underline">Compare memberships</Link>. If you&apos;ve been invited to a Business Deal Room as a professional advisor, open the private link you were sent.</p>
       )}
       <LuxSection eyebrow="Your office" title="Everything in one place">
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

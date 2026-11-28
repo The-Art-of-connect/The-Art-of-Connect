@@ -72,7 +72,7 @@ export async function addPosition(_p: R, f: FormData): Promise<R> {
   const doc = str(f, "document", 40);
   if (category === "committed" && f.get("attest") !== "on") return fail("Please confirm these funds are set aside for this project.");
   const { error } = await c.b.from("funding_positions").insert({ user_id: c.viewer.id, project_id: id, category, amount_cents: amount, method, document_id: z.string().uuid().safeParse(doc).success ? doc : null });
-  if (error) return fail(friendly(error.message, category === "verified_balance" || category === "approved_financing" ? "Attach the lender or professional letter (uploaded to a Deal Room you're in) for review." : "That couldn't be recorded."));
+  if (error) return fail(friendly(error.message, category === "verified_balance" || category === "approved_financing" ? "Attach the lender or professional letter (uploaded to a Business Deal Room you're in) for review." : "That couldn't be recorded."));
   page(id);
   return ok(category === "declared" || category === "committed" ? "Recorded as self-reported." : "Submitted for review. It will show as verified only after the owner reviews the evidence.");
 }

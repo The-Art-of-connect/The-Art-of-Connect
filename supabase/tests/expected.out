@@ -1157,6 +1157,35 @@ v52-4) A regular member is not a QA account (expect f):
 f
 v52-5) An expired QA listing no longer previews (expect f):
 f
+v53-1) Visible members show their distinction, from their membership (expect executive|f, elite|t):
+executive|f
+elite|t
+v53-2) A member who is not visible to the viewer returns nothing (expect 0):
+0
+v53-3) Members cannot give themselves an Elite badge (expect error):
+ERROR:  new row violates row-level security policy for table "elite_badges"
+v53-4) Members cannot give themselves Executive Private (expect error):
+ERROR:  permission denied for table subscriptions
+v53-5) Members cannot call the internal distinction check directly (expect error):
+ERROR:  permission denied for function membership_distinction
+v53-6) Members can read their own marks (expect 1 row, no distinction):
+1|
+v53-7) Distinctions update automatically when membership ends (expect one row, empty distinction):
+1|
+v53-8) A blocked member is never shown (expect 0):
+0
+v53-9) An expired Elite badge no longer counts (expect f):
+f
+v53-10) Elite expired: the crown is removed, identity verification stays (expect <none>|t):
+<none>|t
+v53-11) Elite downgraded to Executive Private: Executive Member, identity unchanged (expect executive|t):
+executive|t
+v53-12) A paused (past due) membership shows no emblem, identity unchanged (expect <none>|t):
+<none>|t
+v53-13) A revoked Elite badge never shows the crown (expect f):
+f
+v53-14) An Executive Member who never verified identity shows no orange check (expect executive|f):
+executive|f
 v54-1) Elite: Elite research, In Business and In Love, active badge, $0 with no payment record (expect elite|t|t|active|0|t):
 elite
 elite|t|t|active|0|t

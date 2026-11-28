@@ -7,7 +7,8 @@ import { connectionAction, startConversation } from "@/app/actions/social";
 import { INTEREST_LABEL, SEEKING, SEEKING_LABEL } from "@/lib/social";
 import { loadFeed, people, signPhotos } from "@/lib/social-server";
 import { Avatar, PostCard, ReportMenu } from "@/components/social/ui";
-import { EliteBadge } from "@/components/EliteBadge";
+import { MemberMarks } from "@/components/MembershipEmblem";
+import { memberMarks } from "@/lib/member-marks";
 
 export const metadata = { title: "Member profile" };
 
@@ -18,7 +19,9 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
   const viewer = (await getViewer())!;
   if (isInsidePreview(viewer) || viewer.viewAs) return <p className="rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm">Preview: sign in with your own account.</p>;
   const db = (await createClient())!;
-  const p = (await people(db, [id]))[id];
+  const [pp, mk] = await Promise.all([people(db, [id]), memberMarks(db, [id])]);
+  const p = pp[id];
+  const marks = mk[id];
   if (!p && id !== viewer.id) notFound();
   const me = id === viewer.id;
   const [{ data: photos }, { data: follow }, feed] = await Promise.all([
@@ -39,7 +42,7 @@ export default async function MemberProfile({ params }: { params: Promise<{ id: 
         <div className="flex flex-wrap items-start gap-5">
           <Avatar name={prof?.display_name ?? null} url={prof?.avatar_path ? urls[prof.avatar_path] : null} size={96} />
           <div className="min-w-0 flex-1">
-            <h1 className="display flex items-center gap-2 text-4xl">{prof?.display_name ?? "Member"}{p?.elite && <EliteBadge size={26} />}</h1>
+            <h1 className="display flex flex-wrap items-center gap-3 text-4xl">{prof?.display_name ?? "Member"}<MemberMarks distinction={marks?.distinction} verified={marks?.verified} size={22} label interactive /></h1>
             {prof?.headline && <p className="mt-1 text-muted">{prof.headline}</p>}
             {location && <p className="mt-1 text-sm text-faint">{location}</p>}
           </div>

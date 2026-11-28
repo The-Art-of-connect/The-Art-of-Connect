@@ -35,7 +35,7 @@ export default async function MyWorld() {
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
   const sections: { title: string; tiles: Tile[] }[] = [
     ...(exec ? [{ title: "My projects", tiles: [
-      { href: "/app/connect360/rooms", title: "Deal Rooms", detail: plural(rooms, "active room", "active rooms") },
+      { href: "/app/connect360/rooms", title: "Business Deal Rooms", detail: plural(rooms, "active room", "active rooms") },
       { href: "/app/connect360/proposals", title: "Proposals", detail: plural(proposals, "proposal", "proposals") },
       { href: "/app/connect360/funding", title: "Funding", detail: plural(funding, "project", "projects") },
       { href: "/app/connect360/intelligence", title: "My Intelligence Office", detail: `${plural(research, "assignment", "assignments")} · ${saved} saved` },

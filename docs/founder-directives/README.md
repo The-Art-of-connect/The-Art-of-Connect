@@ -42,6 +42,9 @@ changes an earlier one, the later one wins.
 | 36 | [Membership-Aware Upgrade Pop-Up](36-membership-aware-upgrade-popup.md) | No silent redirects: one elegant pop-up explains the feature, price and upgrade; 15-day experience where eligible; Elite never prompted; return to the chosen feature. |
 | 37 | [Brand Terminology Standard](37-brand-terminology-standard.md) | **Permanent requirement.** One official name per feature, controlled by the Brand Terminology Registry and enforced automatically. |
 | 38 | [In Love Experience](38-in-love-experience.md) | Recognizable Singles matchmaking and a dedicated Couples space with contextual navigation; Singles-to-Couples transition; Executive and Elite members recognizable. |
+| 39 | [Executive & Elite Membership Distinctions](39-membership-distinctions.md) | Entitlement-controlled emblems, separate from identity verification. |
+| 40 | [Approval: Membership and Identity Distinctions](40-membership-and-identity-distinctions-approval.md) | Identity Verified (orange checkmark), Executive Member and Elite Member emblems approved. |
+| 41 | [Final Naming Directive](41-final-naming-directive.md) | **Permanent.** Six naming decisions resolved: one feature, one official name, one consistent experience. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

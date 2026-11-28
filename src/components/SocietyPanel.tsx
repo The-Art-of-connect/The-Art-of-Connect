@@ -14,7 +14,7 @@ export function SocietyPanel({ current }: { current: string | null }) {
     <section className="glass mt-10 p-7">
       <p className="eyebrow">Your society</p>
       <h2 className="display mt-2 text-3xl">{name}</h2>
-      <p className="mt-2 text-sm text-muted">Life changes. If you&rsquo;ve entered a committed relationship, or your goals have shifted, you can move to another society in this same account. Your history in The Art of Knowing Yourself, Personal Discovery Portfolio and private reflections always stay with you.</p>
+      <p className="mt-2 text-sm text-muted">Life changes. If you&rsquo;ve entered a committed relationship, or your goals have shifted, you can move to another society in this same account. Your history in The Art of Knowing Yourself, My Personal Discovery Portfolio and private reflections always stay with you.</p>
       <ActionForm action={changeSociety} className="mt-5 space-y-3">
         <div className="grid gap-2 sm:grid-cols-3">
           {SOCIETIES.filter((s) => s.id !== current).map((s) => (

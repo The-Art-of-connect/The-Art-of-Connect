@@ -3,7 +3,7 @@ import { EliteBadge } from "@/components/EliteBadge";
 import { ELITE_TAGLINE } from "@/lib/elite";
 
 const TILES = [
-  { href: "/app/elite", title: "Elite Concierge Society", body: "Your private Elite dashboard and experiences." },
+  { href: "/app/elite", title: "Elite Concierge", body: "Your private Elite dashboard and experiences." },
   { href: "/app/journey", title: "Journey Concierge", body: "Unlimited, personal guidance by text; 300 voice minutes a month." },
   { href: "/app/connect/circles?category=elite", title: "Elite circles", body: "Verified peers, plus every open circle you choose." },
   { href: "/app/connect/events?eligibility=elite", title: "Elite experiences", body: "Exclusive events on The Connect Calendar." },

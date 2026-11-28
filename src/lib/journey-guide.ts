@@ -161,7 +161,7 @@ const PAGE_CONTEXT: [string, string][] = [
   ["/app/know-yourself/identity-self-love", "The Art of Knowing Yourself · Identity & Self-Love founding curriculum"],
   ["/app/know-yourself/emotional-intelligence", "The Art of Knowing Yourself · Emotional Intelligence"],
   ["/app/know-yourself/boundaries", "The Art of Knowing Yourself · Boundaries & non-negotiables"],
-  ["/app/know-yourself/portfolio", "The Art of Knowing Yourself · their Personal Discovery Portfolio"],
+  ["/app/know-yourself/portfolio", "The Art of Knowing Yourself · My Personal Discovery Portfolio"],
   ["/app/know-yourself/growth", "The Art of Knowing Yourself · their growth goals and history"],
   ["/app/know-yourself", "The Art of Knowing Yourself (self-discovery for every member)"],
   ["/emotional-intelligence", "The Art of Emotional Intelligence"],

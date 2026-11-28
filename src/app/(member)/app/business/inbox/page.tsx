@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { MemberMarks } from "@/components/MembershipEmblem";
+import { memberMarks } from "@/lib/member-marks";
 import { requireExperience } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,6 +29,7 @@ export default async function BusinessInbox({ searchParams }: { searchParams: Pr
     postIds.length ? biz.from("posts").select("id, title").in("id", postIds) : Promise.resolve({ data: [] as { id: string; title: string }[] }),
     ids.length ? biz.from("messages").select("conversation_id").in("conversation_id", ids).is("read_at", null).neq("sender_id", viewer.id) : Promise.resolve({ data: [] as { conversation_id: string }[] }),
   ]);
+  const marks = await memberMarks(supabase, others);
   const nameOf = (uid: string) => {
     const n = (names ?? []).find((x) => x.user_id === uid);
     return n?.display_name || n?.company || "A Professional Society member";
@@ -50,7 +53,7 @@ export default async function BusinessInbox({ searchParams }: { searchParams: Pr
               <li key={c.id}>
                 <Link href={`/app/business/inbox/${c.id}`} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-champagne/10">
                   <span>
-                    <span className={`block ${n ? "font-semibold" : ""}`}>{nameOf(other)}</span>
+                    <span className={`flex flex-wrap items-center gap-1.5 ${n ? "font-semibold" : ""}`}>{nameOf(other)}<MemberMarks distinction={marks[other]?.distinction} verified={marks[other]?.verified} size={13} /></span>
                     <span className="block text-xs text-muted">{KIND[c.kind] ? `${KIND[c.kind]} · ` : ""}{titleOf(c.post_id) ? `Re: ${titleOf(c.post_id)} · ` : ""}{c.requester_id === viewer.id ? "You reached out" : "Reached out to you"} · {new Date(c.last_message_at).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">

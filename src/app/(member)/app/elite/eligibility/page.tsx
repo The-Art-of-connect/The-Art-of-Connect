@@ -89,7 +89,7 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
           <Link href="/app/membership" className="btn btn-gold mt-4">Choose Elite Concierge in Membership &amp; billing</Link>
         </div>
       )}
-      {status === "membership_activated" && <p className="mt-8 text-center"><Link href="/app/elite" className="btn btn-gold">Enter the Elite Concierge Society</Link></p>}
+      {status === "membership_activated" && <p className="mt-8 text-center"><Link href="/app/elite" className="btn btn-gold">Enter Elite Concierge</Link></p>}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="glass p-6">

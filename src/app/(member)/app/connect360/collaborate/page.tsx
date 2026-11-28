@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { MemberMarks } from "@/components/MembershipEmblem";
+import { memberMarks } from "@/lib/member-marks";
 import { getViewer, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getMembership } from "@/lib/membership-server";
@@ -27,6 +29,7 @@ export default async function Collaborate() {
     db.rpc("professional_ready", { p: viewer.id }),
   ]) : [{ data: null }, { data: [] }, { data: false }];
   const list = (dir ?? []) as Entry[];
+  const marks = db ? await memberMarks(db, list.map((e) => e.user_id)) : {};
 
   if (!premium) {
     return (
@@ -71,7 +74,7 @@ export default async function Collaborate() {
           <ul className="grid gap-5 lg:grid-cols-2">
             {list.map((e) => (
               <li key={e.user_id} className="glass p-6">
-                <p className="display text-2xl">{e.display}</p>
+                <p className="display flex flex-wrap items-center gap-2 text-2xl">{e.display}<MemberMarks distinction={marks[e.user_id]?.distinction} verified={marks[e.user_id]?.verified} size={16} /></p>
                 <p className="mt-1 text-xs text-muted">{[e.industry, e.owns_business ? "Business owner" : null, e.regions.join(", ")].filter(Boolean).join(" · ")}</p>
                 {e.summary && <p className="mt-3 text-sm text-muted">{e.summary}</p>}
                 <p className="mt-3 flex flex-wrap gap-1.5">{e.interests.map((i) => <span key={i} className="chip normal-case tracking-normal">{INTERESTS[i] ?? i}</span>)}</p>

@@ -11,7 +11,7 @@ import { atLeast } from "@/lib/membership-level";
 import { ADVISOR_TYPES, DOC_CATEGORIES, INTERESTS, ITEM_KINDS, PURPOSES, STAGES, friendly } from "@/lib/connect360";
 
 /**
- * CONNECT 360 member actions (founder directives 27–29): collaboration preferences and requests, Deal Rooms, advisors, plan items,
+ * CONNECT 360 member actions (founder directives 27–29): collaboration preferences and requests, Business Deal Rooms, advisors, plan items,
  * private and shared discussion, documents and reviews. Every rule is enforced again by the database (row-level security and
  * guards); these checks add respectful messages.
  */
@@ -78,13 +78,13 @@ export async function respondCollaboration(_p: R, f: FormData): Promise<R> {
   return ok({ accepted: "Accepted for discussion. This isn't an agreement or commitment of any kind.", declined: "Declined.", more_info: "Asked for more information. You can each send a few messages before deciding.", withdrawn: "Withdrawn from the discussion." }[decision]!);
 }
 
-// ─── Deal Rooms (directives 27 §6, 28 §10) ───────────────────────────────────────────────────
+// ─── Business Deal Rooms (directives 27 §6, 28 §10) ───────────────────────────────────────────────────
 export async function createRoom(_p: R, f: FormData): Promise<R> {
   const m = await me(); if (!isCtx(m)) return m;
   const title = str(f, "title", 160);
-  if (title.length < 3) return fail("Give your Deal Room a name.");
+  if (title.length < 3) return fail("Give your Business Deal Room a name.");
   const { data, error } = await m.b.from("deal_rooms").insert({ owner_id: m.viewer.id, title, objective: str(f, "objective", 4000) || null }).select("id").single();
-  if (error || !data) return fail(friendly(error?.message, "The Deal Room couldn't be created."));
+  if (error || !data) return fail(friendly(error?.message, "The Business Deal Room couldn't be created."));
   room(data.id);
   redirect(`/app/connect360/rooms/${data.id}`);
 }
@@ -97,7 +97,7 @@ export async function updateRoom(_p: R, f: FormData): Promise<R> {
   if (stage in STAGES) patch.stage = stage;
   if (f.get("archive") === "1") patch.status = "archived";
   const { error } = await m.b.from("deal_rooms").update(patch).eq("id", id);
-  if (error) return fail(friendly(error.message, "Only the Deal Room owner can change this."));
+  if (error) return fail(friendly(error.message, "Only the Business Deal Room owner can change this."));
   room(id);
   return ok("Saved.");
 }
@@ -109,7 +109,7 @@ export async function invitePrincipal(_p: R, f: FormData): Promise<R> {
   const { error } = await m.b.from("room_participants").insert({ room_id: id, user_id: user, role: "principal" });
   if (error) return fail(error.code === "23505" ? "They're already invited." : friendly(error.message, "That invitation couldn't be sent."));
   room(id);
-  return ok("Invited. They'll see the Deal Room and can accept or decline.");
+  return ok("Invited. They'll see the Business Deal Room and can accept or decline.");
 }
 
 /** A participant accepts or declines their invitation, or withdraws (their advisors and shared funding information leave with them). */
@@ -121,14 +121,14 @@ export async function setMyParticipation(_p: R, f: FormData): Promise<R> {
   if (error) return fail(friendly(error.message, "That couldn't be updated."));
   room(id);
   if (status !== "active") redirect("/app/connect360/rooms");
-  return ok("Welcome to the Deal Room.");
+  return ok("Welcome to the Business Deal Room.");
 }
 
 export async function removeParticipant(_p: R, f: FormData): Promise<R> {
   const m = await me(false); if (!isCtx(m)) return m;
   const id = str(f, "room", 40);
   const { error } = await m.b.from("room_participants").update({ status: "removed" }).eq("id", str(f, "participant", 40));
-  if (error) return fail(friendly(error.message, "You can remove only your own advisors, or anyone if you own the Deal Room."));
+  if (error) return fail(friendly(error.message, "You can remove only your own advisors, or anyone if you own the Business Deal Room."));
   room(id);
   return ok("Removed.");
 }

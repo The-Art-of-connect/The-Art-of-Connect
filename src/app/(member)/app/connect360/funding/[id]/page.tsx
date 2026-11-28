@@ -37,7 +37,7 @@ export default async function FundingProject({ params }: { params: Promise<{ id:
     { label: "At least one capital scenario", done: (scenarios ?? []).length > 0 },
     { label: "Owner contribution recorded", done: byCat("declared") + byCat("committed") > 0 },
     { label: "Verified balance or approved financing on file", done: byCat("verified_balance") + byCat("approved_financing") > 0 },
-    { label: "Supporting documents in a Deal Room vault", done: docOptions.length > 0 },
+    { label: "Supporting documents in a Business Deal Room vault", done: docOptions.length > 0 },
     { label: "A financing option being tracked", done: (apps ?? []).length > 0 },
   ];
 
@@ -66,7 +66,7 @@ export default async function FundingProject({ params }: { params: Promise<{ id:
             <MemberForm action={saveAssessment} className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
               <input type="hidden" name="id" value={id} />
               {ASSESSMENT.map((q) => <label key={q.key} className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-muted">{q.label}</span><textarea name={q.key} rows={2} className="field w-full" defaultValue={a[q.key]?.value ?? ""} placeholder={q.hint} /></label>)}
-              <label className="block sm:col-span-2"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-muted">Link a Deal Room (optional)</span>
+              <label className="block sm:col-span-2"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-muted">Link a Business Deal Room (optional)</span>
                 <select name="room" className="field w-full" defaultValue={p.room_id ?? ""}><option value="">None</option>{roomList.map((r) => <option key={r.room_id} value={r.room_id}>{r.deal_rooms!.title}</option>)}</select></label>
               <button className="btn btn-gold btn-sm sm:col-span-2 sm:w-fit">Save assessment</button>
             </MemberForm>
