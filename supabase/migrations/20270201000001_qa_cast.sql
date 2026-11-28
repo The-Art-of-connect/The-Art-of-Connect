@@ -252,3 +252,26 @@ exception when others then
 end $$;
 revoke all on function public.qa_act(uuid, text, text) from public, anon;
 grant execute on function public.qa_act(uuid, text, text) to authenticated;
+
+-- Where each fictional participant stands with the QA account (for the QA console only).
+create or replace function public.qa_participant_status()
+returns table (user_id uuid, name text, persona text, age integer, gender text, seeking text[], city text, test_verified boolean, distinction text,
+               connection text, exclusive text, couple boolean, blocked boolean)
+language sql stable security definer set search_path = public, relationships as $$
+  select q.user_id, p.display_name, q.persona,
+    case when rp.birth_year is not null then extract(year from now())::int - rp.birth_year end, rp.gender, rp.seeking, rp.city,
+    p.test_identity_verified, public.membership_distinction(q.user_id),
+    (select c.status || case when c.requester_id = auth.uid() then ' (you asked)' else ' (they asked)' end from relationships.connections c
+       where (c.requester_id = q.user_id and c.recipient_id = auth.uid()) or (c.requester_id = auth.uid() and c.recipient_id = q.user_id) order by c.created_at desc limit 1),
+    (select e.status from relationships.exclusive_requests e
+       where (e.requester_id = q.user_id and e.recipient_id = auth.uid()) or (e.requester_id = auth.uid() and e.recipient_id = q.user_id) order by e.created_at desc limit 1),
+    exists (select 1 from relationships.couple_members a join relationships.couple_members b on a.couple_id = b.couple_id where a.user_id = q.user_id and b.user_id = auth.uid()),
+    public.is_blocked_between(q.user_id, auth.uid())
+  from public.qa_participants q
+  join public.profiles p on p.id = q.user_id
+  left join relationships.profiles rp on rp.user_id = q.user_id
+  where public.is_qa_account(auth.uid())
+  order by q.persona, p.display_name;
+$$;
+revoke all on function public.qa_participant_status() from public, anon;
+grant execute on function public.qa_participant_status() to authenticated;

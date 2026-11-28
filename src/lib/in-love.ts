@@ -2,6 +2,9 @@
 export const INTENTS: Record<string, string> = {
   long_term: "A long-term relationship", marriage: "Marriage", companionship: "Companionship", exploring: "Getting to know someone",
 };
+export const GENDERS: Record<string, string> = { woman: "A woman", man: "A man", nonbinary: "Nonbinary" };
+export const SEEKING: Record<string, string> = { woman: "Women", man: "Men", nonbinary: "Nonbinary people" };
+
 export const MOODS: Record<string, string> = {
   connected: "Connected", grateful: "Grateful", calm: "Calm", hopeful: "Hopeful", tender: "Tender", stretched: "Stretched thin", distant: "A little distant",
 };

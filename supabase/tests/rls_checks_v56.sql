@@ -81,3 +81,12 @@ set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f561';
 select first_name from relationships.discover();
 reset role;
 reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f561';
+\echo 'v56-15) The QA console lists the fictional participants for the QA account (expect 3):'
+select count(*) from public.qa_participant_status();
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f565';
+\echo 'v56-16) Anyone else gets nothing (expect 0):'
+select count(*) from public.qa_participant_status();
+reset role;
+reset request.jwt.claim.sub;

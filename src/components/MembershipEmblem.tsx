@@ -95,12 +95,14 @@ export function IdentityCheck({ size = 16 }: { size?: number }) {
 }
 
 /** A member's marks, in a fixed order: identity check, then membership emblem. */
-export function MemberMarks({ distinction, verified, size = 16, label = false, interactive = false }: { distinction?: string | null; verified?: boolean | null; size?: number; label?: boolean; interactive?: boolean }) {
+export function MemberMarks({ distinction, verified, testVerified, size = 16, label = false, interactive = false }: { distinction?: string | null; verified?: boolean | null; testVerified?: boolean | null; size?: number; label?: boolean; interactive?: boolean }) {
   const tier = distinction === "elite" || distinction === "executive" ? distinction : null;
-  if (!tier && !verified) return null;
+  if (!tier && !verified && !testVerified) return null;
   return (
     <span className="inline-flex items-center gap-1.5 align-middle">
       {verified && <IdentityCheck size={size} />}
+      {/* Fictional QA accounts only: never shown as Identity Verified. */}
+      {!verified && testVerified && <span title="Fictional test account: test verification only" className="rounded-full border border-dashed border-muted px-1.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Test</span>}
       {tier && <MembershipEmblem tier={tier} size={size + 2} label={label} interactive={interactive} />}
     </span>
   );

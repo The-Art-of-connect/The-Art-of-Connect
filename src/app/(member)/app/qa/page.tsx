@@ -38,7 +38,8 @@ export default async function QaSwitcherPage() {
           </li>
         ))}
       </ul>
-      <Link href="/app" className="btn btn-ghost mt-8 w-full">Go to my home</Link>
+      <Link href="/app/qa/participants" className="btn btn-gold mt-8 w-full">Fictional participants for In Love testing</Link>
+      <Link href="/app" className="btn btn-ghost mt-3 w-full">Go to my home</Link>
     </div>
   );
 }

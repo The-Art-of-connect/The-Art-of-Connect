@@ -1276,3 +1276,7 @@ v56-14) Reset returns both to single, unblocked and unconnected, so scenarios ca
 ok
 f|0|0
 Marcus
+v56-15) The QA console lists the fictional participants for the QA account (expect 3):
+3
+v56-16) Anyone else gets nothing (expect 0):
+0
