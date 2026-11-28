@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { comingSoonPaths } from "@/lib/section-status";
-import { getLaunchState } from "@/lib/launch";
 import { getJourneyStatus } from "@/lib/journey-server";
 import { journeyClosedReason } from "@/lib/journey-guide-access";
 import { getViewer, hasRole } from "@/lib/auth";
@@ -35,33 +33,28 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
   const viewer = await getViewer();
   const ownerTest = status.access === "staff" && hasRole(viewer, ["owner"]);
   const available = status.enabled && (status.access === "standard" || status.access === "enhanced" || ownerTest);
-  const reason = await journeyClosedReason();
-  // Pay-as-you-go opens when Journey Plus is open to members and the credit packages are published (owner's switches).
-  const creditsOpen = status.access === "none" && !(await comingSoonPaths()).includes("/app/journey/plus") && (await getLaunchState()).payments_live;
+  const freeAccess = status.access === "none";
+  const reason = freeAccess ? "" : await journeyClosedReason();
   return (
     <>
-      <JourneyOrbHero />
+      <JourneyOrbHero showConversationLinks={!freeAccess} />
 
-      {status.access === "none" && !ownerTest && (
-        <div className="mt-10 rounded-[2rem] border border-champagne/50 bg-champagne/10 p-6 sm:p-8">
-          <p className="eyebrow">Journey with a membership</p>
-          <h2 className="display mt-2 text-3xl">Personal conversations with Journey begin with any paid membership</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted">Every lesson in The Art of Knowing Yourself stays open to you at no cost. A paid membership adds a monthly Journey allowance, and new members can try one free for 15 days.</p>
-          <p className="mt-2 max-w-2xl text-sm text-muted">
-            <span className="font-semibold text-text">Or pay as you go with Journey credits.</span> One credit is one reply from Journey in The Art of Becoming, priced at our cost.{" "}
-            {creditsOpen ? "Credits never expire unless shown at checkout, and nothing is charged until you confirm." : "Journey credits open soon. Nothing is ever charged without your confirmation."}
-          </p>
+      {freeAccess && (
+        <div id="chat" className="mt-10 scroll-mt-24 rounded-[2rem] border border-champagne/50 bg-champagne/10 p-6 sm:p-8">
+          <p className="eyebrow">Journey on a Free account</p>
+          <h2 className="display mt-2 text-3xl">Pay-as-you-go Journey credits are coming soon.</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted">Your self-guided lessons are included at no cost. Paid memberships include a monthly Journey allowance.</p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/app/onboarding" className="btn btn-gold btn-sm">Start a trial or choose a membership</Link>
-            {creditsOpen && <Link href="/app/journey/plus#credits" className="btn btn-ghost btn-sm">Buy Journey credits</Link>}
-            <Link href="/membership#compare" className="btn btn-ghost btn-sm">Compare Journey allowances</Link>
-            <Link href="/app/know-yourself" className="btn btn-ghost btn-sm">Continue self-guided</Link>
+            <Link href="/app/know-yourself" className="btn btn-gold btn-sm">Continue self-guided</Link>
+            <Link href="/membership#compare" className="btn btn-ghost btn-sm">Compare memberships</Link>
           </div>
         </div>
       )}
-      <div id="chat" className="mt-10 scroll-mt-24">
-        <JourneyChat allowance={status.allowance} available={available} reason={reason} ownerTest={ownerTest} initialText={ask} lesson={lesson} />
-      </div>
+      {!freeAccess && (
+        <div id="chat" className="mt-10 scroll-mt-24">
+          <JourneyChat allowance={status.allowance} available={available} reason={reason} ownerTest={ownerTest} initialText={ask} lesson={lesson} />
+        </div>
+      )}
 
       <LuxSection eyebrow="Four ways Journey walks with you" title="One philosophy. Every part of your life.">
         <div className="grid gap-5 sm:grid-cols-2">
@@ -73,7 +66,7 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
 
       <LuxSection eyebrow="Your Journey" title="More ways to grow">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {MORE.map((m) => <LuxCard key={m.href} {...m} />)}
+          {MORE.filter((m) => !freeAccess || !["/app/journey/plus", "/app/journey/voice", "/app/journey/sessions"].includes(m.href)).map((m) => <LuxCard key={m.href} {...m} />)}
         </div>
       </LuxSection>
 

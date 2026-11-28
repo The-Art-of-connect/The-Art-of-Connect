@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getViewer, isInsidePreview, isStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { money } from "@/lib/admin";
@@ -6,13 +7,21 @@ import { MemberForm } from "@/components/MemberForm";
 import { buy, disableAutoReload, enableAutoReload } from "@/app/actions/journey-member";
 import { hasAllAccess } from "@/lib/journey-commerce";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { membershipFor } from "@/lib/journey-server";
+import { getJourneyStatus, membershipFor } from "@/lib/journey-server";
 
 export const metadata = { title: "Journey Plus" };
 
 export default async function Plus({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
   const viewer = (await getViewer())!;
+  if ((await getJourneyStatus()).access === "none") {
+    return (
+      <LuxHero eyebrow="Journey" title="Journey Plus" tagline="Pay-as-you-go credits for Free accounts are coming soon.">
+        <p className="max-w-2xl text-muted">You can keep using your self-guided lessons at no cost.</p>
+        <Link href="/app/know-yourself" className="btn btn-gold mt-5">Continue self-guided</Link>
+      </LuxHero>
+    );
+  }
   const supabase = await createClient();
   const live = Boolean(supabase && !isInsidePreview(viewer));
   const [{ data: packages }, { data: ar }, { data: purchases }] = live
