@@ -4,7 +4,7 @@ import { syncMemberCalendars } from "@/lib/calendar-server";
 import { CouplesCalendar, type Busy, type CalEvent, type Link, type MyBusy } from "@/components/CouplesCalendar";
 import { SafetyFooter } from "@/components/Lux";
 
-export const metadata = { title: "Just us — our calendar" };
+export const metadata = { title: "Our Calendar" };
 
 export default async function CalendarPage() {
   const { viewer } = await requireExperience("relationships");
