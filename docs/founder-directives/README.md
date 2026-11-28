@@ -39,6 +39,9 @@ changes an earlier one, the later one wins.
 | 33 | [Professional Credibility & Opportunity Readiness](33-professional-credibility-opportunity-readiness.md) | **Recorded.** Completes directive 32; one system with the Résumé Builder and Intelligence Division. |
 | 34 | [Mandatory Professional Résumé (Executive & Elite)](34-mandatory-professional-resume.md) | **Recorded; in development.** Upload, build or approve; master history; readiness dashboard; required only for introductions and applications. |
 | 35 | [Luxury Through Simplicity](35-luxury-through-simplicity.md) | **Founder-level requirement.** Four destinations (Home · Connect · Journey · My World), Journey as concierge, progressive discovery, mobile first. |
+| 36 | [Membership-Aware Upgrade Pop-Up](36-membership-aware-upgrade-popup.md) | No silent redirects: one elegant pop-up explains the feature, price and upgrade; 15-day experience where eligible; Elite never prompted; return to the chosen feature. |
+| 37 | [Brand Terminology Standard](37-brand-terminology-standard.md) | **Permanent requirement.** One official name per feature, controlled by the Brand Terminology Registry and enforced automatically. |
+| 38 | [In Love Experience](38-in-love-experience.md) | Recognizable Singles matchmaking and a dedicated Couples space with contextual navigation; Singles-to-Couples transition; Executive and Elite members recognizable. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

@@ -240,7 +240,7 @@ export async function eliteBadge(_p: ActionResult, f: FormData): Promise<ActionR
   const status = String(f.get("status") ?? "");
   if (!["active", "suspended", "revoked"].includes(status)) return fail("Choose a badge status.");
   const { data: c } = await o.db.from("elite_candidates").select("status").eq("user_id", userId).maybeSingle();
-  if (status === "active" && c?.status !== "membership_activated") return fail("A badge can only be active for an activated Elite membership.");
+  if (status === "active" && c?.status !== "membership_activated") return fail("A badge can only be active for an activated Elite Concierge membership.");
   const { error } = await o.db.from("elite_badges").upsert({ user_id: userId, status, updated_at: new Date().toISOString() });
   if (error) return fail("Not saved.");
   await audit(`elite.badge_${status}`, "elite_badges", userId, {});

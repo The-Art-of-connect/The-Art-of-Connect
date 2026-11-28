@@ -209,7 +209,7 @@ export const templates = {
       preheader: "A quiet moment for yourself, whenever it suits you.",
       heading: `Hello, ${first(name)}.`,
       paragraphs: [
-        `Your Daily Sanctuary is ready${types.length ? `: ${types.join(", ")}` : ""}. Take a few minutes for yourself today, or whenever it suits you. There's nothing to catch up on.`,
+        `My Daily Sanctuary is ready for you${types.length ? `: ${types.join(", ")}` : ""}. Take a few minutes for yourself today, or whenever it suits you. There's nothing to catch up on.`,
         "You chose to receive these reminders. Change or turn them off anytime in Reminders & privacy.",
       ],
       action: { label: "Open My Daily Sanctuary", url: `${SITE}/app/sanctuary` },
