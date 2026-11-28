@@ -1130,3 +1130,20 @@ v50-3) Members can save a finding but cannot relabel its verification (expect er
 ERROR:  permission denied for table intel_findings
 v50-4) Saving works (expect t):
 t
+v51-1) An unlisted account cannot switch (expect error):
+ERROR:  QA_NOT_ALLOWED
+v51-2) An unlisted account cannot add itself to the switcher list (expect error):
+ERROR:  permission denied for table qa_switchers
+v51-3) The QA account switches to Elite (expect elite, elite-concierge, active, 0 staff):
+elite
+elite-concierge|active|0
+v51-4) Switching to Couples (expect personal-society, t, couples, expired):
+couples
+personal-society|t|couples|expired
+v51-5) Switching to Free removes paid access (expect 0, 0):
+free
+0|0
+v51-6) Unknown experiences are refused (expect error):
+ERROR:  QA_UNKNOWN_PERSONA
+v51-7) A non-test account on the list is still refused (expect error):
+ERROR:  QA_NOT_ALLOWED
