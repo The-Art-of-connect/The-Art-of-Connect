@@ -77,3 +77,4 @@
 20270122000002_formation_jurisdictions_draft.sql	exists (select 1 from public.formation_jurisdictions where code = 'DC')
 20270123000001_intel_webhook_deliveries.sql	exists (select 1 from information_schema.tables where table_name = 'intel_webhook_deliveries')
 20270124000001_vault_aws_testing.sql	exists (select 1 from information_schema.tables where table_name = 'vault_security_runs')
+20270125000001_connect360_screens.sql	exists (select 1 from pg_proc where proname = 'collab_directory')

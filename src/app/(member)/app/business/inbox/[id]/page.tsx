@@ -4,6 +4,9 @@ import { requireExperience } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { acknowledgeHelp, reportBusiness, respondToRequest, sendBusinessMessage, updateConversation } from "@/app/actions/business";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { MemberForm } from "@/components/MemberForm";
+import { respondCollaboration } from "@/app/actions/connect360";
+import { PURPOSES } from "@/lib/connect360";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +42,26 @@ export default async function Conversation({ params }: { params: Promise<{ id: s
         {post && <p className="mt-2 text-xs text-muted">About: <Link href={`/app/business/board/${post.id}`} className="text-gold underline">{post.title}</Link></p>}
       </div>
 
-      {c.status === "requested" && isRecipient && (
+      {c.kind !== "connection" && (
+        <section className="mt-4 rounded-2xl border border-champagne/50 bg-champagne/10 p-5 text-sm">
+          <p className="eyebrow">{c.kind === "proposal" ? "Proposal" : "Business collaboration request"} · {PURPOSES[c.purpose] ?? "Collaboration"}</p>
+          <p className="mt-3 font-semibold">The opportunity</p><p className="whitespace-pre-line text-muted">{c.project}</p>
+          <p className="mt-3 font-semibold">Why they reached out</p><p className="whitespace-pre-line text-muted">{c.reason}</p>
+          {c.shared_info && <><p className="mt-3 font-semibold">Business information they chose to share</p><p className="whitespace-pre-line text-muted">{c.shared_info}</p></>}
+          {isRecipient && ["requested", "more_info"].includes(c.status) && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <MemberForm action={respondCollaboration}><input type="hidden" name="id" value={id} /><input type="hidden" name="decision" value="accepted" /><button className="btn btn-gold btn-sm">Accept to discuss</button></MemberForm>
+              {c.status === "requested" && <MemberForm action={respondCollaboration}><input type="hidden" name="id" value={id} /><input type="hidden" name="decision" value="more_info" /><button className="btn btn-ghost btn-sm">Ask for more information</button></MemberForm>}
+              <MemberForm action={respondCollaboration}><input type="hidden" name="id" value={id} /><input type="hidden" name="decision" value="declined" /><button className="btn btn-ghost btn-sm">Decline</button></MemberForm>
+            </div>
+          )}
+          {["requested", "more_info", "accepted"].includes(c.status) && (
+            <MemberForm action={respondCollaboration} className="mt-3"><input type="hidden" name="id" value={id} /><input type="hidden" name="decision" value="withdrawn" /><button className="text-xs text-muted underline">Withdraw from this discussion</button></MemberForm>
+          )}
+          <p className="mt-3 text-xs text-faint">Accepting means you&apos;re open to discussing it. It is never an agreement, commitment or financial obligation.</p>
+        </section>
+      )}
+      {c.kind === "connection" && c.status === "requested" && isRecipient && (
         <div className="mt-4 rounded-2xl border border-champagne/50 bg-champagne/10 p-5">
           <p className="font-semibold">{otherName} would like to connect.</p>
           <p className="mt-1 text-sm text-muted">Read their introduction below. Accept to start a private conversation, or decline — they won’t be able to message you about this post.</p>
@@ -49,8 +71,9 @@ export default async function Conversation({ params }: { params: Promise<{ id: s
           </div>
         </div>
       )}
-      {c.status === "requested" && !isRecipient && <p className="mt-4 text-sm text-muted">Your introduction was sent. You’ll be able to continue once {otherName} accepts.</p>}
-      {["declined", "closed", "blocked"].includes(c.status) && <p className="mt-4 text-sm text-muted">This conversation is closed.</p>}
+      {c.kind === "connection" && c.status === "requested" && !isRecipient && <p className="mt-4 text-sm text-muted">Your introduction was sent. You’ll be able to continue once {otherName} accepts.</p>}
+      {["declined", "closed", "blocked", "withdrawn"].includes(c.status) && <p className="mt-4 text-sm text-muted">This conversation is closed.</p>}
+      {c.status === "more_info" && <p className="mt-4 text-sm text-muted">More information was requested. You can each send a few messages before a decision is made.</p>}
 
       <ol className="mt-6 space-y-3" aria-label="Messages">
         {(messages ?? []).map((m) => {
@@ -64,7 +87,7 @@ export default async function Conversation({ params }: { params: Promise<{ id: s
         })}
       </ol>
 
-      {c.status === "accepted" && (
+      {(c.status === "accepted" || c.status === "more_info") && (
         <ActionForm action={sendBusinessMessage} className="mt-6 space-y-2">
           <input type="hidden" name="id" value={id} />
           <textarea name="body" required maxLength={4000} className="field !min-h-[100px]" placeholder={`Write to ${otherName}…`} aria-label="Message" />

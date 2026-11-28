@@ -7,6 +7,7 @@ import { allow } from "@/lib/ratelimit";
 import { createClient } from "@/lib/supabase/server";
 import { CONTACT, FUTURE, HELP_NEEDED, HELP_OFFERED, MENTORSHIP, RELATIONSHIPS, SCOPES, STAGES, STRUCTURES, US_STATES, YEARS } from "@/lib/business-options";
 import type { ActionResult } from "@/app/actions/admin";
+import { friendly } from "@/lib/connect360";
 
 /**
  * The Professional Society — member actions. Every rule (who can post, who
@@ -19,7 +20,8 @@ const str = (f: FormData, k: string, max = 2000) => String(f.get(k) ?? "").trim(
 const pick = (f: FormData, k: string, allowed: Record<string, string>) => f.getAll(k).map(String).filter((v) => v in allowed);
 const oneOf = (v: string, allowed: Record<string, string>) => (v in allowed ? v : null);
 const dbMessage = (e: { message?: string } | null, fallback: string) =>
-  e?.message && /limit|waiting|closed|links|recipient|accept/i.test(e.message) ? e.message : fallback;
+  e?.message && /REGULATED_ACTIVITY|SAFETY_SHIELD/.test(e.message) ? friendly(e.message, fallback)
+  : e?.message && /limit|waiting|closed|links|recipient|accept/i.test(e.message) ? e.message : fallback;
 
 async function db() {
   const { viewer } = await requireExperience("business");
