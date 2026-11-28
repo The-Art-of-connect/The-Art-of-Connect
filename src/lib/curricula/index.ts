@@ -74,5 +74,5 @@ export async function teachingGuidance(db: Db | null, ref: string): Promise<stri
   const lessonText = l
     ? `\n\n## Current lesson: ${l.title}\nEducational focus: ${l.focus.join(" ")}\n${l.principles ? `Founding principles: ${l.principles.join(" ")}\n` : ""}Discovery questions you may explore conversationally (one at a time, never as a quiz): ${l.questions.map((q) => q.prompt).join(" | ")}\nGuided understanding: ${l.understanding.join(" ")}`
     : `\n\nLessons in this section: ${c.lessons.map((x) => x.title).join("; ")}.`;
-  return `# Teaching guidance: ${c.title} (The Art of Self)\n${c.philosophy}\n${c.journeyInstructions}${lessonText}`.slice(0, 7000);
+  return `# Teaching guidance: ${c.title} (The Art of Knowing Yourself)\n${c.philosophy}\n${c.journeyInstructions}${lessonText}`.slice(0, 7000);
 }

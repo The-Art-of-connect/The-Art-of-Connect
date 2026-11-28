@@ -5,7 +5,7 @@
 
 export const QA_DEPARTMENTS = [
   { key: "account", title: "Account and Registration" },
-  { key: "art-of-self", title: "The Art of Self" },
+  { key: "art-of-self", title: "The Art of Knowing Yourself" },
   { key: "journey", title: "Journey Intelligence" },
   { key: "professional", title: "The Professional Society" },
   { key: "singles", title: "Singles Experience" },

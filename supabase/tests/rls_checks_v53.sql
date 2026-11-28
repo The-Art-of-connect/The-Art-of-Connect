@@ -42,3 +42,36 @@ reset role;
 reset request.jwt.claim.sub;
 \echo 'v53-9) An expired Elite badge no longer counts (expect f):'
 select public.social_is_elite('00000000-0000-0000-0000-00000000f533');
+delete from public.blocks where blocker_id = '00000000-0000-0000-0000-00000000f531';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f531';
+\echo 'v53-10) Elite expired: the crown is removed, identity verification stays (expect <none>|t):'
+select coalesce(distinction, '<none>'), identity_verified from public.member_marks(array['00000000-0000-0000-0000-00000000f533']::uuid[]);
+reset role;
+reset request.jwt.claim.sub;
+insert into public.subscriptions (user_id, status, kind, tier_slug, tier_name, experiences, stripe_subscription_id) values
+  ('00000000-0000-0000-0000-00000000f533', 'active', 'member', 'executive-private', 'Executive Private', '{business,relationships}', 'sub_test_v53_downgrade');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f531';
+\echo 'v53-11) Elite downgraded to Executive Private: Executive Member, identity unchanged (expect executive|t):'
+select distinction, identity_verified from public.member_marks(array['00000000-0000-0000-0000-00000000f533']::uuid[]);
+reset role;
+reset request.jwt.claim.sub;
+update public.subscriptions set status = 'past_due' where stripe_subscription_id = 'sub_test_v53_downgrade';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f531';
+\echo 'v53-12) A paused (past due) membership shows no emblem, identity unchanged (expect <none>|t):'
+select coalesce(distinction, '<none>'), identity_verified from public.member_marks(array['00000000-0000-0000-0000-00000000f533']::uuid[]);
+reset role;
+reset request.jwt.claim.sub;
+update public.elite_badges set status = 'revoked', expires_at = null where user_id = '00000000-0000-0000-0000-00000000f533';
+update public.subscriptions set status = 'active' where stripe_subscription_id = 'sub_test_v53_downgrade';
+\echo 'v53-13) A revoked Elite badge never shows the crown (expect f):'
+select public.social_is_elite('00000000-0000-0000-0000-00000000f533');
+\echo 'v53-14) An Executive Member who never verified identity shows no orange check (expect executive|f):'
+update public.subscriptions set status = 'active' where stripe_subscription_id = 'sub_test_v53_exec';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000f531';
+select distinction, identity_verified from public.member_marks(array['00000000-0000-0000-0000-00000000f532']::uuid[]);
+reset role;
+reset request.jwt.claim.sub;

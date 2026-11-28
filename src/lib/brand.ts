@@ -31,8 +31,10 @@ export const BRAND_TERMS = [
 
   // Societies
   { key: "art-of-becoming", name: "The Art of Becoming", kind: "society", href: "/app/counseling", aliases: ["becoming", "wellness", "growth"] },
-  { key: "art-of-self", name: "The Art of Self", kind: "feature", aliases: ["self awareness", "lessons", "curriculum"] },
-  { key: "art-of-knowing-yourself", name: "The Art of Knowing Yourself", kind: "feature", href: "/app/know-yourself", aliases: ["know yourself", "who am i"] },
+  // Founder naming decision (November 28, 2026, final): "The Art of Knowing Yourself" is the official name; "The Art of Self" is retired.
+  // Part of The Art of Becoming, within In Life.
+  { key: "art-of-knowing-yourself", name: "The Art of Knowing Yourself", kind: "feature", href: "/app/know-yourself", aliases: ["know yourself", "who am i", "art of self", "self awareness", "lessons", "curriculum"],
+    avoid: [/\bArt of Self\b(?!-)/], note: "Part of The Art of Becoming, within In Life." },
   { key: "personal-society", name: "The Personal Society", kind: "society", aliases: ["singles", "couples", "dating society"] },
   { key: "professional-society", name: "The Professional Society", kind: "society", aliases: ["business society", "professionals"] },
 
@@ -123,7 +125,6 @@ export function brandInstructions(): string {
 
 /** Naming questions awaiting the founder (the registry keeps the current name until she decides). */
 export const PENDING_DECISIONS = [
-  "The Art of Self and The Art of Knowing Yourself: the feature directory lists The Art of Self at the page titled The Art of Knowing Yourself (/app/know-yourself). Confirm whether these are one name or two (the society and its hub).",
   "Business Deal Rooms: the directives use both \"Business Deal Room\" and \"Deal Room\". The site uses \"Deal Room\" inside CONNECT 360 screens. Confirm whether the shorter form is approved there.",
   "My Daily Sanctuary: the directives use both \"My Daily Sanctuary\" and \"Daily Sanctuary\".",
   "My Personal Discovery Portfolio: the directives say \"Personal Discovery Portfolio\"; the site adds \"My\".",

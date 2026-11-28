@@ -19,7 +19,7 @@ type Discovery = { percent: number; modulesDone: number; totalModules: number; n
 const GROUP_EXPERIENCE: Record<string, string> = { relationships: "relationships", professional: "business" };
 
 export function DashboardHub({ state, discovery, experiences }: { state: NavState; discovery: Discovery; experiences: string[] }) {
-  // The Art of Self and Journey are for everyone; society spaces only for members who have them.
+  // The Art of Knowing Yourself and Journey are for everyone; society spaces only for members who have them.
   const groups = NAV.filter((g) => g.key !== "home" && (!GROUP_EXPERIENCE[g.key] || experiences.includes(GROUP_EXPERIENCE[g.key])));
   const ring = 2 * Math.PI * 34;
   const started = discovery.percent > 0;

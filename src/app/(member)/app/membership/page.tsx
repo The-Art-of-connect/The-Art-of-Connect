@@ -61,7 +61,7 @@ export default async function MyMembershipPage({ searchParams }: { searchParams:
         ) : null}
         <p className="eyebrow">My membership</p>
         <h1 className="display mt-3 text-4xl">The Art of Becoming</h1>
-        <p className="mt-3 max-w-2xl text-muted">Your complimentary foundation: The Art of Self, personal discovery, identity, self-love, emotional intelligence, boundaries, love languages, private journaling and your Discovery Portfolio. It’s yours, free, for as long as you like.</p>
+        <p className="mt-3 max-w-2xl text-muted">Your complimentary foundation: The Art of Knowing Yourself, personal discovery, identity, self-love, emotional intelligence, boundaries, love languages, private journaling and your Discovery Portfolio. It’s yours, free, for as long as you like.</p>
         <MembershipChoices trialAvailable={Boolean(trialOpen)} />
       </>
     );

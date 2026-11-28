@@ -18,7 +18,7 @@ const MORE = [
   { href: "/app/journey/voice", title: "Talk to Journey", body: "Natural spoken conversations in the voice you choose." },
   { href: "/app/journey/daily", title: "My Daily Journey", body: "Morning manifestations, affirmations, journaling and evening reflections." },
   { href: "/app/journey/check-ins", title: "Check-ins", body: "Gentle follow-ups on the moments that matter — on your schedule, with quiet hours." },
-  { href: "/app/journey/library", title: "The Journey Library", body: "The ten Arts — from The Art of Self to The Art of Becoming." },
+  { href: "/app/journey/library", title: "The Journey Library", body: "The ten Arts — from The Art of Knowing Yourself to The Art of Becoming." },
   { href: "/app/journey/sessions", title: "Journey Private Sessions", body: "Focused, structured sessions around your personal goals." },
   { href: "/app/journey/memory", title: "What Journey remembers", body: "Review, change or delete anything Journey keeps for you." },
   { href: "/app/journey/plus", title: "Journey Plus", body: "Optional additional messages and voice minutes." },

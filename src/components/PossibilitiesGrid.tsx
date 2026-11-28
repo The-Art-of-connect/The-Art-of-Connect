@@ -3,7 +3,7 @@ import Link from "next/link";
 type Tile = { title: string; href: string; icon: string; free?: boolean; needs?: "paid" | "executive"; soon?: boolean; locked?: string };
 
 const TILES: Tile[] = [
-  { title: "The Art of Self", href: "/app/know-yourself", icon: "❀", free: true },
+  { title: "The Art of Knowing Yourself", href: "/app/know-yourself", icon: "❀", free: true },
   { title: "My Future Self", href: "/app/sanctuary/becoming", icon: "◎", free: true },
   { title: "The Becoming Circle", href: "/app/circle", icon: "◌◌", free: true },
   { title: "My Daily Sanctuary", href: "/app/sanctuary", icon: "✎", free: true },

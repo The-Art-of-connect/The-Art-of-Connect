@@ -41,7 +41,7 @@ export default async function WellnessCenter() {
           {paid ? (
             <div className="mt-5 flex flex-wrap gap-2"><Link href="/app/journey" className="btn btn-gold btn-sm">Talk with Journey</Link><Link href="/app/journey/sessions" className="btn btn-ghost btn-sm">Private Sessions</Link></div>
           ) : (
-            <div className="mt-5"><p className="text-xs text-muted">Included with paid memberships. Free self-guided learning is always open in The Art of Self.</p><Link href="/app/know-yourself" className="btn btn-ghost btn-sm mt-3">The Art of Self</Link></div>
+            <div className="mt-5"><p className="text-xs text-muted">Included with paid memberships. Free self-guided learning is always open in The Art of Knowing Yourself.</p><Link href="/app/know-yourself" className="btn btn-ghost btn-sm mt-3">The Art of Knowing Yourself</Link></div>
           )}
         </div>
         <div className="glass flex flex-col p-7">
