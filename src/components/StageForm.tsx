@@ -1,23 +1,33 @@
 "use client";
-import Link from "next/link";
-import { useActionState } from "react";
+import { startTransition, useActionState } from "react";
 import { saveOnboardingStage } from "@/app/actions/onboarding";
 import type { Answers, Question } from "@/lib/onboarding";
 
-export function StageForm({ stage, questions, answers, reflections, nextHref, nextLabel }: { stage: string; questions: Question[]; answers: Answers; reflections: Record<string, string>; nextHref: string; nextLabel: string }) {
+export function StageForm({ stage, questions, answers, reflections, nextLabel }: { stage: string; questions: Question[]; answers: Answers; reflections: Record<string, string>; nextLabel: string }) {
   const [state, action, pending] = useActionState(saveOnboardingStage, null);
   return (
-    <form action={action} className="mt-10 space-y-6">
+    <form
+      action={action}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (pending) return;
+        const submitter = (event.nativeEvent as SubmitEvent).submitter;
+        const data = new FormData(event.currentTarget, submitter);
+        // Keep the draft in the form when the server rejects a save or asks for more answers.
+        startTransition(() => action(data));
+      }}
+      className="mt-10 space-y-6"
+    >
       <input type="hidden" name="stage" value={stage} />
       {questions.map((q, i) => {
         const a = answers[q.id];
         const chosen = Array.isArray(a) ? a.map(String) : typeof a === "string" ? [a] : [];
         return (
-          <fieldset key={q.id} className="glass p-6 sm:p-7">
+          <fieldset key={q.id} disabled={pending} className="glass p-6 sm:p-7">
             <legend className="sr-only">{q.prompt}</legend>
             <p className="flex items-center justify-between gap-3 text-xs tracking-[0.2em] text-gold-deep uppercase">
               <span>Question {i + 1} of {questions.length}</span>
-              <span>{q.required ? "" : "Optional"}{q.private ? `${q.required ? "" : " · "}Private` : ""}</span>
+              <span>{q.required ? "Required" : "Optional"}{q.private ? ` · Private` : ""}</span>
             </p>
             <p className="display mt-3 text-2xl sm:text-3xl" style={{ color: "var(--burgundy)" }}>{q.prompt}</p>
             <div className="mt-5 space-y-2">
@@ -29,9 +39,9 @@ export function StageForm({ stage, questions, answers, reflections, nextHref, ne
                   </label>
                 ))
               ) : q.kind === "long_text" ? (
-                <textarea name={q.id} rows={4} maxLength={2000} defaultValue={typeof a === "string" ? a : ""} className="field w-full" />
+                <textarea name={q.id} aria-label={q.prompt} rows={4} maxLength={2000} defaultValue={typeof a === "string" ? a : ""} className="field w-full" />
               ) : q.kind === "date" ? (
-                <input type="date" name={q.id} defaultValue={typeof a === "string" ? a : ""} className="field" required={q.required} />
+                <input type="date" name={q.id} defaultValue={typeof a === "string" ? a : ""} className="field" aria-label={q.prompt} />
               ) : q.kind === "range" ? (
                 <div className="flex items-center gap-3">
                   <input type="number" name={`${q.id}.min`} min={30} max={99} defaultValue={(a as { min?: number })?.min ?? 30} className="field w-24" aria-label="From age" />
@@ -39,7 +49,7 @@ export function StageForm({ stage, questions, answers, reflections, nextHref, ne
                   <input type="number" name={`${q.id}.max`} min={30} max={99} defaultValue={(a as { max?: number })?.max ?? 65} className="field w-24" aria-label="To age" />
                 </div>
               ) : (
-                <input name={q.id} maxLength={200} defaultValue={typeof a === "string" ? a : ""} className="field w-full" placeholder={q.kind === "location" ? "Birmingham, AL" : ""} />
+                <input name={q.id} aria-label={q.prompt} maxLength={200} defaultValue={typeof a === "string" ? a : ""} className="field w-full" placeholder={q.kind === "location" ? "Birmingham, AL" : ""} />
               )}
               {q.reflection && (
                 <label className="block pt-2 text-sm text-muted">
@@ -52,11 +62,11 @@ export function StageForm({ stage, questions, answers, reflections, nextHref, ne
         );
       })}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button className="btn btn-gold" disabled={pending}>{pending ? "Saving…" : "Save my answers"}</button>
-        <Link href={nextHref} className="btn btn-ghost">{nextLabel}</Link>
+        <button type="submit" name="intent" value="continue" className="btn btn-gold" disabled={pending}>{pending ? "Saving…" : nextLabel}</button>
+        <button type="submit" name="intent" value="save" className="btn btn-ghost" disabled={pending}>Save progress</button>
       </div>
       {state && <p className={`text-sm ${state.ok ? "text-success" : "text-danger"}`} role="status">{state.message}</p>}
-      <p className="text-xs text-faint">You can leave and come back anytime — saved answers are kept.</p>
+      <p className="text-xs text-faint">Save progress before leaving. You can return to your saved answers anytime.</p>
     </form>
   );
 }
