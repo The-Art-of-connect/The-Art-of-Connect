@@ -21,6 +21,14 @@ const STARTERS = [
 ];
 
 export function AllowanceMeter({ a }: { a: AllowanceView }) {
+  // Pay-as-you-go: purchased Journey credits only, one per reply.
+  if (a.creditsOnly) return (
+    <div className="theme-dark rounded-2xl border border-gold/30 p-5" style={{ background: "var(--ink-2)" }}>
+      <p className="text-xs tracking-[0.25em] text-gold uppercase">Your Journey credits</p>
+      <p className="mt-2"><span className="display text-5xl text-gold-bright">{a.purchasedRemaining}</span> <span className="text-muted">credit{a.purchasedRemaining === 1 ? "" : "s"} remaining</span></p>
+      <p className="mt-2 text-xs text-faint">One credit is one reply from Journey in The Art of Becoming. Nothing is ever charged automatically. <a href="/app/journey/plus#credits" className="underline">More credits</a></p>
+    </div>
+  );
   // Directive 51: one dollar allowance at actual AI cost for writing and voice.
   if (a.cents) {
     const usd = (c: number) => `$${(Math.floor(c) / 100).toFixed(2)}`;

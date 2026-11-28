@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { saveOnboardingStage } from "@/app/actions/onboarding";
 import type { Answers, Question } from "@/lib/onboarding";
 
-export function StageForm({ stage, questions, answers, nextHref, nextLabel }: { stage: string; questions: Question[]; answers: Answers; nextHref: string; nextLabel: string }) {
+export function StageForm({ stage, questions, answers, reflections, nextHref, nextLabel }: { stage: string; questions: Question[]; answers: Answers; reflections: Record<string, string>; nextHref: string; nextLabel: string }) {
   const [state, action, pending] = useActionState(saveOnboardingStage, null);
   return (
     <form action={action} className="mt-10 space-y-6">
@@ -44,7 +44,7 @@ export function StageForm({ stage, questions, answers, nextHref, nextLabel }: { 
               {q.reflection && (
                 <label className="block pt-2 text-sm text-muted">
                   Add a reflection (optional)
-                  <textarea name={`${q.id}.reflection`} rows={2} maxLength={2000} className="field mt-1.5 w-full" />
+                  <textarea name={`${q.id}.reflection`} rows={2} maxLength={2000} defaultValue={reflections[q.id] ?? ""} className="field mt-1.5 w-full" />
                 </label>
               )}
             </div>

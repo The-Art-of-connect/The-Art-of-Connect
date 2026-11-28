@@ -25,7 +25,7 @@ import {
   type JourneyCapability, type JourneyMode, type PaidMembership,
 } from "@/lib/journey";
 import {
-  allowanceView, unlimitedView, costCents, decide, trimHistory, type AllowanceView, type JourneySettings, type TierLimit, dollarView, isAllowanceMode,
+  allowanceView, unlimitedView, costCents, decide, trimHistory, type AllowanceView, type JourneySettings, type TierLimit, dollarView, isAllowanceMode, creditsView,
 } from "@/lib/journey-budget";
 
 /**
@@ -135,6 +135,18 @@ export async function membershipFor(db: Db, userId: string) {
   return { membership, holderId: sub.user_id as string, periodStart: start, periodEnd: periodEnd ?? new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1)) };
 }
 
+/**
+ * Pay-as-you-go (directive 51 §4): Journey credits apply only to a member WITHOUT an entitled paid membership (members
+ * use their allowance first; the existing purchase path already covers them), never to Private Sessions.
+ */
+async function creditsOnlyEligible(db: Db, userId: string, session: boolean, cfg: { enhancedPackages: readonly string[]; entitledStatuses: readonly string[] }) {
+  if (session) return false;
+  const m = await membershipFor(db, userId);
+  if (m && journeyAccessFor(m.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses }) !== "none") return false;
+  const { data } = await db.rpc("journey_credits_remaining", { p_user: userId });
+  return Number(data ?? 0) > 0;
+}
+
 export async function sendJourneyMessage(input: {
   mode: JourneyMode;
   message: string;
@@ -188,6 +200,7 @@ export async function sendJourneyMessage(input: {
   let periodEnd = new Date();
   let tier: TierLimit | null = null;
   let qaTest = false;
+  let creditsOnly = false;
 
   if (input.sessionId && !input.ownerTest) {
     const m = await membershipFor(db, viewer.id);
@@ -201,6 +214,26 @@ export async function sendJourneyMessage(input: {
     if (!ownerTestAccess({ roles: viewer.roles, mfaVerified: mfa.verified, ownerTestingEnabled: cfg.ownerTestingEnabled }))
       return refuse(403, "Owner testing isn't authorized for this session.");
     periodStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
+  } else if (await creditsOnlyEligible(db, viewer.id, Boolean(input.sessionId), cfg)) {
+    // Pay-as-you-go (directive 51 §4): a member without a paid membership who bought Journey credits uses Journey in
+    // their complimentary experience (In Life), one credit per reply. Membership-only experiences stay closed.
+    if (input.mode !== "life") {
+      if (input.mode === "concierge" || !(input.lesson || input.discovery || input.portfolio || input.guide || input.page || input.resume))
+        return refuse(403, "This Journey experience is part of a paid membership. Your Journey credits work in The Art of Becoming.");
+      input = { ...input, mode: "life" };
+    }
+    if (input.intel || input.minutes) return refuse(403, "This Journey experience is part of a paid membership.");
+    const launch = await getLaunchState();
+    if (!launch.payments_live) {
+      const qa = viewer.viewAs ? "not_qa" : await qaJourneyTesting(viewer.id);
+      if (qa !== "ok") return refuse(403, "Journey opens soon.");
+      qaTest = true;
+    }
+    creditsOnly = true;
+    access = "standard";
+    holderId = viewer.id;
+    periodStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
+    tier = { packageSlug: "credits", monthlyMessages: null, dailyMessages: null, memberMonthlyLimitCents: 0, personMonthlyLimitCents: 0, tierMonthlyLimitCents: null, maxOutputTokens: 700, model: null, unlimited: false, fairUseDaily: 300 };
   } else {
     const m = await membershipFor(db, viewer.id);
     const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
@@ -246,7 +279,9 @@ export async function sendJourneyMessage(input: {
   const holderCents = Number(spent?.holder_cents ?? 0), personCents = Number(spent?.person_cents ?? 0);
   const personalLimit = tier && allowanceMode ? Math.min(tier.memberMonthlyLimitCents!, tier.personMonthlyLimitCents ?? Infinity) : 0;
   const personalUsed = tier && allowanceMode ? Math.max(tier.personMonthlyLimitCents != null ? personCents : 0, holderCents - (tier.memberMonthlyLimitCents! - personalLimit)) : 0;
-  const view = allowanceMode && usage ? dollarView(personalLimit, personalUsed, Number(usage.purchased_remaining), periodEnd)
+  const credits = creditsOnly ? Number((await db.rpc("journey_credits_remaining", { p_user: viewer.id })).data ?? 0) : 0;
+  const view = creditsOnly ? creditsView(credits, periodEnd)
+    : allowanceMode && usage ? dollarView(personalLimit, personalUsed, Number(usage.purchased_remaining), periodEnd)
     : tier?.unlimited && usage ? unlimitedView(Number(usage.period_messages), periodEnd)
     : tier?.monthlyMessages != null && usage
     ? allowanceView(tier.monthlyMessages, Number(usage.period_messages), Number(usage.purchased_remaining), periodEnd)
@@ -333,7 +368,7 @@ export async function sendJourneyMessage(input: {
     usage: {
       inFlight: Number(usage?.in_flight ?? 0), minuteRequests: Number(usage?.minute ?? 0), dayMessages: Number(usage?.day ?? 0),
       periodMessages: Number(usage?.period_messages ?? 0), periodCents: allowanceMode ? holderCents : Number(usage?.period_cents ?? 0), personCents,
-      purchasedRemaining: Number(usage?.purchased_remaining ?? 0), tierMonthCents: 0, companyMonthCents: 0,
+      purchasedRemaining: creditsOnly ? credits : Number(usage?.purchased_remaining ?? 0), tierMonthCents: 0, companyMonthCents: 0,
     },
   });
   if (!d.allowed) {
@@ -349,10 +384,12 @@ export async function sendJourneyMessage(input: {
   const outTokens = resumeDraft ? Math.max(d.maxOutputTokens, 3200) : d.maxOutputTokens;
   const reserveCents = Math.ceil(d.reserveCents * (outTokens / Math.max(1, d.maxOutputTokens)));
   if (qaTest && (await qaJourneyTesting(viewer.id, reserveCents)) !== "ok") return refuse(429, "QA testing budget reached for now. Journey will be available again when the budget resets.", view);
-  const { data: reserved } = await db.rpc("journey_reserve", {
-    p_user: viewer.id, p_holder: holderId, p_request_key: input.requestKey, p_package: packageSlug, p_mode: input.mode,
-    p_model: d.model, p_reserve: reserveCents, p_period_start: periodStart.toISOString(), p_owner_test: Boolean(input.ownerTest),
-  });
+  const { data: reserved } = creditsOnly
+    ? await db.rpc("journey_reserve_credit", { p_user: viewer.id, p_request_key: input.requestKey, p_mode: input.mode, p_model: d.model, p_reserve: reserveCents })
+    : await db.rpc("journey_reserve", {
+      p_user: viewer.id, p_holder: holderId, p_request_key: input.requestKey, p_package: packageSlug, p_mode: input.mode,
+      p_model: d.model, p_reserve: reserveCents, p_period_start: periodStart.toISOString(), p_owner_test: Boolean(input.ownerTest),
+    });
   if (typeof reserved !== "string" || reserved.startsWith("refused:")) {
     const why = String(reserved ?? "");
     return refuse(429, why === "refused:in_flight" ? "Journey is still replying to your last message." : why === "refused:duplicate" ? "That message was already sent." : "Journey is resting right now. Please try again a little later.", view);
@@ -398,7 +435,8 @@ export async function sendJourneyMessage(input: {
     if (summarize) await db.from("discovery_analyses").insert({ user_id: viewer.id, scope: `category:${discovery.category}`, source: "journey", content: result.text.slice(0, 20000) });
   }
   if (input.ownerTest) return { ok: true, reply: result.text, conversationId, allowance: null, test: { id: testRunId, model: d.model, latencyMs, inputTokens: result.inputTokens, outputTokens: result.outputTokens, costCents: actual, instructionVersion: published?.version ?? null } };
-  const after = view?.cents ? dollarView(view.allowance, view.used + (d.usesPurchased ? 0 : actual), view.purchasedRemaining - (d.usesPurchased ? 1 : 0), periodEnd)
+  const after = view?.creditsOnly ? creditsView(view.purchasedRemaining - 1, periodEnd)
+    : view?.cents ? dollarView(view.allowance, view.used + (d.usesPurchased ? 0 : actual), view.purchasedRemaining - (d.usesPurchased ? 1 : 0), periodEnd)
     : view?.unlimited ? unlimitedView(view.used + 1, periodEnd) : view && !d.usesPurchased
     ? allowanceView(view.allowance, view.used + 1, view.purchasedRemaining, periodEnd)
     : view && { ...view, purchasedRemaining: Math.max(0, view.purchasedRemaining - 1) };
@@ -411,6 +449,8 @@ export async function getJourneyStatus(): Promise<{
   enabled: boolean;
   allowance: AllowanceView | null;
   packageSlug: string | null;
+  /** Pay-as-you-go: no paid membership, purchased Journey credits only (In Life, writing). */
+  creditsOnly?: boolean;
 }> {
   const viewer = await getViewer();
   const none = { access: "none" as const, enabled: false, allowance: null, packageSlug: null };
@@ -432,7 +472,11 @@ export async function getJourneyStatus(): Promise<{
   if (!db || !cfg) return none;
   const m = await membershipFor(db, viewer.id);
   const access = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
-  if (!m || access === "none") return { ...none, enabled };
+  if (!m || access === "none") {
+    const { data: n } = await db.rpc("journey_credits_remaining", { p_user: viewer.id });
+    if (Number(n ?? 0) > 0) return { access: "standard", enabled, packageSlug: null, creditsOnly: true, allowance: creditsView(Number(n), new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1))) };
+    return { ...none, enabled };
+  }
   const [{ data: t }, { data: u }] = await Promise.all([
     db.rpc("journey_effective_tier", { p_slug: m.membership.packageSlug ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle<{ monthly_messages: number | null; unlimited_messages: boolean; member_monthly_limit_cents: number | null; person_monthly_limit_cents: number | null }>(),
     db.rpc("journey_holder_usage", { p_holder: m.holderId, p_period_start: m.periodStart.toISOString() }),
