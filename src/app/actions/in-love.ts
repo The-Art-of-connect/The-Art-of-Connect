@@ -9,7 +9,7 @@ import { allow } from "@/lib/ratelimit";
 import { sendEmail } from "@/lib/email";
 import { templates } from "@/lib/email-templates";
 import { env } from "@/lib/env";
-import { GENDERS, INTENTS, MOODS, SEEKING } from "@/lib/in-love";
+import { GENDERS, INTENTS, MOODS, REFLECTION_PROMPTS, SEEKING } from "@/lib/in-love";
 
 /**
  * In Love (founder directive 38). The database enforces every rule: discovery shows only eligible, visible,
@@ -176,4 +176,111 @@ export async function acceptPartner(f: FormData) {
   const db = (await createClient())!;
   const { error } = await db.schema("relationships").rpc("accept_partner_invitation", { token });
   redirect(error ? `/app/relationships/join?token=${encodeURIComponent(token)}&error=${/different email/.test(error.message) ? "email" : "invalid"}` : "/app/relationships?welcome=1");
+}
+
+// ─── Private reflections (directive 51 §7; directive 47) ───────────────────────────────────────────────────────────────
+// The database keeps every reflection private to its author. A partner can read one only when the author shares it, and
+// only while both are in the same couple; when the couple ends, sharing ends automatically.
+const REFLECTIONS = "/app/relationships/reflections";
+
+/** The member's couple, and whether both partners have joined it. */
+async function myCouple(m: NonNullable<Awaited<ReturnType<typeof member>>>) {
+  const { data: cm } = await m.rel.from("couple_members").select("couple_id").eq("user_id", m.viewer.id).maybeSingle();
+  if (!cm) return null;
+  const { count } = await m.rel.from("couple_members").select("user_id", { count: "exact", head: true }).eq("couple_id", cm.couple_id);
+  return { coupleId: cm.couple_id as string, active: (count ?? 0) > 1 };
+}
+
+export async function saveReflection(_p: R, f: FormData): Promise<R> {
+  const m = await member();
+  if (!m) return fail("Preview only: nothing is saved.");
+  const body = str(f, "body", 4000);
+  if (body.length < 2) return fail("Write a few words for your reflection.");
+  const id = str(f, "id", 40);
+  if (id) {
+    if (!UUID.safeParse(id).success) return fail("Please try again.");
+    const { data, error } = await m.rel.from("private_reflections").update({ body, updated_at: new Date().toISOString() }).eq("id", id).eq("user_id", m.viewer.id).select("id");
+    if (error || !data?.length) return fail("Your reflection couldn't be updated. Please try again.");
+    revalidatePath(REFLECTIONS);
+    return ok("Updated. It stays exactly as private (or shared) as it was.");
+  }
+  if (!(await allow("reflection", 60, 86400))) return fail("You've written many reflections today. Please continue tomorrow.");
+  const promptIn = str(f, "prompt", 200);
+  const prompt = (REFLECTION_PROMPTS as readonly string[]).includes(promptIn) ? promptIn : null;
+  const { error } = await m.rel.from("private_reflections").insert({ user_id: m.viewer.id, prompt, body });
+  if (error) return fail("Your reflection couldn't be saved. Please try again.");
+  revalidatePath(REFLECTIONS);
+  return ok("Saved privately. Only you can read it.");
+}
+
+export async function deleteReflection(_p: R, f: FormData): Promise<R> {
+  const m = await member();
+  if (!m) return fail("Preview only.");
+  const id = UUID.safeParse(str(f, "id", 40));
+  if (!id.success) return fail("Please try again.");
+  if (f.get("confirm") !== "on") return fail("Tick the box to confirm. Deleting a reflection can't be undone.");
+  const { data, error } = await m.rel.from("private_reflections").delete().eq("id", id.data).eq("user_id", m.viewer.id).select("id");
+  if (error || !data?.length) return fail("That reflection couldn't be deleted. Please try again.");
+  revalidatePath(REFLECTIONS);
+  return ok("Deleted.");
+}
+
+export async function shareReflection(_p: R, f: FormData): Promise<R> {
+  const m = await member();
+  if (!m) return fail("Preview only.");
+  const id = UUID.safeParse(str(f, "id", 40));
+  if (!id.success) return fail("Please try again.");
+  const share = f.get("share") === "1";
+  let patch: { shared_at: string | null; shared_couple_id: string | null } = { shared_at: null, shared_couple_id: null };
+  if (share) {
+    const c = await myCouple(m);
+    if (!c?.active) return fail("Sharing opens once your partner has joined your shared space.");
+    patch = { shared_at: new Date().toISOString(), shared_couple_id: c.coupleId };
+  }
+  const { data, error } = await m.rel.from("private_reflections").update(patch).eq("id", id.data).eq("user_id", m.viewer.id).select("id");
+  if (error || !data?.length) return fail("That couldn't be changed. Please try again.");
+  revalidatePath(REFLECTIONS);
+  return ok(share ? "Shared with your partner. They'll be told a reflection is waiting, never what it says." : "Private again. Your partner can no longer read it.");
+}
+
+// ─── Couples Connection Community (directive 08): Couples Connection Circles in Find Your Circle ───────────────────────
+const COMMUNITY = "/app/relationships/community";
+
+export async function couplesCircle(_p: R, f: FormData): Promise<R> {
+  const m = await member();
+  if (!m) return fail("Preview only.");
+  const id = UUID.safeParse(str(f, "circle_id", 40));
+  if (!id.success) return fail("Please try again.");
+  if (str(f, "op", 10) === "leave") {
+    const { error } = await m.db.from("social_circle_members").delete().eq("circle_id", id.data).eq("user_id", m.viewer.id);
+    if (error) return fail("That couldn't be completed. Please try again.");
+    revalidatePath(COMMUNITY); revalidatePath("/app/connect", "layout");
+    return ok("You've left the circle. You can rejoin whenever you like.");
+  }
+  const { error } = await m.db.from("social_circle_members").insert({ circle_id: id.data, user_id: m.viewer.id });
+  if (error) {
+    if (error.code === "23505") return ok("You're already a member.");
+    const c = await myCouple(m);
+    return fail(c?.active ? "This circle has membership requirements you don't meet yet." : "Couples Connection Circles open once your partner has joined your shared space.");
+  }
+  revalidatePath(COMMUNITY); revalidatePath("/app/connect", "layout");
+  return ok("Welcome to the circle. Open it to meet the other couples.");
+}
+
+export async function proposeCouplesCircle(_p: R, f: FormData): Promise<R> {
+  const m = await member();
+  if (!m) return fail("Preview only: nothing is sent.");
+  const name = str(f, "name", 80);
+  if (name.length < 3) return fail("Give your circle a name of at least three characters.");
+  const c = await myCouple(m);
+  if (!c?.active) return fail("Proposing a circle opens once your partner has joined your shared space.");
+  if (!(await allow("couples-circle-proposal", 3, 86400))) return fail("You've proposed several circles today. Please try again tomorrow.");
+  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "couples";
+  const { error } = await m.db.from("social_circles").insert({
+    slug: `${base}-${randomBytes(3).toString("hex")}`, name, tagline: str(f, "tagline", 160) || null, description: str(f, "description", 2000) || null,
+    category: "couples", kind: "specialized", eligibility: "couples", status: "proposed", created_by: m.viewer.id,
+  });
+  if (error) return fail("Your proposal wasn't sent. Please try again.");
+  revalidatePath(COMMUNITY);
+  return ok("Thank you. Your circle is with our founder for approval; once approved, you'll host it.");
 }
