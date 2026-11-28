@@ -45,6 +45,8 @@ changes an earlier one, the later one wins.
 | 39 | [Executive & Elite Membership Distinctions](39-membership-distinctions.md) | Entitlement-controlled emblems, separate from identity verification. |
 | 40 | [Approval: Membership and Identity Distinctions](40-membership-and-identity-distinctions-approval.md) | Identity Verified (orange checkmark), Executive Member and Elite Member emblems approved. |
 | 41 | [Final Naming Directive](41-final-naming-directive.md) | **Permanent.** Six naming decisions resolved: one feature, one official name, one consistent experience. |
+| 42 | [Intelligent Membership Recommendations](42-intelligent-membership-recommendations.md) | Every restricted feature recommends the lowest membership that unlocks it; Current Membership, Recommended for You, Best Value, Most Comprehensive Access. |
+| 43 | [Live Q&A and Member Notifications](43-live-qa-and-member-notifications.md) | Two live Q&A sessions a day to start, owner-adjustable schedule, branded invitation and Message Center, continuous participation. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.
