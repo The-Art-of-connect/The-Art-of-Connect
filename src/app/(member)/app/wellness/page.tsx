@@ -6,11 +6,12 @@ import { getJourneyStatus } from "@/lib/journey-server";
 import { CRISIS, GENDERS, IN_HOUSE_SERVICES, MEETING, PROVIDERS, SUPPORT_CONCERNS } from "@/lib/wellness";
 import { saveSupportPreferences } from "@/app/actions/wellness";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { bookingGate } from "@/lib/counseling-booking";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Counseling & Wellness Center" };
 
-/** Open to every member, whatever their society or membership. Clinical services stay Coming Soon until approved. */
+/** Open to every member, whatever their society or membership. Clinical services (appointments) stay closed until approved. */
 export default async function WellnessCenter() {
   const viewer = (await getViewer())!;
   const status = await getJourneyStatus();
@@ -19,6 +20,11 @@ export default async function WellnessCenter() {
   const { data: pref } = supabase && !isInsidePreview(viewer)
     ? await supabase.schema("counseling").from("support_preferences").select("*").eq("user_id", viewer.id).maybeSingle()
     : { data: null };
+  const gate = await bookingGate(viewer);
+  const { data: counselorRow } = supabase && !isInsidePreview(viewer) && !viewer.viewAs
+    ? await supabase.schema("counseling").from("counselors").select("user_id").eq("user_id", viewer.id).maybeSingle()
+    : { data: null };
+  const isCounselor = Boolean(counselorRow);
   const radio = "peer sr-only";
   const pill = "block cursor-pointer rounded-xl border border-champagne/60 px-4 py-2.5 text-sm transition peer-checked:border-burgundy peer-checked:bg-champagne/25 peer-checked:font-semibold peer-focus-visible:ring-2 peer-focus-visible:ring-gold";
 
@@ -48,7 +54,13 @@ export default async function WellnessCenter() {
           <p className="eyebrow">2 · Independent Professional Network</p>
           <p className="display mt-2 text-2xl text-burgundy">Verified licensed counselors</p>
           <p className="mt-2 flex-1 text-sm text-muted">Search verified counselors and therapists by your concerns, specialty, location, licensing, virtual or in-person preference, availability, pricing, insurance, language and culture. Each professional sets their own fees, shown clearly on their profile before you book.</p>
-          <span className="chip chip-locked mt-5 self-start">Coming soon</span>
+          {gate.canBrowse ? (
+            <div className="mt-5 flex flex-wrap gap-2"><Link href="/app/wellness/counselors" className="btn btn-gold btn-sm">Find a counselor</Link><Link href="/app/wellness/appointments" className="btn btn-ghost btn-sm">My appointments</Link></div>
+          ) : (
+            <div className="mt-5 flex flex-wrap items-center gap-3"><span className="chip chip-locked">Not open yet</span><Link href="/app/wellness/counselors" className="text-xs text-gold underline-offset-2 hover:underline">What this means →</Link></div>
+          )}
+          {gate.tester && <p className="mt-2 text-xs text-gold">Pre-launch testing with fictional counselors only.</p>}
+          {isCounselor && <Link href="/app/wellness/practice" className="mt-3 text-xs font-semibold text-gold underline-offset-2 hover:underline">My Counseling Practice →</Link>}
         </div>
         <div className="theme-dark flex flex-col rounded-[24px] bg-ink p-7 text-ivory">
           <p className="eyebrow">3 · The Art of Wellness</p>

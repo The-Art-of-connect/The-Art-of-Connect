@@ -85,6 +85,7 @@ export const NAV: NavGroup[] = [
       { href: "/app/connect360/intelligence", label: "My Intelligence Office", note: "Executive & Elite · research with Journey", access: "paid" },
       { href: "/app/career", label: "My Professional Readiness", note: "Résumé Builder", access: "member" },
       { href: "/app/launch", label: "Business Launch Center", note: "All 50 states and D.C.", access: "member" },
+      { href: "/app/launch/orders", label: "My formation requests", note: "Business Launch Center · reviewed before anything is filed", access: "member" },
     ],
   },
   {
@@ -104,6 +105,8 @@ export const NAV: NavGroup[] = [
     key: "counseling", label: "Counseling", href: "/app/wellness", intro: "Counseling & Wellness Center, free with every account.",
     links: [
       { href: "/app/wellness", label: "Counseling & Wellness Center", note: "Journey, independent counselors, The Art of Wellness", access: "member" },
+      { href: "/app/wellness/counselors", label: "Find a counselor", note: "Verified counselors · appointments open after approval", access: "member" },
+      { href: "/app/wellness/appointments", label: "My appointments", note: "Counseling requests and confirmations", access: "member" },
       { href: "/app/wellness/art-of-wellness", label: "The Art of Wellness", note: "In-house counseling · coming soon", access: "member" },
       { href: "/wellness", label: "Crisis resources", note: "Always available, no account needed" },
       { href: "/app/counseling", label: "The Art of Becoming", note: "Free with every account", access: "member" },
