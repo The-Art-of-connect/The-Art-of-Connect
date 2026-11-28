@@ -25,6 +25,8 @@ export default async function Plus({ searchParams }: { searchParams: Promise<Rec
   const admin = createAdminClient();
   const m = live && admin ? await membershipFor(admin, viewer.id) : null;
   const allAccess = live ? await hasAllAccess(viewer.id, m?.holderId) : false;
+  // Pay-as-you-go: a member without a paid membership buys Journey credits (directive 51 §4).
+  const payg = live && !m;
   const [{ data: voicePacks }, { data: cost }] = admin ? await Promise.all([
     admin.from("journey_voice_packages").select("slug, minutes, price_cents").eq("is_active", true).order("sort_order"),
     admin.from("journey_settings").select("text_cost_cents_per_message, voice_cost_cents_per_minute, card_fee_percent, card_fee_fixed_cents, message_packages_published").maybeSingle(),
@@ -35,15 +37,17 @@ export default async function Plus({ searchParams }: { searchParams: Promise<Rec
   const list = packages?.length ? packages : [25, 50, 100, 250].map((n) => ({ slug: `messages-${n}`, messages: n, price_cents: null as number | null }));
   return (
     <>
-      <LuxHero eyebrow="Journey" title="Journey Plus" tagline="More conversation, only when you choose.">
-        <p className="max-w-2xl text-muted">{allAccess
+      <LuxHero eyebrow="Journey" title="Journey Plus" tagline={payg ? "Journey credits, only when you choose." : "More conversation, only when you choose."}>
+        <p className="max-w-2xl text-muted">{payg
+          ? "Pay as you go: without a paid membership, Journey credits let you talk with Journey in The Art of Becoming. One credit is one reply, priced at exactly our cost with no markup. Every lesson stays open to you at no cost either way."
+          : allAccess
           ? "Your Elite Concierge membership includes the largest monthly Journey allowance for writing and voice. If you'd like more, additional usage is offered at exactly our cost, with no markup, and only when you choose."
           : "Your membership includes a generous monthly Journey allowance. If you'd like more, additional messages and voice minutes are offered at exactly our cost, with no markup, and only when you choose."}</p>
       </LuxHero>
       {sp.purchase === "success" && <div className="mt-8"><Notice>Thank you. Your messages are added as soon as your payment is confirmed — usually within a minute.</Notice></div>}
       {sp.autoreload === "on" && <div className="mt-8"><Notice>Your card is saved. Auto-Reload turns on as soon as your bank confirms it.</Notice></div>}
 
-      <LuxSection title="Additional voice minutes" intro={`Used after your included monthly minutes. Priced at our cost: ${cost ? cents(Number(cost.voice_cost_cents_per_minute)) : "the OpenAI rate"} per minute for the voice service, plus card processing (${cost ? `${Number(cost.card_fee_percent)}% + ${cost.card_fee_fixed_cents}¢` : "standard fees"}). No markup.`}>
+      {!payg && <LuxSection title="Additional voice minutes" intro={`Used after your included monthly minutes. Priced at our cost: ${cost ? cents(Number(cost.voice_cost_cents_per_minute)) : "the OpenAI rate"} per minute for the voice service, plus card processing (${cost ? `${Number(cost.card_fee_percent)}% + ${cost.card_fee_fixed_cents}¢` : "standard fees"}). No markup.`}>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {(voicePacks ?? []).map((v) => (
             <LuxCard key={v.slug} mark={String(v.minutes)} title={`${v.minutes} minutes`} badge={sellable && v.price_cents ? money(v.price_cents) : "Pricing soon"}>
@@ -58,10 +62,10 @@ export default async function Plus({ searchParams }: { searchParams: Promise<Rec
           ))}
         </div>
         <p className="mt-3 text-xs text-faint">See your remaining minutes in <a href="/app/journey/voice" className="underline">Journey Live</a>. You&rsquo;re never charged unless you choose a package and confirm payment.</p>
-      </LuxSection>
+      </LuxSection>}
 
       {<>
-      <LuxSection title="Message packages" intro={`Used after your monthly allowance. Priced at our cost: about ${cost ? cents(Number(cost.text_cost_cents_per_message)) : "half a cent"} per message, plus card processing. Included monthly messages don't roll over.`}>
+      <div id="credits" className="scroll-mt-24" /><LuxSection title={payg ? "Journey credits" : "Message packages"} intro={payg ? `One credit is one reply from Journey. Priced at our cost: about ${cost ? cents(Number(cost.text_cost_cents_per_message)) : "half a cent"} per reply, plus card processing.` : `Used after your monthly allowance. Priced at our cost: about ${cost ? cents(Number(cost.text_cost_cents_per_message)) : "half a cent"} per message, plus card processing. Included monthly messages don't roll over.`}>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {list.map((p) => (
             <LuxCard key={p.slug} mark={String(p.messages)} title={`${p.messages} messages`} badge={published && p.price_cents ? money(p.price_cents) : "Pricing soon"}>

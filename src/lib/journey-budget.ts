@@ -218,6 +218,8 @@ export type AllowanceView = {
   unlimited?: boolean;
   /** Directive 51 allowance mode: allowance, used and remaining are cents of actual AI cost. */
   cents?: boolean;
+  /** Pay-as-you-go (no paid membership): only purchased Journey credits, one per reply. */
+  creditsOnly?: boolean;
   allowance: number;
   used: number;
   remaining: number;
@@ -239,9 +241,15 @@ export function dollarView(limitCents: number, usedCents: number, purchasedRemai
 }
 
 const usd = (cents: number) => `$${(Math.floor(cents) / 100).toFixed(2)}`;
+/** Pay-as-you-go balance: purchased Journey credits only (one credit per reply). */
+export function creditsView(credits: number, periodEnd: Date): AllowanceView {
+  return { creditsOnly: true, allowance: 0, used: 0, remaining: 0, purchasedRemaining: Math.max(0, credits), percentUsed: 0, resetsOn: periodEnd.toISOString().slice(0, 10), notice: null };
+}
+
 /** One wording for the balance everywhere: Home, Journey, membership settings and the Owner Portal. */
 export function balanceLabel(v: AllowanceView | null | undefined): string | null {
   if (!v) return null;
+  if (v.creditsOnly) return `${v.purchasedRemaining} Journey credit${v.purchasedRemaining === 1 ? "" : "s"} remaining`;
   if (v.cents) return `${usd(v.remaining)} of ${usd(v.allowance)} included this month`;
   if (v.unlimited) return "Included in your membership";
   return `${v.remaining} of ${v.allowance} messages left this month`;

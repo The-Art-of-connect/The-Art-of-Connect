@@ -45,7 +45,7 @@ export default async function TalkToJourney({ searchParams }: { searchParams: Pr
   }
   const voiceReady = Boolean(s?.voice_enabled && s.voice_model && s.voice_cents_per_minute != null && status.enabled);
   const owner = hasRole(viewer, ["owner"]);
-  const available = voiceReady && (status.access === "standard" || status.access === "enhanced" || owner);
+  const available = voiceReady && !status.creditsOnly && (status.access === "standard" || status.access === "enhanced" || owner);
   const reason = await journeyClosedReason({ voice: true });
   return (
     <>

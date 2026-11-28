@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { comingSoonPaths } from "@/lib/section-status";
+import { getLaunchState } from "@/lib/launch";
 import { getJourneyStatus } from "@/lib/journey-server";
 import { journeyClosedReason } from "@/lib/journey-guide-access";
 import { getViewer, hasRole } from "@/lib/auth";
@@ -34,6 +36,8 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
   const ownerTest = status.access === "staff" && hasRole(viewer, ["owner"]);
   const available = status.enabled && (status.access === "standard" || status.access === "enhanced" || ownerTest);
   const reason = await journeyClosedReason();
+  // Pay-as-you-go opens when Journey Plus is open to members and the credit packages are published (owner's switches).
+  const creditsOpen = status.access === "none" && !(await comingSoonPaths()).includes("/app/journey/plus") && (await getLaunchState()).payments_live;
   return (
     <>
       <JourneyOrbHero />
@@ -43,9 +47,13 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
           <p className="eyebrow">Journey with a membership</p>
           <h2 className="display mt-2 text-3xl">Personal conversations with Journey begin with any paid membership</h2>
           <p className="mt-2 max-w-2xl text-sm text-muted">Every lesson in The Art of Knowing Yourself stays open to you at no cost. A paid membership adds a monthly Journey allowance, and new members can try one free for 15 days.</p>
-          <p className="mt-2 max-w-2xl text-sm text-muted"><span className="font-semibold text-text">Journey credits for Free members: coming soon.</span> Purchasing Journey usage without a membership isn&rsquo;t available yet. It opens only once its pricing is approved, and nothing is ever charged without your confirmation.</p>
+          <p className="mt-2 max-w-2xl text-sm text-muted">
+            <span className="font-semibold text-text">Or pay as you go with Journey credits.</span> One credit is one reply from Journey in The Art of Becoming, priced at our cost.{" "}
+            {creditsOpen ? "Credits never expire unless shown at checkout, and nothing is charged until you confirm." : "Journey credits open soon. Nothing is ever charged without your confirmation."}
+          </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/app/onboarding" className="btn btn-gold btn-sm">Start a trial or choose a membership</Link>
+            {creditsOpen && <Link href="/app/journey/plus#credits" className="btn btn-ghost btn-sm">Buy Journey credits</Link>}
             <Link href="/membership#compare" className="btn btn-ghost btn-sm">Compare Journey allowances</Link>
             <Link href="/app/know-yourself" className="btn btn-ghost btn-sm">Continue self-guided</Link>
           </div>
