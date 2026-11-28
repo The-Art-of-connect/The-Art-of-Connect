@@ -47,7 +47,7 @@ export const EI_AREAS: EIArea[] = [
     ],
     practice: { title: "The daily emotional check-in", steps: ["Twice a day, pause for thirty seconds.", "Ask: “What am I feeling right now?” Name it with one precise word — not just “fine” or “bad”.", "Ask: “Where do I feel it in my body?”", "Ask: “What might it be telling me?”"] },
     journeyPrompt: "I’d like to explore self-awareness. Help me understand a feeling I keep having.",
-    connections: [{ label: "Levels of awareness in The Art of Self", href: "/app/know-yourself" }, { label: "My recurring patterns", href: "/app/know-yourself/who-am-i/my-patterns" }],
+    connections: [{ label: "Levels of awareness in The Art of Knowing Yourself", href: "/app/know-yourself" }, { label: "My recurring patterns", href: "/app/know-yourself/who-am-i/my-patterns" }],
   },
   {
     slug: "self-regulation", title: "Self-Regulation", icon: "sliders", tagline: "Manage your emotions, stay calm and respond with intention.",

@@ -20,7 +20,7 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    key: "self", label: "The Art of Self", href: "/app/know-yourself", intro: "Before you connect with the world, connect with yourself.",
+    key: "self", label: "The Art of Knowing Yourself", href: "/app/know-yourself", intro: "Before you connect with the world, connect with yourself.",
     links: [
       { href: "/app/circle", label: "The Becoming Circle", note: "A new open discussion every four hours", access: "member" },
       { href: "/app/sanctuary", label: "My Daily Sanctuary", note: "Daily practices, lessons & reflections", access: "member" },

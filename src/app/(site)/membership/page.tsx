@@ -40,7 +40,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             <a href="#compare" className="btn btn-ghost">Compare memberships</a>
             <a href="/join/free" className="btn btn-ghost">Begin free self-discovery</a>
           </div>
-          <p className="mt-4 max-w-2xl text-sm text-muted">The Art of Becoming is free with every account: The Art of Self, personal discovery, identity, self-love, emotional intelligence, boundaries, love languages, private journaling and your Discovery Portfolio. Communities, events, connections, the societies and personalized Journey are part of every paid membership. New members can try any membership except Elite free for 15 days (card required; cancel before the trial ends and you won’t be charged). There’s no required order: discover yourself first, or join today.</p>
+          <p className="mt-4 max-w-2xl text-sm text-muted">The Art of Becoming is free with every account: The Art of Knowing Yourself, personal discovery, identity, self-love, emotional intelligence, boundaries, love languages, private journaling and your Discovery Portfolio. Communities, events, connections, the societies and personalized Journey are part of every paid membership. New members can try any membership except Elite free for 15 days (card required; cancel before the trial ends and you won’t be charged). There’s no required order: discover yourself first, or join today.</p>
           {!launch.registrations_open && (
             <p className="mt-8 inline-flex rounded-full border border-line-strong px-4 py-2 text-sm text-gold">Membership enrollment opens soon</p>
           )}
@@ -89,7 +89,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
                         <p className="mt-2 text-sm text-muted">Our complimentary foundation. Understand yourself first, at your own pace, before or after you join.</p>
                         <p className="mt-5 font-semibold text-gold">Free</p>
                         <ul className="mt-5 flex-1 space-y-2.5 text-sm">
-                          {["The Art of Self and self-guided lessons", "Identity, self-love and emotional intelligence", "Boundaries and love languages", "Private journal and Discovery Portfolio", "Safety resources and access to professional counseling"].map((b) => (
+                          {["The Art of Knowing Yourself and self-guided lessons", "Identity, self-love and emotional intelligence", "Boundaries and love languages", "Private journal and Discovery Portfolio", "Safety resources and access to professional counseling"].map((b) => (
                             <li key={b} className="flex gap-3"><span className="mt-2 h-px w-4 shrink-0 bg-champagne" aria-hidden="true" />{b}</li>
                           ))}
                         </ul>

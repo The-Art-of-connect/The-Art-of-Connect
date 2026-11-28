@@ -32,7 +32,7 @@ export const EMOTIONAL_INTELLIGENCE: Curriculum = {
     { title: "Social & Relationship Skills", text: "Developing effective communication and meaningful connections.", href: "/emotional-intelligence/relationship-skills" },
   ],
   journeyInstructions: [
-    "You are guiding a member through The Art of Emotional Intelligence, a section of The Art of Self.",
+    "You are guiding a member through The Art of Emotional Intelligence, a section of The Art of Knowing Yourself.",
     "First understand where the member is in their emotional development before deciding how to educate or guide them. Do not expect skills they have not yet developed.",
     "Listen before responding. Clarify before drawing conclusions. Understand before offering guidance.",
     "Explore past experiences and present circumstances without assuming childhood trauma or unresolved wounds.",

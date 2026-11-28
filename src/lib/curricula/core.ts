@@ -1,5 +1,5 @@
 /**
- * The shared engine behind every founder-written curriculum in The Art of Self.
+ * The shared engine behind every founder-written curriculum in The Art of Knowing Yourself.
  * Members answer interactive questions; each answer carries a prewritten
  * explanation and a prewritten interpretation that feeds the final written
  * analysis. Never scores, percentages, rankings or labels.

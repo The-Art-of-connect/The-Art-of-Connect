@@ -118,7 +118,7 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
             <div className="flex flex-1 flex-col justify-between p-7">
               <div>
                 <span className="chip chip-live">Included for every member</span>
-                <h3 className="display mt-5 text-3xl text-burgundy">The Art of Self</h3>
+                <h3 className="display mt-5 text-3xl text-burgundy">The Art of Knowing Yourself</h3>
                 <p className="mt-1 text-xs tracking-wide text-faint uppercase">Self-discovery · Self-love · Reflection</p>
                 <p className="mt-3 text-sm text-muted">Know yourself, emotional intelligence, love languages and your Personal Discovery Portfolio.</p>
               </div>

@@ -33,6 +33,12 @@ test("everyday language resolves to the official name", () => {
   assert.ok(matchTerms("build my resume").some((t) => t.name === "Professional Résumé Builder"));
 });
 
+test("The Art of Knowing Yourself is the only name (founder decision, final)", () => {
+  assert.equal(findMisnamings("Begin The Art of Self today").length, 1);
+  assert.equal(findMisnamings("Identity & Self-Love in The Art of Knowing Yourself").length, 0);
+  assert.equal(matchTerms("art of self")[0]?.name, "The Art of Knowing Yourself");
+});
+
 test("the naming check catches variants", () => {
   assert.equal(findMisnamings("Open Connect 360 and the Intelligence Office").length, 2);
   assert.equal(findMisnamings("Open CONNECT 360 and My Intelligence Office").length, 0);
@@ -53,7 +59,7 @@ import { MEMBER_PAGES, SITE_PAGES } from "../src/lib/search-index.ts";
 const SEARCH_INDEX = [...SITE_PAGES, ...MEMBER_PAGES];
 const OFFICIAL = new Map(BRAND_TERMS.filter((t) => "href" in t && t.href && t.kind !== "destination" && t.kind !== "experience").map((t) => [(t as { href: string }).href, t.name]));
 // Pages whose name awaits the founder (see PENDING_DECISIONS in src/lib/brand.ts).
-const PENDING_PAGES = ["/app/know-yourself"];
+const PENDING_PAGES: string[] = [];
 const nameOk = (label: string, official: string) => label === official || label.endsWith(` ${official}`) || label.startsWith(`${official} `);
 
 test("menus use the official name for every registered page", () => {

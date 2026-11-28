@@ -11,7 +11,7 @@ export type Persona = { label: string; experiences: Experience[]; packageSlug: s
 export const VIEW_AS_COOKIE = "aoc_view_as";
 
 export const PERSONAS: Record<string, Persona> = {
-  // Membership access v2: a free account is The Art of Becoming only (with The Art of Self).
+  // Membership access v2: a free account is The Art of Becoming only (with The Art of Knowing Yourself).
   free: { label: "Free account (The Art of Becoming)", experiences: ["counseling"], packageSlug: null, society: null },
   "paid-individual": { label: "Individual paid member (The Personal Society)", experiences: ["counseling", "relationships"], packageSlug: "personal-society", society: "singles" },
   "paid-business": { label: "Individual paid member (The Professional Society)", experiences: ["business", "counseling"], packageSlug: "professional-society", society: "business" },

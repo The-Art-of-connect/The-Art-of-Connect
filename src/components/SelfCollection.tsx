@@ -2,11 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { SELF_SECTIONS } from "@/lib/art-of-self";
 
-/** The Art of Self: every section, presented with its signature artwork. */
+/** The Art of Knowing Yourself: every section, presented with its signature artwork. */
 export function SelfCollection() {
   return (
     <section id="art-of-self" aria-labelledby="aos-title" className="mt-14 scroll-mt-24">
-      <p className="eyebrow">The Art of Self</p>
+      <p className="eyebrow">The Art of Knowing Yourself</p>
       <h2 id="aos-title" className="display mt-2 text-4xl sm:text-5xl">Every part of you, <span className="italic text-burgundy">honored.</span></h2>
       <p className="mt-3 max-w-2xl text-muted">Explore at your own pace, in any order. Each section is optional, private and yours to return to whenever you wish.</p>
       <Link href="/app/know-yourself/portfolio" className="theme-dark mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-ink px-6 py-5 text-ivory transition hover:brightness-110">

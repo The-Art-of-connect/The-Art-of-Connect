@@ -260,7 +260,7 @@ const SOCIETY_WELCOME: Record<FreeSociety | "none", string> = {
 };
 
 /**
- * Free account (membership access v2, founder directives 14 and 15): The Art of Becoming, including The Art of Self.
+ * Free account (membership access v2, founder directives 14 and 15): The Art of Becoming, including The Art of Knowing Yourself.
  * The optional society choice only records what interests the member (singles 30+ is still checked); it grants no
  * society access. Social and society experiences need a paid membership or the 15-day trial. No payment details,
  * no Journey and no billable AI.

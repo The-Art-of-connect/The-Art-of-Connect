@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const MODULES = [
   { title: "Personal growth dashboard", body: "Your goals, daily practices and progress in one place.", href: "/app/journey/daily", image: "/images/library/life/garden-walk.webp" },
-  { title: "Guided self-discovery", body: "The ten Arts — from The Art of Self to The Art of Becoming.", href: "/app/journey/library", image: "/images/library/life/moroccan-lounge.webp", position: "50% 70%" },
+  { title: "Guided self-discovery", body: "The ten Arts — from The Art of Knowing Yourself to The Art of Becoming.", href: "/app/journey/library", image: "/images/library/life/moroccan-lounge.webp", position: "50% 70%" },
   { title: "The Art of Emotional Intelligence", body: "Self-awareness, self-regulation, motivation, empathy and relationship skills — interactive lessons with Journey.", href: "/emotional-intelligence", image: "/images/library/life/meditation.webp" },
   { title: "Private journal", body: "Visible only to you — not to partners, matches or The Art of Connect team.", href: "/app/counseling/journal", image: "/images/library/life/journaling.webp" },
   { title: "Journey", body: "Your AI connection concierge for self-discovery and personal growth.", href: "/app/journey", image: "/images/library/journey/orb-glow.webp" },

@@ -82,7 +82,7 @@ export function JourneyCompanion({ access, avatar }: { access: GuideAccess; avat
                 {access.kind === "free" ? (
                   <>
                     <p>Journey, your AI companion, is included with every paid membership: written and live voice conversations across every lesson and feature you can access.</p>
-                    <p className="text-ivory/70">Every lesson in The Art of Self stays open to you self-guided, at no cost.</p>
+                    <p className="text-ivory/70">Every lesson in The Art of Knowing Yourself stays open to you self-guided, at no cost.</p>
                     <Link href="/app/membership" className="btn btn-gold btn-sm">Explore memberships</Link>
                   </>
                 ) : <p>{access.reason ?? "Journey opens soon."}</p>}

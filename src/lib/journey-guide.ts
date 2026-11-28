@@ -20,7 +20,7 @@ export type GuideQuestion = {
 };
 export type GuideModule = {
   ref: string; title: string;
-  /** Where the member is, e.g. "The Art of Self · Who Am I? · Know Yourself". */
+  /** Where the member is, e.g. "The Art of Knowing Yourself · Who Am I? · Know Yourself". */
   place: string;
   objectives: string[];
   questions: GuideQuestion[];
@@ -41,7 +41,7 @@ const TEXT_MAX = 4000;
 /** Builds a guide module from a founder curriculum lesson (multiple-choice questions plus the lesson reflection). */
 export function guideFromLesson(c: Curriculum, l: Lesson, href: string): GuideModule {
   return {
-    ref: `${c.section}/${l.slug}`, title: l.title, place: `The Art of Self · ${c.title}`, href,
+    ref: `${c.section}/${l.slug}`, title: l.title, place: `The Art of Knowing Yourself · ${c.title}`, href,
     objectives: [...l.focus, ...(l.principles ?? [])].slice(0, 12),
     questions: [
       ...l.questions.map((q) => ({ key: choiceKey(c, q.key), prompt: q.prompt, kind: "choice" as const, options: q.choices.map((ch) => ({ id: ch.key, label: ch.label })) })),
@@ -158,12 +158,12 @@ export function guideRefForPath(path: string): string | null {
 
 /** Plain descriptions of where a member is (never page data). Longest matching prefix wins. */
 const PAGE_CONTEXT: [string, string][] = [
-  ["/app/know-yourself/identity-self-love", "The Art of Self · Identity & Self-Love founding curriculum"],
-  ["/app/know-yourself/emotional-intelligence", "The Art of Self · Emotional Intelligence"],
-  ["/app/know-yourself/boundaries", "The Art of Self · Boundaries & non-negotiables"],
-  ["/app/know-yourself/portfolio", "The Art of Self · their Personal Discovery Portfolio"],
-  ["/app/know-yourself/growth", "The Art of Self · their growth goals and history"],
-  ["/app/know-yourself", "The Art of Self (self-discovery for every member)"],
+  ["/app/know-yourself/identity-self-love", "The Art of Knowing Yourself · Identity & Self-Love founding curriculum"],
+  ["/app/know-yourself/emotional-intelligence", "The Art of Knowing Yourself · Emotional Intelligence"],
+  ["/app/know-yourself/boundaries", "The Art of Knowing Yourself · Boundaries & non-negotiables"],
+  ["/app/know-yourself/portfolio", "The Art of Knowing Yourself · their Personal Discovery Portfolio"],
+  ["/app/know-yourself/growth", "The Art of Knowing Yourself · their growth goals and history"],
+  ["/app/know-yourself", "The Art of Knowing Yourself (self-discovery for every member)"],
   ["/emotional-intelligence", "The Art of Emotional Intelligence"],
   ["/app/business", "The Professional Society (business networking and growth)"],
   ["/app/relationships", "The Personal Society (dating and relationships)"],

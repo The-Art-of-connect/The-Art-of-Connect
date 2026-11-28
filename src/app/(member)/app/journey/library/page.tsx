@@ -5,7 +5,7 @@ import { LuxHero, LuxSection, SafetyFooter } from "@/components/Lux";
 export const metadata = { title: "The Journey Library" };
 
 const ARTS: [string, string, string][] = [
-  ["self", "The Art of Self", "Knowing who you are beyond your roles, responsibilities and relationships."],
+  ["self", "The Art of Knowing Yourself", "Knowing who you are beyond your roles, responsibilities and relationships."],
   ["consciousness", "The Art of Consciousness", "Noticing your thoughts, beliefs and patterns with curiosity instead of judgment."],
   ["healing", "The Art of Healing", "Making peace with your past at your own pace, with compassion and support."],
   ["boundaries", "The Art of Boundaries", "Protecting your energy, honoring others and communicating limits with grace."],
