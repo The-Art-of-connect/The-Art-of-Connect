@@ -10,6 +10,7 @@ import { getMfaStatus, getViewer, hasRole } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { serverSecret } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { qaJourneyTesting } from "@/lib/qa-access";
 import { effectiveMode, journeyAccessFor, modeAllowed, ownerTestAccess, type JourneyMode } from "@/lib/journey";
 import { composeFoundation, loadSettings, membershipFor, trainingFor } from "@/lib/journey-server";
 
@@ -59,6 +60,7 @@ export async function startVoice(input: {
   const cfg = await loadSettings(db);
   if (!cfg || !cfg.voice.enabled || !cfg.voice.model || cfg.voice.centsPerMinute === null) return { ok: false, message: "Talk to Journey opens soon." };
 
+  let qaTest = false;
   let holder = viewer.id, pkg: string | null = null, access: "standard" | "enhanced" = "enhanced", allowed = cfg.voice.maxSessionMinutes * 60;
   if (input.ownerTest) {
     const mfa = await getMfaStatus();
@@ -72,7 +74,11 @@ export async function startVoice(input: {
     if (!em) return { ok: false, message: "This Journey experience isn't part of your membership." };
     input = { ...input, mode: em };
     const launch = await getLaunchState();
-    if (!launch.payments_live) return { ok: false, message: "Talk to Journey opens soon." };
+    if (!launch.payments_live) {
+      // Directive 49: the fictional QA account may test voice pre-launch within the QA testing budget.
+      if (viewer.viewAs || (await qaJourneyTesting(viewer.id)) !== "ok") return { ok: false, message: "Talk to Journey opens soon." };
+      qaTest = true;
+    }
     access = level; holder = m.holderId; pkg = m.membership.packageSlug;
     const [{ data: t }, { data: used }, { data: credits }] = await Promise.all([
       db.rpc("journey_effective_tier", { p_slug: pkg ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle<{ monthly_voice_minutes: number | null }>(),
@@ -96,6 +102,7 @@ export async function startVoice(input: {
   // GPT-Live has an official per-minute price; other models use the owner's rate, or the catalog estimate when comparing.
   const rate = live ? (catalog?.liveCentsPerMinute ?? 5) : model === cfg.voice.model ? cfg.voice.centsPerMinute : (catalog?.budgetCentsPerMinute ?? cfg.voice.centsPerMinute);
   const reserve = Math.round(((rate * allowed) / 60) * 10_000) / 10_000;
+  if (qaTest && (await qaJourneyTesting(viewer.id, reserve)) !== "ok") return { ok: false, message: "QA testing budget reached for now. Try a shorter conversation or test again after the budget resets." };
   const { data: started } = await db.rpc("journey_voice_start", { p_user: viewer.id, p_holder: holder, p_package: pkg, p_allowed_seconds: allowed, p_owner_test: Boolean(input.ownerTest), p_reserve: reserve });
   if (typeof started !== "string" || started.startsWith("refused:")) {
     const why: Record<string, string> = {

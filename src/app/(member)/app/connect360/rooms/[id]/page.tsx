@@ -11,6 +11,8 @@ import {
   addItem, createDocument, invitePrincipal, inviteAdvisor, postRoomMessage, recordReview, removeParticipant, revokeAdvisorInvite,
   setItemStatus, setMyParticipation, updateRoom,
 } from "@/app/actions/connect360";
+import { startMeeting } from "@/app/actions/meetings";
+import { RECORDING_LABEL } from "@/lib/meetings";
 
 export const metadata = { title: "Business Deal Room · CONNECT 360" };
 export const dynamic = "force-dynamic";
@@ -64,6 +66,7 @@ export default async function DealRoom({ params, searchParams }: { params: Promi
     (space === "shared" ? b.from("room_messages").select("id, sender_id, body, created_at").eq("room_id", id).eq("space", "shared") : b.from("room_messages").select("id, sender_id, body, created_at").eq("room_id", id).eq("space", "private").eq("space_owner", side!)).order("created_at").limit(200),
     (space === "shared" ? b.from("room_documents").select("id, title, category, privileged, review_status, current_version, uploaded_by, document_versions(id, version, file_name, scan_status, created_at)").eq("room_id", id).eq("space", "shared") : b.from("room_documents").select("id, title, category, privileged, review_status, current_version, uploaded_by, document_versions(id, version, file_name, scan_status, created_at)").eq("room_id", id).eq("space", "private").eq("space_owner", side!)).order("created_at"),
   ]);
+  const { data: meetings } = space === "shared" ? await b.from("room_meetings").select("id, title, status, recording_state, started_at, host_id").eq("room_id", id).order("started_at", { ascending: false }).limit(20) : { data: [] };
   const ppl = (people ?? []) as Person[];
   const marks = await memberMarks(db, ppl.map((p) => p.user_id));
   const nameOf = (uid: string) => ppl.find((p) => p.user_id === uid)?.display ?? "Participant";
@@ -96,6 +99,31 @@ export default async function DealRoom({ params, searchParams }: { params: Promi
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-6">
+          {space === "shared" && (
+            <section id="meetings" className="glass p-6">
+              <h2 className="display text-2xl">Meetings</h2>
+              <p className="mt-1 text-sm text-muted">Meeting documentation is optional and controlled by the meeting host. Recording is always off unless every participant consents, and approved minutes are shared only with this room&apos;s participants.</p>
+              {(meetings ?? []).length > 0 && (
+                <ul className="mt-3 divide-y divide-line">{(meetings ?? []).map((m) => (
+                  <li key={m.id}><Link href={`/app/connect360/rooms/${id}/meetings/${m.id}`} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
+                    <span><span className="font-semibold">{m.title}</span><span className="block text-xs text-muted">{fmt(m.started_at)} · hosted by {nameOf(m.host_id)}</span></span>
+                    <span className="text-xs text-muted">{m.status === "open" ? `In progress · ${RECORDING_LABEL[m.recording_state]}` : "Ended"} ›</span>
+                  </Link></li>
+                ))}</ul>
+              )}
+              <details className="mt-4"><summary className="cursor-pointer text-sm text-gold-deep">Start a meeting</summary>
+                <MemberForm action={startMeeting} className="mt-3 grid gap-2">
+                  <input type="hidden" name="room" value={id} />
+                  <input name="title" required minLength={3} maxLength={160} className="field" placeholder="Meeting title" aria-label="Meeting title" />
+                  <textarea name="purpose" maxLength={1000} rows={2} className="field" placeholder="Purpose (optional)" aria-label="Purpose" />
+                  <select name="mode" defaultValue="manual" className="field" aria-label="Minutes">
+                    <option value="none">No minutes</option><option value="manual">I&apos;ll take the minutes</option><option value="journey_assisted">Journey helps organize my notes</option>
+                  </select>
+                  <button className="btn btn-gold btn-sm w-fit">Start meeting</button>
+                </MemberForm>
+              </details>
+            </section>
+          )}
           <section className="glass p-6">
             <h2 className="display text-2xl">Plan & progress</h2>
             <ul className="mt-4 divide-y divide-line">

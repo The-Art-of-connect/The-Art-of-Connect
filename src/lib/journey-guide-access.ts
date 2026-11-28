@@ -4,6 +4,7 @@ import { getJourneyStatus } from "@/lib/journey-server";
 import { getLaunchState } from "@/lib/launch";
 import { resolveGuide, loadGuideAnswers } from "@/lib/journey-guide-server";
 import { createClient } from "@/lib/supabase/server";
+import { qaJourneyTesting } from "@/lib/qa-access";
 import type { GuideAccess, GuideModule } from "@/lib/journey-guide";
 
 /** What the Journey buttons should offer this viewer. The server still re-checks everything on every message. */
@@ -17,7 +18,8 @@ export async function guideAccess(): Promise<GuideAccess> {
     return { kind: "owner", available: s.enabled, reason: s.enabled ? undefined : "Owner: turn on Journey in the Journey Intelligence Center" };
   }
   if (s.access === "none") return { kind: "free" };
-  const live = viewer.viewAs ? true : (await getLaunchState()).payments_live;
+  // Directive 49: the fictional QA account tests Journey pre-launch when the owner allows it (the server re-checks every message).
+  const live = viewer.viewAs ? true : (await getLaunchState()).payments_live || (await qaJourneyTesting(viewer.id)) === "ok";
   const credits = s.allowance ? s.allowance.remaining + s.allowance.purchasedRemaining : 0;
   return { kind: "paid", credits, available: s.enabled && live, reason: s.enabled && live ? undefined : viewer.viewAs ? "Owner: turn on Journey in the Journey Intelligence Center" : "Opens soon" };
 }

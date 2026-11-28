@@ -1342,3 +1342,47 @@ left
 0
 v59-14) Scheduled reflections follow each member's frequency, and paused members get none (expect t|1):
 t|1
+v60-1) A participant starts a meeting; recording is off by default (expect t, then off):
+t
+off
+v60-2) Someone outside the room cannot start or see meetings (expect error, 0):
+ERROR:  Only Business Deal Room participants can start a meeting.
+0
+v60-3) Participants join without consenting to recording (expect joined):
+joined
+v60-4) Only the host controls recording (expect error):
+ERROR:  Only the meeting host controls recording.
+v60-5) Recording stays off until the founder approves a provider (expect error):
+ERROR:  Recording is not available yet. Meetings continue without recording.
+v60-6) Even then, everyone must consent first (expect error):
+ERROR:  Every participant must consent before recording begins.
+v60-7) The host writes minutes; drafts are private to the host until approved (expect 1):
+1
+v60-8) Other participants do not see a draft (expect 0):
+0
+v60-9) Only the host approves (expect error):
+ERROR:  Only the meeting host approves the minutes.
+v60-10) Approval publishes the minutes and adds decisions and actions to the room tracker (expect approved|1|1):
+approved
+1|1
+v60-11) Participants now see approved minutes (expect 1):
+1
+v60-12) A participant added later does not see earlier meetings (expect 0):
+0
+v60-13) Unless the host shares that meeting (expect granted, then 1):
+granted
+1
+v60-14) Every host action is in the room audit history (expect t):
+t
+v61-1) The exception is off until the owner turns it on (expect off):
+off
+v61-2) On: the QA account may test; a member who is not the QA account never can (expect ok, not_qa):
+ok
+not_qa
+v61-3) A staff account is never the QA exception (expect not_qa):
+not_qa
+v61-4) The daily QA testing budget ($5) is enforced (expect qa_day_budget, then ok for a small request):
+qa_day_budget
+ok
+v61-5) Members cannot call the check themselves (expect error):
+ERROR:  permission denied for function journey_qa_allowed
