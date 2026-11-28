@@ -137,7 +137,12 @@ export function normalizeSelection(cat: PricingCatalogue, sel: Selection): Selec
  */
 export function matchPackage(cat: PricingCatalogue, rawSel: Selection): { pkg: MembershipPackage | null; needsCouplesUpgrade: boolean } {
   const sel = normalizeSelection(cat, rawSel);
-  if (sel.package) return { pkg: cat.packages.find((p) => p.slug === sel.package) ?? null, needsCouplesUpgrade: false };
+  if (sel.package) {
+    // An exclusive membership keeps the couples experience: Executive Private takes the Couples upgrade like any other plan;
+    // Elite Concierge (all-inclusive) already includes it (directive 44 audit: relationship status never blocks a level up).
+    const pkg = cat.packages.find((p) => p.slug === sel.package) ?? null;
+    return { pkg, needsCouplesUpgrade: Boolean(pkg && sel.couples && pkg.experiences.includes("relationships") && !pkg.all_access) };
+  }
   if (!sel.experiences.length) return { pkg: null, needsCouplesUpgrade: false };
   const candidates = cat.packages.filter((p) => p.category !== "exclusive" && sameSet(p.experiences, sel.experiences));
   if (!sel.experiences.includes("relationships")) return { pkg: candidates[0] ?? null, needsCouplesUpgrade: false };

@@ -17,7 +17,7 @@ export type Plan = { slug: string; name: string; category: string; experiences: 
 export type Current = { packageSlug: string | null; level: Level; experiences: readonly string[]; society: GateFacts["society"] };
 
 const PAID = (e: readonly string[]) => e.filter((x) => x === "business" || x === "relationships");
-export const levelOfPlan = (p: Plan): Level => levelOf({ packageSlug: p.slug, status: "active", experiences: p.experiences, eliteBadge: false });
+export const levelOfPlan = (p: Plan): Level => levelOf({ packageSlug: p.slug.replace("+couples", ""), status: "active", experiences: p.experiences, eliteBadge: false });
 const factsFor = (p: Plan, c: Current): GateFacts => ({ signedIn: true, level: levelOfPlan(p), experiences: p.experiences, society: c.society, live: { business: true, relationships: true }, preview: true });
 
 /** Whether a plan unlocks a need (launch switches aside: they apply equally to every plan). */
@@ -26,6 +26,27 @@ const price = (p: Plan) => p.monthly_price_cents ?? Number.POSITIVE_INFINITY;
 const buyable = (p: Plan) => !p.all_access && p.slug !== "elite-concierge";
 /** Couples plans for couples, singles plans for singles; everyone else may see either. */
 const fitsSociety = (p: Plan, c: Current) => !p.love_track || !c.society || c.society === "business" || (c.society === "couples") === (p.love_track === "couple");
+
+/**
+ * Relationship status and membership level work together (directive 44 audit): every plan that includes In Love can carry
+ * the couples experience through the Couples upgrade (a second, secure login for the partner and the shared space). These
+ * options are added alongside the published plans; Elite Concierge already includes couples. The upgrade's price comes only
+ * from the owner's pricing record — with no approved price, the option shows without a price.
+ */
+export const COUPLES_SUFFIX = "+couples";
+export function withCouplesOptions(plans: Plan[], upgradeCents: number | null): Plan[] {
+  const couplesAllowance = plans.find((p) => p.love_track === "couple")?.journeyMessages;
+  const extra = plans
+    .filter((p) => p.experiences.includes("relationships") && !p.love_track && !p.all_access)
+    .map((p): Plan => ({
+      ...p, slug: p.slug + COUPLES_SUFFIX, name: `${p.name} with the Couples upgrade`, love_track: "couple",
+      monthly_price_cents: p.monthly_price_cents != null && upgradeCents != null ? p.monthly_price_cents + upgradeCents : null,
+      journeyMessages: p.journeyMessages === null || couplesAllowance === null ? null
+        : p.journeyMessages === undefined && couplesAllowance === undefined ? undefined : Math.max(p.journeyMessages ?? 0, couplesAllowance ?? 0),
+    }));
+  return [...plans, ...extra];
+}
+export const baseSlug = (slug: string) => slug.replace(COUPLES_SUFFIX, "");
 
 /**
  * Directive 44 (permanent): what a member would lose by moving from one plan to another. A level up loses nothing:
