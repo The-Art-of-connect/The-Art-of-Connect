@@ -38,6 +38,7 @@ changes an earlier one, the later one wins.
 | 32 | [Opportunity Radar & Application Assistance Center](32-opportunity-radar-application-assistance.md) | **Recorded (partial text received).** Design follows the full text; consent-based matching and official-source verification. |
 | 33 | [Professional Credibility & Opportunity Readiness](33-professional-credibility-opportunity-readiness.md) | **Recorded.** Completes directive 32; one system with the Résumé Builder and Intelligence Division. |
 | 34 | [Mandatory Professional Résumé (Executive & Elite)](34-mandatory-professional-resume.md) | **Recorded; in development.** Upload, build or approve; master history; readiness dashboard; required only for introductions and applications. |
+| 35 | [Luxury Through Simplicity](35-luxury-through-simplicity.md) | **Founder-level requirement.** Four destinations (Home · Connect · Journey · My World), Journey as concierge, progressive discovery, mobile first. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

@@ -129,12 +129,18 @@ export const PROFILE_LINKS: NavLink[] = [
 ];
 
 /** Bottom navigation inside the signed-in member experience (phones). */
+/**
+ * Luxury Through Simplicity (founder directive 35): four destinations for members, five for visitors. Everything else lives
+ * inside the In Life, In Love and In Business experiences, My World, and "Everything available to me" (/app/explore).
+ */
 export const MEMBER_TABS = [
   { href: "/app", label: "Home", icon: "home", match: ["/app"] },
-  { href: "/app/know-yourself", label: "Self", icon: "self", match: ["/app/know-yourself", "/emotional-intelligence"] },
-  { href: "/app/connect", label: "Connect", icon: "connect", match: ["/app/connect", "/app/relationships", "/app/readiness", "/app/business"] },
+  { href: "/app/connections", label: "Connect", icon: "connect", match: ["/app/connections", "/app/connect", "/app/relationships", "/app/readiness", "/app/business", "/app/connect360"] },
   { href: "/app/journey", label: "Journey", icon: "journey", match: ["/app/journey"] },
-  { href: "#profile", label: "Profile", icon: "profile", match: ["/app/membership", "/app/safety", "/app/verify"] },
+  { href: "/app/world", label: "My World", icon: "profile", match: ["/app/world", "/app/membership", "/app/safety", "/app/verify", "/app/career", "/app/explore"] },
+] as const;
+export const PUBLIC_PRIMARY = [
+  { href: "/", label: "Home" }, { href: "/life", label: "In Life" }, { href: "/love", label: "In Love" }, { href: "/business", label: "In Business" }, { href: "/membership", label: "Memberships" },
 ] as const;
 
 /** Legacy export kept for any remaining consumers. */
