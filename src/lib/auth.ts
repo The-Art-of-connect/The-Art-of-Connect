@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Experience, StaffRole } from "@/lib/experiences";
+import { isQaAccount } from "@/lib/qa-access";
 import { getLaunchState } from "@/lib/launch";
 import { cookies, headers } from "next/headers";
 import { isPersona, PERSONAS, VIEW_AS_COOKIE, type Society } from "@/lib/view-as";
@@ -114,8 +115,10 @@ export async function requireExperience(experience: Experience) {
   const granted = viewer.experiences.includes(experience);
   const live = launch[`${experience}_live` as const];
   const staffPreview = isStaff(viewer) || isInsidePreview(viewer);
-  if (!staffPreview && !(granted && live)) redirect(granted ? "/app?locked=" + experience : `/app/membership?locked=${experience}`);
-  return { viewer, preview: staffPreview && !(granted && live) };
+  // The owner-listed fictional QA account previews experiences that are not open to members yet.
+  const qaPreview = granted && !live && !viewer.viewAs && (await isQaAccount(viewer.id));
+  if (!staffPreview && !qaPreview && !(granted && live)) redirect(granted ? "/app?locked=" + experience : `/app/membership?locked=${experience}`);
+  return { viewer, preview: (staffPreview || qaPreview) && !(granted && live) };
 }
 
 /** Membership access v2: a paid membership or active trial (Business or In Love access), staff, or an owner preview. */

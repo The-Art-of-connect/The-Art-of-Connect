@@ -38,7 +38,7 @@ export default async function MyWorld() {
       { href: "/app/connect360/rooms", title: "Deal Rooms", detail: plural(rooms, "active room", "active rooms") },
       { href: "/app/connect360/proposals", title: "Proposals", detail: plural(proposals, "proposal", "proposals") },
       { href: "/app/connect360/funding", title: "Funding", detail: plural(funding, "project", "projects") },
-      { href: "/app/connect360/intelligence", title: "Research", detail: `${plural(research, "assignment", "assignments")} · ${saved} saved` },
+      { href: "/app/connect360/intelligence", title: "My Intelligence Office", detail: `${plural(research, "assignment", "assignments")} · ${saved} saved` },
     ] }] : []),
     { title: "My professional life", tiles: [
       { href: "/app/career", title: "Résumés", detail: plural(resumes, "résumé or letter", "résumés and letters") },

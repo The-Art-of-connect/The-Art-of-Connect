@@ -58,7 +58,7 @@ export default async function KnowledgeExchange() {
 
   return (
     <>
-      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — The Professional Society is not open to members yet.</p>}
+      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Preview — The Professional Society is not open to members yet.</p>}
       <div className="theme-dark band rounded-[28px] p-8 text-center sm:p-10">
         <p className="eyebrow">The Professional Society</p>
         <h1 className="display mt-3 text-4xl sm:text-5xl">The Knowledge Exchange</h1>

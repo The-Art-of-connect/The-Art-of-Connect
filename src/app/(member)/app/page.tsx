@@ -28,7 +28,10 @@ const PHOTO: Record<string, string> = {
   relationships: "/images/library/love/candlelit-dinner.webp",
 };
 
-export default async function MemberHome() {
+const LOCKED: Record<string, string> = { relationships: "In Love", business: "In Business" };
+
+export default async function MemberHome({ searchParams }: { searchParams: Promise<{ locked?: string }> }) {
+  const { locked } = await searchParams;
   const viewer = (await getViewer())!;
   const launch = await getLaunchState();
   const staff = isStaff(viewer) || isInsidePreview(viewer);
@@ -53,6 +56,12 @@ export default async function MemberHome() {
   const membership = await getMembership(viewer);
   return (
     <>
+      {locked && LOCKED[locked] && (
+        <p role="status" className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-4 text-sm">
+          <span className="font-semibold text-gold">{LOCKED[locked]} is opening soon.</span> It&rsquo;s included in your membership, and we&rsquo;ll let you know the moment it opens.
+          In the meantime, <Link href="/app/life" className="text-gold underline">continue In Life</Link> or <Link href="/app/journey" className="text-gold underline">ask Journey</Link>.
+        </p>
+      )}
       {elite?.status === "invitation_issued" && (
         <Link href="/app/elite/eligibility" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border-2 border-[#e8892b]/60 px-6 py-4 text-[#f6e7c8]" style={{ background: "#1b1310" }}>
           <span className="flex items-center gap-3"><EliteBadge size={22} interactive={false} /><span><span className="display block text-2xl">You&rsquo;re invited to the Elite Concierge Society.</span><span className="text-xs text-[#f5ecdf]/70">A private invitation is waiting for you. Nothing is charged until you choose.</span></span></span>
@@ -65,7 +74,7 @@ export default async function MemberHome() {
         <div className="mt-6 max-w-2xl"><AskJourney level={membership?.level ?? "free"} journey={nav.paid} /></div>
         <div className="mt-8"><ExperienceDoors love={viewer.experiences.includes("relationships")} business={viewer.experiences.includes("business")} /></div>
       </section>
-      {isElite ? <EliteHome name={viewer.displayName} since={badge?.issued_at ? new Date(badge.issued_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null} /> : <LivingHero
+      {isElite ? <EliteHome name={viewer.displayName} since={badge?.issued_at ? new Date(badge.issued_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null} /> : <LivingHero headingLevel="h2"
         slides={[
           { src: "/images/library/life/journaling.webp", alt: "Writing in a journal by a sunlit window" },
           { src: "/images/society/roundtable.webp", alt: "Business owners gathered around a boardroom table" },

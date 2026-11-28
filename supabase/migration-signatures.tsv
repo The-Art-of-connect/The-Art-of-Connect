@@ -81,3 +81,4 @@
 20270126000001_intel_selftest.sql	exists (select 1 from information_schema.tables where table_name = 'intel_security_runs')
 20270127000001_intel_depth_entitlement.sql	exists (select 1 from pg_trigger where tgname = 'guard_intel_depth')
 20270128000001_qa_experience_switcher.sql	exists (select 1 from pg_proc where proname = 'qa_switch_experience')
+20270129000001_qa_preview_access.sql	exists (select 1 from pg_proc where proname = 'is_qa_account')

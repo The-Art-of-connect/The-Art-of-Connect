@@ -43,13 +43,18 @@ export default async function IntelligenceOffice() {
       <LuxSection eyebrow="New assignment" title="What would you like to explore?" intro="Describe the opportunity or question. Leave out personal details; Journey prepares a research plan, asks if anything is unclear, and our partners do the rest.">
         <MemberForm action={createAssignment} className="glass max-w-3xl space-y-3 p-6">
           <div className="grid gap-3 sm:grid-cols-2">
-            <input name="title" required minLength={3} maxLength={160} className="field" placeholder="Title, e.g. Franchise opportunities in Georgia" />
-            <select name="category" className="field" defaultValue="business-ownership">{Object.entries(CATEGORY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+            <label className="block text-sm"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-muted">Title</span><input name="title" required minLength={3} maxLength={160} className="field w-full" placeholder="e.g. Franchise opportunities in Georgia" /></label>
+            <label className="block text-sm"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-muted">Topic</span><select name="category" className="field w-full" defaultValue="business-ownership">{Object.entries(CATEGORY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
           </div>
-          <textarea name="objective" required minLength={20} rows={5} maxLength={6000} className="field w-full" placeholder="Your objective, what you already know, and what a great result would look like." />
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <label className="flex items-center gap-2"><input type="radio" name="depth" value="standard" defaultChecked />Standard</label>
-            <label className="flex items-center gap-2"><input type="radio" name="depth" value="deep" disabled={level !== "elite"} />In-depth {level !== "elite" && <span className="text-xs text-faint">(Elite)</span>}</label>
+          <label className="block text-sm"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-muted">What would you like to know?</span>
+          <textarea name="objective" required minLength={20} rows={5} maxLength={6000} className="field w-full" placeholder="Your objective, what you already know, and what a great result would look like." /></label>
+          <p className="text-xs text-muted"><span className="font-semibold">Example:</span> &ldquo;I&rsquo;m considering buying an established coffee franchise in the Atlanta area within 12 months. Compare three franchise options: startup costs, ongoing fees, training and what owners say. I have no franchise experience.&rdquo;</p>
+          <fieldset className="space-y-2 text-sm">
+            <legend className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-muted">Research depth</legend>
+            <label className="flex items-start gap-2"><input type="radio" name="depth" value="standard" defaultChecked className="mt-1" /><span><span className="font-semibold">Standard</span> <span className="block text-xs text-muted">A focused summary of the most relevant sources, each one cited.</span></span></label>
+            <label className="flex items-start gap-2"><input type="radio" name="depth" value="deep" disabled={level !== "elite"} className="mt-1" /><span><span className="font-semibold">In-depth</span> {level !== "elite" && <span className="text-xs text-faint">· Included with Elite Concierge</span>}<span className="block text-xs text-muted">A broader investigation: more sources, comparisons and a fuller written report with every source cited.</span></span></label>
+          </fieldset>
+          <div className="flex">
             <button className="btn btn-gold btn-sm ml-auto">Create assignment</button>
           </div>
         </MemberForm>

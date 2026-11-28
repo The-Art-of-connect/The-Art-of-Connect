@@ -28,7 +28,7 @@ export default async function InLove() {
   const { viewer, preview } = await requireExperience("relationships");
   return (
     <>
-      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — In Love is not open to members yet.</p>}
+      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Preview — In Love is not open to members yet.</p>}
       <LivingHero
         slides={[
           { src: "/images/library/love/candlelit-dinner.webp", alt: "A couple smiling over a candlelit dinner" },

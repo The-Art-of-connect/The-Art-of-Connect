@@ -24,7 +24,7 @@ export default async function LoveLanguagesTogether() {
 
   return (
     <>
-      {staffPreview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — In Love is not open to members yet.</p>}
+      {staffPreview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Preview — In Love is not open to members yet.</p>}
       <SelfBanner section="love-languages" actions={[{ href: "/app/know-yourself/love-languages#profile", label: mine ? "Update my profile" : "Discover my love languages", primary: true }]} />
       <p className="mt-5 max-w-2xl text-muted">Understand how you each feel loved, how you each show it, and where your needs may differ. Insight, never a score.</p>
 
