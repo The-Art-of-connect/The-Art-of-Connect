@@ -52,6 +52,8 @@ export const NAV: NavGroup[] = [
       { href: "/app/readiness", label: "Relationship readiness", access: "paid" },
       { href: "/app/relationships/love-languages", label: "Love languages together", access: "paid" },
       { href: "/app/relationships/calendar", label: "Our Calendar", access: "paid" },
+      { href: "/app/relationships/reflections", label: "Private Reflections", note: "Yours alone unless you share one", access: "paid" },
+      { href: "/app/relationships/community", label: "Couples Connection Community", note: "Friendships with other couples", access: "paid" },
       { href: "/app/relationships/exclusive", label: "The Exclusive Connection", access: "paid" },
     ],
   },

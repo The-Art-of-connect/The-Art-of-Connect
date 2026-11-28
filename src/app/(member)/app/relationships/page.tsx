@@ -152,6 +152,8 @@ async function Couples({ coupleId, welcome, viewerId }: { coupleId: string | nul
 
       <ul className="mt-6 grid gap-3">
         {[
+          { href: "/app/relationships/community", title: brandName("couples-connection-community"), line: "Friendships, double dates and travel with other couples." },
+          { href: "/app/relationships/reflections", title: brandName("private-reflections"), line: "Yours alone. Share an individual reflection only if you choose." },
           { href: "/app/relationships/love-languages", title: "Five Love Languages", line: "Understand how your partner receives love." },
           { href: "/app/relationships/calendar", title: "Our Calendar", line: "Date nights and plans, with each partner's schedule kept private." },
           { href: "/app/journey", title: "Journey for couples", line: "Communicate intentionally and plan meaningful moments." },

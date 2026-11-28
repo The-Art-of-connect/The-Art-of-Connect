@@ -78,6 +78,13 @@ export const BRAND_TERMS = [
   { key: "journey-library", name: "The Journey Library", kind: "feature", aliases: ["library", "articles"] },
   { key: "discovery-sessions", name: "Discovery Sessions", kind: "feature", aliases: ["discovery session", "adaptive discovery"] },
   { key: "our-calendar", name: "Our Calendar", kind: "feature", href: "/app/relationships/calendar", aliases: ["couples calendar", "date nights", "shared calendar"], avoid: [/\bJust us\b/] },
+  // Directive 08 (Couples Connection Community), built under directive 51 §4. Couples-only circles in Find Your Circle.
+  { key: "couples-connection-community", name: "Couples Connection Community", kind: "feature", href: "/app/relationships/community",
+    aliases: ["couples community", "other couples", "couple friends", "double dates", "double date", "couples networking", "couples travel"] },
+  // Directive 51 §7 (private reflections) and directive 47: each partner's own reflections, shared one at a time by choice.
+  { key: "private-reflections", name: "Private Reflections", kind: "feature", href: "/app/relationships/reflections",
+    aliases: ["private reflection", "reflections", "relationship journal", "couples journal", "reflect on my relationship"] },
+  { key: "couples-connection-circles", name: "Couples Connection Circles", kind: "feature", aliases: ["couples circles", "couples groups"], note: "The circles of the Couples Connection Community." },
   { key: "exclusive-connection", name: "The Exclusive Connection", kind: "feature", href: "/app/relationships/exclusive", aliases: ["exclusive", "exclusivity"] },
   { key: "connect-calendar", name: "The Connect Calendar", kind: "feature", aliases: ["calendar", "events calendar"] },
   { key: "connection-feed", name: "The Connection Feed", kind: "feature", aliases: ["feed", "posts", "updates"] },

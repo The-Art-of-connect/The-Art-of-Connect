@@ -1399,3 +1399,39 @@ v62-5) Their partner still has their own share of the couple allowance (expect t
 t
 v62-6) Members cannot read the allowance function directly (expect error):
 ERROR:  permission denied for function journey_allowance_used
+v63-1) A member saves reflections and reads them back, then edits one and reads the change back (expect 2|f, then Ada private thought, revised):
+2|f
+Ada private thought, revised
+v63-2) A partner cannot read the other's unshared reflection (expect 0):
+0
+v63-3) A partner cannot share, edit or delete the other's reflection (expect 0, 0):
+0
+0
+v63-4) A member cannot share into a couple they are not in (expect error):
+ERROR:  new row violates row-level security policy for table "private_reflections"
+v63-5) Nobody can ask whether another member is in a couple (expect f):
+f
+v63-6) The author shares one reflection; the partner reads only that one and is told without its content (expect 1|Ada shared thought, then 1|f):
+1|Ada shared thought
+1|f
+v63-7) Someone outside the couple never sees it (expect 0):
+0
+v63-8) A member who is not in an active couple cannot join a couples-only circle (expect error):
+ERROR:  new row violates row-level security policy for table "social_circle_members"
+v63-9) ...nor propose a Couples Connection Circle (expect error):
+ERROR:  new row violates row-level security policy for table "social_circles"
+v63-10) A member of an active couple may join and propose one for approval, and their partner may join (expect 1, then 2):
+1
+2
+v63-11) A couple member posts in the circle and reads it back; the other couple member reads it too (expect 1, then 1):
+1
+1
+v63-12) After Ada leaves the couple, the shared reflection is no longer readable by Ben and his notice is withdrawn (expect left, then 0|0):
+left
+0|0
+v63-13) Ada keeps every reflection, sharing ended rather than carrying over, and she can still delete her own (expect 2|0, then 1):
+2|0
+1
+v63-14) Neither former partner remains in couples-only circles, and a single member cannot rejoin (expect 0, then error):
+0
+ERROR:  new row violates row-level security policy for table "social_circle_members"
