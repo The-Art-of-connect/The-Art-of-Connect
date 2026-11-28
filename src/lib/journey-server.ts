@@ -50,7 +50,7 @@ const SAFETY_NOTE =
   "If you or someone else may be in danger, contact local emergency services (911 in the U.S.) or call or text 988 for the Suicide & Crisis Lifeline. You can also reach our safety team from Safety in your member menu.";
 
 export type JourneyReply =
-  | { ok: true; reply: string; conversationId: string | null; allowance: AllowanceView | null; test?: { id: string | null; model: string; latencyMs: number; inputTokens: number; outputTokens: number; costCents: number; instructionVersion: number | null } }
+  | { ok: true; reply: string; conversationId: string | null; allowance: AllowanceView | null; saved?: boolean; test?: { id: string | null; model: string; latencyMs: number; inputTokens: number; outputTokens: number; costCents: number; instructionVersion: number | null } }
   | { ok: false; status: number; message: string; allowance?: AllowanceView | null; safety: string };
 
 const refuse = (status: number, message: string, allowance?: AllowanceView | null): JourneyReply => ({ ok: false, status, message, allowance, safety: SAFETY_NOTE });
@@ -152,6 +152,7 @@ export async function sendJourneyMessage(input: {
   message: string;
   requestKey: string;
   conversationId?: string | null;
+  homeChat?: boolean;
   ownerTest?: boolean;
   hasAttachment?: boolean;
   /** A purchased Journey Private Session (time- and message-limited; doesn't use the monthly allowance). */
@@ -347,13 +348,16 @@ export async function sendJourneyMessage(input: {
     instructions += `\n\n${discoveryInstructions(dc, tc?.learning_objectives ?? [], FOUNDER_PRINCIPLES[ds.category] ?? [], Boolean(input.discovery?.summarize))}`;
   }
 
+  const homeChat = Boolean(input.homeChat && !input.ownerTest && !input.sessionId && !input.comparisonId
+    && !input.discovery && !input.lesson && !input.guide && !input.page && !input.portfolio && !input.resume && !input.intel && !input.minutes);
   // Context: only this member's own conversation, trimmed to the owner's limits.
   let history: ChatTurn[] = [];
   if (input.conversationId) {
-    const { data: conv } = await db.from("journey_conversations").select("id").eq("id", input.conversationId).eq("user_id", viewer.id).maybeSingle();
-    if (!conv) return refuse(404, "That conversation wasn't found.");
-    const { data: msgs } = await db.from("journey_messages").select("role, content").eq("conversation_id", conv.id).order("created_at", { ascending: true }).limit(200);
-    history = trimHistory((msgs ?? []).map((r) => ({ role: r.role === "journey" ? "assistant" : "user", content: r.content }) as ChatTurn), cfg.settings.maxHistoryMessages, cfg.settings.maxHistoryChars);
+    const { data: conv } = await db.from("journey_conversations").select("id, mode, home_chat").eq("id", input.conversationId).eq("user_id", viewer.id).maybeSingle();
+    if (!conv || Boolean(conv.home_chat) !== homeChat || (homeChat && conv.mode !== input.mode)) return refuse(404, "That conversation wasn't found.");
+    const { data: msgs, error: historyError } = await db.from("journey_messages").select("role, content").eq("conversation_id", conv.id).eq("user_id", viewer.id).order("id", { ascending: false }).limit(200);
+    if (historyError) return refuse(503, "Your conversation couldn't load. Please try again.");
+    history = trimHistory((msgs ?? []).reverse().map((r) => ({ role: r.role === "journey" ? "assistant" : "user", content: r.content }) as ChatTurn), cfg.settings.maxHistoryMessages, cfg.settings.maxHistoryChars);
   }
   // Founder training most relevant to what the member is talking about now (this message and their recent turns).
   const recent = [...history].reverse().filter((h) => h.role === "user").slice(0, 3).map((h) => h.content).join(" ");
@@ -414,16 +418,26 @@ export async function sendJourneyMessage(input: {
   }
 
   let conversationId = input.conversationId ?? null;
+  let saved = false;
   if (resumeDraft) draftOnly = true;
   if (!conversationId && !input.comparisonId && !draftOnly) {
-    const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, title: `${input.ownerTest ? "[Owner test] " : ""}${discovery ? `Discovery · ${discoveryCategory(discovery.category)?.title}` : input.message}`.slice(0, 80) }).select("id").single();
+    const { data: c } = await db.from("journey_conversations").insert({ user_id: viewer.id, mode: input.mode, home_chat: homeChat, title: `${input.ownerTest ? "[Owner test] " : ""}${discovery ? `Discovery · ${discoveryCategory(discovery.category)?.title}` : input.message}`.slice(0, 80) }).select("id").single();
     conversationId = c?.id ?? null;
   }
   if (conversationId && !input.comparisonId && !draftOnly) {
-    await db.from("journey_messages").insert([
+    const { error: saveError } = await db.from("journey_messages").insert([
       { conversation_id: conversationId, user_id: viewer.id, role: "member", content: input.message },
       { conversation_id: conversationId, user_id: viewer.id, role: "journey", content: result.text },
     ]);
+    saved = !saveError;
+    if (homeChat && saved) {
+      await db.from("journey_conversations").update({ updated_at: new Date().toISOString() })
+        .eq("id", conversationId).eq("user_id", viewer.id);
+    }
+    if (homeChat && !saved && !input.conversationId) {
+      await db.from("journey_conversations").delete().eq("id", conversationId).eq("user_id", viewer.id);
+      conversationId = null;
+    }
   }
   if (input.portfolio) await db.from("discovery_analyses").insert({ user_id: viewer.id, scope: "portfolio", source: "journey", content: result.text.slice(0, 20000) });
   if (discovery) {
@@ -440,7 +454,7 @@ export async function sendJourneyMessage(input: {
     : view?.unlimited ? unlimitedView(view.used + 1, periodEnd) : view && !d.usesPurchased
     ? allowanceView(view.allowance, view.used + 1, view.purchasedRemaining, periodEnd)
     : view && { ...view, purchasedRemaining: Math.max(0, view.purchasedRemaining - 1) };
-  return { ok: true, reply: result.text, conversationId, allowance: after };
+  return { ok: true, reply: result.text, conversationId, allowance: after, saved };
 }
 
 /** What a Journey page needs to show: access level, the allowance meter and whether Journey is switched on. */

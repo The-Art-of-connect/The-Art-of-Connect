@@ -10,6 +10,7 @@ const Body = z.object({
   // Generated once per message by the browser; resending it can never be charged twice.
   requestKey: z.string().regex(/^[A-Za-z0-9_-]{8,80}$/),
   conversationId: z.uuid().nullish(),
+  homeChat: z.boolean().optional(),
   ownerTest: z.boolean().optional(),
   sessionId: z.uuid().nullish(),
   model: z.string().regex(/^[A-Za-z0-9._:-]{2,80}$/).nullish(),
