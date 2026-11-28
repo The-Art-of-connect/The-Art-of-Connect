@@ -1,5 +1,5 @@
 import "server-only";
-import { isQaAccount } from "@/lib/qa-access";
+import { isQaAccount, qaJourneyTesting } from "@/lib/qa-access";
 import { brandInstructions } from "@/lib/brand";
 import { guideDraftRequest, guideInstructions, pageContext } from "@/lib/journey-guide";
 import { loadGuideAnswers, resolveGuide } from "@/lib/journey-guide-server";
@@ -164,6 +164,8 @@ export async function sendJourneyMessage(input: {
   page?: string | null;
   /** Résumé enhancement (directives 33–34): the member's own résumé text with contact details removed. Never stored as a conversation. */
   resume?: { text: string; industry?: string | null } | null;
+  /** Business Deal Room minutes (directive 48): the host's own notes organized into structured minutes. Draft only, never stored. */
+  minutes?: { title: string; notes: string } | null;
   /** Research planning (directive 26): Journey turns the member's objective into a plan for the research partners. Never stored as a conversation. */
   intel?: { objective: string; depth: "standard" | "deep" } | null;
 }): Promise<JourneyReply> {
@@ -185,6 +187,7 @@ export async function sendJourneyMessage(input: {
   let periodStart = new Date();
   let periodEnd = new Date();
   let tier: TierLimit | null = null;
+  let qaTest = false;
 
   if (input.sessionId && !input.ownerTest) {
     const m = await membershipFor(db, viewer.id);
@@ -203,13 +206,18 @@ export async function sendJourneyMessage(input: {
     const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
     if (!m || level === "none") return refuse(403, "Journey is a benefit of paid memberships.");
     // Lessons, discovery and the portfolio belong to every paid plan: use an experience the plan includes.
-    if ((input.lesson || input.discovery || input.portfolio || input.guide || input.page || input.resume || input.intel) && input.mode !== "concierge") {
+    if ((input.lesson || input.discovery || input.portfolio || input.guide || input.page || input.resume || input.intel || input.minutes) && input.mode !== "concierge") {
       const em = effectiveMode(input.mode, level, m.membership);
       if (em) input = { ...input, mode: em };
     }
     if (!modeAllowed(input.mode, level, m.membership)) return refuse(403, "This Journey experience isn't part of your membership.");
     const launch = await getLaunchState();
-    if (!launch.payments_live || (input.mode !== "concierge" && !launch[LAUNCH_KEY[input.mode]])) return refuse(403, "Journey opens soon.");
+    if (!launch.payments_live || (input.mode !== "concierge" && !launch[LAUNCH_KEY[input.mode]])) {
+      // Directive 49: only the fictional QA account, with the owner's switch on and within the QA testing budget.
+      const qa = viewer.viewAs ? "not_qa" : await qaJourneyTesting(viewer.id);
+      if (qa !== "ok") return refuse(403, qa.startsWith("qa_") ? "QA testing budget reached for now. Journey will be available again when the budget resets." : "Journey opens soon.");
+      qaTest = true;
+    }
     access = level;
     holderId = m.holderId;
     packageSlug = m.membership.packageSlug;
@@ -254,6 +262,11 @@ export async function sendJourneyMessage(input: {
     resumeDraft = true;
     instructions += `\n\n${planInstructions(input.intel.depth)}`;
     input = { ...input, conversationId: null, comparisonId: null, message: `${PLAN_REQUEST}\n\n--- OBJECTIVE ---\n${input.intel.objective}` };
+  }
+  if (input.minutes) {
+    resumeDraft = true;
+    instructions += `\n\n# Meeting minutes (directive 48)\nOrganize the host's notes into structured minutes with these headings: Purpose; Participants and business roles; Discussion topics; Decisions reached; Proposed arrangements (not decisions); Financial matters discussed; Unresolved questions; Assigned responsibilities (who, what, by when); Next steps; Suggested follow-up topics. Use only what the notes say: never invent decisions, amounts, names or deadlines. Clearly separate proposals from actual decisions. End with: "These minutes record a discussion and are not a legally binding agreement."`;
+    input = { ...input, conversationId: null, comparisonId: null, mode: "business", message: `Meeting: ${input.minutes.title}\n\n--- HOST'S NOTES ---\n${input.minutes.notes}` };
   }
   if (input.resume) {
     resumeDraft = true;
@@ -327,6 +340,7 @@ export async function sendJourneyMessage(input: {
   // A résumé draft is one structured document: allow a longer reply and reserve for it proportionally.
   const outTokens = resumeDraft ? Math.max(d.maxOutputTokens, 3200) : d.maxOutputTokens;
   const reserveCents = Math.ceil(d.reserveCents * (outTokens / Math.max(1, d.maxOutputTokens)));
+  if (qaTest && (await qaJourneyTesting(viewer.id, reserveCents)) !== "ok") return refuse(429, "QA testing budget reached for now. Journey will be available again when the budget resets.", view);
   const { data: reserved } = await db.rpc("journey_reserve", {
     p_user: viewer.id, p_holder: holderId, p_request_key: input.requestKey, p_package: packageSlug, p_mode: input.mode,
     p_model: d.model, p_reserve: reserveCents, p_period_start: periodStart.toISOString(), p_owner_test: Boolean(input.ownerTest),

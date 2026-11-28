@@ -89,3 +89,5 @@
 20270201100001_couples_level_up.sql	exists (select 1 from pg_proc where proname = 'journey_effective_tier')
 20270202000001_live_qa.sql	exists (select 1 from pg_proc where proname = 'circle_live_tick')
 20270203000001_growth_and_relationships.sql	exists (select 1 from pg_proc where proname = 'growth_tick')
+20270204000001_deal_room_meetings.sql	exists (select 1 from pg_proc where proname = 'approve_minutes')
+20270205000001_qa_journey_testing.sql	exists (select 1 from pg_proc where proname = 'journey_qa_allowed')

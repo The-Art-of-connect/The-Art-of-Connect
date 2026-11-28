@@ -450,3 +450,17 @@ export async function updateTeamMember(_prev: ActionResult, form: FormData): Pro
   revalidatePath("/admin/team");
   return done(roles.length ? "Permissions updated." : "Team access removed and all sessions signed out.");
 }
+
+/** Directive 49: the owner's switch for the fictional QA account's pre-launch Journey testing exception. Owner only. */
+export async function setQaJourneyTesting(_prev: ActionResult, form: FormData): Promise<ActionResult> {
+  await requireStaff(["owner"]);
+  const enable = form.get("enable") === "true";
+  const supabase = (await createClient())!;
+  const { data: auth } = await supabase.auth.getUser();
+  const { error, count } = await supabase.from("platform_settings")
+    .update({ value: enable, updated_by: auth.user?.id, updated_at: new Date().toISOString() }, { count: "exact" }).eq("key", "qa_journey_testing");
+  if (error || !count) return fail("The change was not saved.");
+  await audit(enable ? "qa_journey.enable" : "qa_journey.disable", "platform_settings", "qa_journey_testing");
+  revalidatePath("/admin/qa/readiness");
+  return done(enable ? "The QA account can now test Journey within its selected membership and the QA testing budget." : "QA Journey testing is off.");
+}
