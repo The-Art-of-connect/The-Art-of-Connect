@@ -2,6 +2,8 @@
 -- rls_checks.sql, _v2 and _v3 on the same throwaway database.
 reset role;
 reset request.jwt.claim.sub;
+-- Blocking is checked without verification first; v4 turns the requirement back on below to check it.
+update public.platform_settings set value = 'false' where key = 'require_identity_for_matchmaking';
 
 -- Setup: two visible singles (6 and 8) in In Love.
 insert into public.experience_access(user_id, experience, source) values ('00000000-0000-0000-0000-000000000008','relationships','owner_grant')

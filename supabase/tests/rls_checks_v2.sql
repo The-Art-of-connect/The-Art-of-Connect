@@ -2,6 +2,10 @@
 -- throwaway database (it reuses the users created there).
 reset role; -- start as the database owner, whatever ran before
 reset request.jwt.claim.sub;
+\echo 'v2-0) Production requires identity verification for matchmaking (directive 51) (expect true):'
+select value from public.platform_settings where key = 'require_identity_for_matchmaking';
+-- These checks cover couples and visibility, not verification: switch the requirement off for this scenario only.
+update public.platform_settings set value = 'false' where key = 'require_identity_for_matchmaking';
 
 -- Setup as superuser: open In Love for testing, two partners + a single.
 update public.platform_settings set value = 'true' where key = 'relationships_live';

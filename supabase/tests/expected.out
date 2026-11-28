@@ -26,6 +26,8 @@ true
 0
 13) Anonymous joins waitlist, cannot read it (expect permission denied):
 ERROR:  permission denied for table waitlist
+v2-0) Production requires identity verification for matchmaking (directive 51) (expect true):
+true
 v2-0) Start a couple (expect a couple id), then try a second one (expect error):
 t
 ERROR:  You are already in a couple
