@@ -68,6 +68,12 @@ export const MEMBER_PAGES: SearchEntry[] = [
   member("/app/readiness", "Readiness Profile", "In Love", "Your relationship readiness results.", "readiness results profile assessment"),
   member("/app/relationships/exclusive", "The Exclusive Connection", "In Love", "Pause matchmaking when you’ve found your person.", "exclusive found my person pause"),
   member("/app/relationships/calendar", "Couples calendar", "In Love", "Your shared calendar for date nights and trips.", "calendar couples date night trip schedule"),
+  member("/app/connect360", "CONNECT 360", "In Business", "Your private business workspace: collaborators, Deal Rooms, proposals, funding and research. Executive Private and Elite Concierge.", "connect 360 connect360 business workspace collaboration collaborators deal room proposals funding capital research executive elite"),
+  member("/app/connect360/intelligence", "My Intelligence Office", "CONNECT 360", "Ask Journey to research an opportunity: cited sources, clear labels and a private report.", "my intelligence office intelligence research assignment report opportunity radar market research acquisition suppliers sources citations"),
+  member("/app/connect360/rooms", "Deal Rooms", "CONNECT 360", "Private rooms for a business project: people, documents, milestones and professional review.", "deal room rooms project documents milestones due diligence"),
+  member("/app/connect360/collaborate", "Collaborators", "CONNECT 360", "Find Executive and Elite members open to business collaboration.", "collaborators collaboration partners directory executive elite"),
+  member("/app/connect360/proposals", "Proposals", "CONNECT 360", "Write, version and share strategic proposals.", "proposal proposals strategic plan versions"),
+  member("/app/connect360/funding", "Capital & Funding", "CONNECT 360", "Plan how a project is funded, track applications and lender decisions.", "funding capital financing loan lender application proof of funds"),
   member("/app/counseling", "The Art of Becoming", "In Life", "Personal growth and guidance.", "life growth counseling"),
   member("/app/counseling/journal", "Private journal", "In Life", "Your private journal — only you can read it.", "journal diary private writing"),
 ];

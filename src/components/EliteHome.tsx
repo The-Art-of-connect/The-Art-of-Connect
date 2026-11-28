@@ -20,7 +20,7 @@ export function EliteHome({ name, since }: { name: string | null; since: string 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_60%_at_85%_0%,rgb(232_112_26/0.16),transparent_70%),radial-gradient(45%_50%_at_0%_100%,rgb(201_169_110/0.18),transparent_70%)]" aria-hidden="true" />
       <div className="relative">
         <p className="flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.3em] text-[#f0c98a]"><EliteBadge size={18} /> Elite Concierge{since ? ` · since ${since}` : ""}</p>
-        <h1 className="display mt-4 text-4xl text-[#f6e7c8] sm:text-6xl">Welcome back{name ? `, ${name}` : ""}.</h1>
+        <h2 className="display mt-4 text-4xl text-[#f6e7c8] sm:text-6xl">Welcome back{name ? `, ${name}` : ""}.</h2>
         <p className="display mt-2 text-xl italic text-[#e8892b]">{ELITE_TAGLINE}</p>
         <p className="mt-3 max-w-2xl text-sm text-[#f5ecdf]/75">Everything at The Art of Connect is yours: every society, every course, every circle you choose, and Journey without limits on text. The only optional extra is additional voice time, offered at our cost.</p>
         <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

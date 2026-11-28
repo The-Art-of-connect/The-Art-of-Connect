@@ -2,10 +2,12 @@ import { HeroSlides, type Slide } from "@/components/business/HeroSlides";
 import Link from "next/link";
 
 /** A cinematic hero: cross-fading photographs and a call to action. Photos are shown clean — no overlays across faces. */
-export function LivingHero({ slides, eyebrow, title, gilded, subtitle, cta, secondary, aspect = "aspect-[16/10] sm:aspect-[21/9]" }: {
+export function LivingHero({ slides, eyebrow, title, gilded, subtitle, cta, secondary, aspect = "aspect-[16/10] sm:aspect-[21/9]", headingLevel = "h1" }: {
+  headingLevel?: "h1" | "h2";
   slides?: Slide[]; eyebrow: string; title: string; gilded?: string; subtitle: string;
   cta: { href: string; label: string }; secondary?: { href: string; label: string }; aspect?: string;
 }) {
+  const Heading = headingLevel;
   return (
     <section className="theme-dark relative overflow-hidden rounded-[28px] bg-ink p-3 sm:p-4">
       <div className={`relative overflow-hidden rounded-[22px] ${aspect}`}>
@@ -15,7 +17,7 @@ export function LivingHero({ slides, eyebrow, title, gilded, subtitle, cta, seco
       </div>
       <div className="relative px-3 pt-6 pb-4 sm:px-6 sm:pb-6">
         <p className="eyebrow rise">{eyebrow}</p>
-        <h1 className="display rise rise-2 mt-3 text-4xl leading-tight sm:text-6xl">{title}{gilded && <> <span className="gilded italic">{gilded}</span></>}</h1>
+        <Heading className="display rise rise-2 mt-3 text-4xl leading-tight sm:text-6xl">{title}{gilded && <> <span className="gilded italic">{gilded}</span></>}</Heading>
         <p className="rise rise-3 mt-4 max-w-xl text-muted">{subtitle}</p>
         <div className="rise rise-4 mt-6 flex flex-col gap-3 sm:flex-row">
           <Link href={cta.href} className="btn btn-gold shimmer w-full sm:w-auto">{cta.label}</Link>

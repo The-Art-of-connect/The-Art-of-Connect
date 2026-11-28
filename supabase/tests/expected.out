@@ -1147,3 +1147,13 @@ v51-6) Unknown experiences are refused (expect error):
 ERROR:  QA_UNKNOWN_PERSONA
 v51-7) A non-test account on the list is still refused (expect error):
 ERROR:  QA_NOT_ALLOWED
+v52-1) A member with In Love waits for launch (expect f):
+f
+v52-2) The QA account previews In Love before launch (expect t):
+t
+v52-3) The QA account still needs the experience itself (expect f):
+f
+v52-4) A regular member is not a QA account (expect f):
+f
+v52-5) An expired QA listing no longer previews (expect f):
+f

@@ -18,7 +18,7 @@ export default async function InLife() {
   const { viewer, preview } = await requireExperience("counseling");
   return (
     <>
-      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — In Life is not open to members yet.</p>}
+      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Preview — In Life is not open to members yet.</p>}
       <LivingHero
         slides={[
           { src: "/images/library/life/meditation.webp", alt: "Meditating at sunrise above the sea" },

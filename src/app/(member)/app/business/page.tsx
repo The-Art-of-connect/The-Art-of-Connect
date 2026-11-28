@@ -58,7 +58,7 @@ export default async function BusinessHome({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Staff preview — The Professional Society is not open to members yet.</p>}
+      {preview && <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">Preview — The Professional Society is not open to members yet.</p>}
 
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">

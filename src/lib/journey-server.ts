@@ -1,4 +1,5 @@
 import "server-only";
+import { isQaAccount } from "@/lib/qa-access";
 import { guideDraftRequest, guideInstructions, pageContext } from "@/lib/journey-guide";
 import { loadGuideAnswers, resolveGuide } from "@/lib/journey-guide-server";
 import { teachingGuidance } from "@/lib/curricula";
@@ -127,6 +128,8 @@ export async function membershipFor(db: Db, userId: string) {
   const membership: PaidMembership = {
     kind: sub.kind, status: sub.status, packageSlug: sub.tier_slug, experiences: sub.experiences ?? [], amountCents: sub.amount_cents,
   };
+  // The owner-listed fictional QA account's complimentary membership counts for Journey (company Journey limit still applies).
+  if ((!membership.amountCents || membership.amountCents <= 0) && (await isQaAccount(sub.user_id as string))) membership.amountCents = 1;
   return { membership, holderId: sub.user_id as string, periodStart: start, periodEnd: periodEnd ?? new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1)) };
 }
 

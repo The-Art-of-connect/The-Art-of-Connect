@@ -7,7 +7,7 @@ export function ExperienceShell({ experience, preview, children }: { experience:
     <>
       {preview && (
         <div className="mb-8 rounded-2xl border border-gold/30 bg-gold/5 px-5 py-3 text-sm text-gold">
-          Staff preview — this experience is not open to members yet.
+          Preview — this experience is not open to members yet.
         </div>
       )}
       <p className="text-xs tracking-[0.3em] uppercase" style={{ color: e.accent }}>{e.subtitle}</p>
