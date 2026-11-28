@@ -1,4 +1,5 @@
 import { isInsidePreview, requireExperience } from "@/lib/auth";
+import { becomeCouple } from "@/app/actions/in-love";
 import { createClient } from "@/lib/supabase/server";
 import { LuxCard, LuxHero, LuxSection, Notice } from "@/components/Lux";
 import { MemberForm } from "@/components/MemberForm";
@@ -23,6 +24,7 @@ export default async function Exclusive() {
   let requests: { id: string; requester_id: string; recipient_id: string; status: string }[] = [];
   let notices: { id: string; message: string; created_at: string }[] = [];
   let visible = true;
+  let consents: { user_id: string; partner_id: string }[] = [];
   if (live) {
     const rel = supabase!.schema("relationships");
     const [{ data: c }, { data: r }, { data: n }, { data: p }] = await Promise.all([
@@ -35,6 +37,8 @@ export default async function Exclusive() {
     const { data: names } = ids.length ? await supabase!.from("profiles").select("id, display_name").in("id", ids) : { data: [] };
     connections = ids.map((id) => ({ id, name: names?.find((x) => x.id === id)?.display_name ?? "Your connection" }));
     requests = r ?? []; notices = n ?? []; visible = p?.is_visible ?? true;
+    const { data: cs } = await rel.from("couple_consents").select("user_id, partner_id");
+    consents = cs ?? [];
   }
   const active = requests.find((r) => r.status === "accepted");
   const incoming = requests.filter((r) => r.status === "pending" && r.recipient_id === viewer.id);
@@ -52,6 +56,19 @@ export default async function Exclusive() {
           <p className="eyebrow">Your Exclusive Connection</p>
           <p className="display mt-3 text-3xl">You and {nameOf(active.requester_id === viewer.id ? active.recipient_id : active.requester_id)}</p>
           <p className="mt-2 text-sm text-muted">Your profiles are paused from new introductions. Plan your next chapter together in your shared calendar.</p>
+          {(() => {
+            const partner = active.requester_id === viewer.id ? active.recipient_id : active.requester_id;
+            const mine = consents.some((c) => c.user_id === viewer.id && c.partner_id === partner);
+            const theirs = consents.some((c) => c.user_id === partner && c.partner_id === viewer.id);
+            return (
+              <div className="mt-6 rounded-2xl border border-gold/30 bg-gold/5 p-5">
+                <p className="font-semibold">Ready for your next chapter?</p>
+                <p className="mt-1 text-sm text-muted">Becoming a couple opens a shared space for check-ins, goals and your calendar. Each of you keeps your own account, history and personal development. It opens only when you both choose it.</p>
+                {theirs && !mine && <p className="mt-2 text-sm text-gold-deep">{nameOf(partner)} has chosen to become a couple.</p>}
+                <MemberForm action={becomeCouple} className="mt-4"><input type="hidden" name="partner" value={partner} />{mine ? <><input type="hidden" name="withdraw" value="1" /><p className="mb-2 text-sm">You&rsquo;ve chosen to become a couple. Waiting for {nameOf(partner)}.</p><button className="btn btn-ghost btn-sm">Withdraw my choice</button></> : <button className="btn btn-gold">Become a couple</button>}</MemberForm>
+              </div>
+            );
+          })()}
           <MemberForm action={exclusiveAction} className="mt-5"><input type="hidden" name="action" value="end" /><input type="hidden" name="id" value={active.id} /><button className="btn btn-ghost">Step back from exclusivity</button></MemberForm>
         </section>
       ) : (

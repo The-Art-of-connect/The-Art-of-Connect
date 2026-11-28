@@ -1209,3 +1209,32 @@ v54-8) Nor grant itself access directly (expect error):
 ERROR:  new row violates row-level security policy for table "experience_access"
 v54-9) An expired Elite badge no longer grants Elite research (expect <null>):
 <null>
+v55-1) Discover shows visible, identity-verified singles only, never hidden, blocked or unverified members (expect Blake|You want the same kind of relationship,You live in the same city):
+Blake|You want the same kind of relationship,You live in the same city
+v55-2) Expressing interest (expect 1):
+1
+v55-3) Once interest is expressed, that member leaves Discover (expect 0):
+0
+v55-4) No messaging before both accept (expect error):
+ERROR:  You can message a connection you have both accepted.
+v55-5) The recipient sees the interest with a first name only (expect Avery|pending|received):
+Avery|pending|received
+v55-6) Mutual connections can open a private conversation, and reopening returns the same one (expect t):
+t
+v55-7) Becoming a couple requires an accepted Exclusive Connection first (expect error):
+ERROR:  Becoming a couple starts with an accepted Exclusive Connection.
+t
+accepted
+v55-8) One partner choosing waits for the other (expect waiting):
+waiting
+v55-9) Both choosing opens the shared couple space and pauses Singles discovery (expect couple|2|couple|f):
+couple
+2|couple|f
+v55-10) Private check-ins stay private; shared ones reach the partner (expect 1):
+1
+v55-11) The partner never sees the private one (expect 0):
+0
+v55-12) Someone outside the couple sees no check-ins (expect 0):
+0
+v55-13) Nor can they write into the couple (expect error):
+ERROR:  new row violates row-level security policy for table "couple_checkins"

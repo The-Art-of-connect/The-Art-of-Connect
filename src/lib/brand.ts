@@ -75,6 +75,7 @@ export const BRAND_TERMS = [
   { key: "private-sessions", name: "Private Sessions", kind: "service", aliases: ["private session", "coaching session"] },
   { key: "journey-library", name: "The Journey Library", kind: "feature", aliases: ["library", "articles"] },
   { key: "discovery-sessions", name: "Discovery Sessions", kind: "feature", aliases: ["discovery session", "adaptive discovery"] },
+  { key: "our-calendar", name: "Our Calendar", kind: "feature", href: "/app/relationships/calendar", aliases: ["couples calendar", "date nights", "shared calendar"], avoid: [/\bJust us\b/] },
   { key: "exclusive-connection", name: "The Exclusive Connection", kind: "feature", href: "/app/relationships/exclusive", aliases: ["exclusive", "exclusivity"] },
   { key: "connect-calendar", name: "The Connect Calendar", kind: "feature", aliases: ["calendar", "events calendar"] },
   { key: "connection-feed", name: "The Connection Feed", kind: "feature", aliases: ["feed", "posts", "updates"] },

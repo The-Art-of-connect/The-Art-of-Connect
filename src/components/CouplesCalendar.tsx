@@ -86,7 +86,7 @@ export function CouplesCalendar({ events, busy, mine, links, paired, preview }: 
         <p className="text-xs tracking-[0.25em] uppercase" style={{ color: C.gold }}>The Personal Society · couples</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="display text-5xl" style={{ color: C.goldLight }}>Just us</h1>
+            <h1 className="display text-5xl" style={{ color: C.goldLight }}>Our Calendar</h1>
             <p className="mt-1 text-sm" style={{ color: C.cream }}>Your shared calendar. Only the two of you can see it.</p>
           </div>
           <div className="flex items-center gap-2">
@@ -233,7 +233,7 @@ export function CouplesCalendar({ events, busy, mine, links, paired, preview }: 
         </div>
 
         <div className="theme-dark rounded-[1.75rem] p-6 sm:p-7" style={{ background: C.burgundy }}>
-          <p className="display text-2xl" style={{ color: C.goldLight }}>Add &ldquo;Just us&rdquo; to your phone</p>
+          <p className="display text-2xl" style={{ color: C.goldLight }}>Add &ldquo;Our Calendar&rdquo; to your phone</p>
           <p className="mt-1 text-sm" style={{ color: C.cream }}>See your shared plans in the calendar you already use — iPhone, Android, Mac, Windows or the web. Your private schedule is never included.</p>
           <form action={subAction} className="mt-5">
             <button className="w-full rounded-full py-3 font-semibold" style={{ background: C.gold, color: C.espresso }} disabled={subbing || preview}>Create my private subscribe link</button>

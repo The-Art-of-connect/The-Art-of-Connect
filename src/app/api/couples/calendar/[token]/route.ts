@@ -5,7 +5,7 @@ import { hashToken } from "@/lib/calendar-server";
 export const dynamic = "force-dynamic";
 
 /**
- * The couple's shared "Just us" calendar as a subscription feed for Apple
+ * The couple's shared "Our Calendar" as a subscription feed for Apple
  * Calendar, Google Calendar and Outlook on any phone or computer. Only shared
  * events are included — never either partner's private busy times.
  */

@@ -271,9 +271,9 @@ function fold(line: string): string {
   return out.join("\r\n");
 }
 
-export function buildIcs(events: SharedEvent[], calendarName = "Just us · The Art of Connect"): string {
+export function buildIcs(events: SharedEvent[], calendarName = "Our Calendar · The Art of Connect"): string {
   const lines = [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//The Art of Connect//Just us//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//The Art of Connect//Our Calendar//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
     `X-WR-CALNAME:${esc(calendarName)}`, "X-PUBLISHED-TTL:PT1H", "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
   ];
   for (const e of events) {
