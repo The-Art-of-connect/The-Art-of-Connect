@@ -8,7 +8,8 @@ import { serverSecret } from "@/lib/env";
  */
 export const PARALLEL_BASE = "https://api.parallel.ai";
 export const EXA_BASE = "https://api.exa.ai";
-export const EXA_EVENTS = ["webset.search.completed", "webset.item.created", "webset.item.enriched", "webset.idle", "monitor.run.completed"] as const;
+// Websets events only: Exa Monitors register their own webhook (and secret) per monitor.
+export const EXA_EVENTS = ["webset.search.completed", "webset.item.created", "webset.item.enriched", "webset.idle"] as const;
 
 export type KeyStatus = "configured" | "not_configured" | "unexpected_format";
 export function providerConfig() {
