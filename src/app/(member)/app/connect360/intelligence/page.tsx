@@ -28,6 +28,11 @@ export default async function IntelligenceOffice() {
   return (
     <>
       <LuxHero eyebrow="CONNECT 360 · Global Intelligence Division" title="My Intelligence Office" tagline="Tell Journey what you're pursuing. We'll find what matters, and show you where it came from." />
+      <nav aria-label="In My Intelligence Office" className="mx-auto mt-6 flex max-w-3xl flex-wrap justify-center gap-2">
+        <Link href="/app/connect360/radar" className="btn btn-ghost btn-sm">Opportunity Radar</Link>
+        <Link href="/app/connect360/applications" className="btn btn-ghost btn-sm">Application Center</Link>
+        {level === "elite" ? <Link href="/app/connect360/intelligence/watchlist" className="btn btn-ghost btn-sm">My Global Watchlist</Link> : <span className="chip">My Global Watchlist · Elite Concierge</span>}
+      </nav>
       <p className="mx-auto mt-6 max-w-3xl text-center text-xs text-faint">Research uses only public information from cited sources, labeled confirmed, corroborated, unverified or suggestion. Findings are never a guarantee, and your research is private to you.</p>
       {(data ?? []).length > 0 && (
         <LuxSection eyebrow="Your assignments" title="Research in progress and reports">

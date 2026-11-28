@@ -18,11 +18,14 @@ export default async function Connect360() {
   const live = !isInsidePreview(viewer) && !viewer.viewAs;
   const db = await createClient();
   const b = db?.schema("business");
-  const [{ data: rooms }, { data: ready }, { data: requests }] = live && b && db ? await Promise.all([
+  const [{ data: rooms }, { data: ready }, { data: requests }, { data: apps }] = live && b && db ? await Promise.all([
     b.from("room_participants").select("room_id, status").eq("user_id", viewer.id).in("status", ["invited", "active"]),
     db.rpc("professional_ready", { p: viewer.id }),
     b.from("conversations").select("id").neq("kind", "connection").eq("recipient_id", viewer.id).in("status", ["requested", "more_info"]),
-  ]) : [{ data: [] }, { data: false }, { data: [] }];
+    db.from("member_applications").select("status, deadline").eq("user_id", viewer.id).in("status", ["preparing", "submitted", "in_review"]),
+  ]) : [{ data: [] }, { data: false }, { data: [] }, { data: [] }];
+  const openApps = apps ?? [];
+  const soon = openApps.filter((a) => a.status === "preparing" && a.deadline && a.deadline >= new Date().toISOString().slice(0, 10) && a.deadline <= new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10)).length;
   const invited = (rooms ?? []).filter((r) => r.status === "invited").length;
   const active = (rooms ?? []).filter((r) => r.status === "active").length;
 
@@ -34,6 +37,9 @@ export default async function Connect360() {
     { href: "/app/connect360/proposals", eyebrow: "Present your vision", title: "Strategic Proposal Builder", body: "Guided, versioned proposals that label every section as fact, research, assumption, estimate or proposal. Clearly nonbinding, and shared only when you authorize them." },
     { href: "/app/connect360/funding", eyebrow: "Become funding-ready", title: "Capital & Funding Intelligence Center", body: "Funding assessments, capital scenarios with estimated payments, readiness checklists, application tracking and lender message drafts. Declared, verified, approved and committed funds always kept separate." },
     { href: "/app/connect360/intelligence", eyebrow: "Journey, your Director of Intelligence", title: "My Intelligence Office", body: "Research assignments planned by Journey and carried out by our research partners: cited findings labeled by how well they're verified, and a report. Private to you." },
+    { href: "/app/connect360/radar", eyebrow: "Discover", title: "Opportunity Radar", body: "Opportunities confirmed at their official source, matched to your interests once you turn matching on, alongside what your own research found. Save, dismiss or start an application." },
+    { href: "/app/connect360/applications", eyebrow: "Prepare and track", title: "Application Center", body: "Every application in one place: a status pipeline, deadlines with reminders, a documents checklist, private notes and your approved résumé.", status: openApps.length ? `${openApps.length} open${soon ? ` · ${soon} due within a week` : ""}` : undefined },
+    ...(membership?.level === "elite" ? [{ href: "/app/connect360/intelligence/watchlist", eyebrow: "Elite Concierge", title: "My Global Watchlist", body: "Follow companies, topics and people in public roles, with what your research and the Opportunity Radar show about each." }] : []),
   ];
 
   return (

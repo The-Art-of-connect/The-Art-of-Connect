@@ -49,8 +49,9 @@ export const BRAND_TERMS = [
   { key: "proposals", name: "Strategic Proposal Builder", kind: "feature", href: "/app/connect360/proposals", aliases: ["proposal", "proposals", "business proposal", "pitch"] },
   { key: "funding", name: "Capital & Funding Intelligence Center", kind: "feature", href: "/app/connect360/funding", aliases: ["funding", "capital", "financing", "loan", "lender", "proof of funds"],
     avoid: [/\bCapital (?:&|and) Funding Center\b/, /(?<!Intelligence )\bFunding Center\b/] },
-  { key: "opportunity-radar", name: "Opportunity Radar", kind: "feature", aliases: ["opportunities", "radar", "alerts"] },
-  { key: "application-center", name: "Application Center", kind: "feature", aliases: ["applications", "apply"] },
+  { key: "opportunity-radar", name: "Opportunity Radar", kind: "feature", href: "/app/connect360/radar", aliases: ["opportunities", "radar", "casting", "auditions", "grants"] },
+  { key: "application-center", name: "Application Center", kind: "feature", href: "/app/connect360/applications", aliases: ["applications", "apply", "application deadlines", "my applications"] },
+  { key: "global-watchlist", name: "My Global Watchlist", kind: "feature", href: "/app/connect360/intelligence/watchlist", aliases: ["watchlist", "watch list", "monitoring", "follow a company"], note: "Elite Concierge, inside My Intelligence Office (directive 25)." },
   { key: "capital-marketplace", name: "Capital Marketplace", kind: "feature", aliases: ["lenders", "lending marketplace"] },
 
   // Career and business tools
