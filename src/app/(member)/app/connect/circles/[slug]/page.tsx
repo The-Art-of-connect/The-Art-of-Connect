@@ -9,7 +9,13 @@ import { formatEventTime, loadFeed, people, signPhotos } from "@/lib/social-serv
 import { Avatar, Composer, PersonName, PostCard, ReportMenu } from "@/components/social/ui";
 import { EliteBadge } from "@/components/EliteBadge";
 
-export const metadata = { title: "Circle" };
+/** The circle's own name in the browser tab (page-by-page audit). */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const db = await createClient();
+  const { data } = db ? await db.from("social_circles").select("name").eq("slug", slug).maybeSingle() : { data: null };
+  return { title: data?.name ? `${data.name} · Circles` : "Circle" };
+}
 
 /** A circle's community: dashboard, feed, events, members, photos and group messaging. */
 export default async function CirclePage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ tab?: string }> }) {

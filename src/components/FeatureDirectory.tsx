@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { CATEGORIES, FEATURES, STATUS_LABEL, included, needsLabel, type Feature, type Viewer } from "@/lib/features";
+import { CATEGORIES, FEATURES as ALL_FEATURES, STATUS_LABEL, included, needsLabel, ownerStatus, type Feature, type Viewer } from "@/lib/features";
 
 /** Line icons for each category (original artwork, drawn inline). */
 const ICON: Record<string, string> = {
@@ -33,14 +33,15 @@ const Icon = ({ name, className = "h-5 w-5" }: { name: string; className?: strin
  * "What Does This Website Offer?" (founder directive 20): searchable, expandable, Expand All / Collapse All, category chips.
  * Each feature carries exactly one honest status. Using a paid feature is enforced on the server, never by this page.
  */
-export function FeatureDirectory({ viewer, signedIn }: { viewer: Viewer | null; signedIn: boolean }) {
+export function FeatureDirectory({ viewer, signedIn, soon = [] }: { viewer: Viewer | null; signedIn: boolean; soon?: string[] }) {
+  const FEATURES = useMemo(() => ALL_FEATURES.map((f) => ownerStatus(f, soon)), [soon]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("All");
   const [open, setOpen] = useState<Set<string>>(new Set());
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
     return FEATURES.filter((f) => (cat === "All" || f.category === cat) && (!s || `${f.name} ${f.what} ${f.provides} ${f.category}`.toLowerCase().includes(s)));
-  }, [q, cat]);
+  }, [q, cat, FEATURES]);
   const toggle = (k: string) => setOpen((o) => { const n = new Set(o); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const groups = CATEGORIES.filter((c) => list.some((f) => f.category === c));
 

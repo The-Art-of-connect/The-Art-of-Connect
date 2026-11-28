@@ -60,7 +60,7 @@ export default async function Events({ searchParams }: { searchParams: Promise<R
       </section>
 
       {list.length === 0 ? (
-        <div className="glass p-8 text-center"><p className="display text-2xl">No events match yet.</p><p className="mt-2 text-sm text-muted">Know of something worth attending? Share it, even if you&rsquo;re not the organizer.</p></div>
+        <div className="glass p-8 text-center"><p className="display text-2xl">No events match yet.</p><p className="mt-2 text-sm text-muted">Know of something worth attending? Share it, even if you&rsquo;re not the organizer.</p><div className="mt-5 flex flex-wrap justify-center gap-3"><Link href="/app/connect/events/new" className="btn btn-gold btn-sm">Share an event</Link><Link href="/app/connect/circles" className="btn btn-ghost btn-sm">Explore circles</Link></div></div>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">{list.map((e) => (
           <li key={e.id}>

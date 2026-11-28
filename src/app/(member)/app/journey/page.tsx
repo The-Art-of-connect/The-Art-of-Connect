@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getJourneyStatus } from "@/lib/journey-server";
 import { journeyClosedReason } from "@/lib/journey-guide-access";
 import { getViewer, hasRole } from "@/lib/auth";
@@ -37,6 +38,18 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
     <>
       <JourneyOrbHero />
 
+      {status.access === "none" && !ownerTest && (
+        <div className="mt-10 rounded-[2rem] border border-champagne/50 bg-champagne/10 p-6 sm:p-8">
+          <p className="eyebrow">Journey with a membership</p>
+          <h2 className="display mt-2 text-3xl">Personal conversations with Journey begin with any paid membership</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted">Every lesson in The Art of Knowing Yourself stays open to you at no cost. A paid membership adds a monthly Journey allowance, and new members can try one free for 15 days.</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/app/onboarding" className="btn btn-gold btn-sm">Start a trial or choose a membership</Link>
+            <Link href="/membership#compare" className="btn btn-ghost btn-sm">Compare Journey allowances</Link>
+            <Link href="/app/know-yourself" className="btn btn-ghost btn-sm">Continue self-guided</Link>
+          </div>
+        </div>
+      )}
       <div id="chat" className="mt-10 scroll-mt-24">
         <JourneyChat allowance={status.allowance} available={available} reason={reason} ownerTest={ownerTest} initialText={ask} lesson={lesson} />
       </div>
@@ -51,7 +64,7 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
 
       <LuxSection eyebrow="Your Journey" title="More ways to grow">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {MORE.map((m) => <LuxCard key={m.href} {...m} />)}
+          {MORE.map((m) => <LuxCard key={m.href} {...(m.href === "/app/journey/plus" && status.allowance?.unlimited ? { ...m, body: "Your text conversations are unlimited. Additional voice minutes are offered at our cost, only if you choose." } : m)} />)}
         </div>
       </LuxSection>
 

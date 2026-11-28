@@ -43,7 +43,7 @@ export default async function Collaborate() {
     <>
       <LuxHero eyebrow="CONNECT 360" title="Find collaborators" tagline="The right conversation, with the right people, for the right reason." />
 
-      <LuxSection eyebrow="Your preferences" title="What are you open to?" intro="Optional. Only Executive and Elite members see what you choose to share here, and never your financial information.">
+      <div id="preferences" className="scroll-mt-24" /><LuxSection eyebrow="Your preferences" title="What are you open to?" intro="Optional. Only Executive and Elite members see what you choose to share here, and never your financial information.">
         <MemberForm action={saveCollabProfile} className="glass space-y-5 p-6">
           <label className="flex items-center gap-3"><input type="checkbox" name="opt_in" defaultChecked={mine?.collab_opt_in ?? false} className="h-4 w-4" /><span>List my collaboration interests in the directory</span></label>
           <label className="flex items-center gap-3"><input type="checkbox" name="welcome" defaultChecked={mine?.collab_welcome_requests ?? false} className="h-4 w-4" /><span>I welcome business collaboration requests</span></label>
@@ -69,7 +69,7 @@ export default async function Collaborate() {
       <LuxSection eyebrow="Directory" title="Members who welcome collaboration" intro="Every request states its purpose. Recipients may accept to discuss, decline or ask for more information, and accepting is never an agreement.">
         {!ready && <p className="glass mb-5 p-5 text-sm">An approved professional résumé is needed before you send introductions. <Link href="/app/career" className="text-gold underline">Prepare it in My Professional Readiness</Link>.</p>}
         {list.length === 0 ? (
-          <p className="glass p-6 text-sm text-muted">No members are listed yet. As Executive and Elite members share their collaboration interests, they&apos;ll appear here.</p>
+          <div className="glass p-6 text-sm"><p className="text-muted">No members are listed yet. As Executive and Elite members share their collaboration interests, they&apos;ll appear here.</p><div className="mt-4 flex flex-wrap gap-3"><a href="#preferences" className="btn btn-gold btn-sm">Share what you&apos;re open to</a><Link href="/app/connect360/rooms" className="btn btn-ghost btn-sm">Open Business Deal Rooms</Link></div></div>
         ) : (
           <ul className="grid gap-5 lg:grid-cols-2">
             {list.map((e) => (

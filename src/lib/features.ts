@@ -106,3 +106,13 @@ export function needsLabel(f: Feature) {
 export const STATUS_LABEL: Record<Status, string> = { available: "Available", preview: "Preview", "in-development": "In development", planned: "Coming soon" };
 
 export const whatsNew = () => FEATURES.filter((f) => f.released && f.status === "available").sort((a, b) => (b.released ?? "").localeCompare(a.released ?? ""));
+
+/**
+ * One availability everywhere (page-by-page audit, priority 2): a page the owner has marked "Coming soon" in Page reviews
+ * shows as Coming soon in the catalog too, never "Available".
+ */
+export function ownerStatus<T extends { href: string | null; status: Status }>(f: T, soon: readonly string[]): T {
+  if (!f.href || f.status !== "available") return f;
+  const path = f.href.split(/[?#]/)[0];
+  return soon.some((p) => path === p || path.startsWith(`${p}/`)) ? { ...f, status: "planned" } : f;
+}

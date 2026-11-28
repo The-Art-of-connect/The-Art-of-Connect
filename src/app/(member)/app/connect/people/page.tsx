@@ -58,7 +58,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
       {noPrefs && purpose !== "explore" && <p className="rounded-2xl border border-[#e8701a]/40 bg-[#e8701a]/5 p-4 text-sm">For better suggestions, answer a few private questions in <Link href="/app/connect/preferences" className="font-semibold underline">My connection preferences</Link>. Make sure your profile says what you&rsquo;re available for, too.</p>}
 
       {recs.length === 0 ? (
-        <div className="glass p-8 text-center text-sm text-muted">No suggestions yet for this kind of connection. As more members join and share their preferences, they&rsquo;ll appear here. Meanwhile, explore <Link href="/app/connect/circles" className="text-gold underline">circles</Link>.</div>
+        <div className="glass p-8 text-center text-sm text-muted">No suggestions yet for this kind of connection. As more members join and share their preferences, they&rsquo;ll appear here. Meanwhile, these help the right people find you.<div className="mt-5 flex flex-wrap justify-center gap-3"><Link href="/app/connect/preferences" className="btn btn-gold btn-sm">Set my connection preferences</Link><Link href="/app/connect/circles" className="btn btn-ghost btn-sm">Explore circles</Link></div></div>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">{recs.map((r) => {
           const d = dir[r.id]; if (!d) return null;
