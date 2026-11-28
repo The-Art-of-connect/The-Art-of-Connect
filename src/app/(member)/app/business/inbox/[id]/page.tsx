@@ -46,6 +46,7 @@ export default async function Conversation({ params }: { params: Promise<{ id: s
         <section className="mt-4 rounded-2xl border border-champagne/50 bg-champagne/10 p-5 text-sm">
           <p className="eyebrow">{c.kind === "proposal" ? "Proposal" : "Business collaboration request"} · {PURPOSES[c.purpose] ?? "Collaboration"}</p>
           <p className="mt-3 font-semibold">The opportunity</p><p className="whitespace-pre-line text-muted">{c.project}</p>
+          {c.kind === "proposal" && c.proposal_id && <p className="mt-2"><Link href={`/app/connect360/proposals/${c.proposal_id}`} className="btn btn-ghost btn-sm">Review the proposal (version {c.proposal_version})</Link></p>}
           <p className="mt-3 font-semibold">Why they reached out</p><p className="whitespace-pre-line text-muted">{c.reason}</p>
           {c.shared_info && <><p className="mt-3 font-semibold">Business information they chose to share</p><p className="whitespace-pre-line text-muted">{c.shared_info}</p></>}
           {isRecipient && ["requested", "more_info"].includes(c.status) && (
