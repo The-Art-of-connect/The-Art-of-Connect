@@ -42,7 +42,7 @@ export default async function LoveLanguages() {
         }} />
         </JourneyGuide>
       </div>
-      <p className="mt-8 text-center text-sm"><Link href="/app/relationships/love-languages" className="text-gold underline">See love languages together — for dating and couples</Link></p>
+      {viewer.experiences.includes("relationships") && <p className="mt-8 text-center text-sm"><Link href="/app/relationships/love-languages" className="text-gold underline">See love languages together — for dating and couples</Link></p>}
     </>
   );
 }

@@ -139,7 +139,7 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
           </div>
           {mine.map((key) => {
             const e = EXPERIENCES[key];
-            const live = launch[`${key}_live` as const] || qaPreview;
+            const live = key === "counseling" || launch[`${key}_live` as const] || qaPreview;
             const open = live && viewer.experiences.includes(key);
             return (
               <div key={key} className="glass lift tile-in group flex min-h-64 flex-col justify-between overflow-hidden !p-0">

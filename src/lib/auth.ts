@@ -123,7 +123,10 @@ export async function requireExperience(experience: Experience) {
   if (!viewer) redirect(`/sign-in?next=/app/${experience}`);
   const launch = await getLaunchState();
   const granted = viewer.experiences.includes(experience);
-  const live = launch[`${experience}_live` as const];
+  // Directive 51 clarification 1: The Art of Becoming (In Life education) is a foundational benefit of every membership,
+  // Free included, so it is never behind a launch switch or an upgrade prompt. counseling_live still governs the clinical
+  // side (licensed professionals), which lives under the Counseling & Wellness Center, not here.
+  const live = experience === "counseling" ? true : launch[`${experience}_live` as const];
   const staffPreview = isStaff(viewer) || isInsidePreview(viewer);
   // The owner-listed fictional QA account previews experiences that are not open to members yet.
   const qaPreview = granted && !live && !viewer.viewAs && (await isQaAccount(viewer.id));

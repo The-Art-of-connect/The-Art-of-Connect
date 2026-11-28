@@ -65,7 +65,7 @@ async function Singles({ viewerId, live }: { viewerId: string; live: boolean }) 
       {matches.length === 0 ? (
         <div className="glass mt-4 p-8 text-center text-sm text-muted">
           No recommendations yet. As more verified singles join and share their profiles, they&rsquo;ll appear here.
-          <span className="mt-3 block">Meanwhile, complete <Link href="/app/readiness" className="text-gold underline">your Relationship Readiness Profile</Link> and <Link href="/app/relationships/love-languages" className="text-gold underline">your Love Language Profile</Link>.</span>
+          <span className="mt-3 block">Meanwhile, complete <Link href="/app/readiness" className="text-gold underline">your Relationship Readiness Profile</Link> and <Link href="/app/know-yourself/love-languages" className="text-gold underline">your Love Language Profile</Link>.</span>
         </div>
       ) : (
         <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -92,7 +92,7 @@ async function Singles({ viewerId, live }: { viewerId: string; live: boolean }) 
       <MoreForYou items={[
         { href: "/app/relationships/onboarding", title: "Your Personal Society journey", line: "Welcome, understanding you, readiness and compatibility." },
         { href: "/app/readiness", title: "Your Relationship Readiness Profile", line: "Strengths, growth areas and next steps." },
-        { href: "/app/relationships/love-languages", title: "Your Love Language Profile", line: "How you give and receive love." },
+        { href: "/app/know-yourself/love-languages", title: "Your Love Language Profile", line: "How you give and receive love." },
         { href: "/app/relationships/exclusive", title: "The Exclusive Connection", line: "When you both choose to focus on each other." },
         { href: "/app/verify", title: "Identity verification", line: "Required before matchmaking, for everyone's safety." },
       ]} />
