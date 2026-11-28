@@ -12,6 +12,13 @@ export const INTERESTS: Record<string, string> = {
   mentorship: "Mentorship", board_advisory: "Board and advisory", strategic_collaboration: "Strategic collaborations",
   joint_venture_concept: "Joint venture concepts", management_arrangement: "Management arrangements",
 };
+/** Research assignment categories (My Intelligence Office). */
+export const CATEGORY_LABEL: Record<string, string> = {
+  "business-acquisition": "Business acquisition", "business-ownership": "Business ownership", "international-expansion": "International expansion",
+  "supplier-discovery": "Suppliers and manufacturers", "board-advisory": "Board and advisory roles", "leadership-discovery": "Leadership roles",
+  "sports-ownership": "Sports ownership", "business-credibility": "Business credibility", "funding-resources": "Funding programs",
+  "funding-providers": "Funding providers", "proposal-research": "Proposal research", "retirement-legacy": "Retirement and legacy", collaboration: "Collaboration", other: "Other",
+};
 export const ADVISOR_TYPES: Record<string, string> = {
   attorney: "Attorney", accountant: "Accountant", business_advisor: "Business advisor", financing_professional: "Financing professional", other_professional: "Other professional",
 };

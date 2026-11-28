@@ -10,6 +10,7 @@ import { discoveryCategory, discoveryInstructions } from "@/lib/journey-discover
 import { assemblePortfolio, categoryStatuses, portfolioContext, portfolioInstructions, PORTFOLIO_REQUEST } from "@/lib/portfolio";
 import { loadPortfolioInput } from "@/lib/portfolio-server";
 import { resumeInstructions, RESUME_REQUEST } from "@/lib/resume-ai";
+import { planInstructions, PLAN_REQUEST } from "@/lib/intel-plan";
 import { getMfaStatus, getViewer } from "@/lib/auth";
 import { getLaunchState } from "@/lib/launch";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -158,6 +159,8 @@ export async function sendJourneyMessage(input: {
   page?: string | null;
   /** Résumé enhancement (directives 33–34): the member's own résumé text with contact details removed. Never stored as a conversation. */
   resume?: { text: string; industry?: string | null } | null;
+  /** Research planning (directive 26): Journey turns the member's objective into a plan for the research partners. Never stored as a conversation. */
+  intel?: { objective: string; depth: "standard" | "deep" } | null;
 }): Promise<JourneyReply> {
   const viewer = await getViewer();
   // Owner "View as": free personas are refused like any free member; paid personas use the owner's private test budget.
@@ -195,7 +198,7 @@ export async function sendJourneyMessage(input: {
     const level = journeyAccessFor(m?.membership, { enhancedPackages: cfg.enhancedPackages, entitledStatuses: cfg.entitledStatuses });
     if (!m || level === "none") return refuse(403, "Journey is a benefit of paid memberships.");
     // Lessons, discovery and the portfolio belong to every paid plan: use an experience the plan includes.
-    if ((input.lesson || input.discovery || input.portfolio || input.guide || input.page || input.resume) && input.mode !== "concierge") {
+    if ((input.lesson || input.discovery || input.portfolio || input.guide || input.page || input.resume || input.intel) && input.mode !== "concierge") {
       const em = effectiveMode(input.mode, level, m.membership);
       if (em) input = { ...input, mode: em };
     }
@@ -241,6 +244,11 @@ export async function sendJourneyMessage(input: {
   }
 
   let resumeDraft = false;
+  if (input.intel) {
+    resumeDraft = true;
+    instructions += `\n\n${planInstructions(input.intel.depth)}`;
+    input = { ...input, conversationId: null, comparisonId: null, message: `${PLAN_REQUEST}\n\n--- OBJECTIVE ---\n${input.intel.objective}` };
+  }
   if (input.resume) {
     resumeDraft = true;
     instructions += `\n\n${resumeInstructions(input.resume.industry ?? null)}`;

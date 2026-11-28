@@ -79,3 +79,4 @@
 20270124000001_vault_aws_testing.sql	exists (select 1 from information_schema.tables where table_name = 'vault_security_runs')
 20270125000001_connect360_screens.sql	exists (select 1 from pg_proc where proname = 'collab_directory')
 20270126000001_intel_selftest.sql	exists (select 1 from information_schema.tables where table_name = 'intel_security_runs')
+20270127000001_intel_depth_entitlement.sql	exists (select 1 from pg_trigger where tgname = 'guard_intel_depth')

@@ -1122,3 +1122,11 @@ v49-5) A One Society member gets no directory, and outsiders see no room partici
 0|0
 v49-6) A member who stops welcoming requests leaves the directory (expect 0):
 0
+v50-1) Executive members cannot request in-depth (Elite) research (expect error):
+ERROR:  In-depth research is part of Elite Concierge.
+v50-2) Standard research is available to Executive members (expect 1):
+1
+v50-3) Members can save a finding but cannot relabel its verification (expect error):
+ERROR:  permission denied for table intel_findings
+v50-4) Saving works (expect t):
+t
