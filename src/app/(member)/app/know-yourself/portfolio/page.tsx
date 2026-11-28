@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { balanceLabel } from "@/lib/journey-budget";
 import { GrowthPanel } from "@/components/GrowthPanel";
 import { sanctuarySettings } from "@/lib/sanctuary-server";
 import { scenarioInsights, type ScenarioOption } from "@/lib/sanctuary";
@@ -149,7 +150,7 @@ export default async function Portfolio() {
           {paid ? (
             status?.enabled ? (
               <ActionForm action={createPortfolioWithJourney} className="mt-3 space-y-3">
-                <p className="text-sm text-muted">Journey connects themes across your discoveries, in its own words and yours. {credits != null ? <>Included in your membership: {credits >= 9999 ? <>unlimited with your Elite Concierge membership.</> : <>this uses <strong className="text-gold-bright">1</strong> of your {credits} remaining monthly messages.</>}</> : "Owner test: uses your private test budget."} It&rsquo;s written only when you ask, then saved; opening this page never uses your allowance.</p>
+                <p className="text-sm text-muted">Journey connects themes across your discoveries, in its own words and yours. {credits != null ? <>Included in your membership: {balanceLabel(status?.allowance) ?? `${credits} messages left`}.</> : "Owner test: uses your private test budget."} It&rsquo;s written only when you ask, then saved; opening this page never uses your allowance.</p>
                 <label className="flex items-start gap-2 text-xs text-ivory/85"><input type="checkbox" name="consent" value="yes" required className="mt-0.5" />I&rsquo;m happy for Journey to read my discoveries to write this. It stays private to me.</label>
                 <button className="btn btn-gold btn-sm" disabled={!hasAny && !Object.keys(input.journeySummaries).length}>{journeyVersion ? "Refresh with Journey" : "Create with Journey"}</button>
               </ActionForm>

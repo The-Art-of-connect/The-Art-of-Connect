@@ -1,4 +1,5 @@
 import { SelfBanner } from "@/components/SelfBanner";
+import { balanceLabel } from "@/lib/journey-budget";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -49,7 +50,7 @@ export default async function DiscoveryModulePage({ params }: { params: Promise<
   const js = journeyStatus;
   const option = !js || js.access === "none" ? { kind: "none" as const }
     : js.access === "staff" ? { kind: "staff" as const, enabled: js.enabled }
-    : { kind: "member" as const, enabled: js.enabled, credits: js.allowance ? js.allowance.remaining + js.allowance.purchasedRemaining : 0 };
+    : { kind: "member" as const, enabled: js.enabled, credits: js.allowance ? js.allowance.remaining + js.allowance.purchasedRemaining : 0, balance: balanceLabel(js.allowance) };
 
   const form = (
         <ActionForm action={saveDiscoveryModule} className="glass space-y-7 p-6 sm:p-8">

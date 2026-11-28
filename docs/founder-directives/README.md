@@ -53,6 +53,7 @@ changes an earlier one, the later one wins.
 | 47 | [Relationship Transitions and Flexible Business Participation](47-relationship-transitions-and-flexible-business.md) | **Permanent.** Relationship status in Settings, unilateral and safe disconnection, opt-in return to Singles, business continuity. |
 | 48 | [Business Deal Rooms: Meeting Minutes and Recording Controls](48-deal-room-meeting-minutes-and-recording.md) | Host-controlled meetings, consent before recording, approved minutes, typed copy, email (SMS needs a provider). |
 | 49 | [Journey Pre-Launch QA Testing](49-journey-pre-launch-qa-testing.md) | Owner-authorized Journey testing for the fictional QA account before live payments, within its selected tier and all spending limits. |
+| 51 | [Comprehensive Platform Correction, Luxury Experience and Functional Readiness](51-comprehensive-platform-correction.md) | Platform inventory, luxury standards, Home and navigation, membership revenue rules, Journey dollar allowances per membership, In Life, In Love and In Business completion. More sections follow. |
 
 Nothing billable, no public enrollment and no live payments are switched on
 until the founder authorizes them.

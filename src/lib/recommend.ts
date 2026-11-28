@@ -12,7 +12,7 @@ import { decide, type GateFacts, type Need } from "./gate.ts";
 import { LEVEL_ORDER as LEVELS, levelOf, type Level } from "./membership-level.ts";
 
 export type Plan = { slug: string; name: string; category: string; experiences: string[]; love_track?: string | null; monthly_price_cents: number | null; all_access?: boolean; benefits?: string[];
-  /** Included Journey messages per month; null means unlimited (directive 44: never reduced by a level up). */
+  /** Included monthly Journey allowance (directive 51: cents of actual AI cost; legacy plans: messages). Never reduced by a level up (directive 44). */
   journeyMessages?: number | null };
 export type Current = { packageSlug: string | null; level: Level; experiences: readonly string[]; society: GateFacts["society"] };
 

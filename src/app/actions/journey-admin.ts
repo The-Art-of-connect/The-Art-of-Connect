@@ -79,6 +79,7 @@ export async function saveTierLimit(_p: ActionResult, f: FormData): Promise<Acti
   const row = {
     monthly_messages: int(f.get("monthly")), daily_messages: int(f.get("daily")),
     member_monthly_limit_cents: cents(f.get("memberCap")), tier_monthly_limit_cents: cents(f.get("tierCap")),
+    person_monthly_limit_cents: cents(f.get("personCap")),
     max_output_tokens: int(f.get("maxOutput")) ?? 700, model: String(f.get("model") ?? "") || null,
     monthly_voice_minutes: int(f.get("voiceMinutes")),
     unlimited_messages: f.get("unlimited") === "on",

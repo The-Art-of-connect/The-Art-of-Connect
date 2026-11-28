@@ -35,9 +35,9 @@ export default async function Plus({ searchParams }: { searchParams: Promise<Rec
   const list = packages?.length ? packages : [25, 50, 100, 250].map((n) => ({ slug: `messages-${n}`, messages: n, price_cents: null as number | null }));
   return (
     <>
-      <LuxHero eyebrow="Journey" title={allAccess ? "Your Journey, all-inclusive" : "Journey Plus"} tagline={allAccess ? "Unlimited conversation. Voice minutes at our cost." : "More conversation, only when you choose."}>
+      <LuxHero eyebrow="Journey" title="Journey Plus" tagline="More conversation, only when you choose.">
         <p className="max-w-2xl text-muted">{allAccess
-          ? "Your Elite Concierge membership includes unlimited Journey text conversations (fair use applies), Private Sessions and 300 live voice minutes every month. If you'd like more voice time, additional minutes are offered at exactly our cost, with no markup."
+          ? "Your Elite Concierge membership includes the largest monthly Journey allowance for writing and voice. If you'd like more, additional usage is offered at exactly our cost, with no markup, and only when you choose."
           : "Your membership includes a generous monthly Journey allowance. If you'd like more, additional messages and voice minutes are offered at exactly our cost, with no markup, and only when you choose."}</p>
       </LuxHero>
       {sp.purchase === "success" && <div className="mt-8"><Notice>Thank you. Your messages are added as soon as your payment is confirmed — usually within a minute.</Notice></div>}
@@ -60,7 +60,7 @@ export default async function Plus({ searchParams }: { searchParams: Promise<Rec
         <p className="mt-3 text-xs text-faint">See your remaining minutes in <a href="/app/journey/voice" className="underline">Journey Live</a>. You&rsquo;re never charged unless you choose a package and confirm payment.</p>
       </LuxSection>
 
-      {!allAccess && <>
+      {<>
       <LuxSection title="Message packages" intro={`Used after your monthly allowance. Priced at our cost: about ${cost ? cents(Number(cost.text_cost_cents_per_message)) : "half a cent"} per message, plus card processing. Included monthly messages don't roll over.`}>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {list.map((p) => (

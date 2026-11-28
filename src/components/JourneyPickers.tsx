@@ -244,7 +244,7 @@ export function VoiceStudio({ minutes, initialStyle = "warm", initialTranscripts
       {note && <p className="mx-auto mt-4 max-w-md rounded-xl border border-gold/30 px-4 py-2 text-sm text-gold-bright" role="status">{note}</p>}
       {transcript && lines.length > 0 && <div className="mx-auto mt-4 max-h-48 max-w-md overflow-y-auto rounded-xl bg-white/5 p-3 text-left text-xs text-muted">{lines.map((l, i) => <p key={i}>{l}</p>)}</div>}
       <p className="mt-6 text-sm text-muted">
-        {minutes ? <>Voice allowance: <span className="text-gold-bright">{minutes.remaining} of {minutes.total} minutes</span> remaining</> : "Your voice minutes will appear here."}
+        {minutes ? <>Voice allowance: <span className="text-gold-bright">{minutes.remaining} of {minutes.total} minutes</span> remaining</> : "Voice uses your included monthly Journey allowance, at the actual per-minute cost."}
       </p>
       <p className="mt-2 text-xs text-faint">Journey&rsquo;s voice is AI-generated. Journey is an AI assistant, not a person or a therapist.</p>
       <div className="mx-auto mt-8 h-px w-24 bg-gold/50" />

@@ -64,7 +64,7 @@ export default async function JourneyHome({ searchParams }: { searchParams: Prom
 
       <LuxSection eyebrow="Your Journey" title="More ways to grow">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {MORE.map((m) => <LuxCard key={m.href} {...(m.href === "/app/journey/plus" && status.allowance?.unlimited ? { ...m, body: "Your text conversations are unlimited. Additional voice minutes are offered at our cost, only if you choose." } : m)} />)}
+          {MORE.map((m) => <LuxCard key={m.href} {...m} />)}
         </div>
       </LuxSection>
 

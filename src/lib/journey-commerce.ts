@@ -46,7 +46,6 @@ export async function startPurchase(input: { userId: string; holderId: string; e
   const { data: s } = await db.from("journey_settings").select("message_packages_published, sessions_published").maybeSingle();
   let name = "", quantity = 0, price: number | null = null;
   const allAccess = await hasAllAccess(input.userId, input.holderId);
-  if (allAccess && input.kind === "messages") return { ok: false, message: "Journey text conversations are unlimited with your Elite Concierge membership." };
   if (input.kind === "session") {
     if (!s?.sessions_published && !input.staff) return { ok: false, message: "Private Sessions open soon." };
     const { data: p } = await db.from("journey_session_products").select("name, minutes, price_cents, is_active").eq("slug", input.slug).maybeSingle();

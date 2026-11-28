@@ -29,8 +29,8 @@ export const getGateContext = cache(async (): Promise<GateContext | null> => {
   const { data: trialOk } = isInsidePreview(viewer) ? { data: true } : db ? await db.rpc("trial_available", { p: viewer.id }) : { data: false };
   // Journey allowances per plan (directive 44: a level up never reduces them).
   const admin = createAdminClient();
-  const { data: limits } = admin ? await admin.from("journey_tier_limits").select("package_slug, monthly_messages, unlimited_messages") : { data: null };
-  const allowanceOf = (slug: string) => { const l = (limits ?? []).find((x) => x.package_slug === slug); return l ? (l.unlimited_messages ? null : l.monthly_messages) : undefined; };
+  const { data: limits } = admin ? await admin.from("journey_tier_limits").select("package_slug, monthly_messages, unlimited_messages, member_monthly_limit_cents") : { data: null };
+  const allowanceOf = (slug: string) => { const l = (limits ?? []).find((x) => x.package_slug === slug); return l ? (l.unlimited_messages ? null : l.monthly_messages ?? (l.member_monthly_limit_cents == null ? undefined : Number(l.member_monthly_limit_cents))) : undefined; };
   const offers = Object.fromEntries(catalogue.packages.map((p) => [p.slug, {
     slug: p.slug, name: p.name, tagline: p.tagline, benefits: (p.benefits ?? []).slice(0, 3), monthlyCents: p.monthly_price_cents,
     href: `/membership?${selectionToQuery({ experiences: p.experiences, interval: "month", couples: p.love_track === "couple", addons: [], package: p.category === "exclusive" ? p.slug : null })}#build`,

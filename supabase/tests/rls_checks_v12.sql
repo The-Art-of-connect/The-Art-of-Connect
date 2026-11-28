@@ -8,9 +8,10 @@ insert into auth.users(id,email) values ('00000000-0000-0000-0000-000000000041',
 
 \echo 'v12-1) Journey starts switched off with paid usage unauthorized and no budgets (expect f|f|||f):'
 select enabled, paid_usage_authorized, company_monthly_limit_cents, owner_test_monthly_limit_cents, message_packages_published from public.journey_settings;
-\echo 'v12-2) Allowances are seeded, one per membership; only Elite (all-inclusive) has unlimited text (expect 10|150|250|450|1):'
-select count(*), max(monthly_messages) filter (where package_slug = 'personal-society'), max(monthly_messages) filter (where package_slug = 'couples-membership'),
-  max(monthly_messages), count(*) filter (where monthly_messages is null or member_monthly_limit_cents is not null) from public.journey_tier_limits;
+\echo 'v12-2) Directive 51: every active membership has a dollar allowance, none is unlimited (expect 10|personal-society:500,couples-membership:1000/500,professional-society:1000,dual-society:1000,executive-private:1500,elite-concierge:2500|0):'
+select count(*),
+  string_agg(package_slug || ':' || member_monthly_limit_cents::int || case when person_monthly_limit_cents <> member_monthly_limit_cents then '/' || person_monthly_limit_cents::int else '' end, ',' order by member_monthly_limit_cents, package_slug <> 'personal-society', package_slug = 'dual-society', package_slug) filter (where member_monthly_limit_cents is not null),
+  count(*) filter (where unlimited_messages) from public.journey_tier_limits;
 \echo 'v12-3) Additional message packages are priced at cost: API cost plus card processing, 50c minimum (expect 25:50,50:57,100:83,250:160,500:289,1000:546):'
 select string_agg(messages || ':' || price_cents, ',' order by messages) from public.journey_message_packages;
 

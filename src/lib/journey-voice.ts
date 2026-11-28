@@ -61,6 +61,7 @@ export async function startVoice(input: {
   if (!cfg || !cfg.voice.enabled || !cfg.voice.model || cfg.voice.centsPerMinute === null) return { ok: false, message: "Talk to Journey opens soon." };
 
   let qaTest = false;
+  let remainingCents: number | null = null, holderLimit: number | null = null, personLimit: number | null = null, periodStart: string | null = null;
   let holder = viewer.id, pkg: string | null = null, access: "standard" | "enhanced" = "enhanced", allowed = cfg.voice.maxSessionMinutes * 60;
   if (input.ownerTest) {
     const mfa = await getMfaStatus();
@@ -81,15 +82,24 @@ export async function startVoice(input: {
     }
     access = level; holder = m.holderId; pkg = m.membership.packageSlug;
     const [{ data: t }, { data: used }, { data: credits }] = await Promise.all([
-      db.rpc("journey_effective_tier", { p_slug: pkg ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle<{ monthly_voice_minutes: number | null }>(),
+      db.rpc("journey_effective_tier", { p_slug: pkg ?? "", p_couples: Boolean(m.membership.couples) }).maybeSingle<{ monthly_voice_minutes: number | null; monthly_messages: number | null; unlimited_messages: boolean; member_monthly_limit_cents: number | null; person_monthly_limit_cents: number | null }>(),
       db.rpc("journey_voice_used", { p_holder: holder, p_period_start: m.periodStart.toISOString() }),
       db.from("journey_message_credits").select("messages, used").eq("holder_id", holder).eq("kind", "voice_minutes").or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
     ]);
-    if (t?.monthly_voice_minutes == null) return { ok: false, message: "Voice isn't included in your membership yet." };
+    // Directive 51: voice draws from the same monthly dollar allowance as writing, at the actual per-minute cost.
+    if (t && !t.unlimited_messages && t.monthly_messages == null && t.member_monthly_limit_cents != null) {
+      const { data: sp } = await db.rpc("journey_allowance_used", { p_holder: holder, p_user: viewer.id, p_period_start: m.periodStart.toISOString() });
+      const u = sp as { holder_cents: number; person_cents: number } | null;
+      holderLimit = Number(t.member_monthly_limit_cents); personLimit = t.person_monthly_limit_cents == null ? null : Number(t.person_monthly_limit_cents);
+      remainingCents = Math.min(holderLimit - Number(u?.holder_cents ?? 0), personLimit == null ? Infinity : personLimit - Number(u?.person_cents ?? 0));
+      periodStart = m.periodStart.toISOString();
+    } else if (t?.monthly_voice_minutes == null) return { ok: false, message: "Voice isn't included in your membership yet." };
+    else {
     const extra = (credits ?? []).reduce((n, c) => n + (c.messages - c.used), 0) * 60;
     const remaining = t.monthly_voice_minutes * 60 + extra - Number(used ?? 0);
     allowed = Math.min(allowed, remaining);
     if (allowed < 30) return { ok: false, message: "You've used this period's voice minutes. You can keep talking with Journey in writing, your minutes reset on your next billing date, and additional voice minutes are available at our cost in Journey Plus if you'd like." };
+    }
   }
 
   const previewVoice = input.ownerTest && input.previewVoice && voiceById(input.previewVoice) && hasRole(viewer, ["owner"]) && !viewer.viewAs ? voiceById(input.previewVoice)! : null;
@@ -101,9 +111,14 @@ export async function startVoice(input: {
   if (live && !input.sdp) return { ok: false, message: "Please refresh the page and try again." };
   // GPT-Live has an official per-minute price; other models use the owner's rate, or the catalog estimate when comparing.
   const rate = live ? (catalog?.liveCentsPerMinute ?? 5) : model === cfg.voice.model ? cfg.voice.centsPerMinute : (catalog?.budgetCentsPerMinute ?? cfg.voice.centsPerMinute);
+  // Allowance mode: the conversation may last only as long as the remaining allowance covers at this model's actual rate.
+  if (remainingCents != null) {
+    allowed = Math.min(allowed, Math.floor((remainingCents / rate) * 60));
+    if (allowed < 30) return { ok: false, message: "You've used this month's included Journey allowance. Your conversations are saved, and your allowance renews on your next billing date." };
+  }
   const reserve = Math.round(((rate * allowed) / 60) * 10_000) / 10_000;
   if (qaTest && (await qaJourneyTesting(viewer.id, reserve)) !== "ok") return { ok: false, message: "QA testing budget reached for now. Try a shorter conversation or test again after the budget resets." };
-  const { data: started } = await db.rpc("journey_voice_start", { p_user: viewer.id, p_holder: holder, p_package: pkg, p_allowed_seconds: allowed, p_owner_test: Boolean(input.ownerTest), p_reserve: reserve });
+  const { data: started } = await db.rpc("journey_voice_start", { p_user: viewer.id, p_holder: holder, p_package: pkg, p_allowed_seconds: allowed, p_owner_test: Boolean(input.ownerTest), p_reserve: reserve, p_period_start: periodStart, p_holder_limit: holderLimit, p_person_limit: personLimit });
   if (typeof started !== "string" || started.startsWith("refused:")) {
     const why: Record<string, string> = {
       "refused:in_progress": "You already have a voice conversation open.",

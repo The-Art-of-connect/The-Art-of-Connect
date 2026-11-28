@@ -91,3 +91,4 @@
 20270203000001_growth_and_relationships.sql	exists (select 1 from pg_proc where proname = 'growth_tick')
 20270204000001_deal_room_meetings.sql	exists (select 1 from pg_proc where proname = 'approve_minutes')
 20270205000001_qa_journey_testing.sql	exists (select 1 from pg_proc where proname = 'journey_qa_allowed')
+20270206000001_journey_dollar_allowances.sql	exists (select 1 from pg_proc where proname = 'journey_allowance_used')

@@ -317,7 +317,7 @@ export default async function JourneyAdmin() {
 
       <div className="mt-6">
         <Panel title="Membership allowances and spending caps">
-          <div className="p-5 text-xs text-muted">One combined allowance per membership. Couples share theirs. Included messages reset each billing period and don&rsquo;t roll over. Journey stays off for a membership until both caps are set. Free accounts: 0.</div>
+          <div className="p-5 text-xs text-muted">Directive 51: each membership includes a monthly Journey allowance in dollars of actual AI cost, shared by writing and voice. Approved: Singles $5, Couples $5 per person ($10 per couple), Professional $10, Dual Society $10, Executive Private $15, Elite Concierge $25, Free $0. Leave monthly messages blank to use the dollar allowance. The membership cap is optional; the company budget always applies. Allowances renew each billing period and don&rsquo;t roll over.</div>
           <div className="divide-y divide-line">
             {(pkgs ?? []).filter((p) => p.slug in INITIAL_MONTHLY_MESSAGES).map((p) => {
               const t = tierMap.get(p.slug);
@@ -327,15 +327,16 @@ export default async function JourneyAdmin() {
                   <span className="col-span-2 font-semibold sm:col-span-1">{p.name}<span className="block text-xs font-normal text-faint">Spent this month: {usd(byTier.get(p.slug) ?? 0)}</span></span>
                   <label className="text-[0.65rem] text-faint">Monthly messages<input name="monthly" defaultValue={t?.monthly_messages ?? ""} className="field mt-1 w-full" /></label>
                   <label className="text-[0.65rem] text-faint">Daily messages<input name="daily" defaultValue={t?.daily_messages ?? ""} className="field mt-1 w-full" /></label>
-                  <label className="text-[0.65rem] text-faint">Member cap ($/mo)<input name="memberCap" defaultValue={dollars(t?.member_monthly_limit_cents ?? null)} className="field mt-1 w-full" /></label>
+                  <label className="text-[0.65rem] text-faint">Included allowance ($/mo)<input name="memberCap" defaultValue={dollars(t?.member_monthly_limit_cents ?? null)} className="field mt-1 w-full" /></label>
                   <label className="text-[0.65rem] text-faint">Membership cap ($/mo)<input name="tierCap" defaultValue={dollars(t?.tier_monthly_limit_cents ?? null)} className="field mt-1 w-full" /></label>
                   <label className="text-[0.65rem] text-faint">Longest reply (tokens)<input name="maxOutput" defaultValue={t?.max_output_tokens ?? 700} className="field mt-1 w-full" /></label>
                   <label className="text-[0.65rem] text-faint">Voice minutes / mo<input name="voiceMinutes" defaultValue={t?.monthly_voice_minutes ?? ""} className="field mt-1 w-full" /></label>
                   <button className="btn btn-ghost btn-sm">Save</button>
                   <div className="col-span-2 flex flex-wrap items-end gap-3 text-[0.65rem] text-faint sm:col-span-8">
-                    <label className="flex items-center gap-1.5 text-xs text-text"><input type="checkbox" name="unlimited" defaultChecked={t?.unlimited_messages} /> Unlimited text (all-inclusive; message limits ignored)</label>
+                    <label className="flex items-center gap-1.5 text-xs text-text"><input type="checkbox" name="unlimited" defaultChecked={t?.unlimited_messages} /> Legacy unlimited text (not used under directive 51)</label>
                     <label>Fair use / day<input name="fairDaily" defaultValue={t?.fair_use_daily ?? 300} className="field mt-1 w-20" /></label>
                     <label>Fair use / hour<input name="fairHourly" defaultValue={t?.fair_use_hourly ?? 60} className="field mt-1 w-20" /></label>
+                    <label>Per person ($/mo, couples)<input name="personCap" defaultValue={dollars(t?.person_monthly_limit_cents ?? null)} className="field mt-1 w-24" /></label>
                   </div>
                 </ActionForm>
               );
@@ -373,7 +374,7 @@ export default async function JourneyAdmin() {
                 <div><p className="font-semibold">Voice minutes (all members, including Elite)</p><ul className="mt-2 space-y-1 text-xs text-muted">{(voicePacks ?? []).map((v) => <li key={v.slug}>{v.minutes} minutes · {money(v.price_cents ?? 0)}{v.is_active ? "" : " · not offered"}</li>)}</ul></div>
                 <div><p className="font-semibold">Text messages (memberships with an allowance)</p><ul className="mt-2 space-y-1 text-xs text-muted">{(packages ?? []).map((p) => <li key={p.slug}>{p.messages} messages · {money(p.price_cents ?? 0)}{p.is_active ? "" : " · not offered"}</li>)}</ul></div>
               </div>
-              <p className="px-5 pb-4 text-xs text-faint">Stripe&rsquo;s minimum charge is 50¢. Elite Concierge members have unlimited text and are never offered message packages. Nothing is ever charged without the member choosing and confirming a package.</p>
+              <p className="px-5 pb-4 text-xs text-faint">Stripe&rsquo;s minimum charge is 50¢. Every membership, Elite Concierge included, has a monthly dollar allowance at actual AI cost (directive 51); additional usage is the only extra Journey charge. Nothing is ever charged without the member choosing and confirming a package.</p>
             </Panel>
           </div>
         );

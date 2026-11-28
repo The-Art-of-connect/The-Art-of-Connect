@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { balanceLabel } from "@/lib/journey-budget";
 import { messagesLeft } from "@/lib/journey";
 import { getViewer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -35,7 +36,8 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
   const paid = js?.access === "standard" || js?.access === "enhanced";
   const staff = js?.access === "staff";
   const credits = js?.allowance ? js.allowance.remaining + js.allowance.purchasedRemaining : 0;
-  const option = paid ? { kind: "member" as const, enabled: Boolean(js?.enabled), credits } : staff ? { kind: "staff" as const, enabled: Boolean(js?.enabled) } : { kind: "none" as const };
+  const balance = balanceLabel(js?.allowance);
+  const option = paid ? { kind: "member" as const, enabled: Boolean(js?.enabled), credits, balance } : staff ? { kind: "staff" as const, enabled: Boolean(js?.enabled) } : { kind: "none" as const };
   const lessonDone = (slug: string) => isLessonDone(c, c.lessons.find((l) => l.slug === slug)!, answers);
   const firstOpen = c.lessons.find((l) => !lessonDone(l.slug))?.slug ?? null;
 
@@ -88,7 +90,7 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
             <p className="display relative mt-2 text-2xl text-gold-bright">Personal, by text or voice</p>
             <p className="relative mt-3 text-sm text-muted">Journey listens, asks about your circumstances and adapts each lesson to you, then writes an individualized analysis grounded in your conversations.</p>
             {paid ? (
-              <p className="relative mt-4 rounded-xl border border-champagne/30 bg-white/5 p-3 text-sm">Included in your membership, live by voice or in writing. You have <span className="font-semibold text-gold-bright">{messagesLeft(credits)}</span> Journey messages {credits >= 9999 ? "with your Elite Concierge membership" : "left this month"}; opening lessons and learning self-guided never use them.</p>
+              <p className="relative mt-4 rounded-xl border border-champagne/30 bg-white/5 p-3 text-sm">Included in your membership, live by voice or in writing. Your Journey allowance: <span className="font-semibold text-gold-bright">{balance ?? `${messagesLeft(credits)} messages left this month`}</span>. Opening lessons and learning self-guided never use it.</p>
             ) : staff ? (
               <p className="relative mt-4 text-sm text-muted">Owner testing uses your private test budget.</p>
             ) : (

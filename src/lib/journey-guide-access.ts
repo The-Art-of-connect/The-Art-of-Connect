@@ -1,4 +1,5 @@
 import "server-only";
+import { balanceLabel } from "@/lib/journey-budget";
 import { getViewer, hasRole, isInsidePreview } from "@/lib/auth";
 import { getJourneyStatus } from "@/lib/journey-server";
 import { getLaunchState } from "@/lib/launch";
@@ -21,7 +22,7 @@ export async function guideAccess(): Promise<GuideAccess> {
   // Directive 49: the fictional QA account tests Journey pre-launch when the owner allows it (the server re-checks every message).
   const live = viewer.viewAs ? true : (await getLaunchState()).payments_live || (await qaJourneyTesting(viewer.id)) === "ok";
   const credits = s.allowance ? s.allowance.remaining + s.allowance.purchasedRemaining : 0;
-  return { kind: "paid", credits, available: s.enabled && live, reason: s.enabled && live ? undefined : viewer.viewAs ? "Owner: turn on Journey in the Journey Intelligence Center" : "Opens soon" };
+  return { kind: "paid", credits, balance: balanceLabel(s.allowance), available: s.enabled && live, reason: s.enabled && live ? undefined : viewer.viewAs ? "Owner: turn on Journey in the Journey Intelligence Center" : "Opens soon" };
 }
 
 /** Everything a page needs to place the universal Journey options before its questions. */

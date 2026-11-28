@@ -103,7 +103,7 @@ export function JourneyCompanion({ access, avatar }: { access: GuideAccess; avat
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
                     className="field w-full !min-h-0 !bg-white/5 !text-ivory" placeholder="Write to Journey…" />
                   <div className="mt-2 flex items-center justify-between gap-2 text-xs text-ivory/60">
-                    <span>{access.kind === "paid" ? access.credits >= 9999 ? "Included · unlimited" : `Included · ${access.credits} messages left` : "Owner test budget"}</span>
+                    <span>{access.kind === "paid" ? `Included · ${access.balance ?? `${access.credits} messages left`}` : "Owner test budget"}</span>
                     <span className="flex gap-3"><Link href={ref ? `/app/journey/voice?lesson=${encodeURIComponent(ref)}` : "/app/journey/voice"} className="text-gold">Talk instead</Link><button className="btn btn-gold btn-sm" disabled={busy || !text.trim()}>Send</button></span>
                   </div>
                 </form>
