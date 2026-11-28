@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { GrowthPanel } from "@/components/GrowthPanel";
 import { sanctuarySettings } from "@/lib/sanctuary-server";
 import { scenarioInsights, type ScenarioOption } from "@/lib/sanctuary";
-import { getViewer, hasRole } from "@/lib/auth";
+import { isInsidePreview, getViewer, hasRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getJourneyStatus } from "@/lib/journey-server";
 import { DISCOVERY_CATEGORIES } from "@/lib/journey-discovery";
@@ -194,6 +195,7 @@ export default async function Portfolio() {
         )}
         <p className="mt-3 text-xs text-faint">Educational reflections, not clinical assessments or definitive judgments.</p>
       </section>
+      {!isInsidePreview(viewer) && <GrowthPanel userId={viewer.id} />}
     </>
   );
 }

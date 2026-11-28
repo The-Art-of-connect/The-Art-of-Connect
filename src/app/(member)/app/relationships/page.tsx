@@ -9,6 +9,7 @@ import { LoveSafety } from "@/components/love/LoveSafety";
 import { COUPLES_TABS, INTENTS, SINGLES_TABS, questionFor } from "@/lib/in-love";
 import { addGoal, expressInterest, invitePartner, setGoalStatus } from "@/app/actions/in-love";
 import { brandName } from "@/lib/brand";
+import { seasonIdeas } from "@/lib/growth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "In Love" };
@@ -110,6 +111,9 @@ async function Couples({ coupleId, welcome, viewerId }: { coupleId: string | nul
       ])
     : [{ data: [] }, { data: [] }, { data: [] }];
   const partnerJoined = (members ?? []).some((m) => m.user_id !== viewerId);
+  // Directive 46: ideas that evolve with the relationship's season (from the member's own private status).
+  const { data: st } = rel ? await rel.from("status").select("status").eq("user_id", viewerId).maybeSingle() : { data: null };
+  const ideas = seasonIdeas(st?.status === "engaged" || st?.status === "married" ? st.status : "committed");
   const pending = (invites ?? [])[0];
   const today = questionFor();
   return (
@@ -159,6 +163,13 @@ async function Couples({ coupleId, welcome, viewerId }: { coupleId: string | nul
       </ul>
 
       <section className="glass mt-6 p-6">
+        <p className="eyebrow">For this season of your relationship</p>
+        <ul className="mt-3 grid gap-3 sm:grid-cols-2">{ideas.map((i) => (
+          <li key={i.title} className="rounded-2xl border border-line p-4"><p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-gold-deep">{i.kind === "date" ? "Date idea" : i.kind === "conversation" ? "Conversation" : i.kind === "challenge" ? "Relationship challenge" : "Surprise"}</p><p className="mt-1 font-semibold">{i.title}</p><p className="text-sm text-muted">{i.body}</p></li>
+        ))}</ul>
+      </section>
+
+      <section className="glass mt-6 p-6">
         <p className="eyebrow">Our shared goals</p>
         {(goals ?? []).length === 0 ? <p className="mt-2 text-sm text-muted">Create your future together: add a goal you both want to work toward.</p> : (
           <ul className="mt-3 divide-y divide-line">{(goals ?? []).map((g) => (
@@ -170,7 +181,7 @@ async function Couples({ coupleId, welcome, viewerId }: { coupleId: string | nul
         )}
         {partnerJoined && <MemberForm action={addGoal} className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]"><input name="title" required maxLength={120} placeholder="A goal for the two of you" className="field" aria-label="Shared goal" /><button className="btn btn-gold">Add</button></MemberForm>}
       </section>
-      <p className="mt-6 text-center text-xs text-muted">Each of you keeps your own journal, reflections and discoveries. Only what you choose to share appears here.</p>
+      <p className="mt-6 text-center text-xs text-muted">Each of you keeps your own journal, reflections and discoveries. Only what you choose to share appears here. <Link href="/app/relationships/status" className="underline">Relationship status</Link></p>
     </>
   );
 }
