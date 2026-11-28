@@ -41,3 +41,11 @@ test("one balance wording everywhere, in dollars", () => {
   assert.equal(hasBalance(v), true);
   assert.equal(hasBalance(dollarView(500, 500, 0, new Date())), false);
 });
+
+test("pay-as-you-go: a Free member's balance is their purchased Journey credits, worded once", async () => {
+  const { creditsView } = await import("../src/lib/journey-budget.ts");
+  assert.equal(balanceLabel(creditsView(12, new Date("2026-12-01"))), "12 Journey credits remaining");
+  assert.equal(balanceLabel(creditsView(1, new Date("2026-12-01"))), "1 Journey credit remaining");
+  assert.equal(hasBalance(creditsView(0, new Date())), false);
+  assert.equal(hasBalance(creditsView(3, new Date())), true);
+});

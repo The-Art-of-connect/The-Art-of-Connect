@@ -218,6 +218,25 @@ export function quote(cat: PricingCatalogue, rawSel: Selection, promo?: Promotio
   };
 }
 
+/** Reword the original Elite benefits using today's allowance and launch status. */
+export function eliteCatalogueBenefits(benefits: string[], allowanceCents: number | null, voiceComingSoon: boolean, sessionsComingSoon: boolean): string[] {
+  return [...new Set(benefits.map((benefit) => {
+    switch (benefit) {
+      case "Unlimited Journey AI text-based conversations (fair use applies)":
+        return allowanceCents !== null
+          ? `${formatMoney(allowanceCents)} monthly Journey allowance, measured at actual AI cost`
+          : "Monthly Journey allowance, measured at actual AI cost";
+      case "300 Journey live voice minutes a month; additional minutes available at our cost":
+      case "Included Journey live voice conversations (300 minutes a month)":
+        return voiceComingSoon ? "Journey Live (voice) — Coming soon" : "Journey Live (voice) uses your monthly Journey allowance";
+      case "Journey Private Sessions included":
+        return sessionsComingSoon ? "Journey Private Sessions — Coming soon" : benefit;
+      default:
+        return benefit;
+    }
+  }))];
+}
+
 export function formatMoney(cents: number | null | undefined, currency = "usd") {
   if (cents == null) return null;
   return new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase(), minimumFractionDigits: cents % 100 ? 2 : 0 }).format(cents / 100);

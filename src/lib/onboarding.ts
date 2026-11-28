@@ -24,6 +24,22 @@ export type Track = "single" | "couple" | "general";
 
 export type AnswerValue = string | number | boolean | string[] | { min: number; max: number } | null;
 export type Answers = Record<string, AnswerValue>;
+export type StoredAnswer = AnswerValue | { answer: AnswerValue; reflection: string };
+
+export function unpackOnboardingAnswer(value: StoredAnswer): { answer: AnswerValue; reflection: string } {
+  if (value && typeof value === "object" && "answer" in value) {
+    return { answer: value.answer, reflection: value.reflection };
+  }
+  return { answer: value, reflection: "" };
+}
+
+/** A submitted reflection field can be saved or cleared independently of its answer. */
+export function packOnboardingAnswer(value: AnswerValue, reflectionField: FormDataEntryValue | null): StoredAnswer | undefined {
+  const reflection = typeof reflectionField === "string" ? reflectionField.trim().slice(0, 2000) : null;
+  if (isAnswered(value)) return reflection ? { answer: value, reflection } : value;
+  if (reflection !== null) return { answer: null, reflection };
+}
+
 
 export type QuestionKind = "text" | "long_text" | "date" | "single_choice" | "multi_choice" | "range" | "location";
 

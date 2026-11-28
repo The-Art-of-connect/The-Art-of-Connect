@@ -96,7 +96,7 @@ export default async function MyMembershipPage({ searchParams }: { searchParams:
         <section className="theme-dark mt-10 rounded-[28px] border border-[#c9a96e]/50 p-8" style={{ background: "#1b1310" }}>
           <p className="text-xs uppercase tracking-[0.25em] text-[#f0c98a]">Elite Concierge — All Access</p>
           <ul className="mt-4 grid gap-2 text-sm text-[#f5ecdf]/85 sm:grid-cols-2">{(allAccessPkg?.benefits ?? []).map((b) => <li key={b} className="flex gap-2"><span className="text-[#e8892b]" aria-hidden="true">✓</span>{b}</li>)}</ul>
-          <p className="mt-5 text-xs text-[#f5ecdf]/60">Everything is included. The only optional extra is additional Journey voice time, offered at our cost in <Link href="/app/journey/plus" className="underline">Journey Plus</Link>. Billing questions: <Link href="/app/support" className="underline">priority support</Link>.</p>
+          <p className="mt-5 text-xs text-[#f5ecdf]/60">See your included balance and the current availability of Journey features in <Link href="/app/journey" className="underline">Journey</Link>. Billing questions: <Link href="/app/support" className="underline">priority support</Link>.</p>
         </section>
       ) : <>
       <h2 className="mt-14 mb-6 text-lg font-semibold">Add or remove experiences, or change billing</h2>

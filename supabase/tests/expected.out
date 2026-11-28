@@ -1492,3 +1492,19 @@ v64-20) A draft can be cancelled by its member (expect cancelled):
 cancelled
 v64-21) A review cannot authorize an order or approve fees (expect error):
 ERROR:  Not permitted
+v66-1) Without credits a Free member gets no personalized Journey (expect 0, refused:no_credits):
+0
+refused:no_credits
+v66-2) With 2 credits, each reply uses exactly one (expect t, 1, t, 0, refused:no_credits):
+t
+1
+t
+0
+refused:no_credits
+v66-3) Credits work only in The Art of Becoming, never membership experiences (expect refused:mode):
+refused:mode
+v66-4) The company budget and the emergency switch still stop everything (expect refused:company_budget, refused:off):
+refused:company_budget
+refused:off
+v66-5) Members cannot call these directly (expect error):
+ERROR:  permission denied for function journey_reserve_credit

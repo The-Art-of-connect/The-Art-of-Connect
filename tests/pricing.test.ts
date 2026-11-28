@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  annualIncentiveLabel, matchPackage, normalizeSelection, quote, selectionFromQuery, selectionToQuery,
+  annualIncentiveLabel, eliteCatalogueBenefits, matchPackage, normalizeSelection, quote, selectionFromQuery, selectionToQuery,
   type MembershipPackage, type PricingCatalogue,
 } from "../src/lib/pricing.ts";
 
@@ -143,4 +143,26 @@ test("couples keep the couples experience at every level: Executive Private take
   assert.equal(q.couplesMonthly, 1000);
   // Without an approved Couples upgrade price, nothing is priced (never invented).
   assert.equal(quote(cat({ couples_upgrade: { name: "Couples upgrade", description: "", monthly_price_cents: null } }), sel([], { package: "executive-private", couples: true })).priced, false);
+});
+
+test("Elite comparison copy uses the configured allowance and current launch states", () => {
+  const legacy = [
+    "All Singles, Couples and Business services",
+    "Unlimited Journey AI text-based conversations (fair use applies)",
+    "300 Journey live voice minutes a month; additional minutes available at our cost",
+    "Journey Private Sessions included",
+  ];
+  assert.deepEqual(eliteCatalogueBenefits(legacy, 2500, true, true), [
+    legacy[0],
+    "$25 monthly Journey allowance, measured at actual AI cost",
+    "Journey Live (voice) — Coming soon",
+    "Journey Private Sessions — Coming soon",
+  ]);
+  assert.deepEqual(eliteCatalogueBenefits(legacy, 2750, false, false), [
+    legacy[0],
+    "$27.50 monthly Journey allowance, measured at actual AI cost",
+    "Journey Live (voice) uses your monthly Journey allowance",
+    legacy[3],
+  ]);
+  assert.equal(eliteCatalogueBenefits(legacy, null, true, true)[1], "Monthly Journey allowance, measured at actual AI cost");
 });
