@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { LEVEL_LABEL, LEVEL_PROMISE, type Level } from "@/lib/membership-level";
-import { whatsNew } from "@/lib/features";
+import { ownerStatus, whatsNew } from "@/lib/features";
+import { comingSoonPaths } from "@/lib/section-status";
 import { LocalTime } from "@/components/LocalTime";
 
 /**
@@ -22,7 +23,8 @@ export async function PaidHome({ userId, level }: { userId: string; level: Level
   const t = (topics ?? []).filter((x) => !x.closed_at && Date.parse(x.slot_start!) + x.open_hours * 3600_000 > Date.now()).slice(0, 4);
   const events = ((rsvps ?? []) as unknown as { status: string; social_events: { id: string; title: string; starts_at: string } }[]).map((r) => ({ ...r.social_events, rsvp: r.status }));
   const activeGoals = (goals ?? []).filter((g) => g.status === "active").length, achieved = (goals ?? []).filter((g) => g.status === "achieved").length;
-  const news = whatsNew().slice(0, 3);
+  const soon = await comingSoonPaths();
+  const news = whatsNew().map((f) => ownerStatus(f, soon)).filter((f) => f.status === "available").slice(0, 3);
   const Card = ({ title, href, children, cta }: { title: string; href: string; children: React.ReactNode; cta: string }) => (
     <div className="glass flex flex-col p-6"><p className="eyebrow">{title}</p><div className="mt-3 flex-1 text-sm">{children}</div><Link href={href} className="mt-4 text-sm text-gold underline">{cta}</Link></div>
   );

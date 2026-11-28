@@ -3,7 +3,8 @@ import Link from "next/link";
 import { getViewer } from "@/lib/auth";
 import { getMembership } from "@/lib/membership-server";
 import { LEVEL_LABEL } from "@/lib/membership-level";
-import { whatsNew } from "@/lib/features";
+import { ownerStatus, whatsNew } from "@/lib/features";
+import { comingSoonPaths } from "@/lib/section-status";
 import { FeatureDirectory } from "@/components/FeatureDirectory";
 import { WhatsNewCarousel } from "@/components/WhatsNewCarousel";
 
@@ -14,7 +15,8 @@ export const dynamic = "force-dynamic";
 export default async function WhatWeOffer() {
   const viewer = await getViewer().catch(() => null);
   const m = viewer ? await getMembership(viewer) : null;
-  const news = whatsNew().filter((f) => f.image);
+  const soon = await comingSoonPaths();
+  const news = whatsNew().map((f) => ownerStatus(f, soon)).filter((f) => f.image && f.status === "available");
   return (
     <>
       <div className="theme-dark relative overflow-hidden" style={{ background: "radial-gradient(70% 90% at 85% 10%, rgb(122 28 40 / 0.65), transparent 60%), radial-gradient(60% 80% at 0% 100%, rgb(80 20 26 / 0.6), transparent 60%), linear-gradient(160deg, #1f1011 0%, #120a0a 55%, #0c0808 100%)" }}>
@@ -32,7 +34,7 @@ export default async function WhatWeOffer() {
       </div>
       <div className="band theme-ivory">
         <section className="mx-auto max-w-7xl px-4 py-12 sm:px-8 lg:py-16">
-          <FeatureDirectory signedIn={Boolean(m)} viewer={m ? { level: m.level, experiences: m.experiences, elite: m.elite } : null} />
+          <FeatureDirectory soon={soon} signedIn={Boolean(m)} viewer={m ? { level: m.level, experiences: m.experiences, elite: m.elite } : null} />
           <p className="mt-14 text-center text-xs text-faint">Features marked Coming soon are not available yet. Descriptions never grant access; every membership benefit is checked securely on our servers.</p>
         </section>
       </div>

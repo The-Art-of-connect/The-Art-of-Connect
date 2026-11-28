@@ -21,6 +21,8 @@ import { getNavState } from "@/lib/nav-state";
 import { getDiscovery, nextModuleHref } from "@/lib/know-yourself-server";
 import { AskJourney } from "@/components/AskJourney";
 import { ExperienceDoors } from "@/components/ExperienceDoors";
+import { nextStep } from "@/lib/next-step";
+import { isQaAccount } from "@/lib/qa-access";
 
 const SOCIETY_NAME: Record<string, string> = { business: "The Professional Society", relationships: "The Personal Society", counseling: "The Art of Becoming" };
 const PHOTO: Record<string, string> = {
@@ -55,6 +57,14 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
   ]);
   const isElite = badge?.status === "active";
   const membership = await getMembership(viewer);
+  // The QA account previews experiences before launch; its cards must match what actually opens (audit priority 2).
+  const qaPreview = !staff && (await isQaAccount(viewer.id));
+  const { data: cm } = viewer.society === "couples" && !isInsidePreview(viewer) ? await supabase.schema("relationships").from("couple_members").select("couple_id").eq("user_id", viewer.id).maybeSingle() : { data: null };
+  const { data: partners } = cm ? await supabase.schema("relationships").from("couple_members").select("user_id").eq("couple_id", cm.couple_id) : { data: null };
+  const next = nextStep({
+    discoveryStarted: discovery.percent > 0, discoveryHref: nextModuleHref(discovery.answers, discovery.special), level: membership?.level ?? "free",
+    experiences: viewer.experiences, society: viewer.society ?? null, coupleJoined: viewer.society === "couples" ? (partners ?? []).some((p) => p.user_id !== viewer.id) : null, paidJourney: nav.paid,
+  });
   return (
     <>
       {locked && LOCKED[locked] && (
@@ -106,7 +116,7 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
           {sub.tier_name} · <Link href="/app/membership" className="text-gold underline">Manage membership</Link>
         </p>
       )}
-      <DashboardHub state={nav} experiences={staff ? [...EXPERIENCE_ORDER] : viewer.experiences} discovery={{ percent: discovery.percent, modulesDone: discovery.modulesDone, totalModules: discovery.totalModules, nextHref: nextModuleHref(discovery.answers, discovery.special) }} />
+      <DashboardHub next={next} state={nav} experiences={staff ? [...EXPERIENCE_ORDER] : viewer.experiences} discovery={{ percent: discovery.percent, modulesDone: discovery.modulesDone, totalModules: discovery.totalModules, nextHref: nextModuleHref(discovery.answers, discovery.special) }} />
       <DiscoveryInvite userId={viewer.id} back="/app" />
       <section aria-labelledby="mine" className="mt-12">
         <p className="eyebrow">Your memberships</p>
@@ -129,7 +139,7 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
           </div>
           {mine.map((key) => {
             const e = EXPERIENCES[key];
-            const live = launch[`${key}_live` as const];
+            const live = launch[`${key}_live` as const] || qaPreview;
             const open = live && viewer.experiences.includes(key);
             return (
               <div key={key} className="glass lift tile-in group flex min-h-64 flex-col justify-between overflow-hidden !p-0">
@@ -139,7 +149,7 @@ export default async function MemberHome({ searchParams }: { searchParams: Promi
                 </div>
                 <div className="flex flex-1 flex-col justify-between p-7">
                   <div>
-                    <span className={`chip ${open ? "chip-live" : "chip-locked"}`}>{open ? (key === "counseling" ? "Free · included with every account" : subName(key) ?? "Active") : live ? "Staff preview" : "Opening soon"}</span>
+                    <span className={`chip ${open ? "chip-live" : "chip-locked"}`}>{open ? (key === "counseling" ? "Free · included with every account" : subName(key) ?? "Active") : live ? "Staff preview" : "Opening soon"}{qaPreview && open ? " · QA preview" : ""}</span>
                     <h3 className="display mt-5 text-3xl" style={{ color: e.accent }}>{SOCIETY_NAME[key]}</h3>
                     <p className="mt-1 text-xs tracking-wide text-faint uppercase">{e.name} · {e.subtitle}</p>
                     <p className="mt-3 text-sm text-muted">{e.caption}</p>

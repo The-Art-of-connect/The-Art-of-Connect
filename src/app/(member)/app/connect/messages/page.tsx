@@ -31,7 +31,7 @@ export default async function Messages() {
     <div className="space-y-6">
       <header><p className="eyebrow">Private messages</p><h1 className="display mt-2 text-4xl">Messages</h1>
         <p className="mt-2 text-sm text-muted">Conversations are private to the people in them. You can message your connections, start group conversations and event chats.</p></header>
-      {sorted.length === 0 ? <p className="glass p-6 text-sm text-muted">No conversations yet.</p> : (
+      {sorted.length === 0 ? <div className="glass p-6 text-sm"><p className="text-muted">No conversations yet. Conversations begin once a connection is accepted.</p><div className="mt-4 flex flex-wrap gap-3"><Link href="/app/connect/people" className="btn btn-gold btn-sm">Find People Like Me</Link><Link href="/app/connect/circles" className="btn btn-ghost btn-sm">Explore circles</Link></div></div> : (
         <ul className="glass divide-y divide-line !p-0">{sorted.map((c) => {
           const l = last.get(c.conversation_id);
           const unread = l && l.sender_id !== viewer.id && (!c.last_read_at || l.created_at > c.last_read_at);

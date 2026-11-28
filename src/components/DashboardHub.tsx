@@ -3,6 +3,7 @@ import { NAV } from "@/lib/nav";
 import type { NavState } from "@/lib/nav-state";
 import { NavIcon } from "@/components/nav/NavIcons";
 import { badgeFor, linkFor } from "@/components/nav/linkFor";
+import type { NextStep } from "@/lib/next-step";
 
 const SPACE_ICON: Record<string, string> = { self: "self", relationships: "connect", professional: "professional", journey: "journey", counseling: "counseling" };
 const QUICK = [
@@ -15,10 +16,10 @@ const QUICK = [
 
 type Discovery = { percent: number; modulesDone: number; totalModules: number; nextHref: string };
 
-/** The member's home base: search, pick up where you left off, and every space one tap away. */
+/** The member's home base: one clear next step and the one primary search, pick up where you left off, and every space one tap away. */
 const GROUP_EXPERIENCE: Record<string, string> = { relationships: "relationships", professional: "business" };
 
-export function DashboardHub({ state, discovery, experiences }: { state: NavState; discovery: Discovery; experiences: string[] }) {
+export function DashboardHub({ state, discovery, experiences, next }: { state: NavState; discovery: Discovery; experiences: string[]; next: NextStep }) {
   // The Art of Knowing Yourself and Journey are for everyone; society spaces only for members who have them.
   const groups = NAV.filter((g) => g.key !== "home" && (!GROUP_EXPERIENCE[g.key] || experiences.includes(GROUP_EXPERIENCE[g.key])));
   const ring = 2 * Math.PI * 34;
@@ -29,13 +30,16 @@ export function DashboardHub({ state, discovery, experiences }: { state: NavStat
       <div className="theme-dark tile-in relative overflow-hidden rounded-[2rem] bg-ink p-6 text-ivory shadow-2xl sm:p-10">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_60%_at_85%_0%,rgb(116_63_77/0.55),transparent_70%),radial-gradient(40%_50%_at_0%_100%,rgb(201_169_110/0.18),transparent_70%)]" />
         <div className="relative">
-          <p className="eyebrow">Your home base</p>
-          <h2 id="hub-title" className="display mt-3 text-4xl sm:text-5xl">Where would you like to go?</h2>
+          <p className="eyebrow">Your next step</p>
+          <h2 id="hub-title" className="display mt-3 text-4xl sm:text-5xl">{next.label}</h2>
+          <p className="mt-3 max-w-2xl text-ivory/75">{next.line}</p>
+          <Link href={next.href} className="btn btn-gold mt-6 inline-flex">{next.label} <span aria-hidden="true">→</span></Link>
+          {/* Directive 51: the one primary search lives on Home; the header keeps only a compact global search. */}
           <form action="/search" role="search" className="mt-6 flex items-center gap-2 rounded-full border border-champagne/40 bg-white/5 p-1.5 pl-5 backdrop-blur-xl focus-within:border-champagne">
             <NavIcon name="search" className="h-5 w-5 shrink-0 text-gold" />
             <input name="q" aria-label="Search everything" enterKeyHint="search" placeholder="Search lessons, couples, Journey, business…"
               className="min-w-0 flex-1 bg-transparent py-2.5 text-ivory outline-none placeholder:text-ivory/45" />
-            <button className="btn btn-gold btn-sm shrink-0">Search</button>
+            <button className="btn btn-ghost btn-sm shrink-0">Search</button>
           </form>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
             {QUICK.filter((q: { exp?: string }) => !q.exp || experiences.includes(q.exp)).map((q) => (
@@ -65,7 +69,7 @@ export function DashboardHub({ state, discovery, experiences }: { state: NavStat
           <Link href={state.paid ? "/app/journey" : "/membership"} className="glass lift flex flex-col justify-between p-6">
             <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy text-ivory"><NavIcon name="journey" /></span><p className="text-xs uppercase tracking-wide text-faint">Journey</p></div>
             {state.paid ? (
-              <><p className="display mt-3 text-2xl text-burgundy">{state.credits ?? 0} Journey messages left</p><p className="mt-1 text-sm text-muted">Talk with Journey, or continue self-guided at no cost.</p></>
+              <><p className="display mt-3 text-2xl text-burgundy">{(state.credits ?? 0) >= 9999 ? "Unlimited Journey conversations" : `${state.credits ?? 0} Journey messages left`}</p><p className="mt-1 text-sm text-muted">{(state.credits ?? 0) >= 9999 ? "Included in your Elite Concierge membership. Talk with Journey whenever you like." : "Talk with Journey, or continue self-guided at no cost."}</p></>
             ) : (
               <><p className="display mt-3 text-2xl text-burgundy">Self-guided learning</p><p className="mt-1 text-sm text-muted">Every lesson is open to you. Journey is included with paid memberships.</p></>
             )}

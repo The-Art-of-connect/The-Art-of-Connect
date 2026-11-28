@@ -66,9 +66,10 @@ export default async function BusinessInbox({ searchParams }: { searchParams: Pr
           })}
         </ul>
       ) : (
-        <p className="mt-8 rounded-2xl border border-champagne/50 bg-champagne/10 p-6 text-sm text-muted">
-          {view === "requests" ? "No new requests." : view === "saved" ? "No saved connections yet." : "No conversations yet. When you reach out on the Connection Board — or someone reaches out to you — it appears here."}
-        </p>
+        <div className="mt-8 rounded-2xl border border-champagne/50 bg-champagne/10 p-6 text-sm">
+          <p className="text-muted">{view === "requests" ? "No new requests." : view === "saved" ? "No saved connections yet." : "No conversations yet. When you reach out on the Connection Board — or someone reaches out to you — it appears here."}</p>
+          <Link href="/app/business/board" className="btn btn-gold btn-sm mt-4">Open the Business Connection Board</Link>
+        </div>
       )}
     </div>
   );
