@@ -9,15 +9,9 @@ import { brandName } from "@/lib/brand";
  * Lifelong growth inside My Personal Discovery Portfolio (directive 45 and amendment): the member's reflection frequency,
  * their chronological reflections and milestones. No separate dashboard is created.
  */
-export async function GrowthPanel({ userId, compact = false }: { userId: string; compact?: boolean }) {
-  const db = await createClient();
-  if (!db) return null;
-  const [{ data: prefs }, { data: reports }, { data: milestones }] = await Promise.all([
-    db.from("growth_prefs").select("frequency, paused, next_due_at").eq("user_id", userId).maybeSingle(),
-    db.from("growth_reports").select("id, kind, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(24),
-    db.from("milestones").select("id, kind, title, occurred_on, visibility, source, recurring").eq("user_id", userId).order("occurred_on", { ascending: false }).limit(50),
-  ]);
-  const choose = (
+/** The reflection-frequency choice (directive 45 amendment): shared by Home, the Portfolio and Settings (directive 51 §6). */
+export function GrowthPrefsForm({ prefs }: { prefs: { frequency: string; paused: boolean } | null }) {
+  return (
     <MemberForm action={saveGrowthPrefs} className="space-y-3">
       <fieldset className="space-y-2"><legend className="sr-only">How often</legend>
         {FREQUENCIES.map((f) => (
@@ -32,6 +26,17 @@ export async function GrowthPanel({ userId, compact = false }: { userId: string;
       <p className="text-xs text-muted">You can change your preference at any time. Journey keeps your history and milestones whatever you choose.</p>
     </MemberForm>
   );
+}
+
+export async function GrowthPanel({ userId, compact = false }: { userId: string; compact?: boolean }) {
+  const db = await createClient();
+  if (!db) return null;
+  const [{ data: prefs }, { data: reports }, { data: milestones }] = await Promise.all([
+    db.from("growth_prefs").select("frequency, paused, next_due_at").eq("user_id", userId).maybeSingle(),
+    db.from("growth_reports").select("id, kind, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(24),
+    db.from("milestones").select("id, kind, title, occurred_on, visibility, source, recurring").eq("user_id", userId).order("occurred_on", { ascending: false }).limit(50),
+  ]);
+  const choose = <GrowthPrefsForm prefs={prefs} />;
   if (compact) return prefs ? null : (
     <section className="glass mb-8 p-6"><p className="eyebrow">{brandName("brand")}</p><h2 className="display mt-2 text-3xl">Celebrate Your Becoming</h2>
       <p className="mt-2 text-muted">How often would you like Journey to prepare a personalized reflection on your growth, accomplishments and important milestones?</p><div className="mt-4">{choose}</div></section>

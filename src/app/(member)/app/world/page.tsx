@@ -51,6 +51,7 @@ export default async function MyWorld() {
       { href: "/app/sanctuary/vision", title: "My Vision Board", detail: "Your goals in sight" },
     ] },
     { title: "My membership and privacy", tiles: [
+      { href: "/app/settings", title: "Settings", detail: "Growth reflections, relationship status and preferences" },
       { href: "/app/membership", title: "Membership", detail: LEVEL_LABEL[level] },
       { href: "/app/safety", title: "Safety and privacy", detail: "Blocks, reports and your data" },
       { href: "/app/explore", title: "Everything available to me", detail: "Every service, in one place" },

@@ -16,7 +16,7 @@ const QUICK = [
 
 type Discovery = { percent: number; modulesDone: number; totalModules: number; nextHref: string };
 
-/** The member's home base: one clear next step and the one primary search, pick up where you left off, and every space one tap away. */
+/** The member's home base: one clear next step (the one primary search, Ask Journey, sits above it), pick up where you left off, and every space one tap away. */
 const GROUP_EXPERIENCE: Record<string, string> = { relationships: "relationships", professional: "business" };
 
 export function DashboardHub({ state, discovery, experiences, next }: { state: NavState; discovery: Discovery; experiences: string[]; next: NextStep }) {
@@ -34,13 +34,6 @@ export function DashboardHub({ state, discovery, experiences, next }: { state: N
           <h2 id="hub-title" className="display mt-3 text-4xl sm:text-5xl">{next.label}</h2>
           <p className="mt-3 max-w-2xl text-ivory/75">{next.line}</p>
           <Link href={next.href} className="btn btn-gold mt-6 inline-flex">{next.label} <span aria-hidden="true">→</span></Link>
-          {/* Directive 51: the one primary search lives on Home; the header keeps only a compact global search. */}
-          <form action="/search" role="search" className="mt-6 flex items-center gap-2 rounded-full border border-champagne/40 bg-white/5 p-1.5 pl-5 backdrop-blur-xl focus-within:border-champagne">
-            <NavIcon name="search" className="h-5 w-5 shrink-0 text-gold" />
-            <input name="q" aria-label="Search everything" enterKeyHint="search" placeholder="Search lessons, couples, Journey, business…"
-              className="min-w-0 flex-1 bg-transparent py-2.5 text-ivory outline-none placeholder:text-ivory/45" />
-            <button className="btn btn-ghost btn-sm shrink-0">Search</button>
-          </form>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
             {QUICK.filter((q: { exp?: string }) => !q.exp || experiences.includes(q.exp)).map((q) => (
               <Link key={q.href} href={q.href} className="shrink-0 rounded-full border border-champagne/30 px-4 py-1.5 text-xs text-ivory/85 transition hover:border-champagne hover:bg-white/10">{q.label}</Link>

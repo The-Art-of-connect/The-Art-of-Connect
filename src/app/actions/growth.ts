@@ -29,7 +29,7 @@ export async function saveGrowthPrefs(_p: R, f: FormData): Promise<R> {
   const months = NEXT[frequency];
   const next = months ? new Date(new Date().setMonth(new Date().getMonth() + months)).toISOString() : null;
   const { error } = await m.db.from("growth_prefs").upsert({ user_id: m.viewer.id, frequency, paused, next_due_at: next, updated_at: new Date().toISOString() });
-  revalidatePath(PORTFOLIO); revalidatePath("/app");
+  revalidatePath(PORTFOLIO); revalidatePath("/app"); revalidatePath("/app/settings");
   if (error) return fail("Your preference couldn't be saved.");
   return ok(paused ? "Paused. Journey keeps your history either way; resume whenever you like." : frequency === "on_demand" ? "Saved. Request a reflection whenever you'd like one." : `Saved. Your next reflection arrives ${new Date(next!).toLocaleDateString("en-US", { dateStyle: "long" })}.`);
 }
@@ -72,7 +72,7 @@ export async function setRelationshipStatus(_p: R, f: FormData): Promise<R> {
   if (!(status in RELATIONSHIP_STATUS)) return fail("Choose a status.");
   const since = str(f, "since", 10);
   const { error } = await m.db.schema("relationships").from("status").upsert({ user_id: m.viewer.id, status, since: /^\d{4}-\d{2}-\d{2}$/.test(since) ? since : null, updated_at: new Date().toISOString() });
-  revalidatePath("/app/relationships/status");
+  revalidatePath("/app/relationships/status"); revalidatePath("/app/settings");
   return error ? fail("Your status couldn't be saved.") : ok("Saved privately. Your membership and benefits are unchanged.");
 }
 
