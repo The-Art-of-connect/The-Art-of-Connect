@@ -1,9 +1,12 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { memberMarks } from "@/lib/member-marks";
 
 export type Person = { user_id: string; display_name: string | null; headline: string | null; bio: string | null; city: string | null; region: string | null; country: string | null;
   interests: string[] | null; seeking: string[] | null; avatar_path: string | null; elite: boolean; connection_status: string | null; connection_direction: string | null;
-  shared_interests: number; shared_circles: number };
+  shared_interests: number; shared_circles: number;
+  /** Membership distinction and identity verification (directive 39). */
+  distinction?: "executive" | "elite" | null; verified?: boolean };
 
 export type FeedPost = { id: string; author_id: string; kind: string; body: string | null; photo_path: string | null; audience: string; circle_id: string | null; event_id: string | null; created_at: string };
 
@@ -17,8 +20,11 @@ export async function signPhotos(db: SupabaseClient, paths: (string | null | und
 
 export async function people(db: SupabaseClient, ids: string[]) {
   if (!ids.length) return {} as Record<string, Person>;
-  const { data } = await db.rpc("social_directory", { p_ids: [...new Set(ids)], p_seeking: null, p_limit: 200 });
-  return Object.fromEntries(((data ?? []) as Person[]).map((p) => [p.user_id, p]));
+  const [{ data }, marks] = await Promise.all([
+    db.rpc("social_directory", { p_ids: [...new Set(ids)], p_seeking: null, p_limit: 200 }),
+    memberMarks(db, ids),
+  ]);
+  return Object.fromEntries(((data ?? []) as Person[]).map((p) => [p.user_id, { ...p, distinction: marks[p.user_id]?.distinction ?? null, verified: marks[p.user_id]?.verified ?? false }]));
 }
 
 /** Loads a feed page with authors, photos, counts, the viewer's reactions and any shared events. */
