@@ -26,7 +26,7 @@ export default async function StagePage({ params }: { params: Promise<{ stage: s
       <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-gold/15" role="progressbar" aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Stage progress">
         <div className="h-full rounded-full bg-gold" style={{ width: `${progress.percent}%` }} />
       </div>
-      <StageForm stage={s.id} questions={questions} answers={answers} reflections={draft.reflections} nextHref={next ? `/app/relationships/onboarding/${next.id}` : "/app/readiness"} nextLabel={next ? `Continue to ${next.title}` : "View your private results"} />
+      <StageForm stage={s.id} questions={questions} answers={answers} reflections={draft.reflections} nextLabel={next ? "Save and continue" : "Save and finish"} />
       {s.id === "readiness" && <p className="mt-6 text-center text-xs text-faint">A reflection exercise, not a clinical assessment. Your answers are private.</p>}
     </div>
   );
