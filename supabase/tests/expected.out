@@ -1437,6 +1437,61 @@ v63-13) Ada keeps every reflection, sharing ended rather than carrying over, and
 v63-14) Neither former partner remains in couples-only circles, and a single member cannot rejoin (expect 0, then error):
 0
 ERROR:  new row violates row-level security policy for table "social_circle_members"
+v64-1) Before launch a member cannot request an appointment (expect not_open, then error):
+not_open
+ERROR:  BOOKING_NOT_OPEN
+v64-2) Before launch staff may test only with a fictional counselor (expect fictional_only error, then t):
+ERROR:  FICTIONAL_ONLY
+t
+v64-3) The tested time is no longer offered to anyone (expect 0):
+0
+
+v64-4) After the tester cancels, the time is open again (expect 1):
+1
+v64-5) Once launched a member requests a time and reads it back (expect open, t, then requested|video|12000|A Client):
+open
+t
+requested|video|12000|A Client
+v64-6) Another member cannot take the same time (expect SLOT_UNAVAILABLE error):
+ERROR:  SLOT_UNAVAILABLE
+v64-7) ...and cannot read the first member's appointment or write appointments directly (expect 0, then error):
+0
+ERROR:  SLOT_TAKEN
+v64-8) Double booking is refused by the database itself, even for an overlapping server write (expect SLOT_TAKEN error):
+ERROR:  SLOT_TAKEN
+v64-9) The counselor sees only their own clients' appointments and confirms; the member is told without clinical details (expect 1, 0, then confirmed|Your appointment is confirmed):
+1
+0
+
+confirmed|Your appointment is confirmed
+v64-10) A member cannot confirm their own request or answer for a counselor (expect NOT_FOUND error):
+ERROR:  NOT_FOUND
+v64-11) The member cancels their confirmed appointment (expect canceled|client):
+
+canceled|client
+v64-12) A member starts a formation order, sends it as a request and reads it back (expect draft|self_filed|t|A Ventures):
+draft|self_filed|t|A Ventures
+v64-13) Once sent, its details cannot be changed (expect error):
+ERROR:  This request has been sent for review and can no longer be changed.
+v64-14) A member cannot mark their own order processing or completed (expect two errors):
+ERROR:  Not permitted
+ERROR:  Not permitted
+v64-15) Another member cannot read or change it (expect 0, then 0 rows updated):
+0
+0
+v64-16) Members cannot use the review function (expect error):
+ERROR:  Not permitted
+v64-17) A draft not yet sent stays private from staff and cannot be reviewed (expect 0):
+0
+v64-18) The owner marks the request processing; the member is notified (expect processing|Your formation request was updated):
+
+processing|Your formation request was updated
+v64-19) Once processing, the member can no longer cancel it (expect error):
+ERROR:  Not permitted
+v64-20) A draft can be cancelled by its member (expect cancelled):
+cancelled
+v64-21) A review cannot authorize an order or approve fees (expect error):
+ERROR:  Not permitted
 v66-1) Without credits a Free member gets no personalized Journey (expect 0, refused:no_credits):
 0
 refused:no_credits

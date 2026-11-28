@@ -137,8 +137,12 @@ export default async function LaunchCenter({ searchParams }: { searchParams: Pro
         </div>
       </LuxSection>
 
-      <LuxSection eyebrow="Coming next" title="Have a professional filing service form it for you">
-        <p className="max-w-2xl text-sm text-muted">We&apos;re preparing an optional partnership so you can complete your formation right here, with every government fee, service charge and renewal shown in full before you authorize anything. It isn&apos;t available yet. Until then, you can file directly with your state using the official links above.</p>
+      <LuxSection eyebrow="Ready to form it?" title="Send a formation request" intro="Prepare the formation of your LLC, corporation or nonprofit and send it to our team as a request.">
+        <p className="max-w-2xl text-sm text-muted">This is a request, reviewed before anything is filed or charged. No payment is taken and nothing is filed automatically. A professional filing partnership is still being prepared; until it is approved, you can also file directly with your state using the official links above.</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link href={`/app/launch/orders${s ? `?state=${s.code}` : ""}`} className="btn btn-gold">Start a formation request</Link>
+          <Link href="/app/launch/orders" className="btn btn-ghost">My formation requests</Link>
+        </div>
         <p className="mt-3 text-sm"><Link href="/app/career" className="text-gold underline">Preparing for opportunities? Visit My Professional Readiness</Link></p>
       </LuxSection>
     </>
