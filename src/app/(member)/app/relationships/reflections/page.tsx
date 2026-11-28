@@ -30,7 +30,7 @@ export default async function Reflections() {
   const { count } = rel && cm ? await rel.from("couple_members").select("user_id", { count: "exact", head: true }).eq("couple_id", cm.couple_id) : { count: 0 };
   const canShare = (count ?? 0) > 1;
   // Couples see their Couples tabs; a member without a shared space still keeps their own reflections.
-  const tabs = cm || viewer.society === "couples" ? COUPLES_TABS : SINGLES_TABS;
+  const tabs = cm || viewer.society === "couples" || isInsidePreview(viewer) ? COUPLES_TABS : SINGLES_TABS;
   const all = (rows ?? []) as Row[];
   const mine = all.filter((r) => reflectionView(r, viewer.id) !== "from-partner");
   const fromPartner = all.filter((r) => reflectionView(r, viewer.id) === "from-partner");
