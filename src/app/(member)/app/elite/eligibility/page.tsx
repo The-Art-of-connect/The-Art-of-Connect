@@ -69,7 +69,7 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
         <p className="relative flex flex-wrap items-center justify-center gap-2 text-xs uppercase tracking-[0.3em] text-[#f0c98a]"><EliteBadge size={16} interactive={false} /><span>Apply for Elite Membership · Qualification and verification required</span></p>
         <h1 className="display relative mt-4 text-4xl text-[#f6e7c8] sm:text-5xl">My Elite application</h1>
         <p className="display relative mt-2 text-xl italic text-[#e8892b]">{ELITE_TAGLINE}</p>
-        <p className="relative mx-auto mt-4 max-w-xl text-sm text-[#f5ecdf]/75">Private to you. Applying is free and standard verification is complimentary. Once you&rsquo;re approved, Elite membership unlocks for purchase.</p>
+        <p className="relative mx-auto mt-4 max-w-xl text-sm text-[#f5ecdf]/75">Private to you. Applying is free and standard verification is complimentary. Once you&rsquo;re approved, Elite Concierge membership unlocks for purchase.</p>
         <p className="relative mt-4 inline-block rounded-full border border-[#c9a96e]/50 px-4 py-1 text-xs text-[#f0c98a]">Status: {ELITE_STATUS_LABEL[status] ?? status}</p>
       </section>
 
@@ -116,7 +116,7 @@ export default async function EliteEligibility({ searchParams }: { searchParams:
               {check(e.age && e.standing, "Membership in good standing", undefined, "/app/membership", "View my membership")}
               {e.pathway === "earned" && check(e.progression, "Membership milestones", `${e.months} of ${e.min_months} months of membership · ${e.answers} of ${e.min_answers} personal discoveries${s?.progression_approved ? "" : " (milestones being finalized)"}`)}
               {e.pathway === "expedited" && check(e.fee, "Priority verification (optional)", s?.expedited_fee_active ? `One-time ${usd((s.expedited_fee_cents ?? 0) / 100)}, offered only after preliminary screening. It purchases faster verification, never admission.` : sandbox(feeGate) ? `Sandbox test: ${usd((s?.expedited_fee_cents ?? 0) / 100)} with Stripe test cards only. The fee isn't active for members until our founder approves it.` : "Not yet available: the expedited verification service is awaiting final approval.")}
-              {check(["invitation_issued", "invitation_accepted", "membership_activated"].includes(status), "Approved: Elite membership unlocked", "Automatic once every step above is verified.")}
+              {check(["invitation_issued", "invitation_accepted", "membership_activated"].includes(status), "Approved: Elite Concierge membership unlocked", "Automatic once every step above is verified.")}
             </ul>
           ) : <p className="mt-3 text-sm text-muted">Answer the preliminary questions to see your progress.</p>}
           {e && <p className="mt-3 text-xs text-faint">These markers check off automatically as each step is completed; they can&rsquo;t be selected by hand.</p>}

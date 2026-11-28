@@ -99,7 +99,7 @@ export default async function SocialAdmin() {
                 <label className="text-xs">Requirement<select name="eligibility" className="field mt-1 w-full"><option value="all">All members</option><option value="couples">Couples</option><option value="singles">Singles 30+</option></select></label>
               </div>
               <div className="flex flex-wrap gap-1.5">{INTERESTS.map(([k, v]) => <label key={k} className="cursor-pointer rounded-full border border-line px-2 py-0.5 text-[0.7rem] has-[:checked]:border-[#e8701a]"><input type="checkbox" name="interests" value={k} className="sr-only" />{v}</label>)}</div>
-              <p className="text-[0.7rem] text-faint">Interest &amp; lifestyle circles stay open to every member; only &ldquo;Verified Elite&rdquo; requires Elite membership.</p>
+              <p className="text-[0.7rem] text-faint">Interest &amp; lifestyle circles stay open to every member; only &ldquo;Verified Elite&rdquo; requires Elite Concierge membership.</p>
               <button className="btn btn-gold btn-sm">Create circle</button>
             </ActionForm>
           </section>

@@ -5,10 +5,12 @@
  * Founder decision (November 26, 2026): "Complete Society" means both paid societies, In Business (The Professional
  * Society) and In Love (The Personal Society), with The Art of Becoming remaining complimentary.
  */
+import { brandName } from "./brand.ts";
 export type Level = "free" | "one" | "complete" | "executive" | "elite";
 export const LEVEL_ORDER: Level[] = ["free", "one", "complete", "executive", "elite"];
+/** Official membership names come from the Brand Terminology Registry (directive 37). */
 export const LEVEL_LABEL: Record<Level, string> = {
-  free: "Complimentary", one: "One Society", complete: "Complete Society", executive: "Executive Private", elite: "Elite Concierge",
+  free: brandName("level-free"), one: brandName("level-one"), complete: brandName("level-complete"), executive: brandName("executive-private"), elite: brandName("elite-concierge"),
 };
 export const LEVEL_PROMISE: Record<Level, string> = {
   free: "Discover Yourself.", one: "Discover Your People.", complete: "Experience Life Across All Three Societies.",

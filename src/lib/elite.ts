@@ -23,7 +23,7 @@ export const ELITE_STATUS_LABEL: Record<string, string> = {
   owner_verified: "Owner verification successful",
   manual_review: "Manual review required",
   qualification_approved: "Qualification approved",
-  invitation_issued: "Approved: Elite membership unlocked",
+  invitation_issued: "Approved: Elite Concierge membership unlocked",
   invitation_accepted: "Invitation accepted",
   membership_activated: "Membership activated",
   expired: "Verification expired",

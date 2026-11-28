@@ -99,7 +99,7 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
             <input name="fee_confirm" placeholder="Type APPROVE to activate" className="field mt-2 w-full text-xs" autoComplete="off" />
             <p className="mt-1 text-[0.7rem] text-faint">{s?.expedited_fee_active ? "Active." : "Inactive (proposal). Expedited verification payment stays off until you approve it."} The fee purchases faster verification, never admission, and is separate from membership.</p>
           </div>
-          <p className="text-[0.7rem] text-faint">Elite membership price is managed in Pricing &amp; packages (currently a draft until you publish pricing). Identity verification is always required.</p>
+          <p className="text-[0.7rem] text-faint">Elite Concierge membership price is managed in Pricing &amp; packages (currently a draft until you publish pricing). Identity verification is always required.</p>
           <button className="btn btn-gold btn-sm">Save rules</button>
         </ActionForm>
 
@@ -265,7 +265,7 @@ export default async function EliteCenter({ searchParams }: { searchParams: Prom
           </div>
         )}
       </section>
-      <p className="mt-10 text-xs text-faint">Proposed thresholds and the expedited fee stay inactive until you approve them. Stripe is the only verification provider: Stripe Identity and Financial Connections run in Sandbox for testing, and production use follows your switches on the Stripe verification page. Financial results are supporting evidence only; every qualification decision is yours. Revenue for Elite memberships and verification will be reported separately once payments are live.</p>
+      <p className="mt-10 text-xs text-faint">Proposed thresholds and the expedited fee stay inactive until you approve them. Stripe is the only verification provider: Stripe Identity and Financial Connections run in Sandbox for testing, and production use follows your switches on the Stripe verification page. Financial results are supporting evidence only; every qualification decision is yours. Revenue for Elite Concierge memberships and verification will be reported separately once payments are live.</p>
     </>
   );
 }

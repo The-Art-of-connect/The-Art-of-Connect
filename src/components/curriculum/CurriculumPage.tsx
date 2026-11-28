@@ -88,7 +88,7 @@ export async function CurriculumPage({ section: SECTION, backHref = "/app/know-y
             <p className="display relative mt-2 text-2xl text-gold-bright">Personal, by text or voice</p>
             <p className="relative mt-3 text-sm text-muted">Journey listens, asks about your circumstances and adapts each lesson to you, then writes an individualized analysis grounded in your conversations.</p>
             {paid ? (
-              <p className="relative mt-4 rounded-xl border border-champagne/30 bg-white/5 p-3 text-sm">Included in your membership, live by voice or in writing. You have <span className="font-semibold text-gold-bright">{messagesLeft(credits)}</span> Journey messages {credits >= 9999 ? "with your Elite membership" : "left this month"}; opening lessons and learning self-guided never use them.</p>
+              <p className="relative mt-4 rounded-xl border border-champagne/30 bg-white/5 p-3 text-sm">Included in your membership, live by voice or in writing. You have <span className="font-semibold text-gold-bright">{messagesLeft(credits)}</span> Journey messages {credits >= 9999 ? "with your Elite Concierge membership" : "left this month"}; opening lessons and learning self-guided never use them.</p>
             ) : staff ? (
               <p className="relative mt-4 text-sm text-muted">Owner testing uses your private test budget.</p>
             ) : (

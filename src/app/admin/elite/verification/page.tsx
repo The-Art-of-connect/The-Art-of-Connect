@@ -20,14 +20,14 @@ const COSTS = [
   ["Financial Connections: transactions", "$0.30 per account per month", "We take one snapshot of the history the bank provides (Stripe returns up to about 180 days, not 12 months), then disconnect, so expect one month per account."],
   ["Financial Connections: instant bank verification", "$1.50 per success", "Applies to ACH payment accounts. We don't request payment permission; confirm with Stripe that it isn't billed for our data-only sessions."],
   ["Payments: domestic cards", "2.9% + 30¢ per transaction", "+0.5% manually entered, +1.5% international, +1% currency conversion."],
-  ["Billing: subscriptions", "0.7% of Billing volume", "Pay-as-you-go plan, for Elite memberships."],
+  ["Billing: subscriptions", "0.7% of Billing volume", "Pay-as-you-go plan, for Elite Concierge memberships."],
 ];
 
 const EXAMPLES = [
   ["Identity only (one candidate)", "$1.50"],
   ["Identity + one linked bank account", "about $3.40 ($1.50 + $1.50 + $0.10 + $0.30)"],
   ["Expedited verification fee of $995 (if approved)", "about $29.16 in card fees, leaving about $965.84"],
-  ["Elite membership at $249.99 a month", "about $9.30 a month ($7.55 card + $1.75 Billing)"],
+  ["Elite Concierge membership at $249.99 a month", "about $9.30 a month ($7.55 card + $1.75 Billing)"],
 ];
 
 const REQUIREMENTS = [

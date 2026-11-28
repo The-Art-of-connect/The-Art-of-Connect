@@ -81,7 +81,7 @@ export function PersonalDiscoveryCard({ slug, sections, fromJourney, journeyWrit
             <ActionForm action={action} className="relative mt-3 space-y-3">
               <input type="hidden" name={field} value={slug} />
               <p className="text-sm text-muted">
-                {option.kind === "member" ? (option.credits >= 9999 ? <>Included in your Elite membership: unlimited.</> : <>Included in your membership. This uses 1 of your <span className="font-semibold text-gold-bright">{option.credits}</span> remaining monthly messages, only when Journey writes your analysis.</>) : "Owner test: uses your private test budget."}
+                {option.kind === "member" ? (option.credits >= 9999 ? <>Included in your Elite Concierge membership: unlimited.</> : <>Included in your membership. This uses 1 of your <span className="font-semibold text-gold-bright">{option.credits}</span> remaining monthly messages, only when Journey writes your analysis.</>) : "Owner test: uses your private test budget."}
               </p>
               <label className="flex items-start gap-2 text-xs text-ivory/85">
                 <input type="checkbox" name="consent" value="yes" required className="mt-0.5" />

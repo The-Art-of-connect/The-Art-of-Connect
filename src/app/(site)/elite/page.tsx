@@ -105,7 +105,7 @@ export default async function ElitePage() {
       <section className="px-4 pb-24 text-center sm:px-8">
         <div className="mx-auto max-w-2xl rounded-[28px] border border-[#e8892b]/40 bg-white/[0.03] p-8">
           <p className="display text-3xl text-[#f6e7c8]">Apply for Elite Membership</p>
-          <p className="mt-3 text-sm text-[#f5ecdf]/75">Qualification and verification required. Applying is free, standard verification is complimentary, and no one else sees your answers. Elite membership becomes available to purchase once you&rsquo;re approved.</p>
+          <p className="mt-3 text-sm text-[#f5ecdf]/75">Qualification and verification required. Applying is free, standard verification is complimentary, and no one else sees your answers. Elite Concierge membership becomes available to purchase once you&rsquo;re approved.</p>
           {viewer
             ? <Link href="/app/elite/eligibility" className="btn btn-gold mt-6">Continue my application</Link>
             : <div className="mt-6 flex flex-wrap justify-center gap-3"><Link href="/join/elite" className="btn btn-gold">Apply now</Link><Link href="/sign-in?next=/app/elite/eligibility" className="btn btn-ghost">Members: sign in to apply</Link></div>}

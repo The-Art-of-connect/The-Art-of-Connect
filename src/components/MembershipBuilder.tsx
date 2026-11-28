@@ -202,7 +202,7 @@ export function MembershipBuilder({
                       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_0%,rgb(232_112_26/0.14),transparent_70%)]" aria-hidden="true" />
                       <div className="relative">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="eyebrow">Elite membership</p>
+                          <p className="eyebrow">Elite Concierge membership</p>
                           <EliteBadge size={28} interactive={false} />
                         </div>
                         <p className="display mt-2 text-3xl text-[#f6e7c8]">{p.name}</p>

@@ -14,7 +14,7 @@ export const metadata = { title: "Elite Concierge Society" };
 type Tile = { title: string; body: string; href?: string; ready: boolean };
 const TILES: Tile[] = [
   { title: "Private Journey Concierge", body: "Journey with your enhanced Elite allowance, in writing and live voice.", href: "/app/journey", ready: true },
-  { title: "Membership & verification", body: "Your Elite membership, billing and verification status.", href: "/app/membership", ready: true },
+  { title: "Membership & verification", body: "Your Elite Concierge membership, billing and verification status.", href: "/app/membership", ready: true },
   { title: "Elite privacy", body: "Show your profile to Elite members and your connections only, and control every photograph.", href: "/app/connect/profile", ready: true },
   { title: "Private Sessions", body: "Included with your membership, by text or voice.", href: "/app/journey/sessions", ready: true },
   { title: "Elite circles", body: "Verified peers, and every open circle you choose.", href: "/app/connect/circles?category=elite", ready: true },

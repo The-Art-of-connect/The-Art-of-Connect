@@ -1,5 +1,6 @@
 import "server-only";
 import { isQaAccount } from "@/lib/qa-access";
+import { brandInstructions } from "@/lib/brand";
 import { guideDraftRequest, guideInstructions, pageContext } from "@/lib/journey-guide";
 import { loadGuideAnswers, resolveGuide } from "@/lib/journey-guide-server";
 import { teachingGuidance } from "@/lib/curricula";
@@ -553,7 +554,8 @@ export async function composeFoundation(db: Db, cfg: NonNullable<Awaited<ReturnT
     o.spoken ? SPOKEN_CRAFT : "",
     `# Response standards\n${RESPONSE_STANDARDS.map((x) => `- ${x}`).join("\n")}`,
   ];
-  return { instructions: parts.filter(Boolean).join("\n\n"), blueprint: blueprint ?? null };
+  // Brand Terminology Registry (directive 37): official names in every Journey reply, written or spoken.
+  return { instructions: [...parts, brandInstructions()].filter(Boolean).join("\n\n"), blueprint: blueprint ?? null };
 }
 
 /** Founder training entries relevant to the topic. Members: approved only. Owner tests also include drafts awaiting review. */
