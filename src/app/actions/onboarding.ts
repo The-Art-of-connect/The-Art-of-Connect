@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { getViewer, isInsidePreview } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { ageEligibility, applicableQuestions, DEFAULT_REGISTRY, isAnswered, STAGES, type AnswerValue, type StageId, type Track } from "@/lib/onboarding";
+import { ageEligibility, applicableQuestions, DEFAULT_REGISTRY, packOnboardingAnswer, STAGES, type AnswerValue, type StageId, type StoredAnswer, type Track } from "@/lib/onboarding";
 import type { ActionResult } from "@/app/actions/admin";
 
 /**
@@ -19,7 +19,7 @@ export async function saveOnboardingStage(_prev: ActionResult, form: FormData): 
   const supabase = await createClient();
   if (!supabase) return { ok: false, message: "Saving opens soon." };
 
-  const rows: { user_id: string; question_id: string; question_version: number; value: AnswerValue }[] = [];
+  const rows: { user_id: string; question_id: string; question_version: number; value: StoredAnswer }[] = [];
   for (const q of applicableQuestions(DEFAULT_REGISTRY, stage, { track, answers: {} })) {
     let value: AnswerValue = null;
     if (q.kind === "multi_choice") {
@@ -37,8 +37,8 @@ export async function saveOnboardingStage(_prev: ActionResult, form: FormData): 
       const e = ageEligibility(value, track);
       if (!e.eligible) return { ok: false, message: e.reason! };
     }
-    const reflection = String(form.get(`${q.id}.reflection`) ?? "").trim().slice(0, 2000);
-    if (isAnswered(value)) rows.push({ user_id: viewer.id, question_id: q.id, question_version: q.version, value: reflection ? ({ answer: value, reflection } as unknown as AnswerValue) : value });
+    const stored = packOnboardingAnswer(value, q.reflection ? form.get(`${q.id}.reflection`) : null);
+    if (stored !== undefined) rows.push({ user_id: viewer.id, question_id: q.id, question_version: q.version, value: stored });
   }
   if (rows.length) {
     const { error } = await supabase.from("onboarding_answers").upsert(rows.map((r) => ({ ...r, updated_at: new Date().toISOString() })));

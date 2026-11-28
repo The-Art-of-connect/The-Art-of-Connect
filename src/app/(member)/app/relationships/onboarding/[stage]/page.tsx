@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireExperience } from "@/lib/auth";
 import { DEFAULT_REGISTRY, STAGES, applicableQuestions, reuseAnswers, stageProgress, type StageId } from "@/lib/onboarding";
 import { StageForm } from "@/components/StageForm";
-import { loadAnswers } from "@/lib/onboarding-server";
+import { loadOnboardingDraft } from "@/lib/onboarding-server";
 
 export const metadata = { title: "Your Personal Society journey" };
 
@@ -12,7 +12,8 @@ export default async function StagePage({ params }: { params: Promise<{ stage: s
   const s = STAGES.find((x) => x.id === stage);
   if (!s) notFound();
   const { viewer } = await requireExperience("relationships");
-  const answers = reuseAnswers(DEFAULT_REGISTRY, { track: "single", answers: await loadAnswers(viewer.id) });
+  const draft = await loadOnboardingDraft(viewer.id);
+  const answers = reuseAnswers(DEFAULT_REGISTRY, { track: "single", answers: draft.answers });
   const questions = applicableQuestions(DEFAULT_REGISTRY, stage as StageId, { track: "single", answers });
   const progress = stageProgress(DEFAULT_REGISTRY, stage as StageId, { track: "single", answers });
   const next = STAGES[s.order];
@@ -25,7 +26,7 @@ export default async function StagePage({ params }: { params: Promise<{ stage: s
       <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-gold/15" role="progressbar" aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Stage progress">
         <div className="h-full rounded-full bg-gold" style={{ width: `${progress.percent}%` }} />
       </div>
-      <StageForm stage={s.id} questions={questions} answers={answers} nextHref={next ? `/app/relationships/onboarding/${next.id}` : "/app/readiness"} nextLabel={next ? `Continue to ${next.title}` : "View your private results"} />
+      <StageForm stage={s.id} questions={questions} answers={answers} reflections={draft.reflections} nextHref={next ? `/app/relationships/onboarding/${next.id}` : "/app/readiness"} nextLabel={next ? `Continue to ${next.title}` : "View your private results"} />
       {s.id === "readiness" && <p className="mt-6 text-center text-xs text-faint">A reflection exercise, not a clinical assessment. Your answers are private.</p>}
     </div>
   );

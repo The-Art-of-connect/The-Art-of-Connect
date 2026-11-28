@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DEFAULT_REGISTRY, ageEligibility, matchmakingBlockers, remainingQuestions, resumePoint, reuseAnswers,
+  DEFAULT_REGISTRY, ageEligibility, isAnswered, packOnboardingAnswer, unpackOnboardingAnswer, matchmakingBlockers, remainingQuestions, resumePoint, reuseAnswers,
   shareableAnswers, stageProgress, validateRegistry, withOwnerSettings, type ActivationInput, type Question,
 } from "../src/lib/onboarding.ts";
 
@@ -83,4 +83,15 @@ test("matchmaking activates only when every verification is complete", () => {
 test("a safety restriction blocks matchmaking regardless of membership", () => {
   // Membership and payment are not inputs, so no plan can override this.
   assert.deepEqual(matchmakingBlockers({ ...ready, openSafetyRestriction: true }, today), ["Your account is under safety review."]);
+});
+
+test("saved reflection entries round-trip alongside answers and by themselves", () => {
+  const text = "A private reflection";
+  const paired = packOnboardingAnswer("A selected response", text)!;
+  assert.deepEqual(unpackOnboardingAnswer(paired), { answer: "A selected response", reflection: text });
+  const standalone = unpackOnboardingAnswer(packOnboardingAnswer(null, text)!);
+  assert.deepEqual(standalone, { answer: null, reflection: text });
+  assert.equal(isAnswered(standalone.answer), false);
+  assert.deepEqual(unpackOnboardingAnswer(packOnboardingAnswer(null, "")!), { answer: null, reflection: "" });
+  assert.deepEqual(unpackOnboardingAnswer(["Legacy response"]), { answer: ["Legacy response"], reflection: "" });
 });

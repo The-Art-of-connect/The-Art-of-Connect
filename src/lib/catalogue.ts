@@ -4,7 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { EXPERIENCES, EXPERIENCE_ORDER } from "@/lib/experiences";
-import type { PricingCatalogue, Promotion } from "@/lib/pricing";
+import { eliteCatalogueBenefits, type PricingCatalogue, type Promotion } from "@/lib/pricing";
+import { isAllowanceMode } from "@/lib/journey-budget";
+import { comingSoonPaths } from "@/lib/section-status";
 
 /**
  * Used only when the database is unreachable: names and descriptions so the
@@ -36,12 +38,32 @@ export const getCatalogue = cache(async (preview = false): Promise<PricingCatalo
   if (error || !data) return OFFLINE;
   // Tolerate an older database (before membership packages) without breaking pages.
   const d = data as Partial<PricingCatalogue>;
+  let packages = Array.isArray(d.packages) ? d.packages : [];
+  if (packages.some((p) => p.slug === "elite-concierge")) {
+    const admin = createAdminClient();
+    const [{ data: limit }, soon] = await Promise.all([
+      admin?.from("journey_tier_limits")
+        .select("monthly_messages, unlimited_messages, member_monthly_limit_cents")
+        .eq("package_slug", "elite-concierge").maybeSingle() ?? { data: null },
+      comingSoonPaths(),
+    ]);
+    const tier = limit && {
+      monthlyMessages: limit.monthly_messages,
+      unlimited: limit.unlimited_messages,
+      memberMonthlyLimitCents: limit.member_monthly_limit_cents == null ? null : Number(limit.member_monthly_limit_cents),
+    };
+    const cents = tier && isAllowanceMode(tier) ? tier.memberMonthlyLimitCents : null;
+    packages = packages.map((p) => p.slug !== "elite-concierge" ? p : {
+      ...p,
+      benefits: eliteCatalogueBenefits(p.benefits, cents, soon.includes("/app/journey/voice"), soon.includes("/app/journey/sessions")),
+    });
+  }
   return {
     ...OFFLINE,
     ...d,
     annual_months_charged: d.annual_months_charged ?? null,
     experiences: d.experiences?.length ? d.experiences : OFFLINE.experiences,
-    packages: Array.isArray(d.packages) ? d.packages : [],
+    packages,
     addons: Array.isArray(d.addons) ? d.addons : [],
     professional_packages: Array.isArray(d.professional_packages) ? d.professional_packages : [],
   } as PricingCatalogue;
