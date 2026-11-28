@@ -30,5 +30,27 @@ export const SINGLES_TABS = [
 export const COUPLES_TABS = [
   { href: "/app/relationships", label: "Our Relationship" },
   { href: "/app/relationships/checkin", label: "Check-in" },
+  { href: "/app/relationships/reflections", label: "Private Reflections" },
   { href: "/app/relationships/calendar", label: "Our Calendar" },
 ] as const;
+
+/** Private reflections (directive 51 §7): optional, gentle starting points. A member can always write freely instead. */
+export const REFLECTION_PROMPTS = [
+  "What did I appreciate about us this week?",
+  "When did I feel closest to my partner recently, and what made it so?",
+  "What do I need more of right now, and how could I ask for it kindly?",
+  "What is one way I've grown as a partner this year?",
+  "Is there something I'd like to understand better about my partner?",
+  "What small gesture could I offer this week that would mean something?",
+  "What am I hoping for in the season ahead of us?",
+] as const;
+
+type Reflection = { user_id: string; shared_at: string | null };
+/** How a reflection appears to the viewer: their own (private or shared) or one their partner chose to share. */
+export function reflectionView(r: Reflection, viewerId: string): "mine-private" | "mine-shared" | "from-partner" {
+  if (r.user_id !== viewerId) return "from-partner";
+  return r.shared_at ? "mine-shared" : "mine-private";
+}
+
+/** Couples Connection Circles: the circles of the Couples Connection Community (couples-only, plus verified Elite couples). */
+export const isCouplesCircle = (c: { category: string; eligibility: string }) => c.eligibility === "couples" || c.category === "couples";
